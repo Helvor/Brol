@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0e11">
+  <title>Brol</title>
+  <script>
+    // Appliquer le thème avant le rendu pour éviter un flash
+    try { const t = localStorage.getItem('rdl-theme'); if (t) document.documentElement.dataset.theme = t; } catch (_) {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" data-view="shop">
+      <span class="ballot" aria-hidden="true"></span>
+      <span class="brand-name">Brol</span>
+    </a>
+    <nav class="tabs">
+      <button class="tab is-active" data-view="shop" data-i18n="tab.shop">Paquets</button>
+      <button class="tab" data-view="binder"><span data-i18n="tab.binder">Album</span> <span id="progress-pill" class="tab-count"></span></button>
+      <button class="tab" data-view="series"><span data-i18n="tab.series">Séries</span> <span id="series-dot" class="dot" hidden></span></button>
+      <button class="tab" data-view="games" data-i18n="tab.games">Jeux</button>
+      <button class="tab" data-view="ach" data-i18n="tab.ach">Succès</button>
+    </nav>
+    <div class="topbar-right">
+      <div class="wallet"><span class="coin" aria-hidden="true"></span><span id="coins">0</span></div>
+      <button id="lang-btn" class="icon-btn lang-btn">NL</button>
+      <button id="sound-btn" class="icon-btn" aria-label="Son"></button>
+      <button id="theme-btn" class="icon-btn" aria-label="Thème"></button>
+    </div>
+  </header>
+
+  <main>
+    <section id="view-shop" class="view is-active">
+      <div class="shop-head">
+        <div>
+          <h1 data-i18n="shop.title">Paquets</h1>
+          <ul id="odds" class="odds"></ul>
+        </div>
+        <div id="free-box" class="free-box"></div>
+      </div>
+      <div id="packs" class="packs"></div>
+    </section>
+
+    <section id="view-binder" class="view">
+      <div class="binder-head">
+        <div>
+          <h1 data-i18n="binder.title">Album</h1>
+          <p class="muted" id="binder-summary"></p>
+        </div>
+        <div class="filters">
+          <input id="search" type="search" data-i18n-ph="search" autocomplete="off">
+          <select id="f-rarity"></select>
+          <label class="check"><input id="f-owned" type="checkbox"><span></span><em data-i18n="owned">Possédées</em></label>
+          <label class="check"><input id="f-special" type="checkbox"><span></span><em data-i18n="specials">Versions spéciales</em></label>
+          <button id="sell-all" class="btn btn-line" data-i18n="sellAll">Vendre les doublons</button>
+        </div>
+      </div>
+      <div id="cat-chips" class="chips"></div>
+      <div id="series-banner" class="series-banner" hidden></div>
+      <div id="grid" class="grid"></div>
+    </section>
+
+    <section id="view-series" class="view">
+      <div class="binder-head">
+        <div>
+          <h1 data-i18n="series.title">Séries</h1>
+          <p class="muted" id="series-summary"></p>
+        </div>
+      </div>
+      <div id="series-grid" class="series-grid"></div>
+    </section>
+
+    <section id="view-games" class="view">
+      <div class="binder-head">
+        <div>
+          <h1 id="games-title">Jeux</h1>
+          <p class="muted" id="games-intro"></p>
+        </div>
+      </div>
+      <div id="game-area"></div>
+    </section>
+
+    <section id="view-ach" class="view">
+      <div class="binder-head">
+        <div class="ach-head">
+          <h1 data-i18n="ach.title">Succès</h1>
+          <p class="muted" id="ach-summary"></p>
+          <div class="bar ach-total"><span id="ach-bar"></span></div>
+        </div>
+      </div>
+      <div id="ach-list"></div>
+    </section>
+  </main>
+
+  <!-- Scène d'ouverture plein écran -->
+  <div id="stage" class="stage" hidden>
+    <div class="stage-rays" aria-hidden="true"></div>
+    <div class="stage-flash" aria-hidden="true"></div>
+    <div id="stage-pack" class="stage-pack"></div>
+    <p id="stage-hint" class="stage-hint"></p>
+    <div id="reveal" class="reveal"></div>
+    <div id="stage-bar" class="stage-bar">
+      <p id="stage-summary" class="stage-summary"></p>
+      <div class="stage-actions">
+        <button id="flip-all" class="btn btn-line btn-light" data-i18n="flipAll">Tout retourner</button>
+        <button id="again" class="btn btn-gold" hidden></button>
+        <button id="to-album" class="btn btn-line btn-light" hidden data-i18n="toAlbum">Voir l’album</button>
+        <button id="stage-close" class="btn btn-line btn-light" hidden data-i18n="close">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="detail">
+    <div class="detail-inner">
+      <div id="detail-card" class="detail-card"></div>
+      <div class="detail-info">
+        <button class="close" id="detail-close" aria-label="×">×</button>
+        <div id="detail-body"></div>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+  <div id="ach-toast" class="ach-toast" role="status"></div>
+
+  <footer class="foot">
+    <p data-i18n-html="credits"></p>
+    <button id="reset" class="linkish" data-i18n="reset">Réinitialiser la partie</button>
+  </footer>
+
+  <script src="data/cards.js"></script>
+  <script src="data/belgium.js"></script>
+  <script src="i18n.js"></script>
+  <script src="sfx.js"></script>
+  <script src="achievements.js"></script>
+  <script src="app.js"></script>
+  <script src="games.js"></script>
+</body>
+</html>

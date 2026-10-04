@@ -1,0 +1,581 @@
+// Mini-jeux : Formation de gouvernement, Belgle, Chronologie, Tour de Belgique, Plus ou moins
+(() => {
+  'use strict';
+  const API = window.RDL;
+  const { CARDS, esc, imgUrl, fmt, toast, SFX } = API;
+  const L = () => window.I18N.lang;
+  const nm = c => window.I18N.name(c);
+  const $ = s => document.querySelector(s);
+  const area = () => $('#game-area');
+  const rand = n => Math.floor(Math.random() * n);
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const pick = a => a[rand(a.length)];
+
+  // ---------- Textes ----------
+  const TX = {
+    fr: {
+      title: 'Jeux', intro: 'Gagne des pièces avec tes cartes. Gains des mini-jeux plafonnés à {cap} pièces par jour.',
+      back: '← Jeux', play: 'Jouer', again: 'Rejouer', best: 'Record', today: 'Aujourd’hui', capReached: 'Plafond quotidien atteint',
+      earned: n => `+${n} pièces`,
+      // Formation
+      f_name: 'Formation de gouvernement', f_desc: 'Forme une coalition de 76 sièges avec tes cartes politiques. Le record à battre : 541 jours.',
+      f_rules: 'Joue une carte pour faire avancer la négociation avec son parti. Quand un parti est convaincu, il entre dans la coalition, mais certains partis refusent de gouverner ensemble. Il faut 76 sièges sur 150, avec au moins un parti de chaque groupe linguistique. Au-delà de 600 jours, c’est l’échec.',
+      f_days: 'Jours', f_seats: 'Sièges', f_hand: 'Ta main', f_reshuffle: 'Nouvelle main (+10 jours)', f_in: 'Dans la coalition', f_refuse: 'Refuse',
+      f_need: n => `${n} pts`, f_guest: 'Invité', f_deck: (o, g) => `Paquet : ${o} cartes de ta collection${g ? ` + ${g} invités` : ''}. Les cartes rares pèsent plus lourd.`,
+      f_win: d => `Gouvernement formé en ${d} jours !`, f_lose: 'Affaires courantes : 600 jours sans accord.',
+      f_both: 'Majorité dans les deux groupes linguistiques', f_joined: p => `${p} entre dans la coalition`, f_lock: (p, q) => `${p} refuse de gouverner avec ${q}`,
+      f_cordon: 'Cordon sanitaire : aucun parti n’accepte de négocier avec le Vlaams Belang. +30 jours.',
+      f_fr: 'FR', f_nl: 'NL', f_bi: 'FR/NL',
+      ev: {
+        crise: 'Crise communautaire. +30 jours.', fuite: p => `Fuite dans la presse : ${p} recule de 2 points.`,
+        sondage: p => `Sondage favorable : ${p} avance de 2 points.`, roi: p => `Le Roi reçoit le formateur : ${p} avance de 3 points.`,
+        roi0: 'Le Roi reçoit le formateur. Sans carte royale dans ta collection, peu d’effet.',
+        conclave: 'Conclave budgétaire interminable. +14 jours.', bhv: 'Le dossier BHV refait surface. +21 jours.',
+        vacances: 'Vacances parlementaires. +20 jours.', clarif: 'Mission de clarification : tu pioches 2 cartes.',
+      },
+      // Belgle
+      b_name: 'Belgle', b_desc: 'Une carte mystère par jour, la même pour tout le monde. 6 essais, un indice à chaque erreur.',
+      b_ph: 'Tape un nom…', b_guess: 'Proposer', b_hints: 'Indices', b_cat: 'Catégorie', b_rar: 'Rareté', b_sub: 'Description', b_era: 'Époque',
+      b_place: 'Lieu', b_init: 'Initiales', b_win: n => `Trouvé en ${n} essai${n > 1 ? 's' : ''} !`, b_lose: 'Perdu ! C’était…', b_share: 'Copier mon score',
+      b_copied: 'Score copié', b_next: 'Nouvelle carte demain', b_streak: n => `Série : ${n} jour${n > 1 ? 's' : ''}`, b_unknown: 'Carte inconnue',
+      // Chrono
+      c_name: 'Chronologie', c_desc: 'Place chaque carte au bon endroit sur la ligne du temps. Une erreur et c’est fini.',
+      c_place: 'Où placer cette carte ?', c_here: 'Ici', c_over: n => `Série terminée : ${n} carte${n > 1 ? 's' : ''} bien placée${n > 1 ? 's' : ''}.`,
+      c_kind: { 'Naissance': 'Naissance', 'Fondation': 'Fondation', 'Année': 'Création', 'Formation': 'Formation', 'Création': 'Création', 'event': 'Événement' },
+      // Tour
+      t_name: 'Tour de Belgique', t_desc: 'Clique sur la carte là où se trouve le lieu. 10 manches, 1 000 points par manche au maximum.',
+      t_where: 'Où se trouve…', t_next: 'Manche suivante', t_end: 'Voir le résultat', t_round: (i, n) => `Manche ${i}/${n}`,
+      t_dist: (d, p) => `${d} km · ${p} points`, t_total: s => `Score final : ${s} / 10 000`,
+      // Plus ou moins
+      p_name: 'Plus ou moins', p_desc: 'Plus ou moins d’habitants ? Plus ou moins connu dans le monde ? Enchaîne les bonnes réponses.',
+      p_more: 'Plus', p_less: 'Moins', p_pop: 'habitants', p_wiki: 'Wikipédias', p_qpop: (b, a) => `Plus ou moins d’habitants à ${b} qu’à ${a} ?`, p_qwiki: (b, a) => `${b} : plus ou moins d’articles Wikipédia que ${a} ?`,
+      p_over: n => `Perdu ! Série de ${n}.`, p_streak: n => `Série : ${n}`,
+    },
+    nl: {
+      title: 'Spellen', intro: 'Verdien munten met je kaarten. Winst uit minispellen is beperkt tot {cap} munten per dag.',
+      back: '← Spellen', play: 'Spelen', again: 'Opnieuw', best: 'Record', today: 'Vandaag', capReached: 'Daglimiet bereikt',
+      earned: n => `+${n} munten`,
+      f_name: 'Regeringsvorming', f_desc: 'Vorm een coalitie van 76 zetels met je politieke kaarten. Het record om te kloppen: 541 dagen.',
+      f_rules: 'Speel een kaart om de onderhandeling met haar partij te laten vorderen. Is een partij overtuigd, dan treedt ze toe tot de coalitie, maar sommige partijen weigeren samen te regeren. Je hebt 76 van de 150 zetels nodig, met minstens één partij uit elke taalgroep. Na 600 dagen is het mislukt.',
+      f_days: 'Dagen', f_seats: 'Zetels', f_hand: 'Je hand', f_reshuffle: 'Nieuwe hand (+10 dagen)', f_in: 'In de coalitie', f_refuse: 'Weigert',
+      f_need: n => `${n} ptn`, f_guest: 'Gast', f_deck: (o, g) => `Stapel: ${o} kaarten uit je verzameling${g ? ` + ${g} gasten` : ''}. Zeldzame kaarten wegen zwaarder.`,
+      f_win: d => `Regering gevormd in ${d} dagen!`, f_lose: 'Lopende zaken: 600 dagen zonder akkoord.',
+      f_both: 'Meerderheid in beide taalgroepen', f_joined: p => `${p} treedt toe tot de coalitie`, f_lock: (p, q) => `${p} weigert te regeren met ${q}`,
+      f_cordon: 'Cordon sanitaire: geen enkele partij wil onderhandelen met Vlaams Belang. +30 dagen.',
+      f_fr: 'FR', f_nl: 'NL', f_bi: 'FR/NL',
+      ev: {
+        crise: 'Communautaire crisis. +30 dagen.', fuite: p => `Lek in de pers: ${p} verliest 2 punten.`,
+        sondage: p => `Gunstige peiling: ${p} wint 2 punten.`, roi: p => `De Koning ontvangt de formateur: ${p} wint 3 punten.`,
+        roi0: 'De Koning ontvangt de formateur. Zonder koninklijke kaart in je verzameling heeft het weinig effect.',
+        conclave: 'Eindeloos begrotingsconclaaf. +14 dagen.', bhv: 'Het dossier BHV duikt weer op. +21 dagen.',
+        vacances: 'Parlementair reces. +20 dagen.', clarif: 'Verkennersopdracht: je trekt 2 kaarten.',
+      },
+      b_name: 'Belgle', b_desc: 'Elke dag een mysteriekaart, voor iedereen dezelfde. 6 pogingen, een hint bij elke fout.',
+      b_ph: 'Typ een naam…', b_guess: 'Raden', b_hints: 'Hints', b_cat: 'Categorie', b_rar: 'Zeldzaamheid', b_sub: 'Omschrijving', b_era: 'Periode',
+      b_place: 'Plaats', b_init: 'Initialen', b_win: n => `Gevonden in ${n} poging${n > 1 ? 'en' : ''}!`, b_lose: 'Verloren! Het was…', b_share: 'Score kopiëren',
+      b_copied: 'Score gekopieerd', b_next: 'Morgen een nieuwe kaart', b_streak: n => `Reeks: ${n} dag${n > 1 ? 'en' : ''}`, b_unknown: 'Onbekende kaart',
+      c_name: 'Tijdlijn', c_desc: 'Plaats elke kaart op de juiste plek op de tijdlijn. Eén fout en het is voorbij.',
+      c_place: 'Waar hoort deze kaart?', c_here: 'Hier', c_over: n => `Reeks voorbij: ${n} kaart${n > 1 ? 'en' : ''} juist geplaatst.`,
+      c_kind: { 'Naissance': 'Geboren', 'Fondation': 'Opgericht', 'Année': 'Gemaakt', 'Formation': 'Opgericht', 'Création': 'Opgericht', 'event': 'Gebeurtenis' },
+      t_name: 'Ronde van België', t_desc: 'Klik op de kaart waar de plaats ligt. 10 rondes, maximaal 1.000 punten per ronde.',
+      t_where: 'Waar ligt…', t_next: 'Volgende ronde', t_end: 'Resultaat bekijken', t_round: (i, n) => `Ronde ${i}/${n}`,
+      t_dist: (d, p) => `${d} km · ${p} punten`, t_total: s => `Eindscore: ${s} / 10.000`,
+      p_name: 'Meer of minder', p_desc: 'Meer of minder inwoners? Meer of minder bekend in de wereld? Hoe lang hou je het vol?',
+      p_more: 'Meer', p_less: 'Minder', p_pop: 'inwoners', p_wiki: 'Wikipedia’s', p_qpop: (b, a) => `Heeft ${b} meer of minder inwoners dan ${a}?`, p_qwiki: (b, a) => `Heeft ${b} meer of minder Wikipedia-artikels dan ${a}?`,
+      p_over: n => `Verloren! Reeks van ${n}.`, p_streak: n => `Reeks: ${n}`,
+    },
+  };
+  const T = (k, ...a) => { const v = k.split('.').reduce((o, p) => o?.[p], TX[L()]) ?? k.split('.').reduce((o, p) => o?.[p], TX.fr); return typeof v === 'function' ? v(...a) : v; };
+
+  // ---------- Récompenses (plafonnées par jour) ----------
+  const DAILY_CAP = 1500;
+  const todayKey = () => new Date().toISOString().slice(0, 10);
+  function G() {
+    const s = API.state;
+    s.games ||= {};
+    const g = s.games;
+    g.formation ||= { played: 0, won: 0, best: 0, both: 0 };
+    g.belgle ||= { won: 0, first: 0, streak: 0, maxStreak: 0, last: null, day: null };
+    g.chrono ||= { best: 0 };
+    g.tour ||= { best: 0, bull: 0 };
+    g.pom ||= { best: 0 };
+    g.played ||= {};
+    g.coins ||= { day: null, amount: 0 };
+    return g;
+  }
+  function reward(n) {
+    const g = G();
+    if (g.coins.day !== todayKey()) g.coins = { day: todayKey(), amount: 0 };
+    const give = Math.max(0, Math.min(n, DAILY_CAP - g.coins.amount));
+    g.coins.amount += give;
+    if (give) { API.state.coins += give; SFX.coin(); toast(T('earned', give)); }
+    else if (n) toast(T('capReached'));
+    API.save(); API.renderWallet();
+    return give;
+  }
+  function played(id) { G().played[id] = true; API.save(); }
+  const done = () => { API.save(); API.checkAchievements(); };
+
+  // ---------- Menu ----------
+  const GAMES = [
+    { id: 'formation', icon: 'crown', name: 'f_name', desc: 'f_desc', best: g => g.formation.best ? `${g.formation.best} ${T('f_days').toLowerCase()}` : '—' },
+    { id: 'belgle', icon: 'star', name: 'b_name', desc: 'b_desc', best: g => g.belgle.day === todayKey() && g.belgle.done ? (g.belgle.todayWon ? '✓' : '✗') : '—' },
+    { id: 'chrono', icon: 'clock', name: 'c_name', desc: 'c_desc', best: g => g.chrono.best || '—' },
+    { id: 'tour', icon: 'map', name: 't_name', desc: 't_desc', best: g => g.tour.best ? fmt(g.tour.best) : '—' },
+    { id: 'pom', icon: 'gem', name: 'p_name', desc: 'p_desc', best: g => g.pom.best || '—' },
+  ];
+  const icon = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">${window.ACH_ICONS[n]}</svg>`;
+
+  function renderMenu() {
+    const g = G();
+    $('#games-title').textContent = T('title');
+    $('#games-intro').textContent = T('intro').replace('{cap}', fmt(DAILY_CAP));
+    area().innerHTML = `<div class="games-grid">${GAMES.map(x => `
+      <button class="game-tile" data-game="${x.id}">
+        <span class="game-icon">${icon(x.icon)}</span>
+        <span class="game-text"><b>${T(x.name)}</b><span>${T(x.desc)}</span></span>
+        <span class="game-best"><small>${x.id === 'belgle' ? T('today') : T('best')}</small>${esc(String(x.best(g)))}</span>
+      </button>`).join('')}</div>`;
+  }
+  function header(nameKey, extra = '') {
+    return `<div class="game-head"><button class="btn btn-line game-back">${T('back')}</button><h2>${T(nameKey)}</h2><div class="game-extra">${extra}</div></div>`;
+  }
+  document.addEventListener('click', e => {
+    if (e.target.closest('.game-back')) { SFX.tick(); renderMenu(); window.scrollTo(0, 0); return; }
+    const tile = e.target.closest('.game-tile');
+    if (tile) { SFX.open(); START[tile.dataset.game](); window.scrollTo(0, 0); }
+  });
+
+  // =====================================================================
+  // 1. Formation de gouvernement
+  // =====================================================================
+  // Sièges inspirés des élections fédérales de 2024 ; PTB-PVDA compte dans les deux groupes linguistiques.
+  const PARTIES = [
+    { id: 'nva', name: 'N-VA', seats: 24, group: 'nl', fam: 'jaune' },
+    { id: 'vb', name: 'Vlaams Belang', seats: 20, group: 'nl', fam: 'noir', cordon: true },
+    { id: 'mr', name: 'MR', seats: 20, group: 'fr', fam: 'bleu' },
+    { id: 'ps', name: 'PS', seats: 16, group: 'fr', fam: 'rouge' },
+    { id: 'ptb', name: 'PTB-PVDA', seats: 15, group: 'bi', fam: 'pourpre', fr: 8, nl: 7 },
+    { id: 'le', name: 'Les Engagés', seats: 14, group: 'fr', fam: 'turquoise' },
+    { id: 'vooruit', name: 'Vooruit', seats: 13, group: 'nl', fam: 'rouge' },
+    { id: 'cdv', name: 'CD&V', seats: 11, group: 'nl', fam: 'orange' },
+    { id: 'vld', name: 'Open VLD', seats: 7, group: 'nl', fam: 'bleu' },
+    { id: 'groen', name: 'Groen', seats: 6, group: 'nl', fam: 'vert' },
+    { id: 'ecolo', name: 'Ecolo', seats: 3, group: 'fr', fam: 'vert' },
+    { id: 'defi', name: 'DéFI', seats: 1, group: 'fr', fam: 'magenta' },
+  ];
+  const PARTY_OF = {
+    'N-VA': 'nva', 'Volksunie': 'nva', 'Vlaams Belang': 'vb', 'Vlaams Blok': 'vb', 'MR': 'mr', 'PRL': 'mr', 'PLP': 'mr', 'Parti libéral': 'mr',
+    'PS': 'ps', 'PSB': 'ps', 'POB': 'ps', 'PTB-PVDA': 'ptb', 'Les Engagés': 'le', 'cdH': 'le', 'PSC': 'le', 'CSP': 'le', 'Parti catholique': 'cdv',
+    'Vooruit': 'vooruit', 'sp.a': 'vooruit', 'CD&V': 'cdv', 'Open VLD': 'vld', 'VLD': 'vld', 'Ecolo': 'ecolo', 'Groen': 'groen', 'Agalev': 'groen', 'DéFI': 'defi',
+  };
+  // Partis qui refusent de gouverner ensemble (simplifié)
+  const INCOMPATIBLE = [['ptb', 'mr'], ['ptb', 'nva'], ['ptb', 'vld'], ['ptb', 'le'], ['ptb', 'cdv'], ['defi', 'nva']];
+  const need = p => Math.ceil(p.seats / 4) + 1;
+  const RANK = { commune: 0, 'peu-commune': 1, rare: 2, epique: 3, legendaire: 4, mythique: 5 };
+  let F = null;
+
+  function startFormation() {
+    played('formation');
+    const owned = CARDS.filter(c => c.cat === 'politique' && PARTY_OF[c.party] && API.totalOf(c.id));
+    let deck = owned.map(c => ({ c, guest: false }));
+    const guests = [];
+    if (deck.length < 25) {
+      const pool = shuffle(CARDS.filter(c => c.cat === 'politique' && PARTY_OF[c.party] && !API.totalOf(c.id)));
+      for (const c of pool.slice(0, 25 - deck.length)) guests.push({ c, guest: true });
+      deck = deck.concat(guests);
+    }
+    F = {
+      deck: shuffle(deck), hand: [], days: 0, log: [], over: false,
+      parties: Object.fromEntries(PARTIES.map(p => [p.id, { pts: 0, status: 'open' }])),
+      ownedCount: owned.length, guestCount: guests.length, hasKing: CARDS.some(c => c.cat === 'monarchie' && API.totalOf(c.id)),
+    };
+    for (let i = 0; i < 5; i++) drawF();
+    renderFormation();
+  }
+  function drawF() { if (!F.deck.length) F.deck = shuffle(F.hand.splice(0)); const x = F.deck.pop(); if (x) F.hand.push(x); }
+  const influence = x => Math.max(1, RANK[x.c.rarity] + 1 + (x.c.current ? 1 : 0) - (x.guest ? 1 : 0));
+  const coalition = () => PARTIES.filter(p => F.parties[p.id].status === 'in');
+  const seatsOf = list => list.reduce((s, p) => s + p.seats, 0);
+  const groupSeats = (list, g) => list.reduce((s, p) => s + (p.group === g ? p.seats : p.group === 'bi' ? p[g] : 0), 0);
+
+  function playCard(i) {
+    if (F.over) return;
+    const x = F.hand.splice(i, 1)[0];
+    const pid = PARTY_OF[x.c.party];
+    const p = PARTIES.find(q => q.id === pid);
+    const st = F.parties[pid];
+    F.days += 4 + rand(7);
+    SFX.flip();
+    if (p.cordon) {
+      F.days += 30; F.log.unshift({ t: T('f_cordon'), bad: true }); SFX.error();
+    } else if (st.status === 'open') {
+      st.pts += influence(x);
+      if (st.pts >= need(p)) {
+        st.status = 'in';
+        F.log.unshift({ t: T('f_joined', p.name), good: true });
+        SFX.reveal(3);
+        for (const [a, b] of INCOMPATIBLE) {
+          const other = a === pid ? b : b === pid ? a : null;
+          if (other && F.parties[other].status === 'open') {
+            F.parties[other].status = 'refuse';
+            F.log.unshift({ t: T('f_lock', PARTIES.find(q => q.id === other).name, p.name), bad: true });
+          }
+        }
+      }
+    }
+    if (Math.random() < 0.35) eventF();
+    drawF();
+    checkF();
+    renderFormation();
+  }
+  function eventF() {
+    const open = PARTIES.filter(p => F.parties[p.id].status === 'open' && !p.cordon);
+    const progress = open.filter(p => F.parties[p.id].pts > 0);
+    const ev = pick(['crise', 'fuite', 'sondage', 'roi', 'conclave', 'bhv', 'vacances', 'clarif']);
+    const E = TX[L()].ev;
+    let msg, bad = false;
+    if (ev === 'crise') { F.days += 30; msg = E.crise; bad = true; }
+    else if (ev === 'conclave') { F.days += 14; msg = E.conclave; bad = true; }
+    else if (ev === 'bhv') { F.days += 21; msg = E.bhv; bad = true; }
+    else if (ev === 'vacances') { F.days += 20; msg = E.vacances; bad = true; }
+    else if (ev === 'clarif') { drawF(); drawF(); msg = E.clarif; }
+    else if (ev === 'fuite' && progress.length) { const p = pick(progress); F.parties[p.id].pts = Math.max(0, F.parties[p.id].pts - 2); msg = E.fuite(p.name); bad = true; }
+    else if (ev === 'sondage' && open.length) { const p = pick(open); F.parties[p.id].pts += 2; msg = E.sondage(p.name); }
+    else if (ev === 'roi') {
+      const p = (progress.length ? progress : open).sort((a, b) => F.parties[b.id].pts - F.parties[a.id].pts)[0];
+      if (F.hasKing && p) { F.parties[p.id].pts += 3; msg = E.roi(p.name); } else msg = E.roi0;
+    } else return;
+    // Un parti peut franchir son seuil grâce à un événement
+    for (const p of PARTIES) if (F.parties[p.id].status === 'open' && !p.cordon && F.parties[p.id].pts >= need(p)) F.parties[p.id].status = 'in';
+    F.log.unshift({ t: msg, bad, ev: true });
+    bad ? SFX.error() : SFX.shimmer();
+  }
+  function reshuffle() {
+    if (F.over) return;
+    F.days += 10;
+    F.deck = shuffle(F.deck.concat(F.hand.splice(0)));
+    for (let i = 0; i < 5; i++) drawF();
+    SFX.deal(0); SFX.deal(1); SFX.deal(2);
+    checkF(); renderFormation();
+  }
+  function checkF() {
+    const co = coalition();
+    const seats = seatsOf(co);
+    const hasFr = co.some(p => p.group !== 'nl'), hasNl = co.some(p => p.group !== 'fr');
+    const g = G().formation;
+    if (seats >= 76 && hasFr && hasNl) {
+      F.over = 'win';
+      const both = groupSeats(co, 'fr') > 31 && groupSeats(co, 'nl') > 44;
+      F.both = both;
+      g.played++; g.won++;
+      if (!g.best || F.days < g.best) g.best = F.days;
+      if (both) g.both = 1;
+      SFX.fanfare(true);
+      setTimeout(() => reward(Math.max(100, 900 - F.days) + (both ? 200 : 0)), 600);
+      done();
+    } else if (F.days > 600) {
+      F.over = 'lose'; g.played++; SFX.error(); done();
+    }
+  }
+  function renderFormation() {
+    const co = coalition();
+    const seats = seatsOf(co);
+    const grp = p => p.group === 'bi' ? T('f_bi') : T('f_' + p.group);
+    area().innerHTML = header('f_name', `<span class="gstat"><small>${T('f_days')}</small><b class="${F.days > 541 ? 'bad' : ''}">${F.days}</b></span><span class="gstat"><small>${T('f_seats')}</small><b>${seats}/76</b></span>`) + `
+      <p class="game-rules">${T('f_rules')}</p>
+      <div class="hemi"><div class="hemi-bar">${co.map(p => `<span style="flex:${p.seats};background:var(--p-${p.fam})" title="${p.name}"></span>`).join('')}<span style="flex:${Math.max(0, 150 - seats)}" class="hemi-rest"></span></div><i class="hemi-mark"></i></div>
+      <div class="parties">${PARTIES.map(p => {
+        const st = F.parties[p.id];
+        const pct = Math.min(100, st.pts / need(p) * 100);
+        return `<div class="party-tile is-${st.status}${p.cordon ? ' is-cordon' : ''}" style="--fam: var(--p-${p.fam})">
+          <div class="pt-head"><b>${p.name}</b><span>${p.seats}</span></div>
+          <small>${grp(p)}${st.status === 'in' ? ` · ${T('f_in')}` : st.status === 'refuse' ? ` · ${T('f_refuse')}` : p.cordon ? ' · cordon' : ` · ${st.pts}/${T('f_need', need(p))}`}</small>
+          <div class="bar"><span style="width:${st.status === 'in' ? 100 : pct}%"></span></div>
+        </div>`;
+      }).join('')}</div>
+      ${F.over ? `<div class="game-result ${F.over}"><b>${F.over === 'win' ? T('f_win', F.days) : T('f_lose')}</b>${F.over === 'win' && F.both ? `<span>${T('f_both')}</span>` : ''}<button class="btn btn-gold" id="f-again">${T('again')}</button></div>` : `
+      <div class="hand-head"><h3>${T('f_hand')}</h3><button class="btn btn-line" id="f-reshuffle">${T('f_reshuffle')}</button></div>
+      <div class="hand">${F.hand.map((x, i) => {
+        const pid = PARTY_OF[x.c.party]; const p = PARTIES.find(q => q.id === pid); const st = F.parties[pid];
+        const useless = st.status !== 'open';
+        return `<button class="mini${useless ? ' is-useless' : ''}" data-i="${i}" style="--fam: var(--p-${p.fam})">
+          <span class="mini-img" style="background-image:url('${imgUrl(x.c.img, 200)}')"></span>
+          <span class="mini-party">${p.name}</span>
+          <b>${esc(nm(x.c))}</b>
+          <span class="mini-foot"><span class="gem" style="background:var(--r-${x.c.rarity})"></span>+${influence(x)}${x.guest ? ` · ${T('f_guest')}` : ''}</span>
+        </button>`;
+      }).join('')}</div>
+      <p class="muted small">${T('f_deck', F.ownedCount, F.guestCount)}</p>`}
+      <ul class="game-log">${F.log.slice(0, 8).map(l => `<li class="${l.good ? 'good' : l.bad ? 'bad' : ''}">${esc(l.t)}</li>`).join('')}</ul>`;
+    area().querySelectorAll('.hand .mini').forEach(b => b.addEventListener('click', () => playCard(+b.dataset.i)));
+    $('#f-reshuffle')?.addEventListener('click', reshuffle);
+    $('#f-again')?.addEventListener('click', startFormation);
+  }
+
+  // =====================================================================
+  // 2. Belgle (carte du jour)
+  // =====================================================================
+  const BELGLE_POOL = CARDS.filter(c => c.img && !['province', 'region', 'evenement'].includes(c.cat) &&
+    (c.cat === 'commune' ? ['legendaire', 'mythique', 'epique'].includes(c.rarity) : ['rare', 'epique', 'legendaire', 'mythique'].includes(c.rarity)))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  function dailyCard(day) {
+    let h = 2166136261;
+    for (const ch of 'belgle-' + day) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+    return BELGLE_POOL[(h >>> 0) % BELGLE_POOL.length];
+  }
+  const yearOf = c => {
+    if (c.cat === 'evenement') return +(String(c.subtitle).match(/\d{4}/) || [])[0] || null;
+    const s = c.stats.find(([k, v]) => ['Naissance', 'Fondation', 'Année', 'Formation', 'Création'].includes(k) && /^\d{3,4}$/.test(String(v)));
+    return s ? { year: +s[1], kind: s[0] } : null;
+  };
+  function startBelgle() {
+    played('belgle');
+    const g = G().belgle;
+    const day = todayKey();
+    if (g.day !== day) { g.day = day; g.guesses = []; g.done = false; g.todayWon = false; API.save(); }
+    renderBelgle();
+  }
+  function belgleGuess(name) {
+    const g = G().belgle;
+    if (g.done) return;
+    const target = dailyCard(g.day);
+    const card = CARDS.find(c => nm(c).toLowerCase() === name.trim().toLowerCase() || c.name.toLowerCase() === name.trim().toLowerCase());
+    if (!card) { SFX.error(); toast(T('b_unknown')); return; }
+    g.guesses.push(card.id);
+    if (card.id === target.id) {
+      g.done = true; g.todayWon = true; g.won++;
+      if (g.guesses.length === 1) g.first = 1;
+      const yesterday = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+      g.streak = g.last === yesterday ? g.streak + 1 : 1;
+      g.last = g.day; g.maxStreak = Math.max(g.maxStreak, g.streak);
+      SFX.fanfare(false);
+      setTimeout(() => reward(200 - 25 * (g.guesses.length - 1)), 500);
+    } else if (g.guesses.length >= 6) {
+      g.done = true; g.streak = 0; SFX.error();
+    } else SFX.error();
+    done();
+    renderBelgle();
+  }
+  function renderBelgle() {
+    const g = G().belgle;
+    const c = dailyCard(g.day);
+    const wrong = g.guesses.filter(id => id !== c.id).length;
+    const blur = g.done ? 0 : [26, 20, 14, 9, 5, 2][Math.min(wrong, 5)];
+    const y = yearOf(c);
+    const decade = y ? `${Math.floor(y.year / 10) * 10}s` : null;
+    const hints = [
+      [T('b_cat'), window.RDL.catLabel(c.cat)],
+      [T('b_rar'), window.RDL.rarityLabel(c.rarity)],
+      [T('b_sub'), window.I18N.subtitle(c)],
+      [c.coord || /Province|Bruxelles/.test(c.subtitle || '') ? T('b_place') : T('b_era'), decade || window.I18N.meta(c) || '—'],
+      [T('b_init'), nm(c).split(/[\s-]+/).map(w => w[0]).join('. ') + '.'],
+    ];
+    const shown = g.done ? hints.length : Math.min(wrong + 1, hints.length);
+    const squares = g.guesses.map(id => id === c.id ? '🟩' : '🟥').join('') + '⬜'.repeat(Math.max(0, 6 - g.guesses.length));
+    area().innerHTML = header('b_name', `<span class="gstat"><small>${T('today')}</small><b>${g.day}</b></span><span class="gstat"><small>🔥</small><b>${g.streak}</b></span>`) + `
+      <div class="belgle">
+        <div class="belgle-photo"><img src="${imgUrl(c.img, 500)}" alt="" style="filter: blur(${blur}px) ${g.done ? '' : 'grayscale(.3)'}"></div>
+        <div class="belgle-side">
+          <h3>${T('b_hints')}</h3>
+          <dl class="belgle-hints">${hints.slice(0, shown).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+          <div class="belgle-squares">${squares}</div>
+          <ol class="belgle-guesses">${g.guesses.map(id => `<li class="${id === c.id ? 'good' : 'bad'}">${esc(nm(API.BY_ID.get(id)))}</li>`).join('')}</ol>
+          ${g.done ? `<div class="game-result ${g.todayWon ? 'win' : 'lose'}"><b>${g.todayWon ? T('b_win', g.guesses.length) : T('b_lose')}</b><span class="belgle-answer">${esc(nm(c))}</span>
+              <button class="btn btn-gold" id="b-share">${T('b_share')}</button><small>${T('b_next')} · ${T('b_streak', g.streak)}</small></div>`
+          : `<form class="belgle-form" autocomplete="off"><input id="b-input" list="b-list" placeholder="${T('b_ph')}" autofocus><button class="btn">${T('b_guess')}</button></form>
+             <datalist id="b-list">${[...new Set(CARDS.map(nm))].sort().map(n => `<option value="${esc(n)}">`).join('')}</datalist>`}
+        </div>
+      </div>`;
+    area().querySelector('.belgle-form')?.addEventListener('submit', e => { e.preventDefault(); belgleGuess($('#b-input').value); });
+    $('#b-share')?.addEventListener('click', () => {
+      const txt = `Belgle ${g.day} · ${g.todayWon ? g.guesses.length : 'X'}/6\n${squares}\n${location.origin}`;
+      navigator.clipboard?.writeText(txt).then(() => toast(T('b_copied')), () => toast(txt));
+    });
+  }
+
+  // =====================================================================
+  // 3. Chronologie
+  // =====================================================================
+  const CHRONO_POOL = CARDS.map(c => {
+    const y = yearOf(c);
+    if (!y) return null;
+    return typeof y === 'number' ? { c, year: y, kind: 'event' } : { c, year: y.year, kind: y.kind };
+  }).filter(Boolean).filter(x => x.c.img || x.c.cat === 'evenement').filter(x => x.c.cat !== 'politique' || ['rare', 'epique', 'legendaire', 'mythique'].includes(x.c.rarity));
+  let C = null;
+  function startChrono() {
+    played('chrono');
+    // Varier les catégories et éviter deux fois la même année
+    const used = new Set();
+    const deck = shuffle(CHRONO_POOL.slice()).filter(x => !used.has(x.year) && used.add(x.year));
+    C = { deck, line: [deck.pop()], cur: deck.pop(), streak: 0, over: false, wrongAt: null };
+    renderChrono();
+  }
+  function placeChrono(i) {
+    if (C.over) return;
+    const before = C.line[i - 1], after = C.line[i];
+    const ok = (!before || before.year <= C.cur.year) && (!after || C.cur.year <= after.year);
+    if (ok) {
+      C.line.splice(i, 0, C.cur); C.streak++; SFX.reveal(Math.min(5, 2 + Math.floor(C.streak / 3)));
+      if (C.streak % 5 === 0) reward(30);
+      C.cur = C.deck.pop();
+      if (!C.cur) C.over = true;
+    } else {
+      C.over = true; C.wrongAt = C.cur; SFX.error();
+      const g = G().chrono; if (C.streak > g.best) g.best = C.streak;
+      reward(C.streak * 8);
+      done();
+    }
+    renderChrono();
+  }
+  const chronoTile = (x, reveal) => `<div class="ctile${x.c.cat === 'evenement' ? ' is-event' : ''}">
+      ${x.c.img ? `<span class="ctile-img" style="background-image:url('${imgUrl(x.c.img, 200)}')"></span>` : `<span class="ctile-img ctile-ev">${esc(String(x.year))}</span>`}
+      <b>${esc(nm(x.c))}</b><small>${TX[L()].c_kind[x.kind] || ''}</small>
+      ${reveal ? `<span class="ctile-year">${x.year}</span>` : '<span class="ctile-year">?</span>'}</div>`;
+  function renderChrono() {
+    area().innerHTML = header('c_name', `<span class="gstat"><small>${T('p_streak', '').replace(/\s*$/, '')}</small><b>${C.streak}</b></span><span class="gstat"><small>${T('best')}</small><b>${G().chrono.best}</b></span>`) + `
+      ${C.over ? `<div class="game-result lose"><b>${T('c_over', C.streak)}</b>${C.wrongAt ? `<span>${esc(nm(C.wrongAt.c))} : ${C.wrongAt.year}</span>` : ''}<button class="btn btn-gold" id="c-again">${T('again')}</button></div>`
+        : `<div class="chrono-current"><p>${T('c_place')}</p>${chronoTile(C.cur, false)}</div>`}
+      <div class="timeline">${C.line.map((x, i) => `${C.over ? '' : `<button class="gap" data-i="${i}">${T('c_here')}</button>`}${chronoTile(x, true)}`).join('')}${C.over ? '' : `<button class="gap" data-i="${C.line.length}">${T('c_here')}</button>`}</div>`;
+    area().querySelectorAll('.gap').forEach(b => b.addEventListener('click', () => placeChrono(+b.dataset.i)));
+    $('#c-again')?.addEventListener('click', startChrono);
+  }
+
+  // =====================================================================
+  // 4. Tour de Belgique
+  // =====================================================================
+  const OUTLINE = window.BELGIUM || [];
+  const LAT0 = 50.5, KX = Math.cos(LAT0 * Math.PI / 180);
+  const lats = OUTLINE.map(p => p[0]), lons = OUTLINE.map(p => p[1]);
+  const B = { latMin: Math.min(...lats), latMax: Math.max(...lats), lonMin: Math.min(...lons), lonMax: Math.max(...lons) };
+  const SCALE = 1000 / ((B.lonMax - B.lonMin) * KX);
+  const proj = ([lat, lon]) => [(lon - B.lonMin) * KX * SCALE, (B.latMax - lat) * SCALE];
+  const unproj = (x, y) => [B.latMax - y / SCALE, x / (KX * SCALE) + B.lonMin];
+  const W = 1000, H = Math.round((B.latMax - B.latMin) * SCALE);
+  const haversine = ([a, b], [c, d]) => {
+    const R = 6371, r = Math.PI / 180;
+    const x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(x));
+  };
+  const TOUR_POOL = CARDS.filter(c => c.coord && (c.cat !== 'commune' || c.rarity !== 'commune'));
+  let TR = null;
+  function startTour() {
+    played('tour');
+    const communes = shuffle(TOUR_POOL.filter(c => c.cat === 'commune')).slice(0, 5);
+    const others = shuffle(TOUR_POOL.filter(c => c.cat !== 'commune')).slice(0, 5);
+    TR = { rounds: shuffle(communes.concat(others)), i: 0, total: 0, guess: null, scores: [] };
+    renderTour();
+  }
+  function tourClick(e) {
+    if (TR.guess) return;
+    const svg = e.currentTarget;
+    const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    const ll = unproj(p.x, p.y);
+    const c = TR.rounds[TR.i];
+    const d = haversine(ll, c.coord);
+    const score = Math.round(1000 * Math.exp(-d / 30));
+    TR.guess = { ll, d, score };
+    TR.total += score; TR.scores.push(score);
+    if (d < 5) G().tour.bull = 1;
+    score > 700 ? SFX.reveal(4) : score > 300 ? SFX.reveal(2) : SFX.error();
+    renderTour();
+  }
+  function tourNext() {
+    TR.i++; TR.guess = null;
+    if (TR.i >= TR.rounds.length) {
+      const g = G().tour; if (TR.total > g.best) g.best = TR.total;
+      if (TR.total > 7000) SFX.fanfare(TR.total > 9000);
+      reward(Math.round(TR.total / 25));
+      done();
+    }
+    renderTour();
+  }
+  function renderTour() {
+    const ended = TR.i >= TR.rounds.length;
+    const c = TR.rounds[Math.min(TR.i, TR.rounds.length - 1)];
+    const path = 'M' + OUTLINE.map(p => proj(p).map(v => v.toFixed(1)).join(',')).join('L') + 'Z';
+    let marks = '';
+    if (TR.guess && !ended) {
+      const [gx, gy] = proj(TR.guess.ll), [tx, ty] = proj(c.coord);
+      marks = `<line x1="${gx}" y1="${gy}" x2="${tx}" y2="${ty}" class="tour-line"/><circle cx="${gx}" cy="${gy}" r="9" class="tour-guess"/><circle cx="${tx}" cy="${ty}" r="11" class="tour-true"/>`;
+    }
+    area().innerHTML = header('t_name', `<span class="gstat"><small>${T('t_round', Math.min(TR.i + 1, 10), 10)}</small><b>${fmt(TR.total)}</b></span><span class="gstat"><small>${T('best')}</small><b>${fmt(G().tour.best)}</b></span>`) + `
+      ${ended ? `<div class="game-result win"><b>${T('t_total', fmt(TR.total))}</b><span>${TR.scores.map(s => s >= 700 ? '🟩' : s >= 300 ? '🟨' : '🟥').join('')}</span><button class="btn btn-gold" id="t-again">${T('again')}</button></div>` : `
+      <div class="tour-q">
+        ${c.img ? `<span class="tour-img" style="background-image:url('${imgUrl(c.img, 200)}')"></span>` : ''}
+        <div><small>${T('t_where')}</small><b>${esc(nm(c))}</b><span>${esc(window.RDL.catLabel(c.cat))} · ${esc(window.I18N.subtitle(c))}</span></div>
+        ${TR.guess ? `<div class="tour-score"><b>${TR.guess.score}</b><small>${T('t_dist', Math.round(TR.guess.d), TR.guess.score)}</small><button class="btn btn-gold" id="t-next">${TR.i === 9 ? T('t_end') : T('t_next')}</button></div>` : ''}
+      </div>`}
+      <svg class="tour-map${TR.guess || ended ? '' : ' is-active'}" viewBox="-20 -20 ${W + 40} ${H + 40}"><path d="${path}" class="tour-land"/>${marks}</svg>`;
+    if (!ended && !TR.guess) area().querySelector('.tour-map').addEventListener('click', tourClick);
+    $('#t-next')?.addEventListener('click', tourNext);
+    $('#t-again')?.addEventListener('click', startTour);
+  }
+
+  // =====================================================================
+  // 5. Plus ou moins
+  // =====================================================================
+  const num = v => +String(v).replace(/[^\d]/g, '') || 0;
+  const POM = {
+    pop: CARDS.filter(c => c.cat === 'commune' && c.rarity !== 'commune').map(c => ({ c, v: num(c.stats[0][1]) })).filter(x => x.v),
+    wiki: CARDS.filter(c => c.img && c.stats.some(([k]) => k === 'Wikipédias')).map(c => ({ c, v: num(c.stats.find(([k]) => k === 'Wikipédias')[1]) })).filter(x => x.v),
+  };
+  let P = null;
+  function pomPair(mode, keep) {
+    const pool = POM[mode];
+    let b;
+    do { b = pick(pool); } while (keep && (b.c.id === keep.c.id || b.v === keep.v));
+    return b;
+  }
+  function startPom() {
+    played('pom');
+    const mode = pick(['pop', 'wiki']);
+    const a = pick(POM[mode]);
+    P = { mode, a, b: pomPair(mode, a), streak: 0, over: false, reveal: false };
+    renderPom();
+  }
+  function pomAnswer(more) {
+    if (P.over || P.reveal) return;
+    const ok = more ? P.b.v >= P.a.v : P.b.v <= P.a.v;
+    P.reveal = true;
+    renderPom();
+    if (ok) {
+      P.streak++; SFX.reveal(Math.min(5, 2 + Math.floor(P.streak / 3)));
+      if (P.streak % 5 === 0) reward(30);
+      setTimeout(() => {
+        // Changer de mode de temps en temps
+        if (Math.random() < 0.3) { P.mode = P.mode === 'pop' ? 'wiki' : 'pop'; P.a = pick(POM[P.mode]); } else P.a = P.b;
+        P.b = pomPair(P.mode, P.a); P.reveal = false; renderPom();
+      }, 1100);
+    } else {
+      P.over = true; SFX.error();
+      const g = G().pom; if (P.streak > g.best) g.best = P.streak;
+      setTimeout(() => { reward(P.streak * 8); done(); renderPom(); }, 900);
+    }
+  }
+  function renderPom() {
+    const unit = P.mode === 'pop' ? T('p_pop') : T('p_wiki');
+    const side = (x, show) => `<div class="pom-card">
+      <span class="pom-img" style="background-image:url('${imgUrl(x.c.img || '', 400)}')"></span>
+      <div class="pom-info"><b>${esc(nm(x.c))}</b><small>${esc(window.I18N.subtitle(x.c))}</small>
+      <span class="pom-val">${show ? `${fmt(x.v)} <em>${unit}</em>` : '?'}</span></div></div>`;
+    area().innerHTML = header('p_name', `<span class="gstat"><small>${T('p_streak', '').replace(/\s*$/, '')}</small><b>${P.streak}</b></span><span class="gstat"><small>${T('best')}</small><b>${G().pom.best}</b></span>`) + `
+      <div class="pom">
+        ${side(P.a, true)}
+        <div class="pom-mid">
+          <b class="pom-vs">VS</b>
+          <p>${esc(T(P.mode === 'pop' ? 'p_qpop' : 'p_qwiki', nm(P.b.c), nm(P.a.c)))}</p>
+          ${P.over ? `<div class="game-result lose"><b>${T('p_over', P.streak)}</b><button class="btn btn-gold" id="p-again">${T('again')}</button></div>`
+            : `<div class="pom-btns"><button class="btn btn-gold" id="p-more">▲ ${T('p_more')}</button><button class="btn btn-line" id="p-less">▼ ${T('p_less')}</button></div>`}
+        </div>
+        ${side(P.b, P.reveal || P.over)}
+      </div>`;
+    $('#p-more')?.addEventListener('click', () => pomAnswer(true));
+    $('#p-less')?.addEventListener('click', () => pomAnswer(false));
+    $('#p-again')?.addEventListener('click', startPom);
+  }
+
+  const START = { formation: startFormation, belgle: startBelgle, chrono: startChrono, tour: startTour, pom: startPom };
+  window.GAMES_UI = { renderMenu, TX };
+})();

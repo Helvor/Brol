@@ -1,0 +1,173 @@
+// Traductions FR / NL : interface et données des cartes
+(() => {
+  'use strict';
+
+  const UI = {
+    fr: {
+      'tab.shop': 'Paquets', 'tab.binder': 'Album', 'tab.series': 'Séries', 'tab.ach': 'Succès', 'tab.games': 'Jeux',
+      'shop.title': 'Paquets', 'binder.title': 'Album', 'series.title': 'Séries', 'ach.title': 'Succès',
+      'search': 'Rechercher', 'owned': 'Possédées', 'specials': 'Versions spéciales', 'sellAll': 'Vendre les doublons',
+      'allRarities': 'Toutes les raretés', 'all': 'Tout', 'liveGov': 'Gouvernement actuel',
+      'hint': 'Clique pour déchirer', 'flipAll': 'Tout retourner', 'toAlbum': 'Voir l’album', 'close': 'Fermer',
+      'credits': 'Données : <a href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a> (CC0) et Wikipédia. Images : <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>, auteurs et licences sur la page de chaque fichier. Carte : © contributeurs <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>.',
+      'reset': 'Réinitialiser la partie', 'resetConfirm': 'Effacer ta collection et recommencer ?',
+      'cards5': '5 CARTES', 'openHere': 'OUVRIR ICI', 'seal': 'BROL · CARTES DE COLLECTION · BELGIQUE · ',
+      'back': 'Collection', 'backSeal': 'BROL · CARTES · BELGIQUE · ',
+      'free': n => `${n} gratuit${n > 1 ? 's' : ''}`, 'freeIn': t => `+1 dans ${t}`, 'freeFull': 'réserve pleine',
+      'pity': n => n <= 1 ? 'Légendaire garantie au prochain paquet' : `Légendaire garantie dans ${n} paquets au plus`,
+      'oddsNote': b => `Par carte. 5ᵉ carte rare ou mieux · nouvelle carte +${b} pièces · les paquets gratuits passent en premier`,
+      'noCoins': 'Pas assez de pièces', 'freePack': 'Paquet gratuit', 'paid': p => `−${p} pièces`,
+      'new': 'Nouvelle', 'dup': 'Doublon',
+      'summary': (n, d, s, b) => `<b>${n}</b> nouvelle${n > 1 ? 's' : ''} · ${d} doublon${d > 1 ? 's' : ''}${s ? ` · <b>${s}</b> version${s > 1 ? 's' : ''} spéciale${s > 1 ? 's' : ''}` : ''}${b ? ` · <b>+${b}</b> pièces` : ''}`,
+      'pityHit': 'Garantie anti-malchance déclenchée !',
+      'again': p => p === null ? 'Rouvrir · gratuit' : `Rouvrir · ${p}`,
+      'binderSummary': (o, t, s, p, d) => `${o} sur ${t} cartes · ${s} version${s > 1 ? 's' : ''} spéciale${s > 1 ? 's' : ''} · ${p} paquet${p > 1 ? 's' : ''} · ${d} doublon${d > 1 ? 's' : ''}`,
+      'emptyOwned': 'Aucune carte ici pour l’instant.', 'emptyAll': 'Aucune carte ne correspond.',
+      'more': n => `Afficher plus (${n})`,
+      'sellConfirm': (n, g) => `Vendre ${n} doublon${n > 1 ? 's' : ''} pour ${g} pièces ?\nUn exemplaire de chaque version est gardé.`,
+      'coinsPlus': g => `+${g} pièces`,
+      'seriesSummary': (d, t) => `${d} série${d > 1 ? 's' : ''} complétée${d > 1 ? 's' : ''} sur ${t} · une récompense par série complète`,
+      'seriesBanner': 'Série', 'clearFilter': 'Retirer le filtre', 'claim': 'Récupérer', 'claimed': 'Récompense reçue', 'see': 'Voir les cartes',
+      'seriesDone': g => `Série complète : +${g} pièces`,
+      'wikidata': 'Fiche Wikidata', 'imgCredit': 'Crédit de l’image', 'coaCredit': 'Crédit du blason',
+      'copies': 'Exemplaires', 'value': 'Valeur', 'coins': n => `${n} pièces`, 'party': 'Parti',
+      'sellOne': v => `Vendre un doublon · +${v}`, 'seriesH': 'Séries', 'career': 'Parcours',
+      'achSummary': (u, t, c) => `${u} sur ${t} succès · ${c} pièces gagnées grâce aux succès`,
+      'achUnlocked': 'Succès débloqué', 'secret': 'Succès secret', 'secretDesc': 'Continue à jouer pour le découvrir.',
+      'themeAuto': 'Thème : automatique', 'themeLight': 'Thème : clair', 'themeDark': 'Thème : sombre',
+      'soundOn': 'Son activé', 'soundOff': 'Son coupé', 'versionsOwned': 'Versions possédées',
+      'gov': 'Gouv.', 'live': 'en fonction', 'leg': n => `${n}ᵉ législature`,
+    },
+    nl: {
+      'tab.shop': 'Pakjes', 'tab.binder': 'Album', 'tab.series': 'Reeksen', 'tab.ach': 'Prestaties', 'tab.games': 'Spellen',
+      'shop.title': 'Pakjes', 'binder.title': 'Album', 'series.title': 'Reeksen', 'ach.title': 'Prestaties',
+      'search': 'Zoeken', 'owned': 'In bezit', 'specials': 'Speciale versies', 'sellAll': 'Dubbels verkopen',
+      'allRarities': 'Alle zeldzaamheden', 'all': 'Alles', 'liveGov': 'Huidige regering',
+      'hint': 'Klik om open te scheuren', 'flipAll': 'Alles omdraaien', 'toAlbum': 'Naar het album', 'close': 'Sluiten',
+      'credits': 'Gegevens: <a href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a> (CC0) en Wikipedia. Afbeeldingen: <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>, auteurs en licenties op de pagina van elk bestand. Kaart: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-bijdragers.',
+      'reset': 'Spel resetten', 'resetConfirm': 'Je verzameling wissen en opnieuw beginnen?',
+      'cards5': '5 KAARTEN', 'openHere': 'HIER OPENEN', 'seal': 'BROL · VERZAMELKAARTEN · BELGIË · ',
+      'back': 'Verzameling', 'backSeal': 'BROL · KAARTEN · BELGIË · ',
+      'free': n => `${n} gratis`, 'freeIn': t => `+1 over ${t}`, 'freeFull': 'reserve vol',
+      'pity': n => n <= 1 ? 'Legendarische kaart gegarandeerd in het volgende pakje' : `Legendarische kaart gegarandeerd binnen ${n} pakjes`,
+      'oddsNote': b => `Per kaart. 5e kaart zeldzaam of beter · nieuwe kaart +${b} munten · gratis pakjes worden eerst gebruikt`,
+      'noCoins': 'Niet genoeg munten', 'freePack': 'Gratis pakje', 'paid': p => `−${p} munten`,
+      'new': 'Nieuw', 'dup': 'Dubbel',
+      'summary': (n, d, s, b) => `<b>${n}</b> nieuw · ${d} dubbel${d > 1 ? 's' : ''}${s ? ` · <b>${s}</b> speciale versie${s > 1 ? 's' : ''}` : ''}${b ? ` · <b>+${b}</b> munten` : ''}`,
+      'pityHit': 'Pechgarantie geactiveerd!',
+      'again': p => p === null ? 'Nog een · gratis' : `Nog een · ${p}`,
+      'binderSummary': (o, t, s, p, d) => `${o} van ${t} kaarten · ${s} speciale versie${s > 1 ? 's' : ''} · ${p} pakje${p > 1 ? 's' : ''} · ${d} dubbel${d > 1 ? 's' : ''}`,
+      'emptyOwned': 'Hier nog geen kaarten.', 'emptyAll': 'Geen kaarten gevonden.',
+      'more': n => `Meer tonen (${n})`,
+      'sellConfirm': (n, g) => `${n} dubbel${n > 1 ? 's' : ''} verkopen voor ${g} munten?\nVan elke versie blijft één exemplaar over.`,
+      'coinsPlus': g => `+${g} munten`,
+      'seriesSummary': (d, t) => `${d} van ${t} reeksen voltooid · een beloning per volledige reeks`,
+      'seriesBanner': 'Reeks', 'clearFilter': 'Filter wissen', 'claim': 'Ophalen', 'claimed': 'Beloning ontvangen', 'see': 'Kaarten bekijken',
+      'seriesDone': g => `Reeks voltooid: +${g} munten`,
+      'wikidata': 'Wikidata-fiche', 'imgCredit': 'Bron van de afbeelding', 'coaCredit': 'Bron van het wapen',
+      'copies': 'Exemplaren', 'value': 'Waarde', 'coins': n => `${n} munten`, 'party': 'Partij',
+      'sellOne': v => `Dubbel verkopen · +${v}`, 'seriesH': 'Reeksen', 'career': 'Loopbaan',
+      'achSummary': (u, t, c) => `${u} van ${t} prestaties · ${c} munten verdiend met prestaties`,
+      'achUnlocked': 'Prestatie ontgrendeld', 'secret': 'Geheime prestatie', 'secretDesc': 'Blijf spelen om ze te ontdekken.',
+      'themeAuto': 'Thema: automatisch', 'themeLight': 'Thema: licht', 'themeDark': 'Thema: donker',
+      'soundOn': 'Geluid aan', 'soundOff': 'Geluid uit', 'versionsOwned': 'Versies in bezit',
+      'gov': 'Reg.', 'live': 'in functie', 'leg': n => `${n}e zittingsperiode`,
+    },
+  };
+
+  // Valeurs exactes (sous-titres, stats, morceaux de méta)
+  const VAL = {
+    'Plat': 'Gerecht', 'Snack': 'Snack', 'Sucré': 'Zoet', 'Douceur': 'Zoetigheid', 'Trappiste': 'Trappist', 'Abbaye': 'Abdijbier',
+    'Blanche': 'Witbier', 'Pils': 'Pils', 'Ambrée': 'Amber', 'Blonde': 'Blond', 'Blonde forte': 'Sterk blond', 'Triple': 'Tripel',
+    'Lambic': 'Lambiek', 'Brasserie': 'Brouwerij', 'Rouge des Flandres': 'Vlaams rood', 'Saison': 'Saison', 'Bière': 'Bier',
+    'Place': 'Plein', 'Palais': 'Paleis', 'Basilique': 'Basiliek', 'Cathédrale': 'Kathedraal', 'Beffroi': 'Belfort', 'Galerie': 'Galerij',
+    'Arc': 'Triomfboog', 'Gare': 'Station', 'Citadelle': 'Citadel', 'Ouvrage d\'art': 'Kunstwerk', 'Collégiale': 'Collegiale kerk',
+    'Porte': 'Poort', 'Mémorial': 'Gedenkteken', 'Halle': 'Lakenhalle', 'Jardin': 'Tuin', 'Serres': 'Serres', 'Hôtel de ville': 'Stadhuis',
+    'Béguinage': 'Begijnhof', 'Abbaye ': 'Abdij', 'Château fort': 'Burcht', 'Château': 'Kasteel', 'Résidence royale': 'Koninklijke residentie',
+    'Ruines': 'Ruïne', 'Carnaval': 'Carnaval', 'Personnage': 'Figuur', 'Ducasse': 'Kermis', 'Cortège': 'Stoet', 'Procession': 'Processie',
+    'Fête': 'Feest', 'Marche': 'Mars', 'Tradition': 'Traditie', 'Oui': 'Ja', 'Université': 'Universiteit', 'Haute école': 'Hogeschool',
+    'École d\'art': 'Kunstschool', 'Province': 'Provincie', 'Région': 'Gewest', 'Roi des Belges': 'Koning der Belgen',
+    'Député fédéral': 'Federaal volksvertegenwoordiger', 'Premier ministre': 'Eerste minister', 'Œuvre': 'Kunstwerk', 'Règne': 'Regeert',
+    'Statut': 'Status', 'Bruxelles-Capitale': 'Brussels Hoofdstedelijk Gewest', 'National': 'Nationaal', 'Monument': 'Monument',
+    'Wallonie': 'Wallonië', 'Flandre': 'Vlaanderen', 'Bruxelles': 'Brussel', 'Belgique': 'België',
+    'Bande dessinée': 'Strips', 'BD': 'Strips', 'Musique': 'Muziek', 'Cinéma': 'Film', 'Médias': 'Media', 'Arts & sciences': 'Kunst & wetenschap',
+    'Arts': 'Kunst', 'Football': 'Voetbal', 'Cyclisme': 'Wielrennen', 'Tennis': 'Tennis', 'Athlétisme': 'Atletiek', 'Moteur': 'Motorsport',
+    'Sports mécaniques': 'Motorsport', 'Basket': 'Basketbal', 'Fléchettes': 'Darts', 'Judo': 'Judo', 'Snooker': 'Snooker', 'Sport': 'Sport',
+    'Électro': 'Elektro', 'Humour': 'Humor', 'Alternatif': 'Alternatief', 'Musiques du monde': 'Wereldmuziek', 'Fête populaire': 'Volksfeest',
+    'Groupe': 'Groep', 'Festival': 'Festival', 'Folklore': 'Folklore',
+    // Provinces et chefs-lieux
+    'Anvers': 'Antwerpen', 'Limbourg': 'Limburg', 'Flandre-Orientale': 'Oost-Vlaanderen', 'Flandre-Occidentale': 'West-Vlaanderen',
+    'Brabant flamand': 'Vlaams-Brabant', 'Brabant wallon': 'Waals-Brabant', 'Hainaut': 'Henegouwen', 'Liège': 'Luik', 'Luxembourg': 'Luxemburg',
+    'Namur': 'Namen', 'Bruges': 'Brugge', 'Gand': 'Gent', 'Louvain': 'Leuven', 'Wavre': 'Waver', 'Arlon': 'Aarlen', 'Mons': 'Bergen',
+    'Région flamande': 'Vlaams Gewest', 'Région wallonne': 'Waals Gewest', 'Région de Bruxelles-Capitale': 'Brussels Hoofdstedelijk Gewest',
+  };
+  const STAT = {
+    'Naissance': 'Geboren', 'Décès': 'Overleden', 'Parti': 'Partij', 'Années au 16': 'Jaren in de Wetstraat', 'Gouvernements': 'Regeringen',
+    'Mandats': 'Mandaten', 'Législatures': 'Zittingsper.', 'Habitants': 'Inwoners', 'Superficie': 'Oppervlakte', 'Densité': 'Dichtheid',
+    'Chef-lieu': 'Hoofdplaats', 'Années de règne': 'Regeringsjaren', 'Domaine': 'Domein', 'Wikipédias': 'Wikipedia’s', 'Discipline': 'Discipline',
+    'Fondation': 'Opgericht', 'Étudiants': 'Studenten', 'Ville': 'Stad', 'Type': 'Type', 'Région': 'Gewest', 'Année': 'Jaar',
+    'Artiste': 'Kunstenaar', 'Genre': 'Genre', 'Formation': 'Opgericht', 'Création': 'Opgericht', 'UNESCO': 'UNESCO', 'Jours': 'Dagen',
+    'Élections': 'Verkiezingen', 'Gouvernement': 'Regering', 'Avant': 'Voor', 'Après': 'Na', 'Communes': 'Gemeenten', 'Régions': 'Gewesten',
+    'Communautés': 'Gemeensch.', 'Loi': 'Wet', '1er scrutin': '1e stemming', 'Niveau': 'Niveau', 'Consultation': 'Raadpleging',
+    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status',
+  };
+  const META = [
+    [/^En fonction$/, 'In functie'], [/^Sur le trône$/, 'Op de troon'], [/^Gouv\. /, 'Reg. '],
+    [/^(\d+)ᵉ législature/, '$1e zittingsperiode'], [/^Législatures (\d+) à (\d+)$/, 'Zittingsperiodes $1 tot $2'],
+    [/^Législatures /, 'Zittingsperiodes '], [/^Règne depuis (\d+)$/, 'Regeert sinds $1'], [/^Règne /, 'Regeerperiode '],
+    [/^depuis (\d+)/, 'sinds $1'], [/^fondée en (\d+)$/, 'opgericht in $1'], [/^Spécialité$/, 'Specialiteit'],
+    [/^Province d(?:e |’)(.+)$/, (m, p) => 'Provincie ' + (VAL[p] || p)],
+  ];
+  const EVENTS = {
+    'ev-541': { name: '541 dagen', text: 'Wereldrecord regeringsvorming: 541 dagen tussen de verkiezingen van juni 2010 en de installatie van de regering-Di Rupo.' },
+    'ev-fusion77': { name: 'Fusie van de gemeenten', text: 'In één hervorming gaat België van 2.359 naar 596 gemeenten.' },
+    'ev-fusion25': { name: 'Fusies van 2025', text: 'Een nieuwe golf fusies in Vlaanderen brengt het land op 565 gemeenten.' },
+    'ev-federal': { name: 'Federale staat', text: 'Met het Sint-Michielsakkoord wordt België een federale staat, verankerd in de Grondwet.' },
+    'ev-vote': { name: 'Vrouwenstemrecht', text: 'Vrouwen krijgen stemrecht voor de parlementsverkiezingen en stemmen voor het eerst in 1949.' },
+    'ev-question': { name: 'Koningskwestie', text: 'Volksraadpleging over de terugkeer van Leopold III, gevolgd door zijn troonsafstand ten gunste van Boudewijn.' },
+  };
+  const SPECIAL_POS = { Q213107: 'Eerste minister', Q15705021: 'Federaal volksvertegenwoordiger', VPM: 'Vicepremier', MIN: 'Federaal minister' };
+
+  let lang = 'fr';
+  let stored = null;
+  try { stored = localStorage.getItem('rdl-lang'); } catch (_) {}
+  lang = stored || ((navigator.language || '').toLowerCase().startsWith('nl') ? 'nl' : 'fr');
+  if (!UI[lang]) lang = 'fr';
+
+  const capF = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  const tv = v => lang === 'nl' && typeof v === 'string' && VAL[v] ? VAL[v] : v;
+  const tMetaPart = p => {
+    if (lang !== 'nl') return p;
+    for (const [re, to] of META) if (re.test(p)) return p.replace(re, to);
+    return VAL[p] || p;
+  };
+
+  window.I18N = {
+    get lang() { return lang; },
+    set(l) { lang = UI[l] ? l : 'fr'; try { localStorage.setItem('rdl-lang', lang); } catch (_) {} document.documentElement.lang = lang; },
+    t(key, ...args) { const v = UI[lang][key] ?? UI.fr[key]; return typeof v === 'function' ? v(...args) : v; },
+    tv,
+    name: c => (lang === 'nl' && (EVENTS[c.id]?.name || c.nl?.name)) || c.name,
+    text: c => (lang === 'nl' && EVENTS[c.id]?.text) || c.text,
+    subtitle(c) {
+      if (lang !== 'nl') return c.subtitle || '';
+      if (c.cat === 'politique' && c.posId) return capF(SPECIAL_POS[c.posId] || window.POS_NL?.[c.posId]) || c.subtitle;
+      if (c.nl?.subtitle) return c.nl.subtitle;
+      return tMetaPart(c.subtitle || '');
+    },
+    meta: c => (c.meta || '').split(' · ').map(tMetaPart).join(' · '),
+    statKey: k => lang === 'nl' ? (STAT[k] || k) : k,
+    roles(c) {
+      if (c.rolesData) {
+        return c.rolesData.map(r => {
+          const label = lang === 'nl' ? capF(SPECIAL_POS[r.pos] || window.POS_NL?.[r.pos]) || r.fr : r.fr;
+          const extra = r.leg ? ' — ' + window.I18N.t('leg', r.leg) : r.cab ? ` — ${window.I18N.t('gov')} ${r.cab}` : '';
+          const when = r.live ? ` (${window.I18N.t('live')})` : r.span ? ` (${lang === 'nl' ? r.span.replace('depuis', 'sinds') : r.span})` : '';
+          return label + extra + when;
+        });
+      }
+      return (c.roles || []).map(r => lang === 'nl' ? r.replace('Roi des Belges', 'Koning der Belgen').replace('depuis', 'sinds') : r);
+    },
+  };
+  document.documentElement.lang = lang;
+})();
