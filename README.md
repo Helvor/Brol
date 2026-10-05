@@ -14,7 +14,7 @@ Puis ouvrir http://localhost:5173. La collection est sauvegardée dans le naviga
 
 - Interface et cartes en français et en néerlandais (bouton FR/NL). Les noms néerlandais viennent de Wikidata ; les textes de l'interface sont dans `i18n.js`.
 - Raretés relatives : dans chaque catégorie, les cartes sont classées par notoriété puis réparties selon les mêmes proportions, si bien que chaque paquet contient des mythiques et que les taux affichés sont justes pour tous les paquets.
-- Paquet spécial Prestige (600 pièces, 5ᵉ carte légendaire ou mieux) et lot de 10 paquets à −10 % sur tous les paquets sauf ceux d’événement.
+- Paquet Nouveautés (300 pièces, cinq cartes absentes de l’album, 10 par jour) et paquet spécial Prestige (600 pièces, 5ᵉ carte légendaire ou mieux) et lot de 10 paquets à −10 % sur tous les paquets sauf ceux d’événement.
 - Paquets spéciaux (Prestige et paquets d'événement) : chacun a 3 cartes exclusives en « Édition limitée » (liste `EDITIONS` dans le générateur ; une carte sur huit paquets, une sur quatre en Prestige) et sa propre version introuvable ailleurs : Noir et or, Rouge (Saint-Nicolas), Confettis, Pavé, Iris, Lion, Tricolore, Coq (`FINISHES` dans `app.js`, 1,5 % par carte, 3 % en Prestige).
 - Paquets gratuits : un toutes les 2 minutes, jusqu'à 5 en réserve. Missions du jour : 3 missions tirées au sort chaque jour (100 à 300 pièces). À partir de 80 % de l'album, les doublons se revendent ×1,5.
 - Garantie anti-malchance : une légendaire ou mieux au plus tard tous les 40 paquets (`PITY` dans `app.js`).
