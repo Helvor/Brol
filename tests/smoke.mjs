@@ -348,6 +348,28 @@ async function features() {
       });
       check(r.ok === 10 && r.allNew && !r.eleventh, 'paquet Nouveautés : ' + JSON.stringify(r));
     });
+    await step('défi de la semaine et ticket Prestige', async () => {
+      const r = await page.evaluate(() => {
+        const R = window.RDL, w = R.weeklyNow(), x = R.WEEKLY.find(y => y.id === w.id);
+        w.prog = 0; w.claimed = false; R.state.tickets = {}; // les étapes précédentes ont pu avancer le défi
+        const early = R.claimWeekly();
+        w.prog = x.target;
+        const coins0 = R.state.coins, got = R.claimWeekly(), coins1 = R.state.coins, again = R.claimWeekly();
+        const prestige = R.PACKS.find(p => p.id === 'prestige');
+        const res = R.buyPacks(prestige, 1);
+        return { early, got, gain: coins1 - coins0, again, ticket: res?.usedTicket, paid: R.state.coins - coins1, left: R.state.tickets.prestige };
+      });
+      check(!r.early && r.got && r.gain === 400 && !r.again && r.ticket && r.left === 0, 'défi de la semaine : ' + JSON.stringify(r));
+      check(r.paid >= 0, 'le ticket Prestige a coûté des pièces : ' + JSON.stringify(r));
+    });
+    await step('image de partage d’une carte', async () => {
+      const r = await page.evaluate(async () => {
+        const c = window.RDL.CARDS.find(x => x.rarity === 'mythique');
+        const cv = await window.SHARE.render(c, 'holo');
+        return { w: cv.width, h: cv.height, png: cv.toDataURL('image/png').length };
+      });
+      check(r.w === 1080 && r.h === 1350 && r.png > 20000, 'image de partage : ' + JSON.stringify(r));
+    });
     await step('fusion des doublons', async () => {
       const ids = await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'rare'); window.RDL.state.owned[C[0].id] = 4; window.RDL.state.owned[C[1].id] = 3; window.RDL.save(); return [C[0].id, C[1].id]; });
       await page.click('.tab[data-view="binder"]');

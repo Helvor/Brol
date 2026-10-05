@@ -260,7 +260,7 @@
 
   // ---------- Sauvegarde ----------
   // owned : clé « id » pour la version standard, « id|holo » etc. pour les versions spéciales
-  const freshStats = () => ({ packs: 0, cards: 0, free: 0, rarity: {}, finish: {}, packsBy: {}, sold: 0, earned: 0, perfect: 0, doubleLeg: 0, night: 0, pityHits: 0, goldMyth: 0, trades: 0, tradeGift: 0, tradeMyth: 0, tradeFull: 0, fused: 0, fuseHolo: 0, dailyMax: 0, excl: 0, missions: 0 });
+  const freshStats = () => ({ packs: 0, cards: 0, free: 0, rarity: {}, finish: {}, packsBy: {}, sold: 0, earned: 0, perfect: 0, doubleLeg: 0, night: 0, pityHits: 0, goldMyth: 0, trades: 0, tradeGift: 0, tradeMyth: 0, tradeFull: 0, fused: 0, fuseHolo: 0, dailyMax: 0, excl: 0, missions: 0, weekly: 0 });
   const fresh = () => ({ coins: START_COINS, owned: {}, packs: 0, free: 1, freeAt: Date.now(), claimed: {}, pity: 0, stats: freshStats(), ach: {}, trade: { pending: {}, done: {} }, daily: { last: null, streak: 0 } });
   let state = load();
   function load() {
@@ -402,7 +402,7 @@
       <text x="150" y="374" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="${title.length > 13 ? 34 : title.length > 9 ? 38 : 44}" letter-spacing="1" fill="url(#m${k})"${title.length > 9 ? ' textLength="268" lengthAdjust="spacingAndGlyphs"' : ''}>${esc(title)}</text>
     </svg>`;
   }
-  const packVisual = p => `<div class="pack-visual${p.special ? ' is-foil' : ''}">${packSVG(p)}<div class="sheen"></div>${p.special ? '<div class="foil"></div>' : ''}</div>`;
+  const packVisual = p => `<div class="pack-visual${p.special ? ' is-foil' : ''}" tabindex="0" role="button" aria-label="${esc(pl(p, 'title'))}, ${p.price}">${packSVG(p)}<div class="sheen"></div>${p.special ? '<div class="foil"></div>' : ''}</div>`;
   // Logo de Brol en version or au centre du dos des cartes : mêmes trois cartes que logo.svg,
   // les deux du fond en simple filet, celle de devant en or avec le B en creux
   const BACK_MARK = `<svg class="back-logo" viewBox="-1.3 -0.5 63 63" aria-hidden="true"><defs><linearGradient id="bk-gold" x1="0" y1="0" x2="1" y2="1">
@@ -526,9 +526,11 @@
     const ev = nextEvent();
     $('#event-line').innerHTML = activeEvents().length ? '' : ev ? t('nextEvent', esc(pl(ev.p, 'title')), fmtDay(ev.start)) : '';
     $('#packs').innerHTML = shopPacks().map(p => {
-      const locked = (state.coins < p.price && (!state.free || p.special)) || !leftToday(p) || (p.missing && missingCount() < PACK_SIZE);
+      const tickets = state.tickets?.[p.id] || 0;
+      const locked = (state.coins < p.price && !tickets && (!state.free || p.special)) || !leftToday(p) || (p.missing && missingCount() < PACK_SIZE);
       return `
       <div class="pack-card${locked ? ' is-locked' : ''}${p.special ? ' is-special' : ''}${p.event ? ' is-event' : ''}" data-pack="${p.id}">
+        ${tickets ? `<span class="ticket-ribbon">${t('ticketBadge', tickets)}</span>` : ''}
         ${p.event ? `<span class="event-ribbon">${t('eventUntil', fmtDay(eventWindow(p)[1]))}</span>` : ''}
         ${packVisual(p)}
         <div class="pack-info">
@@ -546,6 +548,7 @@
     renderFree();
     renderDaily();
     renderMissions();
+    renderWeekly();
     renderShowcase();
   }
   // Vitrine (ordinateur uniquement, masquée sur téléphone) : les cinq plus belles cartes en éventail,
@@ -560,7 +563,7 @@
     const n = order.length || 3;
     const pct = owned.length / CARDS.length;
     const fan = order.length
-      ? order.map((c, i) => `<div class="sc-card" style="--i:${i};--n:${n};--z:${10 - Math.abs(i - (n - 1) / 2) * 2}">${cardHTML(c, { finish: bestFinish(c.id) })}</div>`).join('')
+      ? order.map((c, i) => `<div class="sc-card" style="--i:${i};--n:${n};--z:${10 - Math.abs(i - (n - 1) / 2) * 2}">${cardHTML(c, { finish: bestFinish(c.id) }).replace('<article ', `<article tabindex="0" role="button" aria-label="${esc(nm(c))}" `)}</div>`).join('')
       : [0, 1, 2].map(i => `<div class="sc-card is-back" style="--i:${i};--n:3;--z:${10 - Math.abs(i - 1) * 2}"><div class="cell sc-backcell">${cardBack()}</div></div>`).join('');
     box.innerHTML = `
       <div class="sc-head"><h3>${t('scTitle')}</h3><span>${t('scCount', fmt(owned.length), fmt(CARDS.length), Math.floor(pct * 100))}</span></div>
@@ -568,6 +571,10 @@
       <div class="sc-fan">${fan}</div>
       ${order.length ? '' : `<p class="sc-empty">${t('scEmpty')}</p>`}`;
   }
+  $('#showcase')?.addEventListener('keydown', e => {
+    const card = e.target.closest('.sc-card .card');
+    if (card && pressKey(e)) { e.preventDefault(); openDetail(card.dataset.id, card.dataset.fin); }
+  });
   $('#showcase')?.addEventListener('click', e => {
     const card = e.target.closest('.sc-card .card');
     if (card) { SFX.tick(); openDetail(card.dataset.id, card.dataset.fin); }
@@ -606,6 +613,9 @@
   setInterval(() => { if ($('#view-shop').classList.contains('is-active')) renderFree(); }, 1000);
 
 
+  $('#packs').addEventListener('keydown', e => {
+    if (e.target.classList?.contains('pack-visual') && pressKey(e)) { e.preventDefault(); e.target.click(); }
+  });
   $('#packs').addEventListener('click', e => {
     const ob = e.target.closest('.odds-btn');
     if (ob) { const ul = ob.nextElementSibling; ul.hidden = !ul.hidden; return; }
@@ -630,9 +640,10 @@
     buyError = null;
     if (pack.perDay && leftToday(pack) < n) { buyError = 'perDay'; return null; }
     if (pack.missing && missingCount() < PACK_SIZE) { buyError = 'albumFull'; return null; }
-    let usedFree = false;
+    let usedFree = false, usedTicket = false;
     const cost = n === 1 ? pack.price : bulkPrice(pack);
-    if (n === 1 && state.free > 0 && !pack.special) { state.free--; usedFree = true; if (state.free === FREE_MAX - 1) state.freeAt = Date.now(); }
+    if (n === 1 && state.tickets?.[pack.id] > 0) { state.tickets[pack.id]--; usedTicket = true; }
+    else if (n === 1 && state.free > 0 && !pack.special) { state.free--; usedFree = true; if (state.free === FREE_MAX - 1) state.freeAt = Date.now(); }
     else if (state.coins >= cost) state.coins -= cost;
     else return null;
     const packs = Array.from({ length: n }, () => rollPack(pack, usedFree));
@@ -641,7 +652,7 @@
       state.perDay.n[pack.id] = (state.perDay.n[pack.id] || 0) + n;
     }
     save();
-    return { packs, usedFree, cost: usedFree ? 0 : cost };
+    return { packs, usedFree, usedTicket, cost: usedFree || usedTicket ? 0 : cost };
   }
   function rollPack(pack, usedFree) {
     const forceLegend = state.pity >= PITY - 1;
@@ -659,6 +670,7 @@
     state.packs++;
     mission('packs'); mission('new', newCount);
     mission('epic', revealed.filter(d => R[d.card.rarity].rank >= R.epique.rank).length);
+    mission('legend', revealed.filter(d => R[d.card.rarity].rank >= R.legendaire.rank).length);
     mission('special', revealed.filter(d => d.finish !== 'normal').length);
 
     // Statistiques pour les succès
@@ -689,7 +701,7 @@
     for (const d of revealed.slice(0, 15)) { const p = photoOf(d.card, d.finish); if (p) new Image().src = imgUrl(p); }
     const sum = k => res.packs.reduce((a, p) => a + p[k], 0);
     renderWallet();
-    current = { pack, n, revealed, newCount: sum('newCount'), bonus: sum('bonus'), usedFree: res.usedFree, cost: res.cost, pityTriggered: res.packs.some(p => p.pityTriggered) };
+    current = { pack, n, revealed, newCount: sum('newCount'), bonus: sum('bonus'), usedFree: res.usedFree, usedTicket: res.usedTicket, cost: res.cost, pityTriggered: res.packs.some(p => p.pityTriggered) };
     // Solde affiché pendant l'ouverture : paquet payé, bonus des nouvelles cartes ajouté à la fin
     stageShown = state.coins - current.bonus; stageAnim = 0;
     $('#stage-coins').textContent = fmt(stageShown);
@@ -706,7 +718,7 @@
     stage.style.setProperty('--hot', hot);
     document.body.style.overflow = 'hidden';
     $('#reveal').innerHTML = '';
-    $('#stage-summary').textContent = usedFree ? t('freePack') : t('paid', fmt(current.cost));
+    $('#stage-summary').textContent = current.usedTicket ? t('ticketUsed') : usedFree ? t('freePack') : t('paid', fmt(current.cost));
     ['#flip-all', '#again', '#to-album', '#stage-close'].forEach(s => { $(s).hidden = true; });
     $('#stage-hint').hidden = false;
     $('#stage-hint').textContent = t('hint');
@@ -857,7 +869,7 @@
     const again = $('#again');
     again.hidden = false;
     if (n > 1) { again.textContent = t('again10', n, fmt(bulkPrice(pack))); again.disabled = state.coins < bulkPrice(pack); }
-    else { const free = state.free && !pack.special; again.textContent = t('again', free ? null : pack.price); again.disabled = (!free && state.coins < pack.price) || !leftToday(pack) || (pack.missing && missingCount() < PACK_SIZE); }
+    else { const free = (state.free && !pack.special) || state.tickets?.[pack.id] > 0; again.textContent = t('again', free ? null : pack.price); again.disabled = (!free && state.coins < pack.price) || !leftToday(pack) || (pack.missing && missingCount() < PACK_SIZE); }
     $('#to-album').hidden = false;
     $('#stage-close').hidden = false;
     checkAchievements();
@@ -935,7 +947,7 @@
     if (!list.length) { grid.innerHTML = `<p class="empty">${filters.owned || filters.special ? t('emptyOwned') : t('emptyAll')}</p>`; return; }
     grid.innerHTML = list.slice(0, shown).map(c => {
       const n = totalOf(c.id);
-      if (n) return `<div class="cell">${cardHTML(c, { count: n, finish: bestFinish(c.id), variants: finishesOwned(c.id) })}</div>`;
+      if (n) return `<div class="cell">${cardHTML(c, { count: n, finish: bestFinish(c.id), variants: finishesOwned(c.id) }).replace('<article ', `<article tabindex="0" role="button" aria-label="${esc(nm(c))}, ${esc(rl(c.rarity))}" `)}</div>`;
       const where = c.cat === 'edition' && packById(c.pack) ? `<span class="ed-where">${t('edWhere', esc(pl(packById(c.pack), 'title')))}</span>` : '';
       return `<div class="cell"><div class="empty-slot"><span class="gem" style="background:var(--r-${c.rarity})"></span><span class="no">${String(c.no).padStart(4, '0')}</span><span class="name">${esc(nm(c))}</span>${where}</div></div>`;
     }).join('') + (list.length > shown ? `<button class="btn btn-line grid-more" id="more">${t('more', fmt(list.length - shown))}</button>` : '');
@@ -963,6 +975,12 @@
   $('#f-owned').addEventListener('change', e => { filters.owned = e.target.checked; shown = PAGE; renderBinder(); });
   $('#f-special').addEventListener('change', e => { filters.special = e.target.checked; shown = PAGE; renderBinder(); });
   $('#search').addEventListener('input', e => { filters.q = e.target.value; shown = PAGE; renderBinder(); });
+  // Clavier : Entrée ou Espace sur une carte de l'album, de la vitrine ou sur un paquet
+  const pressKey = e => (e.key === 'Enter' || e.key === ' ') && !e.repeat;
+  $('#grid').addEventListener('keydown', e => {
+    const card = e.target.closest('.card');
+    if (card && pressKey(e)) { e.preventDefault(); openDetail(card.dataset.id, card.dataset.fin); }
+  });
   $('#grid').addEventListener('click', e => {
     if (e.target.id === 'more') { shown += PAGE; renderBinder(); return; }
     const card = e.target.closest('.card');
@@ -1026,6 +1044,7 @@
     const s = SERIES.find(x => x.id === id);
     if (!s || state.claimed[s.id] || !s.members.every(m => totalOf(m))) return 0;
     state.claimed[s.id] = true; state.coins += s.reward; save();
+    mission('series');
     return s.reward;
   }
   function openSeriesInAlbum(id) {
@@ -1214,8 +1233,9 @@
     const m = missionsToday();
     if (kind === 'games') { if (m.games.includes(key)) return; m.games.push(key); }
     m.prog[kind] = (m.prog[kind] || 0) + n;
+    weeklyProgress(kind, n);
     save();
-    if ($('#view-shop').classList.contains('is-active') && stage.hidden) renderMissions();
+    if ($('#view-shop').classList.contains('is-active') && stage.hidden) { renderMissions(); renderWeekly(); }
     else renderShopDot();
   }
   function claimMission(id) {
@@ -1223,6 +1243,7 @@
     if (!m.ids.includes(id) || !missionReady(m, id)) return 0;
     m.claimed[id] = true;
     state.coins += MISSION[id].reward; state.stats.missions = (state.stats.missions || 0) + 1;
+    mission('mission');
     save();
     return MISSION[id].reward;
   }
@@ -1245,7 +1266,7 @@
   // Point sur l'onglet Paquets : carte du jour à prendre ou mission à réclamer
   function renderShopDot() {
     const m = missionsToday();
-    $('.tab[data-view="shop"]').classList.toggle('has-dot', dailyReady() || m.ids.some(id => missionReady(m, id)));
+    $('.tab[data-view="shop"]').classList.toggle('has-dot', dailyReady() || m.ids.some(id => missionReady(m, id)) || weeklyReady());
   }
   $('#missions-box').addEventListener('click', e => {
     const b = e.target.closest('[data-mission]');
@@ -1255,6 +1276,63 @@
     SFX.coin(); toast(t('coinsPlus', fmt(gain)));
     renderWallet(); renderMissions();
     checkAchievements();
+  });
+
+  // ---------- Défi de la semaine ----------
+  // Un grand objectif par semaine (lundi → dimanche), tiré au sort à partir de la semaine.
+  // Récompense : un ticket Prestige (un paquet Prestige offert) et des pièces.
+  const WEEKLY = [
+    { id: 'packs50',   kind: 'packs',   target: 50, fr: n => `Ouvrir ${n} paquets`, nl: n => `${n} pakjes openen` },
+    { id: 'new40',     kind: 'new',     target: 40, fr: n => `Obtenir ${n} nouvelles cartes`, nl: n => `${n} nieuwe kaarten krijgen` },
+    { id: 'special6',  kind: 'special', target: 6,  fr: n => `Obtenir ${n} versions spéciales`, nl: n => `${n} speciale versies krijgen` },
+    { id: 'legend3',   kind: 'legend',  target: 3,  fr: n => `Obtenir ${n} cartes légendaires ou mieux`, nl: n => `${n} legendarische kaarten of beter krijgen` },
+    { id: 'mission12', kind: 'mission', target: 12, fr: n => `Réclamer ${n} missions du jour`, nl: n => `${n} dagopdrachten innen` },
+    { id: 'belgle4',   kind: 'belgle',  target: 4,  fr: n => `Trouver le Belgle ${n} jours`, nl: n => `De Belgle ${n} dagen raden` },
+    { id: 'fuse5',     kind: 'fuse',    target: 5,  fr: n => `Faire ${n} fusions`, nl: n => `${n} fusies maken` },
+    { id: 'series1',   kind: 'series',  target: 1,  fr: () => 'Compléter une série', nl: () => 'Een reeks vervolledigen' },
+  ];
+  const WEEKLY_COINS = 400;
+  const weekKey = (d = now()) => { const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = x.getUTCDay() || 7; x.setUTCDate(x.getUTCDate() + 4 - day);
+    const y0 = new Date(Date.UTC(x.getUTCFullYear(), 0, 1)); return `${x.getUTCFullYear()}-W${Math.ceil(((x - y0) / 864e5 + 1) / 7)}`; };
+  const daysLeftInWeek = () => 7 - ((now().getDay() + 6) % 7);
+  function weeklyNow() {
+    const wk = weekKey();
+    if (state.weekly?.week !== wk) {
+      const pool = WEEKLY.filter(w => w.kind !== 'new' || albumShare() < 0.85).filter(w => w.kind !== 'series' || SERIES.some(x => !state.claimed[x.id]));
+      const pickW = pool.slice().sort((a, b) => strHash(wk + a.id) - strHash(wk + b.id))[0];
+      state.weekly = { week: wk, id: pickW.id, prog: 0, claimed: false };
+    }
+    return state.weekly;
+  }
+  function weeklyProgress(kind, n) {
+    const w = weeklyNow();
+    if (WEEKLY.find(x => x.id === w.id)?.kind === kind && !w.claimed) w.prog += n;
+  }
+  const weeklyReady = () => { const w = weeklyNow(); return !w.claimed && w.prog >= WEEKLY.find(x => x.id === w.id).target; };
+  function claimWeekly() {
+    if (!weeklyReady()) return false;
+    const w = weeklyNow();
+    w.claimed = true;
+    state.tickets ||= {}; state.tickets.prestige = (state.tickets.prestige || 0) + 1;
+    state.coins += WEEKLY_COINS; state.stats.weekly = (state.stats.weekly || 0) + 1;
+    save();
+    return true;
+  }
+  function renderWeekly() {
+    const box = $('#weekly-box');
+    if (!box) return;
+    const w = weeklyNow(), x = WEEKLY.find(y => y.id === w.id), have = Math.min(w.prog, x.target);
+    box.innerHTML = `
+      <div class="wk-text"><small>${t('weeklyTitle')} · ${w.claimed ? t('weeklyDone') : t('weeklyLeft', daysLeftInWeek())}</small><b>${esc(x[L()](x.target))}</b></div>
+      <div class="wk-prog"><span class="wk-bar"><i style="width:${(have / x.target * 100).toFixed(0)}%"></i></span><span class="wk-num">${have}/${x.target}</span></div>
+      ${w.claimed ? '<span class="wk-done">✓</span>' : weeklyReady() ? `<button class="btn btn-gold" id="weekly-claim">${t('weeklyClaim')}</button>`
+        : `<span class="wk-reward">${t('weeklyReward', fmt(WEEKLY_COINS))}</span>`}`;
+    box.classList.toggle('is-ready', weeklyReady());
+  }
+  $('#weekly-box')?.addEventListener('click', e => {
+    if (!e.target.closest('#weekly-claim') || !claimWeekly()) return;
+    SFX.achievement(); toast(t('weeklyGot', fmt(WEEKLY_COINS)));
+    renderWallet(); renderShop(); checkAchievements();
   });
 
   // ---------- Export / import de la sauvegarde ----------
@@ -1378,7 +1456,7 @@
     const text = window.I18N.text(c);
     const known = window.I18N.known(c);
     $('#detail-body').innerHTML = `
-      <div class="kicker" style="color:var(--r-${c.rarity})"><span class="gem" style="background:var(--r-${c.rarity})"></span>${rl(c.rarity)}${finish !== 'normal' ? ` · <span class="fin-word d-${finish}"${F[finish].pack ? ` style="color:${F[finish].color}"` : ''}>${fl(finish)}</span>` : ''} · <span style="color:var(--ink-2)">${cl(c.cat)}</span></div>
+      <div class="kicker" style="color:var(--rt-${c.rarity})"><span class="gem" style="background:var(--r-${c.rarity})"></span>${rl(c.rarity)}${finish !== 'normal' ? ` · <span class="fin-word d-${finish}">${fl(finish)}</span>` : ''} · <span style="color:var(--ink-2)">${cl(c.cat)}</span></div>
       <h2>${esc(nm(c))}</h2>
       <p class="sub">${esc(window.I18N.subtitle(c))}${c.meta ? `<br>${esc(window.I18N.meta(c))}` : ''}</p>
       ${versions}
@@ -1393,9 +1471,17 @@
       ${known.length ? `<h4>${t('knownFor')}</h4><ul class="known">${known.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       ${roles.length ? `<h4>${t('career')}</h4><ul>${roles.slice(0, 10).map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       <div class="links">${links.join('')}</div>
+      ${cnt ? `<button class="btn btn-line" id="share-card">${t('share')}</button>` : ''}
       ${cnt > 1 ? `<button class="btn" id="sell-one">${t('sellOne', sellValue(c, finish))}</button>` : ''}`;
     $$('#detail-body .chip-s').forEach(b => b.addEventListener('click', () => { dlg.close(); openSeriesInAlbum(b.dataset.series); }));
     $$('#detail-body .ver').forEach(b => b.addEventListener('click', () => { SFX.tick(); openDetail(id, b.dataset.fin); }));
+    const shareBtn = $('#share-card');
+    if (shareBtn) shareBtn.onclick = async () => {
+      shareBtn.disabled = true; shareBtn.textContent = t('sharing');
+      try { const r = await window.SHARE.share(c, finish); if (r === 'downloaded') toast(t('shareSaved')); }
+      catch (_) { toast(t('shareFail')); }
+      shareBtn.disabled = false; shareBtn.textContent = t('share');
+    };
     const sell = $('#sell-one');
     if (sell) sell.onclick = () => {
       const v = sellValue(c, finish);
@@ -1452,6 +1538,7 @@
     $('.brand-name').textContent = 'Brol';
     fillRaritySelect();
     applyTheme(); applySound();
+    if ($('#notif')) renderNotifBtn();
   }
   $('#lang-btn').addEventListener('click', () => {
     window.I18N.set(L() === 'nl' ? 'fr' : 'nl');
@@ -1490,8 +1577,58 @@
     // pour la simulation de l'économie (tools/simulate.mjs) et les tests
     PACKS, SERIES, RARITIES, BULK, bulkPrice, buyPacks, sellDuplicates, dupValue, claimSeries,
     EVENT_PACKS, activeEvents, fuseRarity, fuseHolo, fuseAvailable, claimDaily, dailyReady, drawPack, exclOf, packById,
-    mission, missionsToday, claimMission, MISSION, resaleMult, sellValue,
+    mission, missionsToday, claimMission, MISSION, resaleMult, sellValue, weeklyNow, claimWeekly, WEEKLY, statsOf,
   };
+
+  // ---------- Version installable (PWA) ----------
+  // Service worker : hors ligne et cache des images. Bouton « Installer l'appli » quand le navigateur le propose
+  // (Chrome, Edge, Android) ; sur iPhone et iPad, il explique la marche à suivre dans Safari.
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+  const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  let installPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; $('#install').hidden = false; });
+  window.addEventListener('appinstalled', () => { installPrompt = null; $('#install').hidden = true; toast(t('installed')); });
+  if (isIOS && !standalone()) $('#install').hidden = false;
+  $('#install').addEventListener('click', async () => {
+    if (installPrompt) { installPrompt.prompt(); await installPrompt.userChoice.catch(() => {}); installPrompt = null; $('#install').hidden = true; }
+    else if (isIOS) alert(t('installIOS'));
+  });
+
+  // ---------- Rappels (notifications, sur demande) ----------
+  // Sans serveur, pas de notification quand le jeu est complètement fermé, sauf le rappel quotidien de l'appli
+  // installée sur Chrome / Android (synchronisation périodique, voir sw.js). Quand le jeu est ouvert en arrière-plan :
+  // paquets gratuits au complet, carte du jour disponible. Une seule notification de chaque sorte.
+  const NOTIF_KEY = 'rdl-notif';
+  const notifOn = () => { try { return localStorage.getItem(NOTIF_KEY) === '1' && Notification.permission === 'granted'; } catch (_) { return false; } };
+  function renderNotifBtn() {
+    const b = $('#notif');
+    if (!('Notification' in window) || Notification.permission === 'denied') { b.hidden = true; return; }
+    b.hidden = false; b.textContent = notifOn() ? t('notifOn') : t('notifOff');
+  }
+  async function notify(kind, title, body) {
+    if (!notifOn() || !document.hidden) return;
+    const day = ymd(now()), sent = state.notified ||= {};
+    if (sent[kind] === day + (kind === 'free' ? state.freeAt : '')) return; // déjà prévenu pour ce cas
+    sent[kind] = day + (kind === 'free' ? state.freeAt : ''); save();
+    const opts = { body, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: 'brol-' + kind };
+    try { const reg = await navigator.serviceWorker?.getRegistration(); if (reg) reg.showNotification(title, opts); else new Notification(title, opts); } catch (_) { /* rien */ }
+  }
+  setInterval(() => {
+    if (!notifOn() || !document.hidden) return;
+    tickFree();
+    if (state.free >= FREE_MAX) notify('free', t('notifFreeTitle'), t('notifFreeBody', FREE_MAX));
+    if (dailyReady()) notify('daily', t('notifDailyTitle'), t('notifDailyBody'));
+  }, 30000);
+  $('#notif').addEventListener('click', async () => {
+    if (notifOn()) { try { localStorage.removeItem(NOTIF_KEY); } catch (_) {} renderNotifBtn(); toast(t('notifOff')); return; }
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { renderNotifBtn(); return toast(t('notifDenied')); }
+    try { localStorage.setItem(NOTIF_KEY, '1'); } catch (_) {}
+    // Rappel quotidien de l'appli installée (Chrome / Android uniquement)
+    try { const reg = await navigator.serviceWorker?.ready; await reg?.periodicSync?.register('brol-daily', { minInterval: 20 * 3600 * 1000 }); } catch (_) { /* non pris en charge */ }
+    renderNotifBtn(); toast(t('notifOnToast'));
+  });
 
   applyStatic();
   renderWallet();

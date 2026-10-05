@@ -20,14 +20,14 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 - [x] **Fusion de doublons** (bouton Fusionner dans l'album) : 5 doublons standard d'une rareté → une carte au hasard de la rareté au-dessus ; 3 doublons d'une même carte → sa version Holo. Un exemplaire est toujours gardé. Succès associés.
 - [x] **Échanges par QR code ou lien** (onglet Échanges, sans serveur) : doublons uniquement, version précise de chaque carte, cartes mises de côté pendant l'échange, chaque échange ne sert qu'une fois, scanner intégré, succès d'échange. Limite connue : sans serveur, rien n'empêche un joueur de tricher (comme pour les pièces aujourd'hui).
 - [x] **Export/import de la sauvegarde** (liens en bas de page) : télécharger sa partie dans un fichier et la réimporter. Ça protège d'un cache effacé et permet de passer d'un appareil ou d'une adresse à l'autre en attendant les comptes. Le format servira aussi à migrer les parties vers le serveur en phase 5.
-- [ ] **Partager une carte** : générer une image (PNG) d'une carte, avec sa version spéciale, pour la partager par message ou sur les réseaux (Web Share API sur mobile, téléchargement sinon). Garder le crédit de l'image sur le visuel.
-- [ ] **Mode daltonien et accessibilité** : distinguer les raretés autrement que par la couleur (forme de la gemme, motif), navigation complète au clavier, contrastes vérifiés dans les deux thèmes.
+- [x] **Partager une carte** : générer une image (PNG) d'une carte, avec sa version spéciale, pour la partager par message ou sur les réseaux (Web Share API sur mobile, téléchargement sinon). Garder le crédit de l'image sur le visuel.
+- [x] **Mode daltonien et accessibilité** : distinguer les raretés autrement que par la couleur (forme de la gemme, motif), navigation complète au clavier, contrastes vérifiés dans les deux thèmes.
 - [ ] **Équilibrage de Formation de gouvernement** après quelques parties (durée, difficulté, gains).
 
 ## Phase 3 — Identité et mobile
 
 - [x] **Logo Brol** (trois cartes noir-jaune-rouge, un B sur la rouge ; `logo.svg`) : en-tête, dos des cartes et icône d'onglet. Reste : icônes d'application (PNG) avec la version installable.
-- [ ] **Version installable (PWA)** : manifeste, icônes, service worker. Le jeu s'ouvre hors ligne ; les images Commons déjà vues restent en cache.
+- [x] **Version installable (PWA)** : manifeste, icônes (`tools/build-icons.mjs`), service worker (`sw.js`). Le jeu s'ouvre hors ligne ; les images Commons déjà vues restent en cache (600 au plus). Bouton « Installer l'appli » en bas de page.
 - [x] **Carte du jour** : une carte et 20 pièces par jour ; série de jours consécutifs (rare ou mieux dès le 3ᵉ jour, épique dès le 5ᵉ, légendaire tous les 7 jours).
 - [x] **Calendrier d'événements belges** (Carnaval, Tour des Flandres, Fête de l'Iris, 11 juillet, 21 juillet, Fêtes de Wallonie, Saint-Nicolas ; dates mobiles calculées) : paquets limités dans le temps (Fête nationale le 21 juillet, Carnaval de Binche, Saint-Nicolas, Tour des Flandres, Fêtes de Wallonie, 11 juillet…), avec des chances accrues dans les catégories concernées.
 - [x] **Cartes exclusives des paquets spéciaux** : 3 cartes « Édition limitée » par paquet spécial (24 en tout, de l'Ordre de Léopold aux Échasseurs namurois), une série et des succès associés ; une version propre à chaque paquet (Rouge à la Saint-Nicolas, Pavé au Tour des Flandres…), avec un taux bas.

@@ -5,8 +5,9 @@
   --bg-3: #e3e3df;
   --line: #d2d2cc;
   --ink: #121212;
-  --ink-2: #66665f;
-  --gold: #a87a12;
+  --ink-2: #5c5c55;
+  --gold: #7d5a00;
+  --rt-commune: #5c5c55; --rt-peu-commune: #2f7046; --rt-rare: #2a5fc0; --rt-epique: #7a3fc9; --rt-legendaire: #7d5a00; --rt-mythique: #c0283a;
   --gold-hi: #e2b33c;
   --danger: #c8102e;
   color-scheme: light;
@@ -20,6 +21,8 @@
   --ink-2: #94949c;
   --gold: #e2b33c;
   --gold-hi: #f6d478;
+  --rt-commune: #b8b8b0; --rt-peu-commune: #6fcf8f; --rt-rare: #5b93f0; --rt-epique: #a982f0; --rt-legendaire: #e2b33c; --rt-mythique: #ff5a6e;
+  --danger: #ff5a6e;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -32,6 +35,8 @@
     --ink-2: #94949c;
     --gold: #e2b33c;
     --gold-hi: #f6d478;
+    --rt-commune: #b8b8b0; --rt-peu-commune: #6fcf8f; --rt-rare: #5b93f0; --rt-epique: #a982f0; --rt-legendaire: #e2b33c; --rt-mythique: #ff5a6e;
+    --danger: #ff5a6e;
     color-scheme: dark;
   }
 }
@@ -1344,3 +1349,45 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .stage-wallet em.is-on { animation: gain-pop 1.8s ease-out forwards; }
 @keyframes gain-pop { 0% { opacity: 0; transform: translateY(-6px); } 15% { opacity: 1; transform: translateY(0); } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(6px); } }
 @media (max-width: 760px) { .stage-wallet { top: 12px; right: 12px; font-size: 14px; padding: 5px 12px 5px 8px; } }
+
+/* Défi de la semaine */
+.weekly-box { display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, 200px) auto; align-items: center; gap: 8px 16px; width: min(360px, 100%);
+  padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--bg-2); }
+.weekly-box.is-ready { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.wk-text small { display: block; font-family: var(--display); font-weight: 700; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
+.wk-text b { display: block; font-family: var(--display); font-weight: 800; font-size: 17px; text-transform: uppercase; line-height: 1.1; }
+.wk-prog { display: flex; align-items: center; gap: 8px; }
+.wk-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--bg-3); overflow: hidden; }
+.wk-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), var(--r-legendaire)); }
+.wk-num { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+.wk-reward { font-family: var(--mono); font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+.wk-done { color: var(--gold); font-weight: 800; font-size: 18px; }
+.weekly-box .btn { padding: 6px 12px; animation: daily-glow 2.4s ease-in-out infinite; }
+.ticket-ribbon { position: absolute; top: 12px; right: -6px; z-index: 3; padding: 4px 10px; border-radius: 3px; background: linear-gradient(180deg, #fff1b8, #d6a12a); color: #2a1d00;
+  font-family: var(--display); font-weight: 800; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 4px 10px -4px rgba(0, 0, 0, .5); }
+@media (max-width: 760px) {
+  .weekly-box { width: 100%; grid-template-columns: minmax(0, 1fr) auto; }
+  .weekly-box .wk-text { grid-column: 1 / -1; }
+  .weekly-box .wk-text b { font-size: 16px; }
+}
+@media (min-width: 761px) {
+  .shop-head { grid-template-rows: auto auto 1fr auto; grid-template-areas: "title title title" "show today missions" "show free missions" "week week week"; }
+  #weekly-box { grid-area: week; width: auto; border-radius: 8px; padding: 12px 18px; }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .shop-head { grid-template-areas: "title title" "show today" "show free" "missions missions" "week week"; }
+}
+
+/* ============ Accessibilité ============ */
+/* Rareté lisible sans les couleurs : une forme de gemme par rareté
+   (cercle, carré, losange, hexagone, étoile, étoile double) */
+.r-commune .gem, .gem[style*="--r-commune"] { transform: none; border-radius: 50%; }
+.r-peu-commune .gem, .gem[style*="--r-peu-commune"] { transform: none; border-radius: 1px; }
+.r-epique .gem, .gem[style*="--r-epique"] { transform: scale(1.12); clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%); }
+.r-legendaire .gem, .gem[style*="--r-legendaire"] { transform: scale(1.35);
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+.r-mythique .gem, .gem[style*="--r-mythique"] { transform: scale(1.4);
+  clip-path: polygon(50% 0, 60% 30%, 85% 15%, 70% 40%, 100% 50%, 70% 60%, 85% 85%, 60% 70%, 50% 100%, 40% 70%, 15% 85%, 30% 60%, 0 50%, 30% 40%, 15% 15%, 40% 30%); }
+/* Clavier : contour bien visible sur tout ce qui se joue au clavier */
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.grid .card:focus-visible, .sc-card .card:focus-visible, .pack-visual:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; border-radius: 6px; }
