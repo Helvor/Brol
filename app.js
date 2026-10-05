@@ -1493,6 +1493,21 @@
     mission, missionsToday, claimMission, MISSION, resaleMult, sellValue,
   };
 
+  // ---------- Version installable (PWA) ----------
+  // Service worker : hors ligne et cache des images. Bouton « Installer l'appli » quand le navigateur le propose
+  // (Chrome, Edge, Android) ; sur iPhone et iPad, il explique la marche à suivre dans Safari.
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+  const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  let installPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; $('#install').hidden = false; });
+  window.addEventListener('appinstalled', () => { installPrompt = null; $('#install').hidden = true; toast(t('installed')); });
+  if (isIOS && !standalone()) $('#install').hidden = false;
+  $('#install').addEventListener('click', async () => {
+    if (installPrompt) { installPrompt.prompt(); await installPrompt.userChoice.catch(() => {}); installPrompt = null; $('#install').hidden = true; }
+    else if (isIOS) alert(t('installIOS'));
+  });
+
   applyStatic();
   renderWallet();
   renderShop();

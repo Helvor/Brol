@@ -44,7 +44,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Préparer les fichiers du site
         run: |
-          mkdir _site && cp -r index.html style.css logo.svg *.js data vendor _site/
+          mkdir _site && cp -r index.html style.css logo.svg manifest.webmanifest *.js data vendor icons _site/
+          # Service worker : un cache par version (voir sw.js)
+          sed -i "s/__VERSION__/${GITHUB_SHA::7}/" _site/sw.js
           # Numéro de version sur les fichiers locaux (app.js?v=abc1234) : après un déploiement,
           # les navigateurs ne mélangent pas d'anciens fichiers en cache avec les nouveaux.
           V="${GITHUB_SHA::7}"
