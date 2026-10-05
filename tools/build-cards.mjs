@@ -984,29 +984,37 @@ const EDITIONS = [
 }
 
 // ---------- Photos alternatives (pour la version « Plein cadre ») ----------
-// On prend une autre photo libre dans la catégorie Commons de la personne, si elle existe.
+// Une autre photo libre de la personne sur Wikimedia Commons, si elle existe (voir le choix strict ci-dessous).
 const ALT_CATS = new Set(['culture', 'sport', 'science', 'monarchie']);
 const altTargets = cards.filter(c => c.img && (ALT_CATS.has(c.cat) || (c.cat === 'politique' && (c.current || ['epique', 'legendaire', 'mythique'].includes(c.rarity)))));
-const commonsCats = new Map();
-for (let i = 0; i < altTargets.length; i += 200) {
-  const rows = await sparql(`SELECT ?p ?cat WHERE { VALUES ?p { ${altTargets.slice(i, i + 200).map(c => 'wd:' + c.id).join(' ')} } ?p wdt:P373 ?cat. }`);
-  for (const r of rows) commonsCats.set(qid(r.p), r.cat);
-}
 async function commonsApi(params) {
   const url = 'https://commons.wikimedia.org/w/api.php?' + new URLSearchParams({ format: 'json', formatversion: '2', ...params });
   return getJSON(url, { delay: 300, label: 'Commons' });
 }
-const BAD_FILE = /signature|autograph|grave|graf|tomb|plaque|logo|coat|wapen|blason|map|carte|stamp|timbre|postzegel|poster|affiche|statue|standbeeld|monument|cover|pochette|\.svg$|\.tif/i;
+// Choix strict : le fichier doit être indiqué sur Commons comme représentant cette personne et elle seule
+// (« dépeint », P180), ne pas être une signature, une statue, une tombe…, et être assez grand.
+// Sans fichier sûr, pas de photo alternative : la version Plein cadre reprend la photo principale.
+const BAD_FILE = /signat|unterschrift|handtekening|firma|podpis|autograph|hommage|homenaje|buste|bust|statue|standbeeld|sculpt|beeld|plaque|gedenk|memorial|grave|graf|tomb|cimeti|begraaf|friedhof|cemetery|rue |straat|street|maison|huis|house|school|[eé]cole|stamp|timbre|postzegel|coin|munt|banknote|billet|medal|m[eé]daille|logo|coat|wapen|blason|map|carte|poster|affiche|cover|pochette|book|livre|boek|mural|graffiti|\.svg$|\.tif/i;
+// Nature du fichier (P31) refusée : signature, sculpture, statue, buste, tombe, plaque, timbre, pièce, billet
+const BAD_KIND = new Set(['Q188675', 'Q860861', 'Q179700', 'Q241045', 'Q173387', 'Q721747', 'Q37930', 'Q41207', 'Q47524', 'Q4006']);
+const ALT_SKIP = new Set([]); // fichiers vérifiés à l'œil et refusés malgré tout (photo d'une autre personne…)
 let altFound = 0;
 for (const c of altTargets) {
-  const cat = commonsCats.get(c.id);
-  if (!cat) continue;
-  const res = await commonsApi({ action: 'query', list: 'categorymembers', cmtitle: 'Category:' + cat, cmtype: 'file', cmlimit: '60' });
-  const surname = c.name.split(' ').filter(w => w.length > 2).pop()?.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-  const files = (res.query?.categorymembers || []).map(m => m.title.replace(/^File:/, ''))
-    .filter(f => /\.jpe?g$/i.test(f) && !BAD_FILE.test(f) && f !== c.img);
-  const pick = files.find(f => surname && f.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().includes(surname));
-  if (pick) { c.alt = pick; altFound++; }
+  const found = await commonsApi({ action: 'query', list: 'search', srnamespace: '6', srlimit: '15', srsearch: `haswbstatement:P180=${c.id} filetype:bitmap` });
+  const hits = (found.query?.search || []).filter(h => !BAD_FILE.test(h.title) && h.title.replace(/^File:/, '') !== c.img && !ALT_SKIP.has(h.title.replace(/^File:/, '')));
+  if (!hits.length) continue;
+  const ents = await commonsApi({ action: 'wbgetentities', ids: hits.map(h => 'M' + h.pageid).join('|'), props: 'claims' });
+  const info = await commonsApi({ action: 'query', prop: 'imageinfo', iiprop: 'size|mime', titles: hits.map(h => h.title).join('|') });
+  const size = new Map((info.query?.pages || []).map(p => [p.title, p.imageinfo?.[0]]));
+  const pick = hits.find(h => {
+    const st = ents.entities?.['M' + h.pageid]?.statements || {};
+    const depicts = (st.P180 || []).map(x => x.mainsnak?.datavalue?.value?.id);
+    const kinds = (st.P31 || []).map(x => x.mainsnak?.datavalue?.value?.id);
+    const ii = size.get(h.title);
+    return depicts.length === 1 && depicts[0] === c.id && !kinds.some(k => BAD_KIND.has(k)) &&
+      ii && /jpeg|png/.test(ii.mime) && ii.width >= 500 && ii.height >= 500 && ii.width / ii.height < 1.9;
+  });
+  if (pick) { c.alt = pick.title.replace(/^File:/, ''); altFound++; }
 }
 console.log(`Photos alternatives : ${altFound} / ${altTargets.length}`);
 
