@@ -37,9 +37,11 @@ self.addEventListener('fetch', e => {
   if (url.hostname === 'commons.wikimedia.org' || url.hostname === 'upload.wikimedia.org') {
     e.respondWith(caches.open(IMAGES).then(async c => {
       const hit = await c.match(req);
-      if (hit) return hit;
+      // Une image gardée en mode « opaque » (affichage simple) ne peut pas servir à une requête CORS
+      // (image de partage dessinée dans un canvas) : on retourne alors au réseau
+      if (hit && !(req.mode === 'cors' && hit.type === 'opaque')) return hit;
       const res = await fetch(req);
-      if (res.ok || res.type === 'opaque') { c.put(req, res.clone()); trimImages(); }
+      if (res.ok || (res.type === 'opaque' && !hit)) { c.put(req, res.clone()); trimImages(); }
       return res;
     }));
     return;

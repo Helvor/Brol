@@ -362,6 +362,14 @@ async function features() {
       check(!r.early && r.got && r.gain === 400 && !r.again && r.ticket && r.left === 0, 'défi de la semaine : ' + JSON.stringify(r));
       check(r.paid >= 0, 'le ticket Prestige a coûté des pièces : ' + JSON.stringify(r));
     });
+    await step('image de partage d’une carte', async () => {
+      const r = await page.evaluate(async () => {
+        const c = window.RDL.CARDS.find(x => x.rarity === 'mythique');
+        const cv = await window.SHARE.render(c, 'holo');
+        return { w: cv.width, h: cv.height, png: cv.toDataURL('image/png').length };
+      });
+      check(r.w === 1080 && r.h === 1350 && r.png > 20000, 'image de partage : ' + JSON.stringify(r));
+    });
     await step('fusion des doublons', async () => {
       const ids = await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'rare'); window.RDL.state.owned[C[0].id] = 4; window.RDL.state.owned[C[1].id] = 3; window.RDL.save(); return [C[0].id, C[1].id]; });
       await page.click('.tab[data-view="binder"]');

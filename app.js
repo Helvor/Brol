@@ -1458,9 +1458,17 @@
       ${known.length ? `<h4>${t('knownFor')}</h4><ul class="known">${known.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       ${roles.length ? `<h4>${t('career')}</h4><ul>${roles.slice(0, 10).map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       <div class="links">${links.join('')}</div>
+      ${cnt ? `<button class="btn btn-line" id="share-card">${t('share')}</button>` : ''}
       ${cnt > 1 ? `<button class="btn" id="sell-one">${t('sellOne', sellValue(c, finish))}</button>` : ''}`;
     $$('#detail-body .chip-s').forEach(b => b.addEventListener('click', () => { dlg.close(); openSeriesInAlbum(b.dataset.series); }));
     $$('#detail-body .ver').forEach(b => b.addEventListener('click', () => { SFX.tick(); openDetail(id, b.dataset.fin); }));
+    const shareBtn = $('#share-card');
+    if (shareBtn) shareBtn.onclick = async () => {
+      shareBtn.disabled = true; shareBtn.textContent = t('sharing');
+      try { const r = await window.SHARE.share(c, finish); if (r === 'downloaded') toast(t('shareSaved')); }
+      catch (_) { toast(t('shareFail')); }
+      shareBtn.disabled = false; shareBtn.textContent = t('share');
+    };
     const sell = $('#sell-one');
     if (sell) sell.onclick = () => {
       const v = sellValue(c, finish);
@@ -1556,7 +1564,7 @@
     // pour la simulation de l'économie (tools/simulate.mjs) et les tests
     PACKS, SERIES, RARITIES, BULK, bulkPrice, buyPacks, sellDuplicates, dupValue, claimSeries,
     EVENT_PACKS, activeEvents, fuseRarity, fuseHolo, fuseAvailable, claimDaily, dailyReady, drawPack, exclOf, packById,
-    mission, missionsToday, claimMission, MISSION, resaleMult, sellValue, weeklyNow, claimWeekly, WEEKLY,
+    mission, missionsToday, claimMission, MISSION, resaleMult, sellValue, weeklyNow, claimWeekly, WEEKLY, statsOf,
   };
 
   // ---------- Version installable (PWA) ----------
