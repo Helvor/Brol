@@ -351,6 +351,7 @@ async function features() {
     await step('défi de la semaine et ticket Prestige', async () => {
       const r = await page.evaluate(() => {
         const R = window.RDL, w = R.weeklyNow(), x = R.WEEKLY.find(y => y.id === w.id);
+        w.prog = 0; w.claimed = false; R.state.tickets = {}; // les étapes précédentes ont pu avancer le défi
         const early = R.claimWeekly();
         w.prog = x.target;
         const coins0 = R.state.coins, got = R.claimWeekly(), coins1 = R.state.coins, again = R.claimWeekly();
