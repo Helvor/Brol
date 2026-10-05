@@ -164,11 +164,6 @@ a { color: inherit; }
   background-size: 260% 100%; background-position: var(--sx, 120%) 0; transition: background-position .4s ease; }
 .pack-card .pack-visual:hover .sheen { --sx: -20%; }
 
-.odds { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 18px; font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
-.odds li { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
-.odds b { color: var(--ink); font-weight: 600; }
-.odds .odds-title { font-family: var(--display); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink); font-size: 13px; }
-.odds .note { flex-basis: 100%; font-size: 11px; opacity: .8; }
 
 /* ============ Scène d'ouverture ============ */
 .stage {
@@ -331,7 +326,7 @@ a { color: inherit; }
 
 .gem { width: 5cqw; height: 5cqw; transform: rotate(45deg); background: var(--rc); box-shadow: 0 0 0 .7cqw rgba(10, 10, 12, .62); flex: none; }
 .r-legendaire .gem, .r-mythique .gem { background: var(--frame); background-size: 200% 200%; }
-.odds .gem, .chip .gem, .detail-info .gem { width: 9px; height: 9px; box-shadow: none; }
+.chip .gem, .detail-info .gem { width: 9px; height: 9px; box-shadow: none; }
 
 .card-band {
   position: absolute; left: 0; right: 0; bottom: 18cqw;
@@ -340,7 +335,8 @@ a { color: inherit; }
   clip-path: polygon(0 4.5cqw, 100% 0, 100% 100%, 0 100%);
 }
 .card-band .party { position: absolute; top: 2.6cqw; right: 4cqw; font-family: var(--display); font-weight: 700; font-size: 4.2cqw; letter-spacing: .06em; text-transform: uppercase; opacity: .9; }
-.card-band h3 {
+/* « .card » en tête : les titres des fenêtres (.side-dlg h3, échanges…) ne doivent pas déborder sur le nom de la carte */
+.card .card-band h3 {
   margin: 0; font-family: var(--display); font-weight: 800; font-size: 10cqw; line-height: 1; padding-bottom: .12em; margin-bottom: -.12em; text-transform: uppercase; letter-spacing: .005em;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
@@ -649,7 +645,6 @@ dialog::backdrop { background: rgba(8, 9, 12, .78); }
 .fin-word.d-or { color: var(--gold); }
 .fin-word.d-plein { color: var(--ink); }
 
-.odds .sep { width: 1px; align-self: stretch; background: var(--line); padding: 0; }
 .slot .tag.special { background: linear-gradient(110deg, #ffd1f1, #b8f3ff 35%, #fff6b0 65%, #c9b8ff); color: #111; }
 
 .versions { display: flex; flex-wrap: wrap; gap: 6px; margin: -8px 0 20px; }
@@ -672,10 +667,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 
   .shop-head { margin-bottom: 20px; }
   .shop-head > div:first-child { flex: 1 1 100%; min-width: 0; }
-  .odds .note { white-space: normal; }
   .tab-count { display: none; }
-  .odds { gap: 3px 12px; font-size: 11px; }
-  .odds .sep { display: none; }
   .packs { grid-template-columns: repeat(2, 1fr); gap: 18px 12px; }
   .pack-info { flex-direction: column; gap: 4px; }
   .pack-info h2 { font-size: 20px; }
@@ -1193,7 +1185,8 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .ex-thumb.r-mythique { --rc: var(--r-mythique); }
 .ex-thumb.is-locked::before { content: ""; position: absolute; inset: 0; -webkit-backdrop-filter: blur(3px) brightness(.45); backdrop-filter: blur(3px) brightness(.45); }
 .ex-thumb b { position: relative; font-family: var(--display); font-weight: 800; font-size: 16px; color: #fff; }
-.pack-odds .odds-x td { color: var(--gold); border-top: 1px dashed var(--line); padding-top: 4px; }
+.pack-odds .odds-x td { color: var(--ink-2); }
+.pack-odds .odds-x.first td { border-top: 1px dashed var(--line); padding-top: 4px; }
 .pack-odds .odds-x .fin-dot { width: 8px; height: 8px; margin-right: 6px; vertical-align: -1px; }
 .empty-slot .ed-where { font-family: var(--mono); font-size: 4.8cqw; color: var(--gold); line-height: 1.2; }
 .slot .tag.ev, .slot .tag.ed { background: var(--tagc); color: #111; box-shadow: 0 0 14px var(--tagc); }

@@ -524,7 +524,6 @@
       </div>`;
     }).join('');
     renderFree();
-    renderOdds();
     renderDaily();
   }
   // Paquets spéciaux : leurs cartes exclusives (floutées tant qu'on ne les a pas) et leur version d'événement
@@ -542,7 +541,7 @@
   }
   function packOddsExtra(p) {
     const fin = packFinish(p.id), ch = exclChance(p);
-    return (ch ? `<tr class="odds-x"><td>${t('oddsExcl')}</td><td colspan="2">${pctOdds(ch)} ${t('perPack')}</td></tr>` : '') +
+    return BASE_FINISHES.slice(1).map((f, i) => `<tr class="odds-x${i ? '' : ' first'}"><td><span class="fin-dot d-${f.id}"></span>${fl(f.id)}</td><td colspan="2">${pctOdds(f.chance * (p.finishBoost || 1))} ${t('perCard')}</td></tr>`).join('') + (ch ? `<tr class="odds-x"><td>${t('oddsExcl')}</td><td colspan="2">${pctOdds(ch)} ${t('perPack')}</td></tr>` : '') +
       (fin ? `<tr class="odds-x"><td><span class="fin-dot d-${fin.id}"></span>${fl(fin.id)}</td><td colspan="2">${pctOdds(fin.packChance)} ${t('perCard')}</td></tr>` : '');
   }
 
@@ -558,15 +557,6 @@
   }
   setInterval(() => { if ($('#view-shop').classList.contains('is-active')) renderFree(); }, 1000);
 
-  function renderOdds() {
-    const total = RARITIES.reduce((a, r) => a + r.weight, 0);
-    const pct = x => (x * 100).toFixed(1).replace('.', ',') + ' %';
-    $('#odds').innerHTML = RARITIES.map(r =>
-      `<li><span class="gem" style="background:var(--r-${r.id})"></span>${rl(r.id)} <b>${pct(r.weight / total)}</b></li>`).join('') +
-      `<li class="sep"></li>` +
-      BASE_FINISHES.slice(1).map(f => `<li><span class="fin-dot d-${f.id}"></span>${fl(f.id)} <b>${pct(f.chance)}</b></li>`).join('') +
-      `<li class="note">${t('oddsNote', NEW_CARD_BONUS)}</li>`;
-  }
 
   $('#packs').addEventListener('click', e => {
     const ob = e.target.closest('.odds-btn');
