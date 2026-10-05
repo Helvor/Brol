@@ -5,14 +5,15 @@
 
   // ---------- Réglages ----------
   const RARITIES = [
-    // sell : valeur de revente d'un doublon. Un paquet revendu en entier rapporte en moyenne
-    // environ 60 % de son prix (vérifié avec tools/simulate.mjs) : acheter pour revendre ne paie pas.
-    { id: 'commune',     label: { fr: 'Commune',     nl: 'Gewoon' },        weight: 50,   sell: 2 },
-    { id: 'peu-commune', label: { fr: 'Peu commune', nl: 'Ongewoon' },      weight: 26,   sell: 3 },
-    { id: 'rare',        label: { fr: 'Rare',        nl: 'Zeldzaam' },      weight: 15.5, sell: 8 },
-    { id: 'epique',      label: { fr: 'Épique',      nl: 'Episch' },        weight: 6,    sell: 18 },
-    { id: 'legendaire',  label: { fr: 'Légendaire',  nl: 'Legendarisch' },  weight: 2.2,  sell: 60 },
-    { id: 'mythique',    label: { fr: 'Mythique',    nl: 'Mythisch' },      weight: 0.3,  sell: 180 },
+    // sell : valeur de revente d'un doublon. Les cartes rares valent cher, les communes presque rien, si bien qu'un
+    // paquet revendu en entier rapporte toujours environ 60 % de son prix (vérifié avec tools/simulate.mjs) :
+    // acheter pour revendre ne paie pas.
+    { id: 'commune',     label: { fr: 'Commune',     nl: 'Gewoon' },        weight: 50,   sell: 1 },
+    { id: 'peu-commune', label: { fr: 'Peu commune', nl: 'Ongewoon' },      weight: 26,   sell: 2 },
+    { id: 'rare',        label: { fr: 'Rare',        nl: 'Zeldzaam' },      weight: 15.5, sell: 5 },
+    { id: 'epique',      label: { fr: 'Épique',      nl: 'Episch' },        weight: 6,    sell: 20 },
+    { id: 'legendaire',  label: { fr: 'Légendaire',  nl: 'Legendarisch' },  weight: 2.2,  sell: 75 },
+    { id: 'mythique',    label: { fr: 'Mythique',    nl: 'Mythisch' },      weight: 0.3,  sell: 340 },
   ];
   const R = Object.fromEntries(RARITIES.map((r, i) => [r.id, { ...r, rank: i }]));
   const rl = id => R[id].label[L()];
@@ -285,7 +286,7 @@
   const totalOf = id => FINISHES.reduce((a, f) => a + countOf(id, f.id), 0);
   const finishesOwned = id => FINISHES.filter(f => countOf(id, f.id) > 0).map(f => f.id);
   const bestFinish = id => finishesOwned(id).pop() || 'normal';
-  const sellValue = (c, fin) => R[c.rarity].sell * F[fin].mult;
+  const sellValue = (c, fin) => R[c.rarity].sell * F[fin].mult * (c.cat === 'edition' ? 2 : 1); // éditions limitées : valeur doublée
 
   // ---------- Utilitaires ----------
   const $ = s => document.querySelector(s);
