@@ -397,7 +397,9 @@
     </svg>`;
   }
   const packVisual = p => `<div class="pack-visual${p.special ? ' is-foil' : ''}">${packSVG(p)}<div class="sheen"></div>${p.special ? '<div class="foil"></div>' : ''}</div>`;
-  const cardBack = () => `<div class="card-back">${sealSVG({ ring: t('backSeal'), center: 'BROL', color: '#e2b33c', size: 200, centerSize: 52 })}<div class="back-foot">${t('back')}</div></div>`;
+  // Logo de Brol (même dessin que logo.svg et l'icône de l'onglet), au centre du dos des cartes
+  const LOGO = document.querySelector('.brand .logo')?.outerHTML.replace('class="logo"', 'class="back-logo"') || '';
+  const cardBack = () => `<div class="card-back">${sealSVG({ ring: t('backSeal'), center: LOGO ? '' : 'BROL', color: '#e2b33c', size: 200, centerSize: 52 })}${LOGO}<div class="back-foot">${t('back')}</div></div>`;
 
   // ---------- Rendu d'une carte ----------
   function cardHTML(c, { count = 0, finish = 'normal', variants = null } = {}) {

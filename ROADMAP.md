@@ -26,7 +26,7 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 
 ## Phase 3 — Identité et mobile
 
-- [ ] **Logo Brol** pour remplacer la case de bulletin de vote : en-tête, dos des cartes, favicon et icônes d'application.
+- [x] **Logo Brol** (trois cartes noir-jaune-rouge, un B sur la rouge ; `logo.svg`) : en-tête, dos des cartes et icône d'onglet. Reste : icônes d'application (PNG) avec la version installable.
 - [ ] **Version installable (PWA)** : manifeste, icônes, service worker. Le jeu s'ouvre hors ligne ; les images Commons déjà vues restent en cache.
 - [x] **Carte du jour** : une carte et 20 pièces par jour ; série de jours consécutifs (rare ou mieux dès le 3ᵉ jour, épique dès le 5ᵉ, légendaire tous les 7 jours).
 - [x] **Calendrier d'événements belges** (Carnaval, Tour des Flandres, Fête de l'Iris, 11 juillet, 21 juillet, Fêtes de Wallonie, Saint-Nicolas ; dates mobiles calculées) : paquets limités dans le temps (Fête nationale le 21 juillet, Carnaval de Binche, Saint-Nicolas, Tour des Flandres, Fêtes de Wallonie, 11 juillet…), avec des chances accrues dans les catégories concernées.
