@@ -7,7 +7,7 @@ runInNewContext(readFileSync(new URL('../data/cards.js', import.meta.url), 'utf8
 const cards = window.CARDS;
 
 const CATS = ['politique', 'monarchie', 'culture', 'groupe', 'festival', 'sport', 'science', 'art', 'monument', 'chateau', 'folklore',
-  'gastronomie', 'biere', 'enseignement', 'commune', 'province', 'region', 'evenement'];
+  'gastronomie', 'biere', 'enseignement', 'commune', 'province', 'region', 'evenement', 'edition'];
 const OPTIONAL = ['science']; // catégories ajoutées au générateur, vides tant que data/cards.js n'est pas régénéré
 const RARITIES = ['commune', 'peu-commune', 'rare', 'epique', 'legendaire', 'mythique'];
 
@@ -39,6 +39,14 @@ for (const cat of CATS) {
     const missing = RARITIES.filter(r => !list.some(c => c.rarity === r));
     if (missing.length) errors.push(`catégorie « ${cat} » sans ${missing.join(', ')}`);
   }
+}
+
+// Éditions limitées : 2 ou 3 cartes par paquet spécial, rattachées à un paquet connu
+const SPECIAL_PACKS = ['prestige', 'carnaval', 'ronde', 'iris', 'onze-juillet', 'fete-nationale', 'wallonie', 'saint-nicolas'];
+for (const c of cards.filter(c => c.cat === 'edition')) if (!SPECIAL_PACKS.includes(c.pack)) fail(c, `paquet inconnu « ${c.pack} »`);
+for (const p of SPECIAL_PACKS) {
+  const n = cards.filter(c => c.pack === p).length;
+  if (n < 2 || n > 3) errors.push(`paquet « ${p} » : ${n} carte(s) exclusive(s), il en faut 2 ou 3`);
 }
 
 if (errors.length) {

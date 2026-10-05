@@ -267,9 +267,40 @@ async function features() {
     });
     await step('paquet d’événement en vente à sa date', async () => {
       check(await page.locator('.pack-card[data-pack="saint-nicolas"] .event-ribbon').count() === 1, 'paquet Saint-Nicolas absent le 1ᵉʳ décembre');
-      const r = await page.evaluate(() => { const R = window.RDL; R.state.coins = 1000; const sn = R.activeEvents()[0]; const free = R.state.free; const res = R.buyPacks(sn, 1); return { cats: res.packs[0].revealed.map(d => d.card.cat), free: R.state.free === free }; });
-      check(r.cats.every(c => ['gastronomie', 'biere', 'folklore'].includes(c)), 'cartes hors thème dans le paquet Saint-Nicolas');
+      const r = await page.evaluate(() => { const R = window.RDL; R.state.coins = 1000; const sn = R.activeEvents()[0]; const free = R.state.free; const res = R.buyPacks(sn, 1); return { cats: res.packs[0].revealed.map(d => d.card.pack || d.card.cat), free: R.state.free === free }; });
+      check(r.cats.every(c => ['gastronomie', 'biere', 'folklore', 'saint-nicolas'].includes(c)), 'cartes hors thème dans le paquet Saint-Nicolas');
       check(r.free, 'le paquet d’événement a utilisé un paquet gratuit');
+    });
+    await step('éditions limitées et versions d’événement', async () => {
+      const r = await page.evaluate(() => {
+        const R = window.RDL, sn = R.packById('saint-nicolas'), be = R.packById('belgique');
+        const tally = (p, n) => { const o = { ed: {}, fin: {} }; for (let i = 0; i < n; i++) for (const d of R.drawPack(p)) {
+          if (d.card.cat === 'edition') o.ed[d.card.pack] = (o.ed[d.card.pack] || 0) + 1;
+          o.fin[d.finish] = (o.fin[d.finish] || 0) + 1; } return o; };
+        return { sn: tally(sn, 3000), be: tally(be, 3000), excl: R.exclOf('saint-nicolas').map(c => c.id) };
+      });
+      check(Object.keys(r.sn.ed).join() === 'saint-nicolas' && r.sn.ed['saint-nicolas'] > 200, 'éditions limitées du paquet Saint-Nicolas : ' + JSON.stringify(r.sn.ed));
+      check(r.sn.fin.rouge > 100 && !['noir', 'confetti', 'pave', 'iris', 'lion', 'tricolore', 'coq'].some(f => r.sn.fin[f]), 'versions du paquet Saint-Nicolas : ' + JSON.stringify(r.sn.fin));
+      check(!Object.keys(r.be.ed).length, 'édition limitée dans un paquet ordinaire');
+      check(['holo', 'plein', 'or'].every(f => r.be.fin[f]) && Object.keys(r.be.fin).length === 4, 'versions d’un paquet ordinaire : ' + JSON.stringify(r.be.fin));
+      // Affichage : une édition limitée en version Rouge, dans l'album et sa fiche
+      await page.evaluate(id => { window.RDL.state.owned[id + '|rouge'] = 1; window.RDL.save(); }, r.excl[0]);
+      await page.click('.tab[data-view="binder"]');
+      await page.click('#cat-chips [data-cat="edition"]');
+      await page.waitForSelector(`#grid .card.cat-edition.fin-rouge[data-id="${r.excl[0]}"]`);
+      check(await page.locator('#grid .empty-slot .ed-where').count() > 0, 'cases vides des éditions sans leur paquet');
+      await page.click(`#grid .card[data-id="${r.excl[0]}"]`);
+      await page.waitForSelector('#detail[open] .card.fin-rouge');
+      await page.click('#detail-close');
+      await page.click('.tab[data-view="shop"]');
+      check(await page.locator('.pack-card[data-pack="saint-nicolas"] .ex-thumb').count() === 3, 'cartes exclusives absentes de la boutique');
+    });
+    await step('fiche d’un savant : connu pour', async () => {
+      const id = await page.evaluate(() => { const c = window.RDL.CARDS.find(c => c.name === 'Adolphe Sax'); window.RDL.state.owned[c.id] = 1; window.RDL.save(); return c.id; });
+      await page.evaluate(id => window.RDL.openDetail(id), id);
+      await page.waitForSelector('#detail[open] ul.known li');
+      check(/saxophone/i.test(await page.textContent('#detail ul.known')), 'Adolphe Sax sans le saxophone');
+      await page.click('#detail-close');
     });
     await step('fusion des doublons', async () => {
       const ids = await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'rare'); window.RDL.state.owned[C[0].id] = 4; window.RDL.state.owned[C[1].id] = 3; window.RDL.save(); return [C[0].id, C[1].id]; });

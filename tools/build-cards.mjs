@@ -578,6 +578,64 @@ const SCIENCES = {
   Mathématiques: ['Gérard Mercator', 'Pierre Deligne', 'Ingrid Daubechies', 'Jean Bourgain', 'Grégoire de Saint-Vincent'],
   'Espace & exploration': ['Frank De Winne', 'Dirk Frimout', 'Adrien de Gerlache', 'Paul Otlet'],
 };
+// Ce qui a rendu chaque savant célèbre (fiche détail) : titre de la liste → [[FR…], [NL…], sous-titre FR, sous-titre NL].
+// Le sous-titre est facultatif : il remplace la description Wikidata quand elle est trompeuse ou absente.
+const KNOWN = {
+  'Georges Lemaître': [['La théorie du Big Bang (« atome primitif », 1931)', 'L’expansion de l’Univers (loi de Hubble-Lemaître, 1927)'],
+    ['De oerknaltheorie (“oeratoom”, 1931)', 'De uitdijing van het heelal (wet van Hubble-Lemaître, 1927)']],
+  'François Englert': [['Le mécanisme de Brout-Englert-Higgs (1964)', 'Prix Nobel de physique 2013'], ['Het Brout-Englert-Higgsmechanisme (1964)', 'Nobelprijs voor de Natuurkunde 2013']],
+  'Ilya Prigogine': [['La thermodynamique hors d’équilibre et les structures dissipatives', 'Prix Nobel de chimie 1977'],
+    ['De thermodynamica buiten evenwicht en dissipatieve structuren', 'Nobelprijs voor de Scheikunde 1977']],
+  'Adolphe Quetelet': [['L’indice de masse corporelle (IMC)', 'L’« homme moyen », pionnier de la statistique sociale', 'La fondation de l’Observatoire royal de Belgique'],
+    ['De body-mass index (BMI)', 'De “gemiddelde mens”, pionier van de sociale statistiek', 'De oprichting van de Koninklijke Sterrenwacht van België']],
+  'Simon Stevin': [['La notation décimale (De Thiende, 1585)', 'Le plan incliné et l’équilibre des forces', 'Les mots néerlandais « wiskunde » et « natuurkunde »'],
+    ['De decimale notatie (De Thiende, 1585)', 'Het hellend vlak en het krachtenevenwicht', 'De woorden “wiskunde” en “natuurkunde”']],
+  'Jean-Baptiste Van Helmont': [['L’invention du mot « gaz »', 'L’expérience du saule, sur la croissance des plantes'], ['Het woord “gas”', 'Het wilgenexperiment, over de groei van planten']],
+  'André Vésale': [['De humani corporis fabrica (1543)', 'La fondation de l’anatomie moderne'], ['De humani corporis fabrica (1543)', 'De grondslag van de moderne anatomie']],
+  'Christian de Duve': [['La découverte des lysosomes et des peroxysomes', 'Prix Nobel de médecine 1974'], ['De ontdekking van lysosomen en peroxisomen', 'Nobelprijs voor de Geneeskunde 1974']],
+  'Albert Claude': [['La microscopie électronique de la cellule et le fractionnement cellulaire', 'Prix Nobel de médecine 1974'],
+    ['Elektronenmicroscopie van de cel en celfractionering', 'Nobelprijs voor de Geneeskunde 1974']],
+  'Jules Bordet': [['La bactérie de la coqueluche (Bordetella pertussis)', 'Prix Nobel de médecine 1919, pour ses travaux sur l’immunité'],
+    ['De kinkhoestbacterie (Bordetella pertussis)', 'Nobelprijs voor de Geneeskunde 1919, voor zijn werk over immuniteit']],
+  'Corneille Heymans': [['Le rôle du sinus carotidien dans la régulation de la respiration', 'Prix Nobel de médecine 1938'],
+    ['De rol van de sinus caroticus bij de regeling van de ademhaling', 'Nobelprijs voor de Geneeskunde 1938']],
+  'Paul Janssen': [['La fondation de Janssen Pharmaceutica', 'Plus de 80 médicaments, dont l’halopéridol et le fentanyl'],
+    ['De oprichting van Janssen Pharmaceutica', 'Meer dan 80 geneesmiddelen, waaronder haloperidol en fentanyl']],
+  'Peter Piot': [['La codécouverte du virus Ebola (1976)', 'La direction de l’ONUSIDA, dont il a été le premier directeur'],
+    ['De mede-ontdekking van het ebolavirus (1976)', 'De leiding van UNAIDS, als eerste directeur']],
+  'Marc Van Montagu': [['Les premières plantes génétiquement modifiées (plasmide Ti d’Agrobacterium)', 'Prix mondial de l’alimentation 2013'],
+    ['De eerste genetisch gewijzigde planten (Ti-plasmide van Agrobacterium)', 'World Food Prize 2013']],
+  'Rembert Dodoens': [['Le Cruydeboeck (1554), grand herbier de la Renaissance'], ['Het Cruydeboeck (1554), groot kruidboek van de renaissance'],
+    'Médecin et botaniste flamand', 'Vlaams arts en botanicus'],
+  'Édouard Van Beneden': [['La méiose et le rôle des chromosomes dans la fécondation (1883)'], ['De meiose en de rol van chromosomen bij de bevruchting (1883)']],
+  'Adolphe Sax': [['Le saxophone (breveté en 1846)', 'Les saxhorns'], ['De saxofoon (gepatenteerd in 1846)', 'De saxhoorns'],
+    'Facteur d’instruments, inventeur du saxophone', 'Instrumentenbouwer, uitvinder van de saxofoon'],
+  'Zénobe Gramme': [['La dynamo Gramme, première génératrice électrique industrielle'], ['De dynamo van Gramme, eerste industriële elektrische generator']],
+  'Leo Baekeland': [['La bakélite (1907), premier plastique synthétique', 'Le papier photographique Velox'], ['Bakeliet (1907), de eerste synthetische kunststof', 'Het Velox-fotopapier'],
+    'Chimiste belgo-américain, né à Gand', 'Belgisch-Amerikaans scheikundige, geboren in Gent'],
+  'Étienne Lenoir': [['Le premier moteur à combustion interne commercialisé (1860)'], ['De eerste commercieel verkochte verbrandingsmotor (1860)']],
+  'Jan Pieter Minckelers': [['Le gaz d’éclairage tiré du charbon (1785)'], ['Lichtgas uit steenkool (1785)'],
+    'Chimiste né à Maastricht, professeur à Louvain', 'Scheikundige uit Maastricht, professor in Leuven'],
+  'Jean-Joseph Merlin': [['Les patins à roulettes', 'Des automates et des instruments de musique'], ['De rolschaats', 'Automaten en muziekinstrumenten']],
+  'Robert Cailliau': [['Le World Wide Web, avec Tim Berners-Lee au CERN (1990)'], ['Het World Wide Web, met Tim Berners-Lee bij CERN (1990)']],
+  'Charles van de Poele': [['Le tramway électrique à perche (trolley) aux États-Unis'], ['De elektrische tram met trolleystang in de Verenigde Staten'],
+    'Inventeur belgo-américain', 'Belgisch-Amerikaans uitvinder'],
+  'Lieven Gevaert': [['La fondation de Gevaert (aujourd’hui Agfa-Gevaert) : papiers et films photographiques'], ['De oprichting van Gevaert (nu Agfa-Gevaert): fotopapier en film'],
+    'Industriel de la photographie', 'Fotografie-industrieel'],
+  'Ernest Solvay': [['Le procédé Solvay de fabrication de la soude (1861)', 'Les conseils Solvay de physique (1911)'],
+    ['Het solvayproces voor de productie van soda (1861)', 'De Solvayconferenties over natuurkunde (1911)']],
+  'Gérard Mercator': [['La projection de Mercator (1569)', 'Le mot « atlas » pour un recueil de cartes'], ['De mercatorprojectie (1569)', 'Het woord “atlas” voor een kaartenboek']],
+  'Pierre Deligne': [['La démonstration des conjectures de Weil (1974)', 'Médaille Fields 1978, prix Abel 2013'], ['Het bewijs van de vermoedens van Weil (1974)', 'Fieldsmedaille 1978, Abelprijs 2013']],
+  'Ingrid Daubechies': [['Les ondelettes de Daubechies, utilisées pour compresser les images (JPEG 2000)'], ['De Daubechies-wavelets, gebruikt om beelden te comprimeren (JPEG 2000)']],
+  'Jean Bourgain': [['L’analyse harmonique et les équations aux dérivées partielles', 'Médaille Fields 1994'], ['Harmonische analyse en partiële differentiaalvergelijkingen', 'Fieldsmedaille 1994']],
+  'Grégoire de Saint-Vincent': [['La quadrature de l’hyperbole, précurseur du logarithme naturel'], ['De kwadratuur van de hyperbool, voorloper van de natuurlijke logaritme']],
+  'Frank De Winne': [['Le premier commandant européen de la Station spatiale internationale (2009)'], ['De eerste Europese commandant van het internationale ruimtestation (2009)']],
+  'Dirk Frimout': [['Le premier Belge dans l’espace (navette Atlantis, 1992)'], ['De eerste Belg in de ruimte (spaceshuttle Atlantis, 1992)']],
+  'Adrien de Gerlache': [['L’expédition de la Belgica, premier hivernage en Antarctique (1897–1899)'], ['De Belgica-expeditie, eerste overwintering op Antarctica (1897–1899)']],
+  'Paul Otlet': [['Le Mundaneum et la Classification décimale universelle', 'Un précurseur d’Internet'], ['Het Mundaneum en de Universele Decimale Classificatie', 'Een voorloper van het internet'],
+    'Bibliographe, fondateur du Mundaneum', 'Bibliograaf, oprichter van het Mundaneum'],
+};
+for (const t of Object.values(SCIENCES).flat()) if (!KNOWN[t]) console.warn('Savant sans « connu pour » :', t);
 const sciQ = await resolveTitles(Object.entries(SCIENCES).flatMap(([field, titles]) => titles.map(title => ({ title, field }))));
 const sciRows = await sparql(`
 SELECT ?p ?pLabel ?desc ?img ?birth ?death ?links WHERE {
@@ -593,12 +651,14 @@ for (const f of sciRows) {
   if (sciSeen.has(id) || cards.some(c => c.id === id)) continue;
   sciSeen.add(id);
   if (!f.img) { console.warn('Pas de photo libre, ignoré :', f.pLabel); continue; }
-  const field = sciQ.get(id).field;
+  const { field, title } = sciQ.get(id);
+  const [known, knownNl, sub, subNl] = KNOWN[title.replace(/^nl:/, '')] || [];
   const links = +f.links;
   const b = year(f.birth), d = year(f.death);
   cards.push({
     id, cat: 'science', name: f.pLabel, img: file(f.img), rarity: 'commune', family: 'science',
-    subtitle: f.desc ? cap(f.desc) : field, meta: field + (b ? ` · ${b}${d ? '–' + d : ''}` : ''),
+    known, nl: knownNl ? { known: knownNl, ...(subNl && { subtitle: subNl }) } : undefined,
+    subtitle: sub || (f.desc ? cap(f.desc) : field), meta: field + (b ? ` · ${b}${d ? '–' + d : ''}` : ''),
     stats: [['Naissance', b ?? '—'], d ? ['Décès', d] : ['Domaine', field.split(' & ')[0]], ['Wikipédias', links]],
   });
 }
@@ -849,6 +909,80 @@ const EVENTS = [
 for (const [id, name, subtitle, text, stats] of EVENTS)
   cards.push({ id, cat: 'evenement', name, rarity: EVENT_RARITY[id] || 'legendaire', img: null, subtitle, text, stats });
 
+// ---------- Éditions limitées : cartes exclusives aux paquets spéciaux ----------
+// Trois cartes par paquet spécial (une épique, une légendaire, une mythique), qu'on ne trouve nulle part ailleurs.
+// Le paquet est l'identifiant utilisé dans app.js (PACKS et EVENT_PACKS). Rareté fixée à la main.
+// [titre Wikipédia FR, paquet, rareté, nom FR, nom NL, texte FR, texte NL, options]
+// Options : img (image imposée, à la place de P18), artwork (tableau ou affiche, affiché en entier).
+const EDITIONS = [
+  ['Ordre de Léopold', 'prestige', 'mythique', 'Ordre de Léopold', 'Leopoldsorde',
+    'La plus haute distinction honorifique belge, créée en 1832 par Léopold Ier.', 'De hoogste Belgische onderscheiding, in 1832 ingesteld door Leopold I.'],
+  ['Armoiries de la Belgique', 'prestige', 'legendaire', 'Grandes armoiries', 'Groot wapen van België',
+    'Le lion belge entouré des bannières des neuf provinces d’origine, sous la devise « L’union fait la force ».', 'De Belgische leeuw tussen de banieren van de negen oorspronkelijke provincies, onder de wapenspreuk “Eendracht maakt macht”.'],
+  ['Butte du Lion', 'prestige', 'epique', 'Butte du Lion', 'Leeuw van Waterloo',
+    'Colline artificielle de 40 mètres élevée en 1826 sur le champ de bataille de Waterloo.', 'Kunstmatige heuvel van 40 meter, in 1826 opgeworpen op het slagveld van Waterloo.'],
+  ['Nicolas de Myre', 'saint-nicolas', 'mythique', 'Saint Nicolas de Myre', 'Sint-Nicolaas van Myra',
+    'Évêque de Myre au IVᵉ siècle, patron des enfants, à l’origine de la fête du 6 décembre.', 'Bisschop van Myra in de 4de eeuw, patroonheilige van de kinderen, oorsprong van het feest op 6 december.', { artwork: true }],
+  ['Cougnou', 'saint-nicolas', 'legendaire', 'Cougnou', 'Cougnou',
+    'Pain brioché en forme d’enfant emmailloté, des fêtes de fin d’année.', 'Briochebrood in de vorm van een ingebakerd kindje, voor de eindejaarsfeesten.'],
+  ['Massepain', 'saint-nicolas', 'epique', 'Massepain', 'Marsepein',
+    'Pâte d’amande moulée en fruits et en figurines, un classique des souliers de Saint-Nicolas.', 'Amandelspijs in de vorm van fruit en figuurtjes, een klassieker in de schoen van Sinterklaas.', { img: 'Lebensmittel-Marzipan1-Asio.jpg' }],
+  ['Bal du Rat mort', 'carnaval', 'mythique', 'Bal du Rat Mort', 'Bal du Rat Mort',
+    'Le grand bal masqué d’Ostende, depuis 1898. James Ensor en a dessiné l’affiche.', 'Het grote gemaskerde bal van Oostende, sinds 1898. James Ensor tekende de affiche.', { artwork: true }],
+  ['Carnaval des Ours', 'carnaval', 'legendaire', 'Carnaval des Ours', 'Berencarnaval',
+    'Le carnaval d’Andenne, la ville de l’ours.', 'Het carnaval van Andenne, de stad van de beer.'],
+  ['Chinels', 'carnaval', 'epique', 'Chinels', 'Chinels',
+    'Les personnages bossus et bruyants du carnaval de Fosses-la-Ville.', 'De gebochelde, luidruchtige figuren van het carnaval van Fosses-la-Ville.'],
+  ['Mur de Grammont', 'ronde', 'mythique', 'Mur de Grammont', 'Muur van Geraardsbergen',
+    'Côte pavée couronnée par sa chapelle, monument du cyclisme flamand.', 'Kasseihelling met de kapel op de top, monument van de Vlaamse wielersport.'],
+  ['Koppenberg', 'ronde', 'legendaire', 'Koppenberg', 'Koppenberg',
+    'Côte pavée si raide que les coureurs doivent parfois mettre pied à terre.', 'Zo steile kasseihelling dat renners soms te voet verder moeten.'],
+  ['Vieux Quaremont', 'ronde', 'epique', 'Vieux Quaremont', 'Oude Kwaremont',
+    'Longue montée pavée de plus de 2 km, juge du final du Tour des Flandres.', 'Lange kasseiklim van ruim 2 km, scherprechter in de finale van de Ronde.'],
+  ['Iris pseudacorus', 'iris', 'mythique', 'Iris des marais', 'Gele lis',
+    'L’iris jaune des marais de la Senne, emblème de la Région bruxelloise.', 'De gele lis uit de moerassen van de Zenne, symbool van het Brussels Gewest.', { img: 'Illustration Iris pseudacorus0.jpg', artwork: true }],
+  ['Jeanneke-Pis', 'iris', 'legendaire', 'Jeanneke-Pis', 'Jeanneke Pis',
+    'La petite sœur de Manneken-Pis, installée en 1987 dans l’impasse de la Fidélité.', 'Het zusje van Manneken Pis, sinds 1987 in de Getrouwheidsgang.'],
+  ['Het Zinneke', 'iris', 'epique', 'Zinneke Pis', 'Het Zinneke',
+    'Le chien de Tom Frantzen (1998), hommage aux Bruxellois de toutes origines.', 'De hond van Tom Frantzen (1998), eerbetoon aan de Brusselaars van alle origines.'],
+  ['Bataille de Courtrai (1302)', 'onze-juillet', 'mythique', 'Bataille des Éperons d’or', 'Guldensporenslag',
+    'Le 11 juillet 1302, les milices flamandes battent la chevalerie française à Courtrai.', 'Op 11 juli 1302 verslaan de Vlaamse milities de Franse ridders bij Kortrijk.', { img: 'Bataille de Courtrai (1302) - Français 2813.png', artwork: true }],
+  ['Drapeau de Flandre', 'onze-juillet', 'legendaire', 'Lion des Flandres', 'Vlaamse Leeuw',
+    'Le lion noir sur fond d’or, drapeau de la Communauté flamande.', 'De zwarte leeuw op een gouden veld, vlag van de Vlaamse Gemeenschap.'],
+  ['Jan Breydel', 'onze-juillet', 'epique', 'Breydel et De Coninck', 'Breydel en De Coninck',
+    'Les meneurs de la révolte brugeoise de 1302, statufiés sur le Markt de Bruges.', 'De leiders van de Brugse opstand van 1302, in brons op de Brugse Markt.'],
+  ['Révolution belge', 'fete-nationale', 'mythique', 'Révolution belge', 'Belgische Revolutie',
+    'Les Journées de septembre 1830 à Bruxelles, prélude à l’indépendance.', 'De Septemberdagen van 1830 in Brussel, aanloop naar de onafhankelijkheid.', { artwork: true }],
+  ['Drapeau de la Belgique', 'fete-nationale', 'legendaire', 'Drapeau belge', 'Belgische vlag',
+    'Noir, jaune, rouge : les couleurs du duché de Brabant, adoptées en 1831.', 'Zwart, geel, rood: de kleuren van het hertogdom Brabant, aangenomen in 1831.'],
+  ['Colonne du Congrès', 'fete-nationale', 'epique', 'Colonne du Congrès', 'Congreskolom',
+    'Colonne de 47 mètres en hommage au Congrès national, au pied de laquelle repose le Soldat inconnu.', 'Zuil van 47 meter ter ere van het Nationaal Congres, met aan de voet het graf van de Onbekende Soldaat.'],
+  ['Échasseurs namurois', 'wallonie', 'mythique', 'Échasseurs namurois', 'Steltlopers van Namen',
+    'Joutes sur échasses attestées à Namur depuis 1411, temps fort des Fêtes de Wallonie.', 'Steltgevechten in Namen, al sinds 1411, hoogtepunt van de Feesten van Wallonië.'],
+  ['Drapeau de la Wallonie', 'wallonie', 'legendaire', 'Coq hardi', 'Waalse haan',
+    'Le coq rouge sur fond jaune, emblème de la Wallonie depuis 1913.', 'De rode haan op een geel veld, embleem van Wallonië sinds 1913.'],
+  ['Perron de Liège', 'wallonie', 'epique', 'Perron liégeois', 'Luikse Perron',
+    'Colonne surmontée d’une pomme de pin, symbole des libertés liégeoises.', 'Zuil met een dennenappel, symbool van de Luikse vrijheden.'],
+];
+{
+  const eds = await resolveTitles(EDITIONS.map(([title, pack, rarity, name, nlName, text, nlText, opt = {}]) => ({ title, pack, rarity, name, nlName, text, nlText, ...opt })));
+  const rows = await sparql(`SELECT ?x ?img WHERE { VALUES ?x { ${[...eds.keys()].map(q => 'wd:' + q).join(' ')} } OPTIONAL { ?x wdt:P18 ?img } }`);
+  const p18 = new Map(rows.map(r => [qid(r.x), file(r.img)]));
+  let n = 0;
+  for (const [id, e] of eds) {
+    const img = e.img || p18.get(id) || await freePageImage(e.title);
+    if (!img) { console.warn('Édition limitée sans image, ignorée :', e.name); continue; }
+    cards.push({
+      id, cat: 'edition', pack: e.pack, name: e.name, rarity: e.rarity, img, artwork: e.artwork || undefined,
+      emblem: /\.svg$/i.test(img) || undefined, subtitle: 'Édition limitée', text: e.text,
+      nl: { name: e.nlName, subtitle: 'Beperkte editie', text: e.nlText },
+      stats: [['Édition', e.pack]], // remplacées dans le jeu par l'édition, le numéro et la période de vente
+    });
+    n++;
+  }
+  console.log(`Éditions limitées : ${n} / ${EDITIONS.length}`);
+}
+
 // ---------- Photos alternatives (pour la version « Plein cadre ») ----------
 // On prend une autre photo libre dans la catégorie Commons de la personne, si elle existe.
 const ALT_CATS = new Set(['culture', 'sport', 'science', 'monarchie']);
@@ -912,7 +1046,7 @@ const MYTHIQUES = [
   'Frite', 'Westvleteren (bière)', 'Tomorrowland (festival)', 'Carnaval de Binche',
 ];
 const QUOTAS = [['legendaire', 0.04], ['epique', 0.09], ['rare', 0.18], ['peu-commune', 0.27]];
-const FIXED_CATS = new Set(['monarchie', 'region', 'province', 'evenement']); // trop petites : rareté fixée à la main
+const FIXED_CATS = new Set(['monarchie', 'region', 'province', 'evenement', 'edition']); // trop petites : rareté fixée à la main
 const linkIds = cards.filter(c => isQ(c.id)).map(c => c.id);
 const LINKS = new Map();
 for (let i = 0; i < linkIds.length; i += 300) {
@@ -1032,11 +1166,11 @@ const POS_NL = {};
 for (const q of nlIds) if (NL.get(q)?.l && cards.every(c => c.id !== q)) POS_NL[q] = NL.get(q).l;
 for (const c of cards) {
   const n = NL.get(c.id);
-  if (!n) continue;
+  if (!n || c.cat === 'edition') continue; // noms et textes néerlandais écrits à la main
   const nl = {};
   if (n.l && n.l !== c.name) nl.name = cap(n.l.replace(/ van België$/, '').replace(/ \((bier|band|festival|gemeente)\)$/, ''));
-  if (n.d && ['culture', 'sport', 'science'].includes(c.cat)) nl.subtitle = cap(n.d);
-  if (Object.keys(nl).length) c.nl = nl;
+  if (n.d && ['culture', 'sport', 'science'].includes(c.cat) && !c.nl?.subtitle) nl.subtitle = cap(n.d);
+  if (Object.keys(nl).length) c.nl = { ...c.nl, ...nl };
 }
 console.log(`Néerlandais : ${cards.filter(c => c.nl?.name).length} noms traduits, ${Object.keys(POS_NL).length} fonctions`);
 

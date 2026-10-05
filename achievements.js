@@ -17,7 +17,7 @@
   const REWARD_SCALE = 1 / 3;
 
   window.buildAchievements = ctx => {
-    const { CARDS, state, totalOf, countOf, SERIES, PACKS } = ctx;
+    const { CARDS, state, totalOf, countOf, SERIES, PACKS, EVENT_FINISHES = [] } = ctx;
     const st = () => state.stats;
     const owned = () => CARDS.filter(c => totalOf(c.id));
     const ownedIn = pred => CARDS.filter(c => pred(c) && totalOf(c.id)).length;
@@ -53,7 +53,7 @@
       [50, 150, 300, 600, 1500, 3000]);
     add({ id: 'unique-all', group: 'collect', icon: 'crown', target: CARDS.length, reward: 20000, value: () => owned().length,
       title: { fr: 'Belgique complète', nl: 'België compleet' }, desc: { fr: 'Posséder toutes les cartes du jeu.', nl: 'Alle kaarten van het spel bezitten.' } });
-    const cats = [...new Set(CARDS.map(c => c.cat))];
+    const cats = [...new Set(CARDS.filter(c => c.cat !== 'edition').map(c => c.cat))];
     add({ id: 'every-cat', group: 'collect', icon: 'grid', target: cats.length, reward: 400,
       value: () => cats.filter(cat => ownedIn(c => c.cat === cat)).length,
       title: { fr: 'Touche-à-tout', nl: 'Duizendpoot' }, desc: { fr: 'Au moins une carte dans chaque catégorie.', nl: 'Minstens één kaart in elke categorie.' } });
@@ -96,6 +96,25 @@
     add({ id: 'all-versions', group: 'finish', icon: 'holo', target: 1, reward: 3000,
       value: () => CARDS.some(c => ['normal', 'holo', 'plein', 'or'].every(f => countOf(c.id, f))) ? 1 : 0,
       title: { fr: 'Collection complète', nl: 'Volledige set' }, desc: { fr: 'Posséder une même carte dans ses quatre versions.', nl: 'Eenzelfde kaart in alle vier versies bezitten.' } });
+
+    // ----- Éditions limitées et versions d'événement -----
+    const eds = CARDS.filter(c => c.cat === 'edition');
+    if (eds.length) {
+      add({ id: 'excl-1', group: 'finish', icon: 'star', target: 1, reward: 300, value: () => st().excl || 0,
+        title: { fr: 'Édition limitée', nl: 'Beperkte editie' }, desc: { fr: 'Trouver une carte exclusive dans un paquet spécial.', nl: 'Een exclusieve kaart vinden in een speciaal pakje.' } });
+      add({ id: 'excl-myth', group: 'finish', icon: 'gem', target: 1, reward: 1500, value: () => eds.some(c => c.rarity === 'mythique' && totalOf(c.id)) ? 1 : 0,
+        title: { fr: 'Pièce de musée', nl: 'Museumstuk' }, desc: { fr: 'Posséder une édition limitée mythique.', nl: 'Een mythische beperkte editie bezitten.' } });
+      add({ id: 'excl-all', group: 'finish', icon: 'crown', target: eds.length, reward: 8000, value: () => eds.filter(c => totalOf(c.id)).length,
+        title: { fr: 'Toutes les éditions', nl: 'Alle edities' }, desc: { fr: 'Posséder toutes les cartes exclusives des paquets spéciaux.', nl: 'Alle exclusieve kaarten van de speciale pakjes bezitten.' } });
+    }
+    if (EVENT_FINISHES.length) {
+      const evCount = () => EVENT_FINISHES.reduce((a, f) => a + (st().finish[f] || 0), 0);
+      tiers('evfin', 'finish', 'holo', [1, 5, 20], [{ fr: 'Hors série', nl: 'Buiten reeks' }, { fr: 'Saisonnier', nl: 'Seizoensgast' }, { fr: 'Calendrier complet', nl: 'Volle kalender' }],
+        evCount, { fr: n => `Obtenir ${n} carte${n > 1 ? 's' : ''} en version d’événement (Rouge, Confettis, Pavé…).`, nl: n => `${n} kaart${n > 1 ? 'en' : ''} in een evenementversie krijgen (Rood, Confetti, Kassei…).` }, [300, 1500, 5000]);
+      add({ id: 'evfin-kinds', group: 'finish', icon: 'medal', target: EVENT_FINISHES.length, reward: 6000,
+        value: () => EVENT_FINISHES.filter(f => st().finish[f]).length,
+        title: { fr: 'Toutes saisons', nl: 'Alle seizoenen' }, desc: { fr: 'Obtenir chaque version d’événement au moins une fois.', nl: 'Elke evenementversie minstens één keer krijgen.' } });
+    }
 
     // ----- Séries -----
     tiers('series', 'series', 'medal', [1, 5], [{ fr: 'Première série', nl: 'Eerste reeks' }, { fr: 'Sériephile', nl: 'Reeksliefhebber' }],

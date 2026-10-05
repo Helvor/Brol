@@ -15,6 +15,7 @@ Puis ouvrir http://localhost:5173. La collection est sauvegardée dans le naviga
 - Interface et cartes en français et en néerlandais (bouton FR/NL). Les noms néerlandais viennent de Wikidata ; les textes de l'interface sont dans `i18n.js`.
 - Raretés relatives : dans chaque catégorie, les cartes sont classées par notoriété puis réparties selon les mêmes proportions, si bien que chaque paquet contient des mythiques et que les taux affichés sont justes pour tous les paquets.
 - Paquet spécial Prestige (600 pièces, 5ᵉ carte légendaire ou mieux) et lot de 10 paquets à −10 % sur les autres.
+- Paquets spéciaux (Prestige et paquets d'événement) : chacun a 3 cartes exclusives en « Édition limitée » (liste `EDITIONS` dans le générateur ; une carte sur huit paquets, une sur quatre en Prestige) et sa propre version introuvable ailleurs : Noir et or, Rouge (Saint-Nicolas), Confettis, Pavé, Iris, Lion, Tricolore, Coq (`FINISHES` dans `app.js`, 1,5 % par carte, 3 % en Prestige).
 - Garantie anti-malchance : une légendaire ou mieux au plus tard tous les 40 paquets (`PITY` dans `app.js`).
 - Séries thématiques et 65 succès (`achievements.js`), dont des succès secrets.
 - Onglet Jeux (`games.js`) : Formation de gouvernement, Belgle (carte du jour), Chronologie, Tour de Belgique, Plus ou moins. Gains plafonnés à 1 500 pièces par jour.

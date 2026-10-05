@@ -5,14 +5,15 @@
 
   // ---------- Réglages ----------
   const RARITIES = [
-    // sell : valeur de revente d'un doublon. Un paquet revendu en entier rapporte en moyenne
-    // environ 60 % de son prix (vérifié avec tools/simulate.mjs) : acheter pour revendre ne paie pas.
-    { id: 'commune',     label: { fr: 'Commune',     nl: 'Gewoon' },        weight: 50,   sell: 2 },
-    { id: 'peu-commune', label: { fr: 'Peu commune', nl: 'Ongewoon' },      weight: 26,   sell: 3 },
-    { id: 'rare',        label: { fr: 'Rare',        nl: 'Zeldzaam' },      weight: 15.5, sell: 8 },
-    { id: 'epique',      label: { fr: 'Épique',      nl: 'Episch' },        weight: 6,    sell: 18 },
-    { id: 'legendaire',  label: { fr: 'Légendaire',  nl: 'Legendarisch' },  weight: 2.2,  sell: 60 },
-    { id: 'mythique',    label: { fr: 'Mythique',    nl: 'Mythisch' },      weight: 0.3,  sell: 180 },
+    // sell : valeur de revente d'un doublon. Les cartes rares valent cher, les communes presque rien, si bien qu'un
+    // paquet revendu en entier rapporte toujours environ 60 % de son prix (vérifié avec tools/simulate.mjs) :
+    // acheter pour revendre ne paie pas.
+    { id: 'commune',     label: { fr: 'Commune',     nl: 'Gewoon' },        weight: 50,   sell: 1 },
+    { id: 'peu-commune', label: { fr: 'Peu commune', nl: 'Ongewoon' },      weight: 26,   sell: 2 },
+    { id: 'rare',        label: { fr: 'Rare',        nl: 'Zeldzaam' },      weight: 15.5, sell: 5 },
+    { id: 'epique',      label: { fr: 'Épique',      nl: 'Episch' },        weight: 6,    sell: 20 },
+    { id: 'legendaire',  label: { fr: 'Légendaire',  nl: 'Legendarisch' },  weight: 2.2,  sell: 75 },
+    { id: 'mythique',    label: { fr: 'Mythique',    nl: 'Mythisch' },      weight: 0.3,  sell: 340 },
   ];
   const R = Object.fromEntries(RARITIES.map((r, i) => [r.id, { ...r, rank: i }]));
   const rl = id => R[id].label[L()];
@@ -23,9 +24,22 @@
     { id: 'holo',   label: { fr: 'Holo',        nl: 'Holo' },        chance: 0.08,  mult: 2 },
     { id: 'plein',  label: { fr: 'Plein cadre', nl: 'Volle kader' }, chance: 0.035, mult: 3 },
     { id: 'or',     label: { fr: 'Dorée',       nl: 'Goud' },        chance: 0.012, mult: 5 },
+    // Versions d'événement : uniquement dans leur paquet spécial, sur n'importe quelle carte du paquet.
+    // packChance : probabilité par carte (≈ 7 % des paquets d'événement, ≈ 14 % des paquets Prestige).
+    { id: 'noir',      label: { fr: 'Noir et or', nl: 'Zwart en goud' }, chance: 0, mult: 6, pack: 'prestige',       packChance: 0.03,  color: '#f6d478' },
+    { id: 'rouge',     label: { fr: 'Rouge',      nl: 'Rood' },          chance: 0, mult: 5, pack: 'saint-nicolas',  packChance: 0.015, color: '#ff4a5c' },
+    { id: 'confetti',  label: { fr: 'Confettis',  nl: 'Confetti' },      chance: 0, mult: 5, pack: 'carnaval',       packChance: 0.015, color: '#f0a3ff' },
+    { id: 'pave',      label: { fr: 'Pavé',       nl: 'Kassei' },        chance: 0, mult: 5, pack: 'ronde',          packChance: 0.015, color: '#f6d43a' },
+    { id: 'iris',      label: { fr: 'Iris',       nl: 'Iris' },          chance: 0, mult: 5, pack: 'iris',           packChance: 0.015, color: '#4f8dff' },
+    { id: 'lion',      label: { fr: 'Lion',       nl: 'Leeuw' },         chance: 0, mult: 5, pack: 'onze-juillet',   packChance: 0.015, color: '#f2c400' },
+    { id: 'tricolore', label: { fr: 'Tricolore',  nl: 'Driekleur' },     chance: 0, mult: 5, pack: 'fete-nationale', packChance: 0.015, color: '#e1001e' },
+    { id: 'coq',       label: { fr: 'Coq',        nl: 'Haan' },          chance: 0, mult: 5, pack: 'wallonie',       packChance: 0.015, color: '#f2c400' },
   ];
   const F = Object.fromEntries(FINISHES.map((f, i) => [f.id, { ...f, rank: i }]));
   const fl = id => F[id].label[L()];
+  const BASE_FINISHES = FINISHES.filter(f => !f.pack);
+  const packFinish = packId => FINISHES.find(f => f.pack === packId);
+  const finTier = id => F[id].pack ? 4 : F[id].rank; // une version d'événement compte comme la plus rare
 
   const CATS = [
     { id: 'politique',    fr: 'Politique',     nl: 'Politiek' },
@@ -46,6 +60,7 @@
     { id: 'province',     fr: 'Provinces',     nl: 'Provincies' },
     { id: 'region',       fr: 'Régions',       nl: 'Gewesten' },
     { id: 'evenement',    fr: 'Événements',    nl: 'Gebeurtenissen' },
+    { id: 'edition',      fr: 'Éditions limitées', nl: 'Beperkte edities' },
   ];
   const CAT_RANK = Object.fromEntries(CATS.map((c, i) => [c.id, i]));
   const cl = id => CATS.find(c => c.id === id)[L()];
@@ -120,7 +135,7 @@
       desc: { fr: 'Gastronomie, bières et folklore. Versions spéciales deux fois plus fréquentes.', nl: 'Gastronomie, bieren en folklore. Speciale versies twee keer vaker.' },
       body: ['#4a0710', '#a3162a'], metal: ['#fff4d6', '#f2c14e', '#9a6a12'], cats: ['gastronomie', 'biere', 'folklore'], finishBoost: 2 },
   ].map(p => ({ ...p, price: 100, special: true, event: true }));
-  const poolOf = p => (window.CARDS || []).filter(c => p.filter ? p.filter(c) : !p.cats || p.cats.includes(c.cat));
+  const poolOf = p => (window.CARDS || []).filter(c => c.cat !== 'edition' && (p.filter ? p.filter(c) : !p.cats || p.cats.includes(c.cat)));
   const eventWindow = (p, d = now()) => p.when(d.getFullYear());
   const activeEvents = () => { const d = ymd(now()); return EVENT_PACKS.filter(p => { const [a, b] = eventWindow(p); return a <= d && d <= b; }); };
   function nextEvent() {
@@ -151,8 +166,9 @@
   // ---------- Données ----------
   const FLANDRE = ['Anvers', 'Limbourg', 'Flandre-Orientale', 'Flandre-Occidentale', 'Brabant flamand'];
   const REGION_FAMILY = { Q9337: 'flandre', Q231: 'wallonie', Q240: 'bruxelles' };
+  const PACK_RANK = Object.fromEntries([...PACKS, ...EVENT_PACKS].map((p, i) => [p.id, i])); // éditions limitées : groupées par paquet
   const CARDS = (window.CARDS || []).filter(c => CAT_RANK[c.cat] !== undefined).sort((a, b) =>
-    CAT_RANK[a.cat] - CAT_RANK[b.cat] || R[b.rarity].rank - R[a.rarity].rank || a.name.localeCompare(b.name, 'fr'));
+    CAT_RANK[a.cat] - CAT_RANK[b.cat] || (PACK_RANK[a.pack] ?? 0) - (PACK_RANK[b.pack] ?? 0) || R[b.rarity].rank - R[a.rarity].rank || a.name.localeCompare(b.name, 'fr'));
   CARDS.forEach((c, i) => {
     c.no = i + 1;
     if (c.cat === 'commune') {
@@ -163,6 +179,42 @@
   });
   const BY_ID = new Map(CARDS.map(c => [c.id, c]));
   const nm = c => window.I18N.name(c);
+
+  // ---------- Éditions limitées ----------
+  // Cartes exclusives aux paquets spéciaux (cat 'edition', champ pack). Dans leur paquet, la première carte est
+  // remplacée par l'une d'elles une fois sur huit (une fois sur quatre en Prestige) : épique 60 %, légendaire 30 %, mythique 10 %.
+  const ALL_PACKS = [...PACKS, ...EVENT_PACKS];
+  const packById = id => ALL_PACKS.find(p => p.id === id);
+  const EXCL = new Map();
+  for (const c of CARDS) if (c.cat === 'edition') { if (!EXCL.has(c.pack)) EXCL.set(c.pack, []); EXCL.get(c.pack).push(c); }
+  const exclOf = id => EXCL.get(id) || [];
+  const EXCL_CHANCE = { prestige: 0.25 }, EXCL_DEFAULT = 0.125;
+  const EXCL_WEIGHT = { epique: 60, legendaire: 30, mythique: 10 };
+  const exclChance = p => exclOf(p.id).length ? (EXCL_CHANCE[p.id] ?? EXCL_DEFAULT) : 0;
+  function pickExclusive(p) {
+    const list = exclOf(p.id);
+    let roll = Math.random() * list.reduce((a, c) => a + (EXCL_WEIGHT[c.rarity] || 1), 0);
+    for (const c of list) { if ((roll -= EXCL_WEIGHT[c.rarity] || 1) < 0) return c; }
+    return list[list.length - 1];
+  }
+  // Statistiques d'une édition limitée : son numéro dans l'édition et sa période de vente (son paquet est sur le sceau)
+  const dm = d => `${d.slice(8, 10)}/${d.slice(5, 7)}`;
+  function statsOf(c) {
+    if (c.cat !== 'edition') return c.stats;
+    const p = packById(c.pack), list = exclOf(c.pack), no = [t('edStatNo'), `${list.indexOf(c) + 1}/${list.length}`];
+    if (!p?.event) return [no, [t('edStatPack'), p ? pl(p, 'title') : c.pack], [t('edStatPrice'), p ? p.price : '—']];
+    const [a, b] = eventWindow(p);
+    return [no, [t('edFrom'), dm(a)], [t('edTo'), dm(b)]];
+  }
+  // Versions possibles pour une carte : les quatre de base, plus celles des paquets spéciaux qui peuvent la donner
+  let finPools = null;
+  function finishesFor(c) {
+    finPools ||= new Map(FINISHES.filter(f => f.pack).map(f => {
+      const p = packById(f.pack);
+      return [f.id, new Set(p ? [...poolOf(p), ...exclOf(p.id)].map(x => x.id) : [])];
+    }));
+    return FINISHES.filter(f => !f.pack || finPools.get(f.id).has(c.id));
+  }
 
   // ---------- Séries thématiques ----------
   const SERIES = [
@@ -193,6 +245,10 @@
     { id: 'univ', title: { fr: 'Universités', nl: 'Universiteiten' }, desc: { fr: 'Les universités belges.', nl: 'De Belgische universiteiten.' }, reward: 500,
       match: c => c.cat === 'enseignement' && c.subtitle === 'Université' },
     { id: 'festivals', title: { fr: 'Été des festivals', nl: 'Festivalzomer' }, desc: { fr: 'De Tomorrowland aux Francofolies.', nl: 'Van Tomorrowland tot de Francofolies.' }, reward: 400, match: c => c.cat === 'festival' },
+    ...ALL_PACKS.filter(p => p.special).map(p => ({ id: 'ed-' + p.id, edition: p.id,
+      title: { fr: `Édition ${p.title.fr}`, nl: `Editie ${p.title.nl}` },
+      desc: { fr: `Les cartes exclusives du paquet ${p.title.fr}.`, nl: `De exclusieve kaarten van het pakje ${p.title.nl}.` },
+      reward: p.id === 'prestige' ? 1500 : 600, match: c => c.pack === p.id })),
   ].map(s => ({ ...s, members: CARDS.filter(s.match).map(c => c.id) })).filter(s => s.members.length >= 3);
   const SERIES_OF = new Map();
   for (const s of SERIES) for (const id of s.members) { if (!SERIES_OF.has(id)) SERIES_OF.set(id, []); SERIES_OF.get(id).push(s); }
@@ -200,7 +256,7 @@
 
   // ---------- Sauvegarde ----------
   // owned : clé « id » pour la version standard, « id|holo » etc. pour les versions spéciales
-  const freshStats = () => ({ packs: 0, cards: 0, free: 0, rarity: {}, finish: {}, packsBy: {}, sold: 0, earned: 0, perfect: 0, doubleLeg: 0, night: 0, pityHits: 0, goldMyth: 0, trades: 0, tradeGift: 0, tradeMyth: 0, tradeFull: 0, fused: 0, fuseHolo: 0, dailyMax: 0 });
+  const freshStats = () => ({ packs: 0, cards: 0, free: 0, rarity: {}, finish: {}, packsBy: {}, sold: 0, earned: 0, perfect: 0, doubleLeg: 0, night: 0, pityHits: 0, goldMyth: 0, trades: 0, tradeGift: 0, tradeMyth: 0, tradeFull: 0, fused: 0, fuseHolo: 0, dailyMax: 0, excl: 0 });
   const fresh = () => ({ coins: START_COINS, owned: {}, packs: 0, free: 1, freeAt: Date.now(), claimed: {}, pity: 0, stats: freshStats(), ach: {}, trade: { pending: {}, done: {} }, daily: { last: null, streak: 0 } });
   let state = load();
   function load() {
@@ -230,7 +286,7 @@
   const totalOf = id => FINISHES.reduce((a, f) => a + countOf(id, f.id), 0);
   const finishesOwned = id => FINISHES.filter(f => countOf(id, f.id) > 0).map(f => f.id);
   const bestFinish = id => finishesOwned(id).pop() || 'normal';
-  const sellValue = (c, fin) => R[c.rarity].sell * F[fin].mult;
+  const sellValue = (c, fin) => R[c.rarity].sell * F[fin].mult * (c.cat === 'edition' ? 2 : 1); // éditions limitées : valeur doublée
 
   // ---------- Utilitaires ----------
   const $ = s => document.querySelector(s);
@@ -240,7 +296,7 @@
   const fileUrl = f => 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(f.replace(/ /g, '_'));
   const initials = n => n.split(/[\s-]+/).filter(w => /^[A-ZÀ-Ý]/.test(w)).slice(0, 2).map(w => w[0]).join('');
   const fmt = n => n.toLocaleString(L() === 'nl' ? 'nl-BE' : 'fr-BE');
-  const isEmblem = c => ['commune', 'province', 'region', 'enseignement'].includes(c.cat) && c.img && (c.img === c.badge || /\.svg$|\.png$/i.test(c.img));
+  const isEmblem = c => c.emblem || (['commune', 'province', 'region', 'enseignement'].includes(c.cat) && c.img && (c.img === c.badge || /\.svg$|\.png$/i.test(c.img)));
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const photoOf = (c, fin) => (fin === 'plein' && c.alt) || c.img;
   const SFX = window.SFX;
@@ -352,14 +408,17 @@
       media = `<div class="portrait">${SILHOUETTE}<span>${esc(initials(c.name))}</span></div>`;
     }
     const fam = c.family || 'gris';
+    const ed = c.cat === 'edition' && packById(c.pack);
+    const style = ed ? `--band: ${ed.body[1]}; --band-ink: ${ed.metal[0]}; --ed-frame: linear-gradient(135deg, ${ed.metal[2]}, ${ed.metal[0]} 22%, ${ed.metal[1]} 45%, ${ed.metal[0]} 65%, ${ed.metal[2]})` : `--band: var(--p-${fam})`;
     const photoClass = isEmblem(c) ? ' is-emblem' : c.artwork ? ' is-artwork' : '';
     const finTag = finish !== 'normal' ? `<span class="fin-tag">${fl(finish)}</span>` : '';
     const liveText = c.live ? (L() === 'nl' ? 'Op de troon' : c.live) : (L() === 'nl' ? 'In functie' : 'En fonction');
-    const live = c.current ? `<span class="live">${esc(liveText)}</span>` : c.unesco ? '<span class="live unesco">UNESCO</span>' : '';
+    const live = ed ? `<span class="ed-seal" style="color:${ed.metal[1]}">${esc(ed.big)}</span>`
+      : c.current ? `<span class="live">${esc(liveText)}</span>` : c.unesco ? '<span class="live unesco">UNESCO</span>' : '';
     const dots = variants && variants.length > 1
       ? `<span class="var-dots" title="${t('versionsOwned')}">${variants.filter(v => v !== 'normal').map(v => `<i class="d-${v}"></i>`).join('')}</span>` : '';
     return `
-      <article class="card r-${c.rarity} cat-${c.cat} fam-${fam} fin-${finish}" data-id="${esc(c.id)}" data-fin="${finish}" style="--band: var(--p-${fam})">
+      <article class="card r-${c.rarity} cat-${c.cat} fam-${fam} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}" style="${style}">
         ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
         <div class="card-in">
           <div class="card-photo${photoClass}">${media}</div>
@@ -370,14 +429,14 @@
             <p class="sub">${esc(window.I18N.subtitle(c))}</p>
             ${c.meta ? `<p class="meta">${esc(window.I18N.meta(c))}</p>` : ''}
           </div>
-          <dl class="card-stats">${c.stats.map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          <dl class="card-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd>${esc(tv(v))}</dd></div>`).join('')}</dl>
           ${dots}
         </div>
       </article>`;
   }
 
   document.addEventListener('pointermove', e => {
-    const card = e.target.closest?.('.card.r-epique, .card.r-legendaire, .card.r-mythique, .card.fin-holo, .card.fin-plein, .card.fin-or');
+    const card = e.target.closest?.('.card.r-epique, .card.r-legendaire, .card.r-mythique, .card.fin-holo, .card.fin-plein, .card.fin-or, .card.fin-ev');
     if (!card) return;
     const b = card.getBoundingClientRect();
     const x = (e.clientX - b.left) / b.width, y = (e.clientY - b.top) / b.height;
@@ -395,9 +454,11 @@
     for (const r of pool) { if ((roll -= r.weight) < 0) return r.id; }
     return pool[pool.length - 1].id;
   }
-  function pickFinish(boost = 1) {
+  function pickFinish(boost = 1, packId = null) {
+    const ev = packId && packFinish(packId);
+    if (ev && Math.random() < ev.packChance) return ev.id;
     let roll = Math.random();
-    for (const f of FINISHES.slice(1).reverse()) { if ((roll -= f.chance * boost) < 0) return f.id; }
+    for (const f of BASE_FINISHES.slice(1).reverse()) { if ((roll -= f.chance * boost) < 0) return f.id; }
     return 'normal';
   }
   function drawPack(pack, forceLegend) {
@@ -417,9 +478,13 @@
       }
       const card = list[Math.floor(Math.random() * list.length)];
       taken.add(card.id);
-      out.push({ card, finish: pickFinish(pack.finishBoost) });
+      out.push({ card, finish: pickFinish(pack.finishBoost, pack.id) });
     }
-    return out.sort((a, b) => R[a.card.rarity].rank - R[b.card.rarity].rank || F[a.finish].rank - F[b.finish].rank);
+    // Édition limitée : remplace la première carte (jamais la 5ᵉ, qui porte la garantie du paquet)
+    if (Math.random() < exclChance(pack)) out[0] = { card: pickExclusive(pack), finish: pickFinish(pack.finishBoost, pack.id) };
+    // Ordre de révélation : de la moins rare à la plus rare, les éditions limitées en dernier
+    const isEd = d => d.card.cat === 'edition' ? 1 : 0;
+    return out.sort((a, b) => isEd(a) - isEd(b) || R[a.card.rarity].rank - R[b.card.rarity].rank || finTier(a.finish) - finTier(b.finish));
   }
 
   // Taux réels par carte pour un paquet : une rareté absente du paquet se reporte sur la plus proche
@@ -452,16 +517,35 @@
           <div><h2>${esc(pl(p, 'title'))}</h2><p>${esc(pl(p, 'desc'))}</p></div>
           <span class="price"><span class="coin"></span>${p.price}</span>
         </div>
+        ${packExtras(p)}
         <button class="linkish odds-btn">${t('packOdds')}</button>
         <table class="pack-odds" hidden><thead><tr><th></th><th>${t('oddsCards')}</th><th>${t('oddsLast')}</th></tr></thead><tbody>${packOdds(p).filter(o => o.p + o.last > 0).map(o =>
-          `<tr><td><span class="gem" style="background:var(--r-${o.id})"></span>${rl(o.id)}</td><td>${pctOdds(o.p)}</td><td>${pctOdds(o.last)}</td></tr>`).join('')}</tbody></table>
+          `<tr><td><span class="gem" style="background:var(--r-${o.id})"></span>${rl(o.id)}</td><td>${pctOdds(o.p)}</td><td>${pctOdds(o.last)}</td></tr>`).join('')}${packOddsExtra(p)}</tbody></table>
         ${p.special ? `<span class="pack-note">${t(p.event ? 'eventNote' : 'specialNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', BULK)} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
       </div>`;
     }).join('');
     renderFree();
-    renderOdds();
     renderDaily();
   }
+  // Paquets spéciaux : leurs cartes exclusives (floutées tant qu'on ne les a pas) et leur version d'événement
+  function packExtras(p) {
+    const list = exclOf(p.id), fin = packFinish(p.id);
+    if (!list.length && !fin) return '';
+    const thumbs = list.map(c => {
+      const got = totalOf(c.id) > 0;
+      return `<span class="ex-thumb r-${c.rarity}${got ? '' : ' is-locked'}" title="${got ? esc(nm(c)) : esc(rl(c.rarity))}" style="background-image:url('${imgUrl(c.img, 160)}')">${got ? '' : '<b>?</b>'}</span>`;
+    }).join('');
+    return `<div class="pack-extras">
+      ${list.length ? `<div class="ex-row"><div class="ex-thumbs">${thumbs}</div><span>${t('exclLine', list.length, list.filter(c => totalOf(c.id)).length)}</span></div>` : ''}
+      ${fin ? `<div class="ex-row"><span class="fin-dot d-${fin.id}"></span><span>${t('evFinLine', fl(fin.id))}</span></div>` : ''}
+    </div>`;
+  }
+  function packOddsExtra(p) {
+    const fin = packFinish(p.id), ch = exclChance(p);
+    return BASE_FINISHES.slice(1).map((f, i) => `<tr class="odds-x${i ? '' : ' first'}"><td><span class="fin-dot d-${f.id}"></span>${fl(f.id)}</td><td colspan="2">${pctOdds(f.chance * (p.finishBoost || 1))} ${t('perCard')}</td></tr>`).join('') + (ch ? `<tr class="odds-x"><td>${t('oddsExcl')}</td><td colspan="2">${pctOdds(ch)} ${t('perPack')}</td></tr>` : '') +
+      (fin ? `<tr class="odds-x"><td><span class="fin-dot d-${fin.id}"></span>${fl(fin.id)}</td><td colspan="2">${pctOdds(fin.packChance)} ${t('perCard')}</td></tr>` : '');
+  }
+
   function renderFree() {
     tickFree();
     const left = state.freeAt + FREE_EVERY_MS - Date.now();
@@ -474,15 +558,6 @@
   }
   setInterval(() => { if ($('#view-shop').classList.contains('is-active')) renderFree(); }, 1000);
 
-  function renderOdds() {
-    const total = RARITIES.reduce((a, r) => a + r.weight, 0);
-    const pct = x => (x * 100).toFixed(1).replace('.', ',') + ' %';
-    $('#odds').innerHTML = RARITIES.map(r =>
-      `<li><span class="gem" style="background:var(--r-${r.id})"></span>${rl(r.id)} <b>${pct(r.weight / total)}</b></li>`).join('') +
-      `<li class="sep"></li>` +
-      FINISHES.slice(1).map(f => `<li><span class="fin-dot d-${f.id}"></span>${fl(f.id)} <b>${pct(f.chance)}</b></li>`).join('') +
-      `<li class="note">${t('oddsNote', NEW_CARD_BONUS)}</li>`;
-  }
 
   $('#packs').addEventListener('click', e => {
     const ob = e.target.closest('.odds-btn');
@@ -532,6 +607,7 @@
       st.rarity[d.card.rarity] = (st.rarity[d.card.rarity] || 0) + 1;
       if (d.finish !== 'normal') st.finish[d.finish] = (st.finish[d.finish] || 0) + 1;
       if (d.finish === 'or' && d.card.rarity === 'mythique') st.goldMyth = 1;
+      if (d.card.cat === 'edition') st.excl = (st.excl || 0) + 1;
     }
     if (newCount === PACK_SIZE) st.perfect = 1;
     const legends = revealed.filter(d => R[d.card.rarity].rank >= R.legendaire.rank).length;
@@ -554,9 +630,9 @@
     current = { pack, n, revealed, newCount: sum('newCount'), bonus: sum('bonus'), usedFree: res.usedFree, cost: res.cost, pityTriggered: res.packs.some(p => p.pityTriggered) };
     const { usedFree } = current;
 
-    const score = d => R[d.card.rarity].rank + F[d.finish].rank * 1.5;
+    const score = d => R[d.card.rarity].rank + finTier(d.finish) * 1.5 + (d.card.cat === 'edition' ? 4 : 0);
     const best = revealed.reduce((a, b) => score(b) > score(a) ? b : a);
-    const hot = best.finish === 'or' ? '#f6d478' : R[best.card.rarity].rank >= R.epique.rank ? `var(--r-${best.card.rarity})` : best.finish !== 'normal' ? '#9fe8ff' : '#ffffff';
+    const hot = F[best.finish].pack ? F[best.finish].color : best.card.cat === 'edition' ? packById(best.card.pack).metal[1] : best.finish === 'or' ? '#f6d478' : R[best.card.rarity].rank >= R.epique.rank ? `var(--r-${best.card.rarity})` : best.finish !== 'normal' ? '#9fe8ff' : '#ffffff';
 
     stage.hidden = false;
     stage.classList.remove('is-hot');
@@ -619,12 +695,13 @@
     $('#reveal').innerHTML = current.revealed.map(({ card, finish, isNew }, i) => {
       const rank = R[card.rarity].rank;
       const special = finish !== 'normal';
-      const tag = bulk ? (isNew ? t('new') : '') : (isNew ? t('new') : t('dup')) + (special ? ` · ${fl(finish)}` : '');
-      const hit = finish === 'or' ? '#f6d478' : special && rank < R.epique.rank ? '#9fe8ff' : `var(--r-${card.rarity})`;
+      const ed = card.cat === 'edition', ev = F[finish].pack;
+      const tag = (ed ? t('edTag') + ' · ' : '') + (bulk ? (isNew ? t('new') : '') : (isNew ? t('new') : t('dup')) + (special ? ` · ${fl(finish)}` : ''));
+      const hit = ev ? F[finish].color : ed ? packById(card.pack).metal[1] : finish === 'or' ? '#f6d478' : special && rank < R.epique.rank ? '#9fe8ff' : `var(--r-${card.rarity})`;
       return `
-      <div class="slot${rank >= R.epique.rank || special ? ' tease' : ''}${rank >= R.legendaire.rank || F[finish].rank >= F.plein.rank ? ' big-hit' : ''}"
+      <div class="slot${rank >= R.epique.rank || special || ed ? ' tease' : ''}${rank >= R.legendaire.rank || finTier(finish) >= F.plein.rank || ed ? ' big-hit' : ''}${ed ? ' is-ed' : ''}"
            style="--hit: ${hit}; --dx: calc(${2 - i % PACK_SIZE} * (var(--w) + 22px)); --dr: ${(i % PACK_SIZE - 2) * 6}deg; animation-delay: ${bulk ? Math.floor(i / PACK_SIZE) * 70 + (i % PACK_SIZE) * 25 : i * 90}ms" data-i="${i}">
-        ${tag ? `<span class="tag${isNew ? '' : ' dup'}${special ? ' special' : ''}">${tag}</span>` : ''}
+        ${tag ? `<span class="tag${isNew ? '' : ' dup'}${special ? ' special' : ''}${ev ? ' ev' : ''}${ed ? ' ed' : ''}"${ev || ed ? ` style="--tagc:${hit}"` : ''}>${tag}</span>` : ''}
         <div class="inner">
           <div class="face back">${cardBack()}</div>
           <div class="face front">${cardHTML(card, { finish })}</div>
@@ -777,7 +854,8 @@
     grid.innerHTML = list.slice(0, shown).map(c => {
       const n = totalOf(c.id);
       if (n) return `<div class="cell">${cardHTML(c, { count: n, finish: bestFinish(c.id), variants: finishesOwned(c.id) })}</div>`;
-      return `<div class="cell"><div class="empty-slot"><span class="gem" style="background:var(--r-${c.rarity})"></span><span class="no">${String(c.no).padStart(4, '0')}</span><span class="name">${esc(nm(c))}</span></div></div>`;
+      const where = c.cat === 'edition' && packById(c.pack) ? `<span class="ed-where">${t('edWhere', esc(pl(packById(c.pack), 'title')))}</span>` : '';
+      return `<div class="cell"><div class="empty-slot"><span class="gem" style="background:var(--r-${c.rarity})"></span><span class="no">${String(c.no).padStart(4, '0')}</span><span class="name">${esc(nm(c))}</span>${where}</div></div>`;
     }).join('') + (list.length > shown ? `<button class="btn btn-line grid-more" id="more">${t('more', fmt(list.length - shown))}</button>` : '');
   }
   function renderWallet() {
@@ -891,7 +969,7 @@
   // 5 doublons standard d'une même rareté → 1 carte au hasard de la rareté au-dessus.
   // 3 doublons standard d'une même carte → sa version Holo. Un exemplaire de chaque carte est toujours gardé.
   const FUSE_COST = 5, HOLO_COST = 3;
-  const randomCard = rarity => { const list = CARDS.filter(c => c.rarity === rarity); return list[Math.floor(Math.random() * list.length)]; };
+  const randomCard = rarity => { const list = CARDS.filter(c => c.rarity === rarity && c.cat !== 'edition'); return list[Math.floor(Math.random() * list.length)]; };
   const fuseStock = rarity => CARDS.filter(c => c.rarity === rarity && countOf(c.id, 'normal') > 1).map(c => ({ c, extra: countOf(c.id, 'normal') - 1 }));
   const fuseAvailable = rarity => fuseStock(rarity).reduce((a, x) => a + x.extra, 0);
   const holoCandidates = () => CARDS.filter(c => countOf(c.id, 'normal') > HOLO_COST);
@@ -1048,7 +1126,7 @@
 
   // ---------- Succès ----------
   // Le contexte lit toujours le state courant (il est remplacé lors d'une réinitialisation)
-  const achievements = window.buildAchievements({ CARDS, get state() { return state; }, totalOf, countOf, SERIES, PACKS });
+  const achievements = window.buildAchievements({ CARDS, get state() { return state; }, totalOf, countOf, SERIES, PACKS, EVENT_FINISHES: FINISHES.filter(f => f.pack).map(f => f.id) });
   const achQueue = [];
   let achShowing = false;
   function checkAchievements() {
@@ -1135,19 +1213,21 @@
       ? `<div class="versions">${owned.map(f => `<button class="ver${f === finish ? ' is-active' : ''}" data-fin="${f}"><span class="fin-dot d-${f}"></span>${fl(f)}<small>×${countOf(id, f)}</small></button>`).join('')}</div>` : '';
     const roles = window.I18N.roles(c);
     const text = window.I18N.text(c);
+    const known = window.I18N.known(c);
     $('#detail-body').innerHTML = `
-      <div class="kicker" style="color:var(--r-${c.rarity})"><span class="gem" style="background:var(--r-${c.rarity})"></span>${rl(c.rarity)}${finish !== 'normal' ? ` · <span class="fin-word d-${finish}">${fl(finish)}</span>` : ''} · <span style="color:var(--ink-2)">${cl(c.cat)}</span></div>
+      <div class="kicker" style="color:var(--r-${c.rarity})"><span class="gem" style="background:var(--r-${c.rarity})"></span>${rl(c.rarity)}${finish !== 'normal' ? ` · <span class="fin-word d-${finish}"${F[finish].pack ? ` style="color:${F[finish].color}"` : ''}>${fl(finish)}</span>` : ''} · <span style="color:var(--ink-2)">${cl(c.cat)}</span></div>
       <h2>${esc(nm(c))}</h2>
       <p class="sub">${esc(window.I18N.subtitle(c))}${c.meta ? `<br>${esc(window.I18N.meta(c))}` : ''}</p>
       ${versions}
       ${text ? `<p class="text">${esc(text)}</p>` : ''}
       <dl>
         ${c.party && !c.stats.some(([k]) => k === 'Parti') ? `<dt>${t('party')}</dt><dd>${esc(c.party)}</dd>` : ''}
-        ${c.stats.map(([k, v]) => `<dt>${esc(window.I18N.statKey(k))}</dt><dd>${esc(tv(v))}</dd>`).join('')}
+        ${statsOf(c).map(([k, v]) => `<dt>${esc(window.I18N.statKey(k))}</dt><dd>${esc(tv(v))}</dd>`).join('')}
         <dt>${t('copies')}</dt><dd>${cnt}${finish !== 'normal' ? ` (${fl(finish)})` : ''}</dd>
         <dt>${t('value')}</dt><dd>${t('coins', sellValue(c, finish))}</dd>
       </dl>
       ${SERIES_OF.has(id) ? `<h4>${t('seriesH')}</h4><p class="series-list">${SERIES_OF.get(id).map(s => `<button class="chip-s" data-series="${s.id}">${esc(sl(s, 'title'))}</button>`).join('')}</p>` : ''}
+      ${known.length ? `<h4>${t('knownFor')}</h4><ul class="known">${known.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       ${roles.length ? `<h4>${t('career')}</h4><ul>${roles.slice(0, 10).map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       <div class="links">${links.join('')}</div>
       ${cnt > 1 ? `<button class="btn" id="sell-one">${t('sellOne', sellValue(c, finish))}</button>` : ''}`;
@@ -1243,10 +1323,10 @@
     CARDS, BY_ID, get state() { return state; }, save, renderWallet, checkAchievements, totalOf,
     esc, imgUrl, fmt, toast, SFX, catLabel: cl, rarityLabel: rl,
     // pour les échanges (trade.js)
-    cardHTML, countOf, keyOf, FINISHES, finishLabel: fl, rarityRank: id => R[id].rank, show, openDetail,
+    cardHTML, countOf, keyOf, FINISHES, finishesFor, finishLabel: fl, rarityRank: id => R[id].rank, show, openDetail,
     // pour la simulation de l'économie (tools/simulate.mjs) et les tests
     PACKS, SERIES, RARITIES, BULK, bulkPrice, buyPacks, sellDuplicates, dupValue, claimSeries,
-    EVENT_PACKS, activeEvents, fuseRarity, fuseHolo, fuseAvailable, claimDaily, dailyReady,
+    EVENT_PACKS, activeEvents, fuseRarity, fuseHolo, fuseAvailable, claimDaily, dailyReady, drawPack, exclOf, packById,
   };
 
   applyStatic();
