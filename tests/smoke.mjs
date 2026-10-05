@@ -141,6 +141,14 @@ async function run(name, options) {
   await step('mini-jeu Chronologie', () => game('chrono', () => click('.gap')));
   await step('mini-jeu Tour de Belgique', () => game('tour', () => click('.tour-map')));
   await step('mini-jeu Plus ou moins', () => game('pom', () => click('#p-more')));
+  await step('mini-jeu Qui suis-je', () => game('qui', async () => {
+    await click('#q-more'); await click('.qui-choice:not(:disabled)');
+    await page.waitForSelector('.qui-clue');
+  }));
+  await step('mini-jeu Le Parti', () => game('parti', async () => {
+    await click('.parti-choice');
+    await page.waitForSelector('.parti-choice.is-ok');
+  }));
 
   await step('néerlandais et thème', async () => {
     await view('shop');

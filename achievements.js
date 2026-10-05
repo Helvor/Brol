@@ -136,8 +136,8 @@
     // ----- Jeux -----
     const gm = () => state.games || {};
     const gv = (game, key) => () => (gm()[game] || {})[key] || 0;
-    add({ id: 'g-all', group: 'games', icon: 'grid', target: 5, reward: 300, value: () => Object.keys(gm().played || {}).length,
-      title: { fr: 'Ludothèque', nl: 'Spelotheek' }, desc: { fr: 'Jouer aux cinq jeux.', nl: 'Alle vijf de spellen spelen.' } });
+    add({ id: 'g-all', group: 'games', icon: 'grid', target: 7, reward: 300, value: () => Object.keys(gm().played || {}).length,
+      title: { fr: 'Ludothèque', nl: 'Spelotheek' }, desc: { fr: 'Jouer aux sept jeux.', nl: 'Alle zeven de spellen spelen.' } });
     add({ id: 'g-formateur', group: 'games', icon: 'crown', target: 1, reward: 300, value: gv('formation', 'won'),
       title: { fr: 'Formateur', nl: 'Formateur' }, desc: { fr: 'Former un gouvernement.', nl: 'Een regering vormen.' } });
     add({ id: 'g-541', group: 'games', icon: 'clock', target: 1, reward: 500, value: () => { const b = gv('formation', 'best')(); return b && b < 541 ? 1 : 0; },
@@ -154,6 +154,10 @@
       title: { fr: 'Du premier coup', nl: 'In één keer' }, desc: { fr: 'Trouver la carte du jour au premier essai.', nl: 'De kaart van de dag bij de eerste poging vinden.' } });
     add({ id: 'g-belgle7', group: 'games', icon: 'clock', target: 7, reward: 1000, value: gv('belgle', 'maxStreak'),
       title: { fr: 'Une semaine de Belgle', nl: 'Een week Belgle' }, desc: { fr: 'Trouver la carte du jour 7 jours de suite.', nl: '7 dagen op rij de kaart van de dag vinden.' } });
+    add({ id: 'g-qui', group: 'games', icon: 'medal', target: 400, reward: 600, value: gv('qui', 'best'),
+      title: { fr: 'Fin limier', nl: 'Speurneus' }, desc: { fr: 'Marquer 400 points ou plus à Qui suis-je ?', nl: '400 punten of meer halen bij Wie ben ik?' } });
+    add({ id: 'g-parti', group: 'games', icon: 'swap', target: 1, reward: 800, value: gv('parti', 'perfect'),
+      title: { fr: 'Politologue', nl: 'Politicoloog' }, desc: { fr: 'Faire 10 sur 10 au jeu Le Parti.', nl: '10 op 10 halen bij De Partij.' } });
     tiers('g-chrono', 'games', 'clock', [10, 25], [{ fr: 'Chronologue', nl: 'Chronoloog' }, { fr: 'Maître du temps', nl: 'Meester van de tijd' }],
       gv('chrono', 'best'), { fr: n => `Placer ${n} cartes d’affilée dans Chronologie.`, nl: n => `${n} kaarten op rij juist plaatsen in Tijdlijn.` }, [300, 1200]);
     tiers('g-tour', 'games', 'map', [7000, 9000], [{ fr: 'Géographe', nl: 'Geograaf' }, { fr: 'GPS humain', nl: 'Menselijke gps' }],

@@ -1236,3 +1236,47 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   .tour-city-name { font-size: 21px; }
   .tour-city { r: 7; }
 }
+
+/* Qui suis-je ? */
+.qui { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; align-items: start; max-width: 900px; }
+.qui-clues { display: grid; gap: 8px; }
+.qui-clue { padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--bg-2); font-size: 16px; font-weight: 600; animation: fade-in .3s ease; }
+.qui-clue small { display: block; font-family: var(--display); font-weight: 700; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 2px; }
+.qui-photo { position: relative; aspect-ratio: 4 / 3; max-height: 260px; border-radius: 6px; background: var(--bg-3) center 25% / cover no-repeat; overflow: hidden; animation: fade-in .3s ease; }
+.qui-photo.is-blur { filter: blur(14px) saturate(.8); }
+.qui-photo small { position: absolute; left: 10px; bottom: 8px; font-family: var(--display); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #fff; }
+.qui-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-family: var(--mono); font-size: 13px; color: var(--gold); }
+.qui-res { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border-radius: 6px; border: 2px solid; }
+.qui-res.ok { border-color: #2f9e5a; }
+.qui-res.lost { border-color: var(--danger); }
+.qui-res b { display: block; font-family: var(--display); font-weight: 800; text-transform: uppercase; font-size: 15px; }
+.qui-res span { display: block; font-family: var(--display); font-weight: 800; font-size: 24px; text-transform: uppercase; line-height: 1.05; margin-top: 2px; }
+.qui-choices { display: grid; gap: 8px; }
+.qui-choice, .parti-choice { padding: 14px 14px; border-radius: 6px; border: 2px solid var(--line); background: var(--bg-2); color: var(--ink); text-align: left;
+  font-family: var(--display); font-weight: 800; font-size: 18px; text-transform: uppercase; line-height: 1.1; cursor: pointer; transition: border-color .15s, transform .15s; }
+.qui-choice:not(:disabled):hover, .parti-choice:not(:disabled):hover { border-color: var(--gold); transform: translateY(-1px); }
+.qui-choice.is-ko, .parti-choice.is-ko { border-color: var(--danger); color: var(--danger); text-decoration: line-through; opacity: .8; }
+.qui-choice.is-ok, .parti-choice.is-ok { border-color: #2f9e5a; box-shadow: 0 0 0 3px color-mix(in srgb, #2f9e5a 30%, transparent); }
+.qui-choice.is-off, .parti-choice.is-off { opacity: .45; }
+
+/* Le Parti */
+.parti { max-width: 620px; }
+.parti-card { display: flex; gap: 16px; align-items: center; padding: 12px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--bg-2); }
+.parti-img { width: 120px; aspect-ratio: 3 / 4; flex: none; border-radius: 6px; background: var(--bg-3) center 20% / cover no-repeat; }
+.parti-card b { display: block; font-family: var(--display); font-weight: 800; font-size: 28px; text-transform: uppercase; line-height: 1.02; }
+.parti-card small { display: block; color: var(--ink-2); font-size: 14px; margin-top: 4px; }
+.parti-q { font-weight: 700; font-size: 17px; margin: 16px 0 10px; }
+.parti-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.parti-choice, .parti-choice:not(:disabled):hover { border-left: 8px solid var(--fam); text-align: center; }
+.parti-choice.is-ok { background: color-mix(in srgb, #2f9e5a 12%, var(--bg-2)); }
+
+@media (max-width: 760px) {
+  .qui { grid-template-columns: 1fr; gap: 12px; }
+  .qui-clue { font-size: 14px; padding: 8px 12px; }
+  .qui-photo { max-height: 150px; }
+  .qui-res span { font-size: 20px; }
+  .qui-choices { grid-template-columns: 1fr 1fr; }
+  .qui-choice, .parti-choice { font-size: 15px; padding: 12px 10px; }
+  .parti-img { width: 90px; }
+  .parti-card b { font-size: 21px; }
+}
