@@ -88,7 +88,7 @@ async function run(name, options) {
 
   await step('paquet Prestige (légendaire ou mieux garantie)', async () => {
     const r = await page.evaluate(() => {
-      const R = window.RDL, prestige = R.PACKS.find(p => p.special);
+      const R = window.RDL, prestige = R.PACKS.find(p => p.id === 'prestige');
       R.state.coins = prestige.price * 30; R.state.free = 3;
       let ok = true;
       for (let i = 0; i < 30; i++) {
@@ -331,6 +331,22 @@ async function features() {
       check(r.early === 0, 'mission réclamée avant d’être faite');
       check(r.gain === r.reward && r.coins === r.reward && r.twice === 0, 'récompense de mission : ' + JSON.stringify(r));
       check(r.multBefore === 1 && r.multAfter === 1.5 && r.myth === 510, 'bonus d’album : ' + JSON.stringify(r));
+    });
+    await step('paquet Nouveautés : cartes absentes, 10 par jour', async () => {
+      const r = await page.evaluate(() => {
+        const R = window.RDL, p = R.PACKS.find(x => x.id === 'nouveautes');
+        R.state.coins = 10000;
+        const owned = new Set(R.CARDS.filter(c => R.totalOf(c.id)).map(c => c.id));
+        let allNew = true, ok = 0;
+        for (let i = 0; i < 10; i++) {
+          const res = R.buyPacks(p, 1);
+          if (!res) break;
+          ok++;
+          for (const d of res.packs[0].revealed) { if (owned.has(d.card.id) || !d.isNew) allNew = false; owned.add(d.card.id); }
+        }
+        return { ok, allNew, eleventh: !!R.buyPacks(p, 1) };
+      });
+      check(r.ok === 10 && r.allNew && !r.eleventh, 'paquet Nouveautés : ' + JSON.stringify(r));
     });
     await step('fusion des doublons', async () => {
       const ids = await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'rare'); window.RDL.state.owned[C[0].id] = 4; window.RDL.state.owned[C[1].id] = 3; window.RDL.save(); return [C[0].id, C[1].id]; });

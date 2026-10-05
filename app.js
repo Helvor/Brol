@@ -90,7 +90,11 @@
     { id: 'territoires', title: { fr: 'Territoires', nl: 'Grondgebied' }, kicker: { fr: 'Édition géographique', nl: 'Geografische editie' }, big: '565', price: 80,
       desc: { fr: 'Communes, provinces, régions et enseignement.', nl: 'Gemeenten, provincies, gewesten en onderwijs.' },
       body: ['#10261a', '#2c4a5a'], metal: ['#ffd9b8', '#d08a52', '#7c4320'], cats: ['commune', 'province', 'region', 'enseignement'] },
-    // Paquet spécial : 5ᵉ carte légendaire ou mieux (≈ 12 % de mythiques). Pièces uniquement, ni gratuit ni lot de 10.
+    // Nouveautés : uniquement des cartes absentes de l'album (version standard). 10 par jour au plus, à l'unité.
+    { id: 'nouveautes', title: { fr: 'Nouveautés', nl: 'Nieuwigheden' }, kicker: { fr: 'Édition collection', nl: 'Verzameleditie' }, big: '+5', price: 300,
+      desc: { fr: 'Cinq cartes qui manquent à ton album, garanti.', nl: 'Vijf kaarten die nog in je album ontbreken, gegarandeerd.' },
+      body: ['#0b1c24', '#16424f'], metal: ['#e6fdff', '#7fd8e0', '#2f7c86'], cats: null, missing: true, perDay: 10, special: true },
+    // Paquet spécial : 5ᵉ carte légendaire ou mieux (≈ 12 % de mythiques). Pièces uniquement, jamais gratuit ; lot de 10 possible.
     { id: 'prestige', title: { fr: 'Prestige', nl: 'Prestige' }, kicker: { fr: 'Édition prestige', nl: 'Prestige-editie' }, big: 'L+', price: 600,
       desc: { fr: 'Toutes les cartes. 5ᵉ carte légendaire ou mieux, garantie.', nl: 'Alle kaarten. 5de kaart gegarandeerd legendarisch of beter.' },
       body: ['#050506', '#2a2210'], metal: ['#fff6cf', '#f0c24a', '#8a6410'], cats: null, last: 'legendaire', special: true },
@@ -156,7 +160,7 @@
   const bulkPrice = p => Math.round(p.price * BULK * BULK_DISCOUNT);
 
   // Les paquets sans assez de cartes (ex. Sciences avant la régénération des données) sont masqués
-  const hasCards = p => poolOf(p).length >= PACK_SIZE;
+  const hasCards = p => p.missing || poolOf(p).length >= PACK_SIZE;
   PACKS.splice(0, PACKS.length, ...PACKS.filter(hasCards));
   // Paquets en vente aujourd'hui : événements en cours d'abord
   const shopPacks = () => [...activeEvents().filter(hasCards), ...PACKS];
@@ -361,6 +365,8 @@
     'fete-nationale': (k, p) => `<rect x="0" y="18" width="100" height="394" fill="#000" opacity=".55"/><rect x="100" y="18" width="100" height="394" fill="#f2c400" opacity=".35"/><rect x="200" y="18" width="100" height="394" fill="#e1001e" opacity=".45"/>
       <path d="M130 96L135 80L143 90L150 76L157 90L165 80L170 96Z" fill="${p.metal[0]}" opacity=".9"/><rect x="130" y="96" width="40" height="5" fill="${p.metal[0]}" opacity=".9"/>`,
     wallonie: (k, p) => rays(28, '#f2c400', '#c8102e', .22),
+    nouveautes: (k, p) => `${Array.from({ length: 24 }, (_, i) => { const x = 22 + (i % 6) * 44, y = 74 + Math.floor(i / 6) * 76, filled = [1, 4, 8, 15, 17, 22].includes(i);
+      return `<rect x="${x}" y="${y}" width="36" height="52" rx="3" fill="${filled ? p.metal[1] : 'none'}" stroke="${p.metal[1]}" stroke-width="1.2" stroke-dasharray="${filled ? 'none' : '3 3'}" opacity="${filled ? .3 : .35}"/>`; }).join('')}`,
     sciences: (k, p) => `<defs><pattern id="gp${k}" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0H0V12" fill="none" stroke="${p.metal[1]}" stroke-width=".4" opacity=".25"/></pattern></defs>
       <rect x="0" y="18" width="300" height="394" fill="url(#gp${k})"/>
       <g fill="none" stroke="${p.metal[1]}" stroke-width="1.6" opacity=".35">${[0, 60, 120].map(a => `<ellipse cx="150" cy="202" rx="128" ry="44" transform="rotate(${a} 150 202)"/>`).join('')}</g>
@@ -393,13 +399,19 @@
       <text x="282" y="92" text-anchor="end" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="11" fill="${p.metal[1]}" opacity=".8">${t('cards5')}</text>
       <g transform="translate(60 112)">${sealSVG({ ring: t('seal'), center: p.big, color: p.metal[1], size: 180, px: 180, centerSize: p.big.length > 2 ? 52 : 66 })}</g>
       <text x="150" y="334" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="600" font-size="13" letter-spacing="4" fill="${p.metal[1]}">${esc(pl(p, 'kicker').toUpperCase())}</text>
-      <text x="150" y="374" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="${title.length > 13 ? 34 : title.length > 10 ? 38 : 44}" letter-spacing="1" fill="url(#m${k})"${title.length > 10 ? ' textLength="268" lengthAdjust="spacingAndGlyphs"' : ''}>${esc(title)}</text>
+      <text x="150" y="374" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="${title.length > 13 ? 34 : title.length > 9 ? 38 : 44}" letter-spacing="1" fill="url(#m${k})"${title.length > 9 ? ' textLength="268" lengthAdjust="spacingAndGlyphs"' : ''}>${esc(title)}</text>
     </svg>`;
   }
   const packVisual = p => `<div class="pack-visual${p.special ? ' is-foil' : ''}">${packSVG(p)}<div class="sheen"></div>${p.special ? '<div class="foil"></div>' : ''}</div>`;
-  // Logo de Brol (même dessin que logo.svg et l'icône de l'onglet), au centre du dos des cartes
-  const LOGO = document.querySelector('.brand .logo')?.outerHTML.replace('class="logo"', 'class="back-logo"') || '';
-  const cardBack = () => `<div class="card-back">${sealSVG({ ring: t('backSeal'), center: LOGO ? '' : 'BROL', color: '#e2b33c', size: 200, centerSize: 52 })}${LOGO}<div class="back-foot">${t('back')}</div></div>`;
+  // Logo de Brol en version or au centre du dos des cartes : mêmes trois cartes que logo.svg,
+  // les deux du fond en simple filet, celle de devant en or avec le B en creux
+  const BACK_MARK = `<svg class="back-logo" viewBox="-1.3 -0.5 63 63" aria-hidden="true"><defs><linearGradient id="bk-gold" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff1b8"/><stop offset=".45" stop-color="#e2b33c"/><stop offset="1" stop-color="#9c7112"/></linearGradient></defs>
+    <g stroke-linejoin="round"><rect x="13" y="9" width="30" height="42" rx="4.5" fill="#0c1020" stroke="#e2b33c" stroke-width="1.6" opacity=".55" transform="rotate(-18 28 50)"/>
+    <rect x="17" y="8" width="30" height="42" rx="4.5" fill="#0c1020" stroke="#e2b33c" stroke-width="1.6" opacity=".8" transform="rotate(-4 32 50)"/>
+    <rect x="21" y="10" width="30" height="42" rx="4.5" fill="url(#bk-gold)" stroke="#fff1b8" stroke-width="1" transform="rotate(12 36 52)"/>
+    <path transform="rotate(12 36 52)" d="M30.5 19.5v23M30.5 19.5h6.5a5.6 5.6 0 0 1 0 11.2h-6.5M30.5 30.7h7.4a6 6 0 0 1 0 12h-7.4" fill="none" stroke="#0c1020" stroke-width="4.6" stroke-linecap="square"/></g></svg>`;
+  const cardBack = () => `<div class="card-back">${sealSVG({ ring: t('backSeal'), center: '', color: '#e2b33c', size: 200, centerSize: 52 })}${BACK_MARK}<div class="back-foot">${t('back')}</div></div>`;
 
   // ---------- Rendu d'une carte ----------
   function cardHTML(c, { count = 0, finish = 'normal', variants = null } = {}) {
@@ -468,7 +480,7 @@
     return 'normal';
   }
   function drawPack(pack, forceLegend) {
-    const pool = poolOf(pack).filter(c => BY_ID.has(c.id));
+    const pool = poolOf(pack).filter(c => BY_ID.has(c.id) && (!pack.missing || !totalOf(c.id)));
     const out = [];
     const taken = new Set();
     for (let i = 0; i < PACK_SIZE; i++) {
@@ -514,7 +526,7 @@
     const ev = nextEvent();
     $('#event-line').innerHTML = activeEvents().length ? '' : ev ? t('nextEvent', esc(pl(ev.p, 'title')), fmtDay(ev.start)) : '';
     $('#packs').innerHTML = shopPacks().map(p => {
-      const locked = state.coins < p.price && (!state.free || p.special);
+      const locked = (state.coins < p.price && (!state.free || p.special)) || !leftToday(p) || (p.missing && missingCount() < PACK_SIZE);
       return `
       <div class="pack-card${locked ? ' is-locked' : ''}${p.special ? ' is-special' : ''}${p.event ? ' is-event' : ''}" data-pack="${p.id}">
         ${p.event ? `<span class="event-ribbon">${t('eventUntil', fmtDay(eventWindow(p)[1]))}</span>` : ''}
@@ -527,7 +539,8 @@
         <button class="linkish odds-btn">${t('packOdds')}</button>
         <table class="pack-odds" hidden><thead><tr><th></th><th>${t('oddsCards')}</th><th>${t('oddsLast')}</th></tr></thead><tbody>${packOdds(p).filter(o => o.p + o.last > 0).map(o =>
           `<tr><td><span class="gem" style="background:var(--r-${o.id})"></span>${rl(o.id)}</td><td>${pctOdds(o.p)}</td><td>${pctOdds(o.last)}</td></tr>`).join('')}${packOddsExtra(p)}</tbody></table>
-        ${p.special ? `<span class="pack-note">${t(p.event ? 'eventNote' : 'specialNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', BULK)} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
+        ${p.perDay ? `<span class="pack-note">${missingCount() < PACK_SIZE ? t('albumFull') : leftToday(p) ? t('perDayLeft', leftToday(p), p.perDay) : t('perDay')}</span>`
+          : p.event ? `<span class="pack-note">${t('eventNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', BULK)} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
       </div>`;
     }).join('');
     renderFree();
@@ -607,14 +620,26 @@
 
   // Achat et tirage, sans interface : utilisé par l'ouverture, le lot ×10 et la simulation (tools/simulate.mjs).
   // Un paquet seul utilise d'abord un paquet gratuit ; le lot ×10 se paie toujours en pièces.
+  // Paquets limités par jour (Nouveautés) : compteur remis à zéro chaque jour
+  const boughtToday = p => state.perDay?.day === ymd(now()) ? (state.perDay.n[p.id] || 0) : 0;
+  const leftToday = p => p.perDay ? Math.max(0, p.perDay - boughtToday(p)) : Infinity;
+  const missingCount = () => CARDS.filter(c => c.cat !== 'edition' && !totalOf(c.id)).length;
+  let buyError = null;
   function buyPacks(pack, n = 1) {
     tickFree();
+    buyError = null;
+    if (pack.perDay && leftToday(pack) < n) { buyError = 'perDay'; return null; }
+    if (pack.missing && missingCount() < PACK_SIZE) { buyError = 'albumFull'; return null; }
     let usedFree = false;
     const cost = n === 1 ? pack.price : bulkPrice(pack);
     if (n === 1 && state.free > 0 && !pack.special) { state.free--; usedFree = true; if (state.free === FREE_MAX - 1) state.freeAt = Date.now(); }
     else if (state.coins >= cost) state.coins -= cost;
     else return null;
     const packs = Array.from({ length: n }, () => rollPack(pack, usedFree));
+    if (pack.perDay) {
+      if (state.perDay?.day !== ymd(now())) state.perDay = { day: ymd(now()), n: {} };
+      state.perDay.n[pack.id] = (state.perDay.n[pack.id] || 0) + n;
+    }
     save();
     return { packs, usedFree, cost: usedFree ? 0 : cost };
   }
@@ -659,7 +684,7 @@
 
   function openPack(pack, n = 1) {
     const res = buyPacks(pack, n);
-    if (!res) { SFX.error(); return toast(t('noCoins')); }
+    if (!res) { SFX.error(); return toast(t(buyError || 'noCoins')); }
     const revealed = res.packs.flatMap(p => p.revealed);
     for (const d of revealed.slice(0, 15)) { const p = photoOf(d.card, d.finish); if (p) new Image().src = imgUrl(p); }
     const sum = k => res.packs.reduce((a, p) => a + p[k], 0);
@@ -832,7 +857,7 @@
     const again = $('#again');
     again.hidden = false;
     if (n > 1) { again.textContent = t('again10', n, fmt(bulkPrice(pack))); again.disabled = state.coins < bulkPrice(pack); }
-    else { const free = state.free && !pack.special; again.textContent = t('again', free ? null : pack.price); again.disabled = !free && state.coins < pack.price; }
+    else { const free = state.free && !pack.special; again.textContent = t('again', free ? null : pack.price); again.disabled = (!free && state.coins < pack.price) || !leftToday(pack) || (pack.missing && missingCount() < PACK_SIZE); }
     $('#to-album').hidden = false;
     $('#stage-close').hidden = false;
     checkAchievements();
