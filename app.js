@@ -43,6 +43,7 @@
 
   const CATS = [
     { id: 'politique',    fr: 'Politique',     nl: 'Politiek' },
+    { id: 'bourgmestre',  fr: 'Bourgmestres',  nl: 'Burgemeesters' },
     { id: 'monarchie',    fr: 'Monarchie',     nl: 'Monarchie' },
     { id: 'culture',      fr: 'Culture',       nl: 'Cultuur' },
     { id: 'groupe',       fr: 'Groupes',       nl: 'Groepen' },
@@ -70,8 +71,8 @@
       desc: { fr: 'Toutes les cartes du jeu.', nl: 'Alle kaarten van het spel.' },
       body: ['#121317', '#2b2c33'], metal: ['#fff0b5', '#e2b33c', '#8f6610'], cats: null },
     { id: 'seize', title: { fr: 'Rue de la Loi', nl: 'Wetstraat' }, kicker: { fr: 'Édition politique', nl: 'Politieke editie' }, big: '16', price: 80,
-      desc: { fr: 'Politique, monarchie et événements.', nl: 'Politiek, monarchie en gebeurtenissen.' },
-      body: ['#111a33', '#2c3c6c'], metal: ['#ffffff', '#c3c7d0', '#6d727d'], cats: ['politique', 'monarchie', 'evenement'] },
+      desc: { fr: 'Politique, bourgmestres, monarchie et événements.', nl: 'Politiek, burgemeesters, monarchie en gebeurtenissen.' },
+      body: ['#111a33', '#2c3c6c'], metal: ['#ffffff', '#c3c7d0', '#6d727d'], cats: ['politique', 'bourgmestre', 'monarchie', 'evenement'] },
     { id: 'icones', title: { fr: 'Icônes', nl: 'Iconen' }, kicker: { fr: 'Édition culture', nl: 'Cultuureditie' }, big: '★', price: 80,
       desc: { fr: 'BD, musique, cinéma, groupes, festivals et art.', nl: 'Strips, muziek, film, groepen, festivals en kunst.' },
       body: ['#2a0d16', '#5e1f30'], metal: ['#ffe1d6', '#e7a58f', '#8a4a3a'], cats: ['culture', 'groupe', 'festival', 'art'] },
@@ -248,6 +249,8 @@
       match: c => c.cat === 'province' || c.cat === 'region' },
     { id: 'univ', title: { fr: 'Universités', nl: 'Universiteiten' }, desc: { fr: 'Les universités belges.', nl: 'De Belgische universiteiten.' }, reward: 500,
       match: c => c.cat === 'enseignement' && c.subtitle === 'Université' },
+    { id: 'maieurs', title: { fr: 'Maïeurs des grandes villes', nl: 'Burgemeesters van grote steden' }, desc: { fr: 'Les bourgmestres des plus grandes communes.', nl: 'De burgemeesters van de grootste gemeenten.' }, reward: 600,
+      match: c => c.cat === 'bourgmestre' && ['legendaire', 'mythique'].includes((window.CARDS || []).find(x => x.id === c.mayorOf)?.rarity) },
     { id: 'festivals', title: { fr: 'Été des festivals', nl: 'Festivalzomer' }, desc: { fr: 'De Tomorrowland aux Francofolies.', nl: 'Van Tomorrowland tot de Francofolies.' }, reward: 400, match: c => c.cat === 'festival' },
     ...ALL_PACKS.filter(p => p.special).map(p => ({ id: 'ed-' + p.id, edition: p.id,
       title: { fr: `Édition ${p.title.fr}`, nl: `Editie ${p.title.nl}` },

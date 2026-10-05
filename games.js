@@ -736,7 +736,7 @@
   // Politiques des partis actuels (ministres, élus de plusieurs législatures, membres du gouvernement en place),
   // quatre partis proposés dont au moins deux du même groupe linguistique que la bonne réponse.
   const CURRENT_PARTIES = Object.fromEntries(PARTIES.map(p => [p.name, p]));
-  const PARTI_POOL = CARDS.filter(c => c.cat === 'politique' && c.img && CURRENT_PARTIES[c.party] && (c.current || c.rarity !== 'commune'));
+  const PARTI_POOL = CARDS.filter(c => ['politique', 'bourgmestre'].includes(c.cat) && c.img && CURRENT_PARTIES[c.party] && (c.current || c.rarity !== 'commune'));
   let LP = null;
   function startParti() {
     played('parti');
