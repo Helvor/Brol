@@ -63,3 +63,19 @@ self.addEventListener('fetch', e => {
     }
   }));
 });
+
+// Rappel quotidien (appli installée sur Chrome / Android, voir « Rappels » dans app.js)
+self.addEventListener('periodicsync', e => {
+  if (e.tag !== 'brol-daily') return;
+  e.waitUntil(self.registration.showNotification('Brol', {
+    body: 'Ta carte du jour et tes missions t’attendent.', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: 'brol-daily',
+  }));
+});
+// Clic sur une notification : revenir au jeu (onglet déjà ouvert, sinon nouvelle fenêtre)
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    const open = list.find(c => new URL(c.url).origin === location.origin);
+    return open ? open.focus() : self.clients.openWindow('./');
+  }));
+});

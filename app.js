@@ -1517,6 +1517,7 @@
     $('.brand-name').textContent = 'Brol';
     fillRaritySelect();
     applyTheme(); applySound();
+    if ($('#notif')) renderNotifBtn();
   }
   $('#lang-btn').addEventListener('click', () => {
     window.I18N.set(L() === 'nl' ? 'fr' : 'nl');
@@ -1571,6 +1572,41 @@
   $('#install').addEventListener('click', async () => {
     if (installPrompt) { installPrompt.prompt(); await installPrompt.userChoice.catch(() => {}); installPrompt = null; $('#install').hidden = true; }
     else if (isIOS) alert(t('installIOS'));
+  });
+
+  // ---------- Rappels (notifications, sur demande) ----------
+  // Sans serveur, pas de notification quand le jeu est complètement fermé, sauf le rappel quotidien de l'appli
+  // installée sur Chrome / Android (synchronisation périodique, voir sw.js). Quand le jeu est ouvert en arrière-plan :
+  // paquets gratuits au complet, carte du jour disponible. Une seule notification de chaque sorte.
+  const NOTIF_KEY = 'rdl-notif';
+  const notifOn = () => { try { return localStorage.getItem(NOTIF_KEY) === '1' && Notification.permission === 'granted'; } catch (_) { return false; } };
+  function renderNotifBtn() {
+    const b = $('#notif');
+    if (!('Notification' in window) || Notification.permission === 'denied') { b.hidden = true; return; }
+    b.hidden = false; b.textContent = notifOn() ? t('notifOn') : t('notifOff');
+  }
+  async function notify(kind, title, body) {
+    if (!notifOn() || !document.hidden) return;
+    const day = ymd(now()), sent = state.notified ||= {};
+    if (sent[kind] === day + (kind === 'free' ? state.freeAt : '')) return; // déjà prévenu pour ce cas
+    sent[kind] = day + (kind === 'free' ? state.freeAt : ''); save();
+    const opts = { body, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: 'brol-' + kind };
+    try { const reg = await navigator.serviceWorker?.getRegistration(); if (reg) reg.showNotification(title, opts); else new Notification(title, opts); } catch (_) { /* rien */ }
+  }
+  setInterval(() => {
+    if (!notifOn() || !document.hidden) return;
+    tickFree();
+    if (state.free >= FREE_MAX) notify('free', t('notifFreeTitle'), t('notifFreeBody', FREE_MAX));
+    if (dailyReady()) notify('daily', t('notifDailyTitle'), t('notifDailyBody'));
+  }, 30000);
+  $('#notif').addEventListener('click', async () => {
+    if (notifOn()) { try { localStorage.removeItem(NOTIF_KEY); } catch (_) {} renderNotifBtn(); toast(t('notifOff')); return; }
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { renderNotifBtn(); return toast(t('notifDenied')); }
+    try { localStorage.setItem(NOTIF_KEY, '1'); } catch (_) {}
+    // Rappel quotidien de l'appli installée (Chrome / Android uniquement)
+    try { const reg = await navigator.serviceWorker?.ready; await reg?.periodicSync?.register('brol-daily', { minInterval: 20 * 3600 * 1000 }); } catch (_) { /* non pris en charge */ }
+    renderNotifBtn(); toast(t('notifOnToast'));
   });
 
   applyStatic();
