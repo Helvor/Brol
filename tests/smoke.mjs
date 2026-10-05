@@ -347,6 +347,19 @@ async function features() {
         return { ok, allNew, eleventh: !!R.buyPacks(p, 1) };
       });
       check(r.ok === 10 && r.allNew && !r.eleventh, 'paquet Nouveautés : ' + JSON.stringify(r));
+      // Cas limite : il ne manque que 5 cartes (toutes mythiques) → le paquet donne exactement ces 5, sans doublon
+      const last = await page.evaluate(() => {
+        const R = window.RDL, p = R.PACKS.find(x => x.id === 'nouveautes');
+        const pool = R.CARDS.filter(c => c.cat !== 'edition');
+        const missing = pool.filter(c => c.rarity === 'mythique').slice(0, 5).map(c => c.id);
+        for (const c of pool) if (!missing.includes(c.id)) R.state.owned[c.id] ||= 1;
+        for (const id of missing) for (const k of Object.keys(R.state.owned)) if (k === id || k.startsWith(id + '|')) delete R.state.owned[k];
+        R.state.perDay = null; R.state.coins = 10000;
+        const res = R.buyPacks(p, 1);
+        const got = res ? res.packs[0].revealed.map(d => d.card.id).sort() : [];
+        return { same: JSON.stringify(got) === JSON.stringify(missing.slice().sort()), again: !!R.buyPacks(p, 1) };
+      });
+      check(last.same && !last.again, 'paquet Nouveautés, 5 cartes manquantes : ' + JSON.stringify(last));
     });
     await step('défi de la semaine et ticket Prestige', async () => {
       const r = await page.evaluate(() => {
