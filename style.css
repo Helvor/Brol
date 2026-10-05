@@ -441,8 +441,11 @@ dialog::backdrop { background: rgba(8, 9, 12, .78); }
 }
 .toast.is-on { opacity: 1; translate: -50% 0; }
 .foot { border-top: 1px solid var(--line); padding: 18px 32px; font-size: 13px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
-.foot p { margin: 0; }
+.foot p { margin: 0; flex: 1 1 320px; }
 .foot .linkish { margin-left: auto; }
+.foot .version { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--ink-2); text-decoration: none; }
+.foot a.version:hover { text-decoration: underline; }
+.foot .version + .linkish { margin-left: 0; }
 
 /* ============ Nouvelles familles ============ */
 :root {
@@ -929,3 +932,43 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   .t-qr { max-width: 340px; width: 100%; margin: 0 auto; }
   .t-fins { padding-left: 0; }
 }
+
+/* ============ Lot de 10 paquets ============ */
+.buy10 { align-self: flex-start; padding: 7px 12px; font-size: 15px; gap: 10px; }
+.buy10 .price { font-size: 14px; }
+.buy10 small { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--r-peu-commune); letter-spacing: 0; }
+.buy10:disabled small { color: inherit; }
+.stage-pack .bulk-badge { position: absolute; top: 18%; right: -14px; z-index: 2; padding: 4px 12px; border-radius: 3px; rotate: 8deg;
+  background: var(--gold-hi); color: #1a1300; font-family: var(--display); font-weight: 800; font-size: 30px; box-shadow: 0 8px 20px -6px rgba(0, 0, 0, .6); }
+.stage-pack.is-torn .bulk-badge { opacity: 0; transition: opacity .2s; }
+.stage.is-bulk { justify-content: flex-start; }
+.stage.is-bulk .stage-pack { margin-top: 14vh; }
+.reveal.is-bulk { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px 12px; width: min(820px, 100%); padding: 16px 0 24px; }
+.reveal.is-bulk .slot { --w: 100%; width: auto; }
+.reveal.is-bulk .slot .tag { font-size: 10px; top: -9px; padding: 2px 6px; letter-spacing: .06em; white-space: nowrap; }
+@media (max-width: 760px) {
+  .buy10 { align-self: stretch; justify-content: center; padding: 7px 8px; font-size: 14px; gap: 6px; }
+  .reveal.is-bulk { overflow: visible; scroll-snap-type: none; gap: 12px 6px; padding: 12px 10px 24px; margin-top: 0; }
+  .reveal.is-bulk .slot { max-width: none; flex: initial; }
+  .reveal.is-bulk .slot .tag { font-size: 8px; padding: 1px 4px; top: -7px; }
+  .stage-pack .bulk-badge { font-size: 24px; right: -6px; }
+}
+
+/* Échanges : onglets « je donne / je demande » (mobile) et recherche */
+.t-switch { display: none; }
+.t-missing { margin: 10px 0 4px; }
+.t-count { font-family: var(--mono); font-size: 12px; color: var(--ink-2); margin: 8px 0 0; }
+@media (max-width: 760px) {
+  .t-switch { display: grid; grid-template-columns: 1fr 1fr; margin: -8px 0 16px; border-bottom: 1px solid var(--line); }
+  .t-tab { border: 0; background: none; padding: 10px 4px; position: relative; color: var(--ink-2);
+    font-family: var(--display); font-weight: 800; font-size: 17px; text-transform: uppercase; letter-spacing: .03em; }
+  .t-tab small { display: block; font-family: var(--mono); font-weight: 500; font-size: 11px; text-transform: none; letter-spacing: 0; }
+  .t-tab.is-active { color: var(--ink); }
+  .t-tab.is-active::after { content: ""; position: absolute; left: 20%; right: 20%; bottom: -1px; height: 3px; background: var(--ink); }
+  .t-pickers[data-tab="give"] .t-pick-want, .t-pickers[data-tab="want"] .t-pick-give { display: none; }
+  .t-pickers h3 { display: none; }
+}
+
+/* Paquet spécial (Prestige) */
+.pack-card.is-special .pack-visual { filter: drop-shadow(0 18px 24px rgba(0, 0, 0, .28)) drop-shadow(0 0 18px rgba(240, 194, 74, .35)); }
+.pack-note { font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }

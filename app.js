@@ -5,12 +5,14 @@
 
   // ---------- Réglages ----------
   const RARITIES = [
-    { id: 'commune',     label: { fr: 'Commune',     nl: 'Gewoon' },        weight: 50,   sell: 10 },
-    { id: 'peu-commune', label: { fr: 'Peu commune', nl: 'Ongewoon' },      weight: 26,   sell: 20 },
-    { id: 'rare',        label: { fr: 'Rare',        nl: 'Zeldzaam' },      weight: 15.5, sell: 50 },
-    { id: 'epique',      label: { fr: 'Épique',      nl: 'Episch' },        weight: 6,    sell: 120 },
-    { id: 'legendaire',  label: { fr: 'Légendaire',  nl: 'Legendarisch' },  weight: 2.2,  sell: 300 },
-    { id: 'mythique',    label: { fr: 'Mythique',    nl: 'Mythisch' },      weight: 0.3,  sell: 800 },
+    // sell : valeur de revente d'un doublon. Un paquet revendu en entier rapporte en moyenne
+    // environ 60 % de son prix (vérifié avec tools/simulate.mjs) : acheter pour revendre ne paie pas.
+    { id: 'commune',     label: { fr: 'Commune',     nl: 'Gewoon' },        weight: 50,   sell: 2 },
+    { id: 'peu-commune', label: { fr: 'Peu commune', nl: 'Ongewoon' },      weight: 26,   sell: 3 },
+    { id: 'rare',        label: { fr: 'Rare',        nl: 'Zeldzaam' },      weight: 15.5, sell: 8 },
+    { id: 'epique',      label: { fr: 'Épique',      nl: 'Episch' },        weight: 6,    sell: 18 },
+    { id: 'legendaire',  label: { fr: 'Légendaire',  nl: 'Legendarisch' },  weight: 2.2,  sell: 60 },
+    { id: 'mythique',    label: { fr: 'Mythique',    nl: 'Mythisch' },      weight: 0.3,  sell: 180 },
   ];
   const R = Object.fromEntries(RARITIES.map((r, i) => [r.id, { ...r, rank: i }]));
   const rl = id => R[id].label[L()];
@@ -69,6 +71,10 @@
     { id: 'territoires', title: { fr: 'Territoires', nl: 'Grondgebied' }, kicker: { fr: 'Édition géographique', nl: 'Geografische editie' }, big: '565', price: 80,
       desc: { fr: 'Communes, provinces, régions et enseignement.', nl: 'Gemeenten, provincies, gewesten en onderwijs.' },
       body: ['#10261a', '#2c4a5a'], metal: ['#ffd9b8', '#d08a52', '#7c4320'], cats: ['commune', 'province', 'region', 'enseignement'] },
+    // Paquet spécial : 5ᵉ carte légendaire ou mieux (≈ 12 % de mythiques). Pièces uniquement, ni gratuit ni lot de 10.
+    { id: 'prestige', title: { fr: 'Prestige', nl: 'Prestige' }, kicker: { fr: 'Édition prestige', nl: 'Prestige-editie' }, big: 'L+', price: 600,
+      desc: { fr: 'Toutes les cartes. 5ᵉ carte légendaire ou mieux, garantie.', nl: 'Alle kaarten. 5de kaart gegarandeerd legendarisch of beter.' },
+      body: ['#050506', '#2a2210'], metal: ['#fff6cf', '#f0c24a', '#8a6410'], cats: null, last: 'legendaire', special: true },
   ];
   const pl = (p, k) => p[k][L()];
 
@@ -78,6 +84,8 @@
   const FREE_EVERY_MS = 3 * 60 * 1000;
   const FREE_MAX = 3;
   const PITY = 40; // une légendaire ou mieux au plus tard tous les 40 paquets
+  const BULK = 10, BULK_DISCOUNT = 0.9; // lot de 10 paquets : 10 % moins cher, payé en pièces
+  const bulkPrice = p => Math.round(p.price * BULK * BULK_DISCOUNT);
   const PAGE = 120;
   const STORE_KEY = 'rue-de-la-loi:v1';
 
@@ -301,7 +309,7 @@
     const taken = new Set();
     for (let i = 0; i < PACK_SIZE; i++) {
       const last = i === PACK_SIZE - 1;
-      const rank = R[pickRarity(last ? (forceLegend ? R.legendaire.rank : R.rare.rank) : 0)].rank;
+      const rank = R[pickRarity(last ? (forceLegend ? R.legendaire.rank : R[pack.last || 'rare'].rank) : 0)].rank;
       let list = [];
       // Si la rareté tirée n'existe pas dans ce paquet, on prend la plus proche (vers le bas d'abord)
       for (let d = 0; d < RARITIES.length && !list.length; d++) {
@@ -321,14 +329,15 @@
   function renderShop() {
     tickFree();
     $('#packs').innerHTML = PACKS.map(p => {
-      const locked = state.coins < p.price && !state.free;
+      const locked = state.coins < p.price && (!state.free || p.special);
       return `
-      <div class="pack-card${locked ? ' is-locked' : ''}" data-pack="${p.id}">
+      <div class="pack-card${locked ? ' is-locked' : ''}${p.special ? ' is-special' : ''}" data-pack="${p.id}">
         ${packVisual(p)}
         <div class="pack-info">
           <div><h2>${esc(pl(p, 'title'))}</h2><p>${esc(pl(p, 'desc'))}</p></div>
           <span class="price"><span class="coin"></span>${p.price}</span>
         </div>
+        ${p.special ? `<span class="pack-note">${t('specialNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', BULK)} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
       </div>`;
     }).join('');
     renderFree();
@@ -357,25 +366,31 @@
   }
 
   $('#packs').addEventListener('click', e => {
-    const el = e.target.closest('.pack-visual');
-    if (!el) return;
-    openPack(PACKS.find(x => x.id === el.closest('[data-pack]').dataset.pack));
+    const el = e.target.closest('.pack-visual, .buy10');
+    if (!el || el.disabled) return;
+    openPack(PACKS.find(x => x.id === el.closest('[data-pack]').dataset.pack), el.classList.contains('buy10') ? BULK : 1);
   });
 
   // ---------- Ouverture ----------
   const stage = $('#stage');
   let current = null;
 
-  function openPack(pack) {
+  // Achat et tirage, sans interface : utilisé par l'ouverture, le lot ×10 et la simulation (tools/simulate.mjs).
+  // Un paquet seul utilise d'abord un paquet gratuit ; le lot ×10 se paie toujours en pièces.
+  function buyPacks(pack, n = 1) {
     tickFree();
     let usedFree = false;
-    if (state.free > 0) { state.free--; usedFree = true; if (state.free === FREE_MAX - 1) state.freeAt = Date.now(); }
-    else if (state.coins >= pack.price) state.coins -= pack.price;
-    else { SFX.error(); return toast(t('noCoins')); }
-
+    const cost = n === 1 ? pack.price : bulkPrice(pack);
+    if (n === 1 && state.free > 0 && !pack.special) { state.free--; usedFree = true; if (state.free === FREE_MAX - 1) state.freeAt = Date.now(); }
+    else if (state.coins >= cost) state.coins -= cost;
+    else return null;
+    const packs = Array.from({ length: n }, () => rollPack(pack, usedFree));
+    save();
+    return { packs, usedFree, cost: usedFree ? 0 : cost };
+  }
+  function rollPack(pack, usedFree) {
     const forceLegend = state.pity >= PITY - 1;
     const drawn = drawPack(pack, forceLegend);
-    for (const d of drawn) { const p = photoOf(d.card, d.finish); if (p) new Image().src = imgUrl(p); }
     let newCount = 0;
     const revealed = drawn.map(d => {
       const key = keyOf(d.card.id, d.finish);
@@ -405,10 +420,18 @@
     const pityTriggered = forceLegend && legends > 0;
     if (pityTriggered) st.pityHits++;
     state.pity = legends ? 0 : state.pity + 1;
+    return { revealed, newCount, bonus, pityTriggered };
+  }
 
-    save();
+  function openPack(pack, n = 1) {
+    const res = buyPacks(pack, n);
+    if (!res) { SFX.error(); return toast(t('noCoins')); }
+    const revealed = res.packs.flatMap(p => p.revealed);
+    for (const d of revealed.slice(0, 15)) { const p = photoOf(d.card, d.finish); if (p) new Image().src = imgUrl(p); }
+    const sum = k => res.packs.reduce((a, p) => a + p[k], 0);
     renderWallet();
-    current = { pack, revealed, newCount, bonus, usedFree, pityTriggered };
+    current = { pack, n, revealed, newCount: sum('newCount'), bonus: sum('bonus'), usedFree: res.usedFree, cost: res.cost, pityTriggered: res.packs.some(p => p.pityTriggered) };
+    const { usedFree } = current;
 
     const score = d => R[d.card.rarity].rank + F[d.finish].rank * 1.5;
     const best = revealed.reduce((a, b) => score(b) > score(a) ? b : a);
@@ -416,10 +439,11 @@
 
     stage.hidden = false;
     stage.classList.remove('is-hot');
+    stage.classList.toggle('is-bulk', n > 1);
     stage.style.setProperty('--hot', hot);
     document.body.style.overflow = 'hidden';
     $('#reveal').innerHTML = '';
-    $('#stage-summary').textContent = usedFree ? t('freePack') : t('paid', pack.price);
+    $('#stage-summary').textContent = usedFree ? t('freePack') : t('paid', fmt(current.cost));
     ['#flip-all', '#again', '#to-album', '#stage-close'].forEach(s => { $(s).hidden = true; });
     $('#stage-hint').hidden = false;
     $('#stage-hint').textContent = t('hint');
@@ -427,9 +451,9 @@
 
     const sp = $('#stage-pack');
     sp.hidden = false;
-    sp.className = 'stage-pack';
+    sp.className = 'stage-pack' + (n > 1 ? ' is-bulk' : '');
     sp.style.setProperty('--cut', (62 / 430 * 100) + '%');
-    sp.innerHTML = `<div class="tilt"><div class="half top">${packSVG(pack)}</div><div class="half bottom">${packSVG(pack)}</div><div class="seam"></div></div>`;
+    sp.innerHTML = `<div class="tilt"><div class="half top">${packSVG(pack)}</div><div class="half bottom">${packSVG(pack)}</div><div class="seam"></div></div>${n > 1 ? `<span class="bulk-badge">×${n}</span>` : ''}`;
   }
 
   $('#stage-pack').addEventListener('pointermove', e => {
@@ -469,22 +493,24 @@
 
   function deal() {
     flipRun++; autoFlipping = false;
+    const bulk = current.n > 1;
+    $('#reveal').classList.toggle('is-bulk', bulk);
     $('#reveal').innerHTML = current.revealed.map(({ card, finish, isNew }, i) => {
       const rank = R[card.rarity].rank;
       const special = finish !== 'normal';
-      const tag = (isNew ? t('new') : t('dup')) + (special ? ` · ${fl(finish)}` : '');
+      const tag = bulk ? (isNew ? t('new') : '') : (isNew ? t('new') : t('dup')) + (special ? ` · ${fl(finish)}` : '');
       const hit = finish === 'or' ? '#f6d478' : special && rank < R.epique.rank ? '#9fe8ff' : `var(--r-${card.rarity})`;
       return `
       <div class="slot${rank >= R.epique.rank || special ? ' tease' : ''}${rank >= R.legendaire.rank || F[finish].rank >= F.plein.rank ? ' big-hit' : ''}"
-           style="--hit: ${hit}; --dx: calc(${2 - i} * (var(--w) + 22px)); --dr: ${(i - 2) * 6}deg; animation-delay: ${i * 90}ms" data-i="${i}">
-        <span class="tag${isNew ? '' : ' dup'}${special ? ' special' : ''}">${tag}</span>
+           style="--hit: ${hit}; --dx: calc(${2 - i % PACK_SIZE} * (var(--w) + 22px)); --dr: ${(i % PACK_SIZE - 2) * 6}deg; animation-delay: ${bulk ? Math.floor(i / PACK_SIZE) * 70 + (i % PACK_SIZE) * 25 : i * 90}ms" data-i="${i}">
+        ${tag ? `<span class="tag${isNew ? '' : ' dup'}${special ? ' special' : ''}">${tag}</span>` : ''}
         <div class="inner">
           <div class="face back">${cardBack()}</div>
           <div class="face front">${cardHTML(card, { finish })}</div>
         </div>
       </div>`;
     }).join('');
-    current.revealed.forEach((_, i) => SFX.deal(i));
+    current.revealed.slice(0, PACK_SIZE).forEach((_, i) => SFX.deal(i));
     const reveal = $('#reveal');
     reveal.scrollLeft = 0;
     requestAnimationFrame(() => { reveal.scrollLeft = 0; });
@@ -514,7 +540,7 @@
     }
     const reveal = $('#reveal');
     const next = $('#reveal .slot:not(.is-flipped)');
-    if (next && !auto && reveal.scrollWidth > reveal.clientWidth + 4) {
+    if (next && !auto && current.n === 1 && reveal.scrollWidth > reveal.clientWidth + 4) {
       setTimeout(() => reveal.scrollTo({ left: next.offsetLeft - (reveal.clientWidth - next.offsetWidth) / 2, behavior: 'smooth' }), 700);
     }
     if (!next) setTimeout(finishReveal, 700);
@@ -528,6 +554,19 @@
     const run = ++flipRun;
     $('#flip-all').hidden = true;
     const reveal = $('#reveal');
+    if (current.n > 1) {
+      const slots = $$('#reveal .slot');
+      for (let r = 0; r < slots.length; r += PACK_SIZE) {
+        if (stage.hidden || run !== flipRun) break;
+        const row = slots.slice(r, r + PACK_SIZE).filter(s => !s.classList.contains('is-flipped'));
+        if (!row.length) continue;
+        row[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+        for (const s of row) { flip(s, true); await sleep(70); }
+        await sleep(380 + (row.some(s => s.classList.contains('big-hit')) ? 600 : 0));
+      }
+      autoFlipping = false;
+      return;
+    }
     const carousel = () => reveal.scrollWidth > reveal.clientWidth + 4;
     for (const s of $$('#reveal .slot:not(.is-flipped)')) {
       if (stage.hidden || run !== flipRun) break;
@@ -542,8 +581,8 @@
   });
 
   function finishReveal() {
-    const { pack, newCount, bonus, revealed } = current;
-    const dups = PACK_SIZE - newCount;
+    const { pack, n, newCount, bonus, revealed } = current;
+    const dups = revealed.length - newCount;
     const specials = revealed.filter(r => r.finish !== 'normal').length;
     $('#stage-summary').innerHTML = t('summary', newCount, dups, specials, bonus);
     if (bonus) SFX.coin();
@@ -551,8 +590,8 @@
     tickFree();
     const again = $('#again');
     again.hidden = false;
-    again.textContent = t('again', state.free ? null : pack.price);
-    again.disabled = !state.free && state.coins < pack.price;
+    if (n > 1) { again.textContent = t('again10', n, fmt(bulkPrice(pack))); again.disabled = state.coins < bulkPrice(pack); }
+    else { const free = state.free && !pack.special; again.textContent = t('again', free ? null : pack.price); again.disabled = !free && state.coins < pack.price; }
     $('#to-album').hidden = false;
     $('#stage-close').hidden = false;
     checkAchievements();
@@ -563,7 +602,7 @@
     current = null;
     renderShop();
   }
-  $('#again').addEventListener('click', () => openPack(current.pack));
+  $('#again').addEventListener('click', () => openPack(current.pack, current.n));
   $('#stage-close').addEventListener('click', () => { SFX.tick(); closeStage(); });
   $('#to-album').addEventListener('click', () => { closeStage(); show('binder'); });
 
@@ -647,16 +686,27 @@
     const card = e.target.closest('.card');
     if (card) openDetail(card.dataset.id, card.dataset.fin);
   });
-  $('#sell-all').addEventListener('click', () => {
+  // Doublons revendables : un exemplaire de chaque version est toujours gardé
+  function dupValue() {
     let gain = 0, n = 0;
     for (const [key, cnt] of Object.entries(state.owned)) {
       const [id, fin = 'normal'] = key.split('|');
       if (cnt > 1 && BY_ID.has(id)) { gain += (cnt - 1) * sellValue(BY_ID.get(id), fin); n += cnt - 1; }
     }
-    if (!n || !confirm(t('sellConfirm', n, fmt(gain)))) return;
-    for (const [key, cnt] of Object.entries(state.owned)) if (cnt > 1) state.owned[key] = 1;
+    return { n, gain };
+  }
+  function sellDuplicates() {
+    const { n, gain } = dupValue();
+    for (const [key, cnt] of Object.entries(state.owned)) if (cnt > 1 && BY_ID.has(key.split('|')[0])) state.owned[key] = 1;
     state.coins += gain; state.stats.sold += n; state.stats.earned += gain;
-    save(); renderWallet(); renderBinder();
+    save();
+    return { n, gain };
+  }
+  $('#sell-all').addEventListener('click', () => {
+    const { n, gain } = dupValue();
+    if (!n || !confirm(t('sellConfirm', n, fmt(gain)))) return;
+    sellDuplicates();
+    renderWallet(); renderBinder();
     SFX.coin(); toast(t('coinsPlus', fmt(gain)));
     checkAchievements();
   });
@@ -688,6 +738,12 @@
         </article>`;
     }).join('');
   }
+  function claimSeries(id) {
+    const s = SERIES.find(x => x.id === id);
+    if (!s || state.claimed[s.id] || !s.members.every(m => totalOf(m))) return 0;
+    state.claimed[s.id] = true; state.coins += s.reward; save();
+    return s.reward;
+  }
   function openSeriesInAlbum(id) {
     filters.series = SERIES.find(s => s.id === id);
     filters.cat = 'all'; filters.owned = false; $('#f-owned').checked = false; shown = PAGE;
@@ -698,8 +754,8 @@
     if (!card) return;
     const s = SERIES.find(x => x.id === card.dataset.series);
     if (e.target.closest('.claim')) {
-      if (state.claimed[s.id] || !s.members.every(id => totalOf(id))) return;
-      state.claimed[s.id] = true; state.coins += s.reward; save(); renderWallet(); renderSeries();
+      if (!claimSeries(s.id)) return;
+      renderWallet(); renderSeries();
       SFX.achievement(); toast(t('seriesDone', fmt(s.reward)));
       checkAchievements();
       return;
@@ -890,6 +946,8 @@
     esc, imgUrl, fmt, toast, SFX, catLabel: cl, rarityLabel: rl,
     // pour les échanges (trade.js)
     cardHTML, countOf, keyOf, FINISHES, finishLabel: fl, rarityRank: id => R[id].rank, show, openDetail,
+    // pour la simulation de l'économie (tools/simulate.mjs) et les tests
+    PACKS, SERIES, RARITIES, BULK, bulkPrice, buyPacks, sellDuplicates, dupValue, claimSeries,
   };
 
   applyStatic();

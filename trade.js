@@ -29,9 +29,13 @@
       back: '← Échanges',
       give_h: 'Je donne', want_h: 'Je demande',
       give_hint: 'Tes doublons : touche une carte pour l’ajouter.',
-      want_hint: 'Cherche les cartes que tu veux en échange. Sans demande, c’est un cadeau.',
+      want_hint: 'Toutes les cartes du jeu, même celles que tu n’as pas. Sans demande, c’est un cadeau.',
       no_dups: 'Tu n’as pas encore de doublon à échanger. Ouvre des paquets !',
       search_ph: 'Rechercher une carte…', search_more: 'Tape au moins deux lettres.', no_result: 'Aucune carte trouvée.',
+      only_missing: 'Seulement celles qui me manquent', no_missing: 'Il ne te manque aucune carte !',
+      tab_dups: n => `${n} doublon${n > 1 ? 's' : ''}`, tab_search: 'chercher',
+      results: n => `${n} carte${n > 1 ? 's' : ''}`, refine: n => `… et ${n} autres : précise ta recherche.`,
+      owned_n: n => `tu l’as (×${n})`, missing: 'il te manque',
       empty_side: 'Rien pour l’instant.',
       create: 'Créer l’échange', max: `Cinq cartes au plus de chaque côté.`, need_one: 'Ajoute au moins une carte.',
       offer_qr_h: 'Montre ce QR code à ton ami',
@@ -66,9 +70,13 @@
       back: '← Ruilen',
       give_h: 'Ik geef', want_h: 'Ik vraag',
       give_hint: 'Je dubbele kaarten: tik op een kaart om ze toe te voegen.',
-      want_hint: 'Zoek de kaarten die je in ruil wilt. Zonder vraag is het een cadeau.',
+      want_hint: 'Alle kaarten van het spel, ook die je niet hebt. Zonder vraag is het een cadeau.',
       no_dups: 'Je hebt nog geen dubbele kaarten om te ruilen. Open pakjes!',
       search_ph: 'Kaart zoeken…', search_more: 'Typ minstens twee letters.', no_result: 'Geen kaart gevonden.',
+      only_missing: 'Alleen kaarten die ik mis', no_missing: 'Je mist geen enkele kaart!',
+      tab_dups: n => `${n} dubbele`, tab_search: 'zoeken',
+      results: n => `${n} kaart${n > 1 ? 'en' : ''}`, refine: n => `… en nog ${n}: verfijn je zoekopdracht.`,
+      owned_n: n => `je hebt ze (×${n})`, missing: 'je mist ze',
       empty_side: 'Nog niets.',
       create: 'Ruil aanmaken', max: 'Maximaal vijf kaarten per kant.', need_one: 'Voeg minstens één kaart toe.',
       offer_qr_h: 'Toon deze QR-code aan je vriend',
@@ -148,7 +156,7 @@
       ${remove ? '<button class="t-x" aria-label="×">×</button>' : ''}
     </div>`;
   }
-  const side = (title, list, opts = {}) => `<div class="t-side"><h3>${esc(title)}${opts.counter ? ` <small>${list.length}/${MAX}</small>` : ''}</h3>
+  const side = (title, list, opts = {}) => `<div class="t-side"${opts.key ? ` data-side="${opts.key}"` : ''}><h3>${esc(title)}${opts.counter ? ` <small>${list.length}/${MAX}</small>` : ''}</h3>
     ${list.length ? list.map(it => item(it, typeof opts.item === 'function' ? opts.item(it) : opts.item)).join('') : `<p class="t-empty">${esc(opts.empty || T('empty_side'))}</p>`}</div>`;
   const head = (title, extra = '') => `<div class="game-head"><button class="btn btn-line t-back">${T('back')}</button><h2>${esc(title)}</h2>${extra}</div>`;
 
@@ -175,7 +183,7 @@
             <div class="t-offer-btns"><button class="btn t-showqr">${T('show_qr')}</button><button class="btn btn-line t-cancel">${T('cancel')}</button></div>
           </div>`).join('') : `<p class="t-empty">${T('pending_none')}</p>`}
       </section>`;
-    $('#t-new').onclick = () => { SFX.tick(); composing = { give: [], want: [], q: '' }; renderCompose(); };
+    $('#t-new').onclick = () => { SFX.tick(); composing = { give: [], want: [], q: '', missing: true, tab: 'give' }; renderCompose(); };
     $('#t-scan').onclick = () => { SFX.tick(); openScanner(); };
     area().querySelector('.t-paste').onsubmit = e => { e.preventDefault(); const v = $('#t-paste').value; if (v.trim()) handle(v); };
     area().querySelectorAll('.t-offer').forEach(el => {
@@ -203,33 +211,41 @@
     const C = composing;
     const dups = duplicates();
     area().innerHTML = head(T('new')) + `
-      <div class="t-tray">
-        ${side(T('give_h'), C.give, { counter: true, item: { remove: true } })}
-        ${side(T('want_h'), C.want, { counter: true, item: { remove: true }, empty: T('gift') })}
-        <div class="t-tray-go"><button class="btn btn-gold" id="t-create" ${C.give.length || C.want.length ? '' : 'disabled'}>${T('create')}</button></div>
+      <div class="t-tray" id="t-tray"></div>
+      <div class="t-switch" role="tablist">
+        <button class="t-tab" data-tab="give">${T('give_h')} <small>${T('tab_dups', dups.length)}</small></button>
+        <button class="t-tab" data-tab="want">${T('want_h')} <small>${T('tab_search')}</small></button>
       </div>
-      <div class="t-pickers">
-        <section>
+      <div class="t-pickers" data-tab="${C.tab}">
+        <section class="t-pick-give">
           <h3>${T('give_h')}</h3><p class="muted small">${T('give_hint')}</p>
-          ${dups.length ? `<div class="t-dups">${dups.map(d => `<div class="cell t-pick${inList(C.give, d) ? ' is-picked' : ''}" data-id="${esc(d.id)}" data-fin="${d.fin}">${API.cardHTML(BY_ID.get(d.id), { finish: d.fin, count: d.n })}</div>`).join('')}</div>`
+          ${dups.length ? `<div class="t-dups">${dups.map(d => `<div class="cell t-pick" data-id="${esc(d.id)}" data-fin="${d.fin}">${API.cardHTML(BY_ID.get(d.id), { finish: d.fin, count: d.n })}</div>`).join('')}</div>`
             : `<p class="t-empty">${T('no_dups')}</p>`}
         </section>
-        <section>
+        <section class="t-pick-want">
           <h3>${T('want_h')}</h3><p class="muted small">${T('want_hint')}</p>
           <input id="t-search" type="search" placeholder="${esc(T('search_ph'))}" value="${esc(C.q)}" autocomplete="off">
+          <label class="check t-missing"><input id="t-missing" type="checkbox"${C.missing ? ' checked' : ''}><span></span><em>${T('only_missing')}</em></label>
           <div id="t-results" class="t-results"></div>
         </section>
       </div>`;
-    renderResults();
-    const tray = area().querySelector('.t-tray');
-    tray.querySelectorAll('.t-side').forEach((el, i) => el.addEventListener('click', e => {
+    renderTray(); renderResults();
+    area().querySelector('.t-switch').onclick = e => {
+      const b = e.target.closest('.t-tab');
+      if (!b) return;
+      C.tab = b.dataset.tab; SFX.tick();
+      area().querySelector('.t-pickers').dataset.tab = C.tab;
+      area().querySelectorAll('.t-tab').forEach(x => x.classList.toggle('is-active', x.dataset.tab === C.tab));
+    };
+    area().querySelectorAll('.t-tab').forEach(x => x.classList.toggle('is-active', x.dataset.tab === C.tab));
+    $('#t-tray').onclick = e => {
       const x = e.target.closest('.t-x');
       if (!x) return;
       const key = x.closest('.t-item').dataset.key;
-      const list = i === 0 ? C.give : C.want;
+      const list = x.closest('.t-side').dataset.side === 'give' ? C.give : C.want;
       list.splice(list.findIndex(it => API.keyOf(it.id, it.fin) === key), 1);
-      SFX.tick(); renderCompose();
-    }));
+      SFX.tick(); renderTray(); renderResults();
+    };
     area().querySelector('.t-dups')?.addEventListener('click', e => {
       const cell = e.target.closest('.t-pick');
       if (!cell) return;
@@ -237,31 +253,51 @@
       if (inList(C.give, it)) C.give = C.give.filter(x => !(x.id === it.id && x.fin === it.fin));
       else if (C.give.length >= MAX) return toast(T('max'));
       else C.give.push(it);
-      SFX.tick(); renderCompose();
+      SFX.tick(); renderTray();
     });
     $('#t-search').addEventListener('input', e => { C.q = e.target.value; renderResults(); });
-    $('#t-create').onclick = createOffer;
-  }
-
-  function renderResults() {
-    const C = composing;
-    const q = C.q.trim().toLowerCase();
-    const box = $('#t-results');
-    if (q.length < 2) { box.innerHTML = `<p class="t-empty">${T('search_more')}</p>`; return; }
-    const list = CARDS.filter(c => [c.name, c.nl?.name].some(s => (s || '').toLowerCase().includes(q))).slice(0, 20);
-    if (!list.length) { box.innerHTML = `<p class="t-empty">${T('no_result')}</p>`; return; }
-    box.innerHTML = list.map(c => `<div class="t-result">${item({ id: c.id, fin: 'normal' })}<div class="t-fins">${API.FINISHES.map(f =>
-      `<button class="t-finbtn${inList(C.want, { id: c.id, fin: f.id }) ? ' is-on' : ''}" data-id="${esc(c.id)}" data-fin="${f.id}"><span class="fin-dot d-${f.id}"></span>${esc(API.finishLabel(f.id))}</button>`).join('')}</div></div>`).join('');
-    box.onclick = e => {
+    $('#t-missing').addEventListener('change', e => { C.missing = e.target.checked; renderResults(); });
+    $('#t-results').onclick = e => {
       const b = e.target.closest('.t-finbtn');
       if (!b) return;
       const it = { id: b.dataset.id, fin: b.dataset.fin };
       if (inList(C.want, it)) C.want = C.want.filter(x => !(x.id === it.id && x.fin === it.fin));
       else if (C.want.length >= MAX) return toast(T('max'));
       else C.want.push(it);
-      SFX.tick(); renderCompose();
-      $('#t-search').focus();
+      SFX.tick(); renderTray(); renderResults();
     };
+  }
+
+  // Le récapitulatif en haut (et les cartes cochées dans la grille des doublons)
+  function renderTray() {
+    const C = composing;
+    $('#t-tray').innerHTML = `
+      ${side(T('give_h'), C.give, { counter: true, item: { remove: true }, key: 'give' })}
+      ${side(T('want_h'), C.want, { counter: true, item: { remove: true }, empty: T('gift'), key: 'want' })}
+      <div class="t-tray-go"><button class="btn btn-gold" id="t-create" ${C.give.length || C.want.length ? '' : 'disabled'}>${T('create')}</button></div>`;
+    $('#t-create').onclick = createOffer;
+    area().querySelectorAll('.t-pick').forEach(el => el.classList.toggle('is-picked', inList(C.give, { id: el.dataset.id, fin: el.dataset.fin })));
+    const counts = area().querySelectorAll('.t-tab small');
+    if (counts[1]) counts[1].textContent = C.want.length ? `${C.want.length}/${MAX}` : T('tab_search');
+  }
+
+  // Recherche dans toutes les cartes du jeu, possédées ou non.
+  // Avec « seulement celles qui me manquent » et sans texte : les cartes manquantes, des plus rares aux plus courantes.
+  function renderResults() {
+    const C = composing;
+    const q = C.q.trim().toLowerCase();
+    const box = $('#t-results');
+    if (q.length < 2 && !C.missing) { box.innerHTML = `<p class="t-empty">${T('search_more')}</p>`; return; }
+    let list = CARDS.filter(c => (!C.missing || !API.totalOf(c.id)) && (q.length < 2 || [c.name, c.nl?.name].some(s => (s || '').toLowerCase().includes(q))));
+    if (q.length < 2) list = list.sort((a, b) => API.rarityRank(b.rarity) - API.rarityRank(a.rarity));
+    const total = list.length;
+    list = list.slice(0, 30);
+    if (!list.length) { box.innerHTML = `<p class="t-empty">${T(C.missing && !q ? 'no_missing' : 'no_result')}</p>`; return; }
+    box.innerHTML = `<p class="t-count">${T('results', total)}</p>` + list.map(c => {
+      const n = API.totalOf(c.id);
+      return `<div class="t-result">${item({ id: c.id, fin: 'normal' }, { note: n ? T('owned_n', n) : T('missing'), bad: !n })}<div class="t-fins">${API.FINISHES.map(f =>
+        `<button class="t-finbtn${inList(C.want, { id: c.id, fin: f.id }) ? ' is-on' : ''}" data-id="${esc(c.id)}" data-fin="${f.id}"><span class="fin-dot d-${f.id}"></span>${esc(API.finishLabel(f.id))}</button>`).join('')}</div></div>`;
+    }).join('') + (total > list.length ? `<p class="t-empty">${T('refine', total - list.length)}</p>` : '');
   }
 
   function createOffer() {

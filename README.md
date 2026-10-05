@@ -14,6 +14,7 @@ Puis ouvrir http://localhost:5173. La collection est sauvegardée dans le naviga
 
 - Interface et cartes en français et en néerlandais (bouton FR/NL). Les noms néerlandais viennent de Wikidata ; les textes de l'interface sont dans `i18n.js`.
 - Raretés relatives : dans chaque catégorie, les cartes sont classées par notoriété puis réparties selon les mêmes proportions, si bien que chaque paquet contient des mythiques et que les taux affichés sont justes pour tous les paquets.
+- Paquet spécial Prestige (600 pièces, 5ᵉ carte légendaire ou mieux) et lot de 10 paquets à −10 % sur les autres.
 - Garantie anti-malchance : une légendaire ou mieux au plus tard tous les 40 paquets (`PITY` dans `app.js`).
 - Séries thématiques et 65 succès (`achievements.js`), dont des succès secrets.
 - Onglet Jeux (`games.js`) : Formation de gouvernement, Belgle (carte du jour), Chronologie, Tour de Belgique, Plus ou moins. Gains plafonnés à 1 500 pièces par jour.
@@ -38,6 +39,7 @@ Le script interroge Wikidata (et Wikipédia pour la composition du gouvernement 
 Versions spéciales (Holo, Plein cadre, Dorée) : tirées pour chaque carte, indépendamment de la rareté ; la version Plein cadre utilise une autre photo libre de la catégorie Commons quand il y en a une. Listes choisies à la main dans le script : `FAMOUS` (culture), `SPORTS`, `ARTWORKS`, `SCHOOLS`, `DISHES`.
 
 Taux de tirage, versions spéciales, prix des paquets, bonus, paquets gratuits et valeurs de revente : en haut de `app.js`.
+Après un changement, `node tools/simulate.mjs [minutes] [parties]` mesure l'effet sur l'économie (pièces gagnées au fil du temps par un joueur normal et par un joueur qui achète pour revendre).
 
 Carte du Tour de Belgique : contour simplifié © contributeurs OpenStreetMap (`data/belgium.js`).
 
