@@ -21,7 +21,7 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 - [x] **Échanges par QR code ou lien** (onglet Échanges, sans serveur) : doublons uniquement, version précise de chaque carte, cartes mises de côté pendant l'échange, chaque échange ne sert qu'une fois, scanner intégré, succès d'échange. Limite connue : sans serveur, rien n'empêche un joueur de tricher (comme pour les pièces aujourd'hui).
 - [x] **Export/import de la sauvegarde** (liens en bas de page) : télécharger sa partie dans un fichier et la réimporter. Ça protège d'un cache effacé et permet de passer d'un appareil ou d'une adresse à l'autre en attendant les comptes. Le format servira aussi à migrer les parties vers le serveur en phase 5.
 - [x] **Partager une carte** : générer une image (PNG) d'une carte, avec sa version spéciale, pour la partager par message ou sur les réseaux (Web Share API sur mobile, téléchargement sinon). Garder le crédit de l'image sur le visuel.
-- [ ] **Mode daltonien et accessibilité** : distinguer les raretés autrement que par la couleur (forme de la gemme, motif), navigation complète au clavier, contrastes vérifiés dans les deux thèmes.
+- [x] **Mode daltonien et accessibilité** : distinguer les raretés autrement que par la couleur (forme de la gemme, motif), navigation complète au clavier, contrastes vérifiés dans les deux thèmes.
 - [ ] **Équilibrage de Formation de gouvernement** après quelques parties (durée, difficulté, gains).
 
 ## Phase 3 — Identité et mobile

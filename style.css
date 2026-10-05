@@ -5,8 +5,9 @@
   --bg-3: #e3e3df;
   --line: #d2d2cc;
   --ink: #121212;
-  --ink-2: #66665f;
-  --gold: #a87a12;
+  --ink-2: #5c5c55;
+  --gold: #7d5a00;
+  --rt-commune: #5c5c55; --rt-peu-commune: #2f7046; --rt-rare: #2a5fc0; --rt-epique: #7a3fc9; --rt-legendaire: #7d5a00; --rt-mythique: #c0283a;
   --gold-hi: #e2b33c;
   --danger: #c8102e;
   color-scheme: light;
@@ -20,6 +21,8 @@
   --ink-2: #94949c;
   --gold: #e2b33c;
   --gold-hi: #f6d478;
+  --rt-commune: #b8b8b0; --rt-peu-commune: #6fcf8f; --rt-rare: #5b93f0; --rt-epique: #a982f0; --rt-legendaire: #e2b33c; --rt-mythique: #ff5a6e;
+  --danger: #ff5a6e;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -32,6 +35,8 @@
     --ink-2: #94949c;
     --gold: #e2b33c;
     --gold-hi: #f6d478;
+    --rt-commune: #b8b8b0; --rt-peu-commune: #6fcf8f; --rt-rare: #5b93f0; --rt-epique: #a982f0; --rt-legendaire: #e2b33c; --rt-mythique: #ff5a6e;
+    --danger: #ff5a6e;
     color-scheme: dark;
   }
 }
@@ -1372,3 +1377,17 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 @media (min-width: 761px) and (max-width: 1100px) {
   .shop-head { grid-template-areas: "title title" "show today" "show free" "missions missions" "week week"; }
 }
+
+/* ============ Accessibilité ============ */
+/* Rareté lisible sans les couleurs : une forme de gemme par rareté
+   (cercle, carré, losange, hexagone, étoile, étoile double) */
+.r-commune .gem, .gem[style*="--r-commune"] { transform: none; border-radius: 50%; }
+.r-peu-commune .gem, .gem[style*="--r-peu-commune"] { transform: none; border-radius: 1px; }
+.r-epique .gem, .gem[style*="--r-epique"] { transform: scale(1.12); clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%); }
+.r-legendaire .gem, .gem[style*="--r-legendaire"] { transform: scale(1.35);
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+.r-mythique .gem, .gem[style*="--r-mythique"] { transform: scale(1.4);
+  clip-path: polygon(50% 0, 60% 30%, 85% 15%, 70% 40%, 100% 50%, 70% 60%, 85% 85%, 60% 70%, 50% 100%, 40% 70%, 15% 85%, 30% 60%, 0 50%, 30% 40%, 15% 15%, 40% 30%); }
+/* Clavier : contour bien visible sur tout ce qui se joue au clavier */
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.grid .card:focus-visible, .sc-card .card:focus-visible, .pack-visual:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; border-radius: 6px; }

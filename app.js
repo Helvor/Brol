@@ -402,7 +402,7 @@
       <text x="150" y="374" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="${title.length > 13 ? 34 : title.length > 9 ? 38 : 44}" letter-spacing="1" fill="url(#m${k})"${title.length > 9 ? ' textLength="268" lengthAdjust="spacingAndGlyphs"' : ''}>${esc(title)}</text>
     </svg>`;
   }
-  const packVisual = p => `<div class="pack-visual${p.special ? ' is-foil' : ''}">${packSVG(p)}<div class="sheen"></div>${p.special ? '<div class="foil"></div>' : ''}</div>`;
+  const packVisual = p => `<div class="pack-visual${p.special ? ' is-foil' : ''}" tabindex="0" role="button" aria-label="${esc(pl(p, 'title'))}, ${p.price}">${packSVG(p)}<div class="sheen"></div>${p.special ? '<div class="foil"></div>' : ''}</div>`;
   // Logo de Brol en version or au centre du dos des cartes : mêmes trois cartes que logo.svg,
   // les deux du fond en simple filet, celle de devant en or avec le B en creux
   const BACK_MARK = `<svg class="back-logo" viewBox="-1.3 -0.5 63 63" aria-hidden="true"><defs><linearGradient id="bk-gold" x1="0" y1="0" x2="1" y2="1">
@@ -563,7 +563,7 @@
     const n = order.length || 3;
     const pct = owned.length / CARDS.length;
     const fan = order.length
-      ? order.map((c, i) => `<div class="sc-card" style="--i:${i};--n:${n};--z:${10 - Math.abs(i - (n - 1) / 2) * 2}">${cardHTML(c, { finish: bestFinish(c.id) })}</div>`).join('')
+      ? order.map((c, i) => `<div class="sc-card" style="--i:${i};--n:${n};--z:${10 - Math.abs(i - (n - 1) / 2) * 2}">${cardHTML(c, { finish: bestFinish(c.id) }).replace('<article ', `<article tabindex="0" role="button" aria-label="${esc(nm(c))}" `)}</div>`).join('')
       : [0, 1, 2].map(i => `<div class="sc-card is-back" style="--i:${i};--n:3;--z:${10 - Math.abs(i - 1) * 2}"><div class="cell sc-backcell">${cardBack()}</div></div>`).join('');
     box.innerHTML = `
       <div class="sc-head"><h3>${t('scTitle')}</h3><span>${t('scCount', fmt(owned.length), fmt(CARDS.length), Math.floor(pct * 100))}</span></div>
@@ -571,6 +571,10 @@
       <div class="sc-fan">${fan}</div>
       ${order.length ? '' : `<p class="sc-empty">${t('scEmpty')}</p>`}`;
   }
+  $('#showcase')?.addEventListener('keydown', e => {
+    const card = e.target.closest('.sc-card .card');
+    if (card && pressKey(e)) { e.preventDefault(); openDetail(card.dataset.id, card.dataset.fin); }
+  });
   $('#showcase')?.addEventListener('click', e => {
     const card = e.target.closest('.sc-card .card');
     if (card) { SFX.tick(); openDetail(card.dataset.id, card.dataset.fin); }
@@ -609,6 +613,9 @@
   setInterval(() => { if ($('#view-shop').classList.contains('is-active')) renderFree(); }, 1000);
 
 
+  $('#packs').addEventListener('keydown', e => {
+    if (e.target.classList?.contains('pack-visual') && pressKey(e)) { e.preventDefault(); e.target.click(); }
+  });
   $('#packs').addEventListener('click', e => {
     const ob = e.target.closest('.odds-btn');
     if (ob) { const ul = ob.nextElementSibling; ul.hidden = !ul.hidden; return; }
@@ -940,7 +947,7 @@
     if (!list.length) { grid.innerHTML = `<p class="empty">${filters.owned || filters.special ? t('emptyOwned') : t('emptyAll')}</p>`; return; }
     grid.innerHTML = list.slice(0, shown).map(c => {
       const n = totalOf(c.id);
-      if (n) return `<div class="cell">${cardHTML(c, { count: n, finish: bestFinish(c.id), variants: finishesOwned(c.id) })}</div>`;
+      if (n) return `<div class="cell">${cardHTML(c, { count: n, finish: bestFinish(c.id), variants: finishesOwned(c.id) }).replace('<article ', `<article tabindex="0" role="button" aria-label="${esc(nm(c))}, ${esc(rl(c.rarity))}" `)}</div>`;
       const where = c.cat === 'edition' && packById(c.pack) ? `<span class="ed-where">${t('edWhere', esc(pl(packById(c.pack), 'title')))}</span>` : '';
       return `<div class="cell"><div class="empty-slot"><span class="gem" style="background:var(--r-${c.rarity})"></span><span class="no">${String(c.no).padStart(4, '0')}</span><span class="name">${esc(nm(c))}</span>${where}</div></div>`;
     }).join('') + (list.length > shown ? `<button class="btn btn-line grid-more" id="more">${t('more', fmt(list.length - shown))}</button>` : '');
@@ -968,6 +975,12 @@
   $('#f-owned').addEventListener('change', e => { filters.owned = e.target.checked; shown = PAGE; renderBinder(); });
   $('#f-special').addEventListener('change', e => { filters.special = e.target.checked; shown = PAGE; renderBinder(); });
   $('#search').addEventListener('input', e => { filters.q = e.target.value; shown = PAGE; renderBinder(); });
+  // Clavier : Entrée ou Espace sur une carte de l'album, de la vitrine ou sur un paquet
+  const pressKey = e => (e.key === 'Enter' || e.key === ' ') && !e.repeat;
+  $('#grid').addEventListener('keydown', e => {
+    const card = e.target.closest('.card');
+    if (card && pressKey(e)) { e.preventDefault(); openDetail(card.dataset.id, card.dataset.fin); }
+  });
   $('#grid').addEventListener('click', e => {
     if (e.target.id === 'more') { shown += PAGE; renderBinder(); return; }
     const card = e.target.closest('.card');
@@ -1443,7 +1456,7 @@
     const text = window.I18N.text(c);
     const known = window.I18N.known(c);
     $('#detail-body').innerHTML = `
-      <div class="kicker" style="color:var(--r-${c.rarity})"><span class="gem" style="background:var(--r-${c.rarity})"></span>${rl(c.rarity)}${finish !== 'normal' ? ` · <span class="fin-word d-${finish}"${F[finish].pack ? ` style="color:${F[finish].color}"` : ''}>${fl(finish)}</span>` : ''} · <span style="color:var(--ink-2)">${cl(c.cat)}</span></div>
+      <div class="kicker" style="color:var(--rt-${c.rarity})"><span class="gem" style="background:var(--r-${c.rarity})"></span>${rl(c.rarity)}${finish !== 'normal' ? ` · <span class="fin-word d-${finish}">${fl(finish)}</span>` : ''} · <span style="color:var(--ink-2)">${cl(c.cat)}</span></div>
       <h2>${esc(nm(c))}</h2>
       <p class="sub">${esc(window.I18N.subtitle(c))}${c.meta ? `<br>${esc(window.I18N.meta(c))}` : ''}</p>
       ${versions}
