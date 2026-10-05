@@ -34,6 +34,7 @@
     { id: 'groupe',       fr: 'Groupes',       nl: 'Groepen' },
     { id: 'festival',     fr: 'Festivals',     nl: 'Festivals' },
     { id: 'sport',        fr: 'Sport',         nl: 'Sport' },
+    { id: 'science',      fr: 'Sciences',      nl: 'Wetenschap' },
     { id: 'art',          fr: 'Art',           nl: 'Kunst' },
     { id: 'monument',     fr: 'Monuments',     nl: 'Monumenten' },
     { id: 'chateau',      fr: 'Châteaux',      nl: 'Kastelen' },
@@ -62,6 +63,9 @@
     { id: 'sport', title: { fr: 'Sport', nl: 'Sport' }, kicker: { fr: 'Édition sportive', nl: 'Sporteditie' }, big: 'MVP', price: 80,
       desc: { fr: 'Football, cyclisme, tennis, athlétisme et plus.', nl: 'Voetbal, wielrennen, tennis, atletiek en meer.' },
       body: ['#0a2418', '#17573b'], metal: ['#eafff3', '#86d9aa', '#2d7650'], cats: ['sport'] },
+    { id: 'sciences', title: { fr: 'Sciences', nl: 'Wetenschap' }, kicker: { fr: 'Édition savante', nl: 'Wetenschapseditie' }, big: 'LAB', price: 80,
+      desc: { fr: 'Savants, inventeurs et explorateurs.', nl: 'Wetenschappers, uitvinders en ontdekkingsreizigers.' },
+      body: ['#081c26', '#1b4a5e'], metal: ['#e3fbff', '#74d4e8', '#2a7286'], cats: ['science'] },
     { id: 'patrimoine', title: { fr: 'Patrimoine', nl: 'Erfgoed' }, kicker: { fr: 'Édition patrimoine', nl: 'Erfgoededitie' }, big: '1830', price: 80,
       desc: { fr: 'Monuments, châteaux et folklore.', nl: 'Monumenten, kastelen en folklore.' },
       body: ['#191c22', '#3e4756'], metal: ['#eef3ff', '#a9b8d6', '#566584'], cats: ['monument', 'chateau', 'folklore'] },
@@ -78,6 +82,55 @@
   ];
   const pl = (p, k) => p[k][L()];
 
+  // ---------- Dates (heure locale) ----------
+  // window.BROL_NOW permet aux tests de simuler une autre date.
+  const now = () => window.BROL_NOW ? new Date(window.BROL_NOW) : new Date();
+  const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  const easter = y => { // calendrier grégorien (algorithme de Meeus)
+    const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+    return new Date(y, Math.floor((h + l - 7 * m + 114) / 31) - 1, ((h + l - 7 * m + 114) % 31) + 1);
+  };
+  const nthSunday = (y, month, n) => { const d = new Date(y, month, 1); return addDays(d, (7 - d.getDay()) % 7 + 7 * (n - 1)); };
+  const span = (end, days) => [ymd(addDays(end, -days)), ymd(end)];
+
+  // ---------- Paquets d'événement : en vente seulement pendant leur période ----------
+  // when(année) → [début, fin] inclus. Pièces uniquement, ni gratuit ni lot de 10.
+  const EVENT_PACKS = [
+    { id: 'carnaval', when: y => span(addDays(easter(y), -47), 10), title: { fr: 'Carnaval', nl: 'Carnaval' }, kicker: { fr: 'Édition Mardi gras', nl: 'Vastenavondeditie' }, big: 'MG',
+      desc: { fr: 'Folklore, festivals et groupes. 5ᵉ carte épique ou mieux.', nl: 'Folklore, festivals en groepen. 5de kaart episch of beter.' },
+      body: ['#2b0a3d', '#6b1e7a'], metal: ['#fff0ff', '#f0a3ff', '#8a3fa0'], cats: ['folklore', 'festival', 'groupe'], last: 'epique' },
+    { id: 'ronde', when: y => span(nthSunday(y, 3, 1), 7), title: { fr: 'Tour des Flandres', nl: 'Ronde van Vlaanderen' }, kicker: { fr: 'Édition cycliste', nl: 'Wielereditie' }, big: 'RVV',
+      desc: { fr: 'Les géants du vélo. 5ᵉ carte épique ou mieux.', nl: 'De wielerreuzen. 5de kaart episch of beter.' },
+      body: ['#1a1a1a', '#3a3a3a'], metal: ['#fffbe0', '#f6d43a', '#8a7410'], filter: c => c.cat === 'sport' && /^Cyclisme/.test(c.meta || ''), last: 'epique' },
+    { id: 'iris', when: y => [`${y}-05-01`, `${y}-05-08`], title: { fr: 'Fête de l’Iris', nl: 'Irisfeest' }, kicker: { fr: 'Région bruxelloise', nl: 'Brussels Gewest' }, big: 'BXL',
+      desc: { fr: 'Bruxelles à l’honneur. 5ᵉ carte épique ou mieux.', nl: 'Brussel in de kijker. 5de kaart episch of beter.' },
+      body: ['#0c2350', '#1d4f9e'], metal: ['#eef4ff', '#f2c400', '#6b5a10'], filter: c => c.family === 'bruxelles', last: 'epique' },
+    { id: 'onze-juillet', when: y => [`${y}-07-04`, `${y}-07-11`], title: { fr: '11 juillet', nl: '11 juli' }, kicker: { fr: 'Communauté flamande', nl: 'Vlaamse Gemeenschap' }, big: '11/7',
+      desc: { fr: 'La Flandre à l’honneur. 5ᵉ carte épique ou mieux.', nl: 'Vlaanderen in de kijker. 5de kaart episch of beter.' },
+      body: ['#1a1a12', '#3b3510'], metal: ['#fffbe0', '#f2c400', '#7a6400'], filter: c => c.family === 'flandre', last: 'epique' },
+    { id: 'fete-nationale', when: y => [`${y}-07-14`, `${y}-07-21`], title: { fr: 'Fête nationale', nl: 'Nationale feestdag' }, kicker: { fr: 'Édition du 21 juillet', nl: 'Editie van 21 juli' }, big: '21/7',
+      desc: { fr: 'Politique, monarchie, régions et grandes dates. 5ᵉ carte épique ou mieux.', nl: 'Politiek, monarchie, gewesten en grote data. 5de kaart episch of beter.' },
+      body: ['#111111', '#7a0f1f'], metal: ['#fff5c2', '#f2c400', '#a3101f'], cats: ['politique', 'monarchie', 'evenement', 'region', 'province'], last: 'epique' },
+    { id: 'wallonie', when: y => span(nthSunday(y, 8, 3), 7), title: { fr: 'Fêtes de Wallonie', nl: 'Feesten van Wallonië' }, kicker: { fr: 'Édition wallonne', nl: 'Waalse editie' }, big: 'WAL',
+      desc: { fr: 'La Wallonie à l’honneur. 5ᵉ carte épique ou mieux.', nl: 'Wallonië in de kijker. 5de kaart episch of beter.' },
+      body: ['#3a0710', '#8a1022'], metal: ['#fff6cf', '#f2c400', '#8a6410'], filter: c => c.family === 'wallonie', last: 'epique' },
+    { id: 'saint-nicolas', when: y => [`${y}-11-28`, `${y}-12-06`], title: { fr: 'Saint-Nicolas', nl: 'Sinterklaas' }, kicker: { fr: 'Édition du 6 décembre', nl: 'Editie van 6 december' }, big: '6/12',
+      desc: { fr: 'Gastronomie, bières et folklore. Versions spéciales deux fois plus fréquentes.', nl: 'Gastronomie, bieren en folklore. Speciale versies twee keer vaker.' },
+      body: ['#4a0710', '#a3162a'], metal: ['#fff4d6', '#f2c14e', '#9a6a12'], cats: ['gastronomie', 'biere', 'folklore'], finishBoost: 2 },
+  ].map(p => ({ ...p, price: 100, special: true, event: true }));
+  const poolOf = p => (window.CARDS || []).filter(c => p.filter ? p.filter(c) : !p.cats || p.cats.includes(c.cat));
+  const eventWindow = (p, d = now()) => p.when(d.getFullYear());
+  const activeEvents = () => { const d = ymd(now()); return EVENT_PACKS.filter(p => { const [a, b] = eventWindow(p); return a <= d && d <= b; }); };
+  function nextEvent() {
+    const d = now(), today = ymd(d);
+    return EVENT_PACKS.flatMap(p => [0, 1].map(k => ({ p, start: p.when(d.getFullYear() + k)[0] })))
+      .filter(x => x.start > today).sort((a, b) => a.start.localeCompare(b.start))[0];
+  }
+  const fmtDay = s => new Date(s + 'T12:00').toLocaleDateString(L() === 'nl' ? 'nl-BE' : 'fr-BE', { day: 'numeric', month: 'long' });
+
+
   const PACK_SIZE = 5;
   const START_COINS = 1000;
   const NEW_CARD_BONUS = 5;
@@ -86,6 +139,12 @@
   const PITY = 40; // une légendaire ou mieux au plus tard tous les 40 paquets
   const BULK = 10, BULK_DISCOUNT = 0.9; // lot de 10 paquets : 10 % moins cher, payé en pièces
   const bulkPrice = p => Math.round(p.price * BULK * BULK_DISCOUNT);
+
+  // Les paquets sans assez de cartes (ex. Sciences avant la régénération des données) sont masqués
+  const hasCards = p => poolOf(p).length >= PACK_SIZE;
+  PACKS.splice(0, PACKS.length, ...PACKS.filter(hasCards));
+  // Paquets en vente aujourd'hui : événements en cours d'abord
+  const shopPacks = () => [...activeEvents().filter(hasCards), ...PACKS];
   const PAGE = 120;
   const STORE_KEY = 'rue-de-la-loi:v1';
 
@@ -141,8 +200,8 @@
 
   // ---------- Sauvegarde ----------
   // owned : clé « id » pour la version standard, « id|holo » etc. pour les versions spéciales
-  const freshStats = () => ({ packs: 0, cards: 0, free: 0, rarity: {}, finish: {}, packsBy: {}, sold: 0, earned: 0, perfect: 0, doubleLeg: 0, night: 0, pityHits: 0, goldMyth: 0, trades: 0, tradeGift: 0, tradeMyth: 0, tradeFull: 0 });
-  const fresh = () => ({ coins: START_COINS, owned: {}, packs: 0, free: 1, freeAt: Date.now(), claimed: {}, pity: 0, stats: freshStats(), ach: {}, trade: { pending: {}, done: {} } });
+  const freshStats = () => ({ packs: 0, cards: 0, free: 0, rarity: {}, finish: {}, packsBy: {}, sold: 0, earned: 0, perfect: 0, doubleLeg: 0, night: 0, pityHits: 0, goldMyth: 0, trades: 0, tradeGift: 0, tradeMyth: 0, tradeFull: 0, fused: 0, fuseHolo: 0, dailyMax: 0 });
+  const fresh = () => ({ coins: START_COINS, owned: {}, packs: 0, free: 1, freeAt: Date.now(), claimed: {}, pity: 0, stats: freshStats(), ach: {}, trade: { pending: {}, done: {} }, daily: { last: null, streak: 0 } });
   let state = load();
   function load() {
     try {
@@ -151,6 +210,8 @@
         if (s.free === undefined) { s.free = FREE_MAX; s.freeAt = Date.now(); s.coins = Math.max(s.coins, START_COINS); }
         s.claimed ||= {}; s.ach ||= {}; s.pity ||= 0;
         s.trade ||= {}; s.trade.pending ||= {}; s.trade.done ||= {};
+        s.daily ||= { last: null, streak: 0 };
+        if (s.achSeen === undefined) s.achSeen = Date.now(); // parties d'avant : rien n'est « nouveau »
         s.stats = { ...freshStats(), ...(s.stats || {}) };
         if (!s.stats.packs && s.packs) s.stats.packs = s.packs;
         return s;
@@ -211,6 +272,41 @@
     </svg>`;
   }
 
+  // Motifs des paquets spéciaux, dessinés dans le corps du paquet (300 × 430), derrière le sceau
+  const star = (x, y, r) => { let d = ''; for (let i = 0; i < 10; i++) { const a = Math.PI / 5 * i - Math.PI / 2, q = i % 2 ? r * .45 : r; d += (i ? 'L' : 'M') + (x + q * Math.cos(a)).toFixed(1) + ' ' + (y + q * Math.sin(a)).toFixed(1); } return d + 'Z'; };
+  const scatter = (n, seed, f) => { let v = seed; const rnd = () => (v = (v * 9301 + 49297) % 233280) / 233280; return Array.from({ length: n }, (_, i) => f(rnd() * 300, 30 + rnd() * 370, rnd(), i)).join(''); };
+  const rays = (n, c1, c2, op) => Array.from({ length: n }, (_, i) => { const a = 2 * Math.PI * i / n, b = 2 * Math.PI * (i + .5) / n, R0 = 420;
+    return `<path d="M150 202L${(150 + R0 * Math.cos(a)).toFixed(0)} ${(202 + R0 * Math.sin(a)).toFixed(0)}L${(150 + R0 * Math.cos(b)).toFixed(0)} ${(202 + R0 * Math.sin(b)).toFixed(0)}Z" fill="${i % 2 ? c2 : c1}" opacity="${op}"/>`; }).join('');
+  const PACK_ART = {
+    prestige: (k, p) => `${Array.from({ length: 34 }, (_, i) => `<circle cx="150" cy="202" r="${14 + i * 8}" fill="none" stroke="${p.metal[1]}" stroke-width=".6" opacity=".16"/>`).join('')}
+      ${rays(36, p.metal[1], 'transparent', .07)}
+      <rect x="10" y="70" width="280" height="330" fill="none" stroke="${p.metal[1]}" stroke-width="1.4" opacity=".7"/>
+      <rect x="15" y="75" width="270" height="320" fill="none" stroke="${p.metal[1]}" stroke-width=".6" opacity=".55"/>
+      ${[120, 150, 180].map(x => `<path d="${star(x, 96, 7)}" fill="${p.metal[1]}"/>`).join('')}`,
+    'saint-nicolas': (k, p) => `${scatter(26, 7, (x, y, r) => `<path d="${star(x, y, 3 + r * 5)}" fill="${p.metal[0]}" opacity="${(.25 + r * .45).toFixed(2)}"/>`)}
+      <g opacity=".22" fill="${p.metal[1]}"><path d="M150 70c-34 22-52 60-52 100v118h104V170c0-40-18-78-52-100z"/><path d="M150 70c-14 30-16 70-6 110" stroke="${p.body[0]}" stroke-width="4" fill="none"/>
+      <rect x="143" y="130" width="14" height="70" fill="${p.body[0]}"/><rect x="125" y="150" width="50" height="14" fill="${p.body[0]}"/></g>`,
+    carnaval: (k, p) => `<defs><pattern id="hq${k}" width="40" height="60" patternUnits="userSpaceOnUse"><path d="M20 0L40 30L20 60L0 30Z" fill="${p.metal[1]}" opacity=".16"/><path d="M0 0L20 0L0 30ZM40 0L20 0L40 30ZM0 60L20 60L0 30ZM40 60L20 60L40 30Z" fill="#ffd23f" opacity=".1"/></pattern></defs>
+      <rect x="0" y="18" width="300" height="394" fill="url(#hq${k})"/>
+      ${scatter(40, 3, (x, y, r, i) => i % 3 ? `<rect x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="6" height="3" fill="${['#ffd23f', '#5fe0ff', '#ff5fa8'][i % 3]}" transform="rotate(${(r * 180).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})" opacity=".8"/>` : `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="2.2" fill="#fff" opacity=".7"/>`)}`,
+    ronde: (k, p) => `<defs><pattern id="cb${k}" width="36" height="24" patternUnits="userSpaceOnUse"><rect x="2" y="2" width="32" height="9" rx="4" fill="#fff" opacity=".08"/><rect x="-16" y="14" width="32" height="9" rx="4" fill="#fff" opacity=".08"/><rect x="20" y="14" width="32" height="9" rx="4" fill="#fff" opacity=".08"/></pattern></defs>
+      <rect x="0" y="18" width="300" height="394" fill="url(#cb${k})"/>
+      <path d="M0 300L300 250L300 270L0 320Z" fill="${p.metal[1]}" opacity=".85"/><path d="M0 320L300 270L300 276L0 326Z" fill="#111" opacity=".9"/>`,
+    iris: (k, p) => `<g transform="translate(150 215) scale(1.25)" fill="#f2c400" opacity=".28">
+      <path d="M0-95C22-70 22-35 0-10C-22-35-22-70 0-95Z"/><path d="M-6-8C-50-30-90-10-95 30C-60 40-25 25-6-8Z"/><path d="M6-8C50-30 90-10 95 30C60 40 25 25 6-8Z"/>
+      <path d="M-4 0C-30 30-30 70-10 95L10 95C30 70 30 30 4 0Z" opacity=".7"/><rect x="-40" y="-14" width="80" height="12" rx="6"/></g>`,
+    'onze-juillet': (k, p) => `<defs><pattern id="lz${k}" width="30" height="40" patternUnits="userSpaceOnUse"><path d="M15 0L30 20L15 40L0 20Z" fill="#f2c400" opacity=".14"/></pattern></defs>
+      <rect x="0" y="18" width="300" height="394" fill="url(#lz${k})"/>
+      <path d="M-20 360L320 120L320 160L-20 400Z" fill="#f2c400" opacity=".2"/>`,
+    'fete-nationale': (k, p) => `<rect x="0" y="18" width="100" height="394" fill="#000" opacity=".55"/><rect x="100" y="18" width="100" height="394" fill="#f2c400" opacity=".35"/><rect x="200" y="18" width="100" height="394" fill="#e1001e" opacity=".45"/>
+      <path d="M130 96L135 80L143 90L150 76L157 90L165 80L170 96Z" fill="${p.metal[0]}" opacity=".9"/><rect x="130" y="96" width="40" height="5" fill="${p.metal[0]}" opacity=".9"/>`,
+    wallonie: (k, p) => rays(28, '#f2c400', '#c8102e', .22),
+    sciences: (k, p) => `<defs><pattern id="gp${k}" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0H0V12" fill="none" stroke="${p.metal[1]}" stroke-width=".4" opacity=".25"/></pattern></defs>
+      <rect x="0" y="18" width="300" height="394" fill="url(#gp${k})"/>
+      <g fill="none" stroke="${p.metal[1]}" stroke-width="1.6" opacity=".35">${[0, 60, 120].map(a => `<ellipse cx="150" cy="202" rx="128" ry="44" transform="rotate(${a} 150 202)"/>`).join('')}</g>
+      ${[[278, 202], [86, 91], [86, 313]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="${p.metal[0]}" opacity=".8"/>`).join('')}`,
+  };
+
   function packSVG(p) {
     const k = ++uid;
     const zig = (y0, dir) => {
@@ -228,6 +324,7 @@
       </defs>
       <rect x="0" y="18" width="300" height="394" fill="url(#b${k})"/>
       <rect x="0" y="18" width="300" height="394" fill="url(#l${k})"/>
+      ${PACK_ART[p.id] ? `<clipPath id="c${k}"><rect x="0" y="18" width="300" height="394"/></clipPath><g clip-path="url(#c${k})">${PACK_ART[p.id](k, p)}</g>` : ''}
       <path d="${zig(18, 1)}" fill="url(#m${k})"/><path d="${zig(18, 1)}" fill="url(#r${k})"/>
       <path d="${zig(412, -1)}" fill="url(#m${k})"/><path d="${zig(412, -1)}" fill="url(#r${k})"/>
       <line x1="10" y1="62" x2="290" y2="62" stroke="${p.metal[1]}" stroke-width="1" stroke-dasharray="5 5" opacity=".6"/>
@@ -236,10 +333,10 @@
       <text x="282" y="92" text-anchor="end" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="11" fill="${p.metal[1]}" opacity=".8">${t('cards5')}</text>
       <g transform="translate(60 112)">${sealSVG({ ring: t('seal'), center: p.big, color: p.metal[1], size: 180, px: 180, centerSize: p.big.length > 2 ? 52 : 66 })}</g>
       <text x="150" y="334" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="600" font-size="13" letter-spacing="4" fill="${p.metal[1]}">${esc(pl(p, 'kicker').toUpperCase())}</text>
-      <text x="150" y="374" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="${title.length > 10 ? 38 : 44}" letter-spacing="1" fill="url(#m${k})">${esc(title)}</text>
+      <text x="150" y="374" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="${title.length > 13 ? 34 : title.length > 10 ? 38 : 44}" letter-spacing="1" fill="url(#m${k})"${title.length > 10 ? ' textLength="268" lengthAdjust="spacingAndGlyphs"' : ''}>${esc(title)}</text>
     </svg>`;
   }
-  const packVisual = p => `<div class="pack-visual">${packSVG(p)}<div class="sheen"></div></div>`;
+  const packVisual = p => `<div class="pack-visual${p.special ? ' is-foil' : ''}">${packSVG(p)}<div class="sheen"></div>${p.special ? '<div class="foil"></div>' : ''}</div>`;
   const cardBack = () => `<div class="card-back">${sealSVG({ ring: t('backSeal'), center: 'BROL', color: '#e2b33c', size: 200, centerSize: 52 })}<div class="back-foot">${t('back')}</div></div>`;
 
   // ---------- Rendu d'une carte ----------
@@ -298,13 +395,13 @@
     for (const r of pool) { if ((roll -= r.weight) < 0) return r.id; }
     return pool[pool.length - 1].id;
   }
-  function pickFinish() {
+  function pickFinish(boost = 1) {
     let roll = Math.random();
-    for (const f of FINISHES.slice(1).reverse()) { if ((roll -= f.chance) < 0) return f.id; }
+    for (const f of FINISHES.slice(1).reverse()) { if ((roll -= f.chance * boost) < 0) return f.id; }
     return 'normal';
   }
   function drawPack(pack, forceLegend) {
-    const pool = pack.cats ? CARDS.filter(c => pack.cats.includes(c.cat)) : CARDS;
+    const pool = poolOf(pack).filter(c => BY_ID.has(c.id));
     const out = [];
     const taken = new Set();
     for (let i = 0; i < PACK_SIZE; i++) {
@@ -320,28 +417,50 @@
       }
       const card = list[Math.floor(Math.random() * list.length)];
       taken.add(card.id);
-      out.push({ card, finish: pickFinish() });
+      out.push({ card, finish: pickFinish(pack.finishBoost) });
     }
     return out.sort((a, b) => R[a.card.rarity].rank - R[b.card.rarity].rank || F[a.finish].rank - F[b.finish].rank);
+  }
+
+  // Taux réels par carte pour un paquet : une rareté absente du paquet se reporte sur la plus proche
+  // (vers le bas d'abord), exactement comme dans drawPack.
+  const pctOdds = x => x > 0 ? (x * 100).toFixed(1).replace('.', ',') + ' %' : '—';
+  function packOdds(pack) {
+    const have = new Set(poolOf(pack).map(c => c.rarity));
+    const mapTo = r => { for (let d = 0; d < RARITIES.length; d++) for (const x of [r - d, r + d]) if (x >= 0 && x < RARITIES.length && have.has(RARITIES[x].id)) return x; return r; };
+    const slot = minRank => {
+      const out = RARITIES.map(() => 0), pool = RARITIES.filter((_, i) => i >= minRank), tot = pool.reduce((a, r) => a + r.weight, 0);
+      pool.forEach(r => { out[mapTo(R[r.id].rank)] += r.weight / tot; });
+      return out;
+    };
+    const a = slot(0), b = slot(R[pack.last || 'rare'].rank);
+    return RARITIES.map((r, i) => ({ id: r.id, p: a[i], last: b[i] }));
   }
 
   // ---------- Boutique ----------
   function renderShop() {
     tickFree();
-    $('#packs').innerHTML = PACKS.map(p => {
+    const ev = nextEvent();
+    $('#event-line').innerHTML = activeEvents().length ? '' : ev ? t('nextEvent', esc(pl(ev.p, 'title')), fmtDay(ev.start)) : '';
+    $('#packs').innerHTML = shopPacks().map(p => {
       const locked = state.coins < p.price && (!state.free || p.special);
       return `
-      <div class="pack-card${locked ? ' is-locked' : ''}${p.special ? ' is-special' : ''}" data-pack="${p.id}">
+      <div class="pack-card${locked ? ' is-locked' : ''}${p.special ? ' is-special' : ''}${p.event ? ' is-event' : ''}" data-pack="${p.id}">
+        ${p.event ? `<span class="event-ribbon">${t('eventUntil', fmtDay(eventWindow(p)[1]))}</span>` : ''}
         ${packVisual(p)}
         <div class="pack-info">
           <div><h2>${esc(pl(p, 'title'))}</h2><p>${esc(pl(p, 'desc'))}</p></div>
           <span class="price"><span class="coin"></span>${p.price}</span>
         </div>
-        ${p.special ? `<span class="pack-note">${t('specialNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', BULK)} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
+        <button class="linkish odds-btn">${t('packOdds')}</button>
+        <table class="pack-odds" hidden><thead><tr><th></th><th>${t('oddsCards')}</th><th>${t('oddsLast')}</th></tr></thead><tbody>${packOdds(p).filter(o => o.p + o.last > 0).map(o =>
+          `<tr><td><span class="gem" style="background:var(--r-${o.id})"></span>${rl(o.id)}</td><td>${pctOdds(o.p)}</td><td>${pctOdds(o.last)}</td></tr>`).join('')}</tbody></table>
+        ${p.special ? `<span class="pack-note">${t(p.event ? 'eventNote' : 'specialNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', BULK)} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
       </div>`;
     }).join('');
     renderFree();
     renderOdds();
+    renderDaily();
   }
   function renderFree() {
     tickFree();
@@ -366,9 +485,11 @@
   }
 
   $('#packs').addEventListener('click', e => {
+    const ob = e.target.closest('.odds-btn');
+    if (ob) { const ul = ob.nextElementSibling; ul.hidden = !ul.hidden; return; }
     const el = e.target.closest('.pack-visual, .buy10');
     if (!el || el.disabled) return;
-    openPack(PACKS.find(x => x.id === el.closest('[data-pack]').dataset.pack), el.classList.contains('buy10') ? BULK : 1);
+    openPack(shopPacks().find(x => x.id === el.closest('[data-pack]').dataset.pack), el.classList.contains('buy10') ? BULK : 1);
   });
 
   // ---------- Ouverture ----------
@@ -631,7 +752,7 @@
       counts.all[1]++; counts.all[0] += o;
       if (c.current && c.cat === 'politique') { counts.live[1]++; counts.live[0] += o; }
     }
-    const chips = [{ id: 'all', label: t('all') }, ...CATS.map(c => ({ id: c.id, label: c[L()] })), { id: 'live', label: t('liveGov') }];
+    const chips = [{ id: 'all', label: t('all') }, ...CATS.filter(c => counts[c.id]).map(c => ({ id: c.id, label: c[L()] })), { id: 'live', label: t('liveGov') }];
     $('#cat-chips').innerHTML = chips.map(c =>
       `<button class="chip${filters.cat === c.id ? ' is-active' : ''}${c.id === 'live' ? ' live' : ''}" data-cat="${c.id}">${c.label}<small>${counts[c.id][0]}/${counts[c.id][1]}</small></button>`).join('');
 
@@ -766,6 +887,165 @@
     if (e.target.id === 'clear-series') { filters.series = null; shown = PAGE; renderBinder(); }
   });
 
+  // ---------- Fusion des doublons ----------
+  // 5 doublons standard d'une même rareté → 1 carte au hasard de la rareté au-dessus.
+  // 3 doublons standard d'une même carte → sa version Holo. Un exemplaire de chaque carte est toujours gardé.
+  const FUSE_COST = 5, HOLO_COST = 3;
+  const randomCard = rarity => { const list = CARDS.filter(c => c.rarity === rarity); return list[Math.floor(Math.random() * list.length)]; };
+  const fuseStock = rarity => CARDS.filter(c => c.rarity === rarity && countOf(c.id, 'normal') > 1).map(c => ({ c, extra: countOf(c.id, 'normal') - 1 }));
+  const fuseAvailable = rarity => fuseStock(rarity).reduce((a, x) => a + x.extra, 0);
+  const holoCandidates = () => CARDS.filter(c => countOf(c.id, 'normal') > HOLO_COST);
+  function addCard(card, finish) {
+    const key = keyOf(card.id, finish);
+    const isNew = !state.owned[key];
+    state.owned[key] = (state.owned[key] || 0) + 1;
+    return { card, finish, isNew };
+  }
+  function fuseRarity(rarity) {
+    const next = RARITIES[R[rarity].rank + 1];
+    if (!next || fuseAvailable(rarity) < FUSE_COST) return null;
+    for (let k = 0; k < FUSE_COST; k++) { // on prend d'abord les cartes qu'on a en plus grand nombre
+      const top = fuseStock(rarity).sort((a, b) => b.extra - a.extra)[0];
+      state.owned[top.c.id]--;
+    }
+    const res = addCard(randomCard(next.id), 'normal');
+    state.stats.fused++;
+    save();
+    return res;
+  }
+  function fuseHolo(id) {
+    const c = BY_ID.get(id);
+    if (!c || countOf(id, 'normal') <= HOLO_COST) return null;
+    state.owned[id] -= HOLO_COST;
+    const res = addCard(c, 'holo');
+    state.stats.fused++; state.stats.fuseHolo++;
+    state.stats.finish.holo = (state.stats.finish.holo || 0) + 1;
+    save();
+    return res;
+  }
+
+  const fuseDlg = $('#fuse');
+  function renderFuse(result = null) {
+    const rows = RARITIES.slice(0, -1).map((r, i) => {
+      const n = fuseAvailable(r.id), next = RARITIES[i + 1];
+      return `<div class="fuse-row">
+        <span class="fuse-recipe"><b>${FUSE_COST}×</b> <span class="gem" style="background:var(--r-${r.id})"></span>${rl(r.id)} <i>→</i> <b>1×</b> <span class="gem" style="background:var(--r-${next.id})"></span>${rl(next.id)}</span>
+        <small>${t('fuseHave', n)}</small>
+        <button class="btn${n >= FUSE_COST ? ' btn-gold' : ' btn-line'}" data-fuse="${r.id}"${n >= FUSE_COST ? '' : ' disabled'}>${t('fuseGo')}</button>
+      </div>`;
+    }).join('');
+    const holos = holoCandidates().sort((a, b) => R[b.rarity].rank - R[a.rarity].rank);
+    $('#fuse-body').innerHTML = `
+      <h2>${t('fuseTitle')}</h2>
+      <p class="muted">${t('fuseIntro', FUSE_COST, HOLO_COST)}</p>
+      ${result ? `<div class="fuse-result"><div class="cell">${cardHTML(result.card, { finish: result.finish })}</div>
+        <div><span class="tag-inline${result.isNew ? '' : ' dup'}">${result.isNew ? t('new') : t('dup')}</span><b>${esc(nm(result.card))}</b><small>${rl(result.card.rarity)}${result.finish !== 'normal' ? ' · ' + fl(result.finish) : ''}</small></div></div>` : ''}
+      <h3>${t('fuseUp')}</h3>
+      <div class="fuse-rows">${rows}</div>
+      <h3>${t('fuseHoloH', HOLO_COST)}</h3>
+      ${holos.length ? `<div class="fuse-holos">${holos.slice(0, 40).map(c => `<div class="fuse-holo">
+          <span class="gem" style="background:var(--r-${c.rarity})"></span><span class="fuse-name">${esc(nm(c))}</span><small>×${countOf(c.id, 'normal')}</small>
+          <button class="btn btn-line" data-holo="${esc(c.id)}">${t('fuseToHolo')}</button></div>`).join('')}</div>`
+        : `<p class="muted small">${t('fuseNoHolo', HOLO_COST + 1)}</p>`}`;
+  }
+  $('#fuse-btn').addEventListener('click', () => { SFX.tick(); renderFuse(); fuseDlg.showModal(); fuseDlg.scrollTop = 0; });
+  $('#fuse-close').addEventListener('click', () => fuseDlg.close());
+  fuseDlg.addEventListener('click', e => {
+    if (e.target === fuseDlg) return fuseDlg.close();
+    const b = e.target.closest('[data-fuse], [data-holo]');
+    if (!b || b.disabled) return;
+    const res = b.dataset.fuse ? fuseRarity(b.dataset.fuse) : fuseHolo(b.dataset.holo);
+    if (!res) return;
+    SFX.reveal(R[res.card.rarity].rank); if (res.finish !== 'normal') SFX.shimmer();
+    renderFuse(res); fuseDlg.scrollTop = 0;
+    renderWallet(); if ($('#view-binder').classList.contains('is-active')) renderBinder();
+    checkAchievements();
+  });
+  fuseDlg.addEventListener('close', () => { if ($('#view-binder').classList.contains('is-active')) renderBinder(); });
+
+  // ---------- Carte du jour ----------
+  // Une carte offerte par jour. Jours consécutifs : rare ou mieux dès le 3ᵉ jour, épique ou mieux dès le 5ᵉ,
+  // légendaire ou mieux tous les 7 jours. Plus quelques pièces.
+  const DAILY_COINS = 20;
+  const dailyReady = () => state.daily.last !== ymd(now());
+  const dailyMin = streak => streak > 0 && streak % 7 === 0 ? 'legendaire' : streak >= 5 ? 'epique' : streak >= 3 ? 'rare' : 'commune';
+  function claimDaily() {
+    if (!dailyReady()) return null;
+    const d = state.daily;
+    d.streak = d.last === ymd(addDays(now(), -1)) ? d.streak + 1 : 1;
+    d.last = ymd(now());
+    const res = addCard(randomCard(pickRarity(R[dailyMin(d.streak)].rank)), pickFinish());
+    state.coins += DAILY_COINS;
+    state.stats.dailyMax = Math.max(state.stats.dailyMax || 0, d.streak);
+    save();
+    return { ...res, streak: d.streak };
+  }
+  function renderDaily() {
+    const ready = dailyReady();
+    const streak = state.daily.last === ymd(now()) || state.daily.last === ymd(addDays(now(), -1)) ? state.daily.streak : 0;
+    $('#daily-box').innerHTML = ready
+      ? `<button class="daily-btn" id="daily-open"><span class="daily-gift">${ACH_GIFT}</span><span><b>${t('dailyTitle')}</b><small>${dailyMin(streak + 1) === 'commune' ? t('dailyNextAny', streak + 1) : t('dailyNext', streak + 1, rl(dailyMin(streak + 1)))}</small></span></button>`
+      : `<div class="daily-done"><span class="daily-gift">${ACH_GIFT}</span><span><b>${t('dailyDone')}</b><small>${t('dailyStreak', streak)}</small></span></div>`;
+    $('.tab[data-view="shop"]').classList.toggle('has-dot', ready);
+  }
+  const ACH_GIFT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><rect x="4" y="9" width="16" height="11" rx="1"/><path d="M12 9v11M4 13h16M12 9c-2-4-6-4-6-1s6 1 6 1 6 2 6-1-4-3-6 1"/></svg>';
+  const dailyDlg = $('#daily');
+  $('#daily-box').addEventListener('click', e => {
+    if (!e.target.closest('#daily-open')) return;
+    const res = claimDaily();
+    if (!res) return renderDaily();
+    SFX.open();
+    $('#daily-body').innerHTML = `
+      <p class="daily-kicker">${t('dailyDay', res.streak)}</p>
+      <div class="slot daily-slot${R[res.card.rarity].rank >= R.epique.rank || res.finish !== 'normal' ? ' tease' : ''}" style="--hit: var(--r-${res.card.rarity})">
+        <div class="inner"><div class="face back">${cardBack()}</div><div class="face front">${cardHTML(res.card, { finish: res.finish })}</div></div>
+      </div>
+      <p class="daily-hint">${t('dailyHint')}</p>
+      <p class="daily-after" hidden>${res.isNew ? t('new') : t('dup')} · +${DAILY_COINS} ${t('coinsWord')} · ${dailyMin(res.streak + 1) === 'commune' ? t('dailyCome') : t('dailyTomorrow', rl(dailyMin(res.streak + 1)))}</p>`;
+    dailyDlg.showModal();
+    renderWallet(); renderDaily();
+    checkAchievements();
+  });
+  dailyDlg.addEventListener('click', e => {
+    const slot = e.target.closest('.daily-slot');
+    if (slot && !slot.classList.contains('is-flipped')) {
+      slot.classList.add('is-flipped'); SFX.flip();
+      const rank = R[slot.querySelector('.card').className.match(/r-([a-z-]+)/)[1]].rank;
+      setTimeout(() => SFX.reveal(rank), 250);
+      $('#daily-body .daily-hint').hidden = true; $('#daily-body .daily-after').hidden = false;
+    } else if (e.target === dailyDlg || e.target.closest('#daily-close')) dailyDlg.close();
+  });
+
+  // ---------- Export / import de la sauvegarde ----------
+  $('#export').addEventListener('click', () => {
+    const prefs = {};
+    for (const k of ['rdl-theme', 'rdl-lang', 'rdl-sound']) { try { const v = localStorage.getItem(k); if (v !== null) prefs[k] = v; } catch (_) { /* rien */ } }
+    const blob = new Blob([JSON.stringify({ app: 'brol', version: 1, exportedAt: new Date().toISOString(), save: state, prefs }, null, 1)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `brol-partie-${ymd(new Date())}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    toast(t('exported'));
+  });
+  $('#import').addEventListener('click', () => $('#import-file').click());
+  $('#import-file').addEventListener('change', async e => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    let data;
+    try { data = JSON.parse(await f.text()); } catch (_) { data = null; }
+    const sv = data?.app === 'brol' ? data.save : null;
+    if (!sv || typeof sv.coins !== 'number' || typeof sv.owned !== 'object') { SFX.error(); return toast(t('importBad')); }
+    const n = Object.keys(sv.owned).filter(k => !k.includes('|') && BY_ID.has(k) && sv.owned[k] > 0).length;
+    if (!confirm(t('importConfirm', n, fmt(sv.coins)))) return;
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(sv));
+      for (const [k, v] of Object.entries(data.prefs || {})) if (/^rdl-(theme|lang|sound)$/.test(k)) localStorage.setItem(k, String(v));
+    } catch (_) { return toast(t('importBad')); }
+    location.reload();
+  });
+
   // ---------- Succès ----------
   // Le contexte lit toujours le state courant (il est remplacé lors d'une réinitialisation)
   const achievements = window.buildAchievements({ CARDS, get state() { return state; }, totalOf, countOf, SERIES, PACKS });
@@ -778,36 +1058,54 @@
       if (a.value() >= a.target) { state.ach[a.id] = Date.now(); state.coins += a.reward; unlocked.push(a); }
     }
     if (!unlocked.length) return;
-    save(); renderWallet();
+    save(); renderWallet(); renderAchDot();
     achQueue.push(...unlocked);
     if (!achShowing) showNextAch();
-    if ($('#view-ach').classList.contains('is-active')) renderAch();
+    if ($('#view-ach').classList.contains('is-active')) { renderAch(); markAchSeen(); }
   }
+  function markAchSeen() { state.achSeen = Date.now(); save(); renderAchDot(); }
   function showNextAch() {
     const a = achQueue.shift();
     const el = $('#ach-toast');
     if (!a) { achShowing = false; el.classList.remove('is-on'); return; }
     achShowing = true;
-    el.innerHTML = `<span class="medal">${achIcon(a.icon)}</span><span class="ach-toast-text"><small>${t('achUnlocked')}</small><b>${esc(a.title[L()])}</b></span><em>+${fmt(a.reward)}</em>`;
+    el.innerHTML = `<span class="medal">${achIcon(a.icon)}</span><span class="ach-toast-text"><small>${t('achUnlocked')}</small><b>${esc(a.title[L()])}</b><span>${esc(a.desc[L()])}</span></span><em>+${fmt(a.reward)}</em>`;
     el.classList.remove('is-on'); void el.offsetWidth; el.classList.add('is-on');
     SFX.achievement();
     setTimeout(showNextAch, 3200);
   }
   const achIcon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">${window.ACH_ICONS[name] || window.ACH_ICONS.star}</svg>`;
+  // Succès débloqués depuis la dernière visite de l'onglet (state.achSeen) : point sur l'onglet et étiquette « nouveau »
+  const isUnseen = a => state.ach[a.id] > (state.achSeen || 0);
+  function renderAchDot() { $('.tab[data-view="ach"]').classList.toggle('has-dot', achievements.list.some(isUnseen)); }
+  function ago(ts) {
+    if (!(ts > 1e12)) return '';
+    const rtf = new Intl.RelativeTimeFormat(L() === 'nl' ? 'nl-BE' : 'fr-BE', { numeric: 'auto' });
+    const s = Math.round((ts - Date.now()) / 1000);
+    for (const [u, n] of [['day', 86400], ['hour', 3600], ['minute', 60]]) if (Math.abs(s) >= n) return rtf.format(Math.round(s / n), u);
+    return rtf.format(0, 'minute');
+  }
   function renderAch() {
     const all = achievements.list;
     const unlocked = all.filter(a => state.ach[a.id]);
+    const recent = [...unlocked].sort((a, b) => state.ach[b.id] - state.ach[a.id]).slice(0, 6);
     const coins = unlocked.reduce((s, a) => s + a.reward, 0);
     $('#ach-summary').textContent = t('achSummary', unlocked.length, all.length, fmt(coins));
     $('#ach-bar').style.width = (unlocked.length / all.length * 100).toFixed(1) + '%';
-    $('#ach-list').innerHTML = Object.keys(achievements.GROUPS).map(g => {
+    const recentHTML = recent.length ? `<section class="ach-group ach-recent"><h2>${t('achRecent')}</h2><div class="ach-grid">${recent.map(a => `
+      <div class="ach is-got${isUnseen(a) ? ' is-new' : ''}">
+        <span class="medal">${achIcon(a.icon)}</span>
+        <div class="ach-body"><b>${esc(a.title[L()])}${isUnseen(a) ? `<i class="ach-new">${t('achNew')}</i>` : ''}</b><p>${esc(a.desc[L()])}</p><small class="ach-prog">${esc(ago(state.ach[a.id]))}</small></div>
+        <span class="price"><span class="coin"></span>${fmt(a.reward)}</span>
+      </div>`).join('')}</div></section>` : '';
+    $('#ach-list').innerHTML = recentHTML + Object.keys(achievements.GROUPS).map(g => {
       const items = all.filter(a => a.group === g);
       const done = items.filter(a => state.ach[a.id]).length;
       return `<section class="ach-group"><h2>${achievements.GROUPS[g][L()]} <small>${done}/${items.length}</small></h2><div class="ach-grid">${items.map(a => {
         const got = !!state.ach[a.id];
         const hidden = a.secret && !got;
         const v = Math.min(a.value(), a.target);
-        return `<div class="ach${got ? ' is-got' : ''}${hidden ? ' is-secret' : ''}">
+        return `<div class="ach${got ? ' is-got' : ''}${hidden ? ' is-secret' : ''}${got && isUnseen(a) ? ' is-new' : ''}">
           <span class="medal">${hidden ? '<b>?</b>' : achIcon(a.icon)}</span>
           <div class="ach-body">
             <b>${hidden ? t('secret') : esc(a.title[L()])}</b>
@@ -927,7 +1225,7 @@
     if (view === 'binder') renderBinder();
     if (view === 'shop') renderShop();
     if (view === 'series') renderSeries();
-    if (view === 'ach') renderAch();
+    if (view === 'ach') { renderAch(); markAchSeen(); }
     if (view === 'games') window.GAMES_UI?.renderMenu();
     if (view === 'trade') window.TRADE_UI?.render();
     window.scrollTo(0, 0);
@@ -948,10 +1246,12 @@
     cardHTML, countOf, keyOf, FINISHES, finishLabel: fl, rarityRank: id => R[id].rank, show, openDetail,
     // pour la simulation de l'économie (tools/simulate.mjs) et les tests
     PACKS, SERIES, RARITIES, BULK, bulkPrice, buyPacks, sellDuplicates, dupValue, claimSeries,
+    EVENT_PACKS, activeEvents, fuseRarity, fuseHolo, fuseAvailable, claimDaily, dailyReady,
   };
 
   applyStatic();
   renderWallet();
   renderShop();
   checkAchievements();
+  renderAchDot();
 })();

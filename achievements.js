@@ -141,6 +141,14 @@
     tiers('g-pom', 'games', 'gem', [10, 25], [{ fr: 'Bon instinct', nl: 'Goed instinct' }, { fr: 'Encyclopédie vivante', nl: 'Wandelende encyclopedie' }],
       gv('pom', 'best'), { fr: n => `Enchaîner ${n} bonnes réponses à Plus ou moins.`, nl: n => `${n} juiste antwoorden op rij in Meer of minder.` }, [300, 1200]);
 
+    // ----- Fusion et carte du jour -----
+    tiers('fused', 'collect', 'clover', [1, 10, 50], [{ fr: 'Alchimiste', nl: 'Alchemist' }, { fr: 'Fondeur', nl: 'Gieter' }, { fr: 'Maître des forges', nl: 'Smidsmeester' }],
+      () => st().fused || 0, { fr: n => `Réaliser ${n} fusion${n > 1 ? 's' : ''}.`, nl: n => `${n} keer samensmelten.` }, [150, 600, 2000]);
+    add({ id: 'fuse-holo', group: 'finish', icon: 'holo', target: 1, reward: 300, value: () => st().fuseHolo || 0,
+      title: { fr: 'Fait maison', nl: 'Huisgemaakt' }, desc: { fr: 'Fabriquer une version Holo par fusion.', nl: 'Een holoversie maken door samen te smelten.' } });
+    tiers('daily', 'open', 'clock', [3, 7, 30], [{ fr: 'Habitué du matin', nl: 'Ochtendmens' }, { fr: 'Une semaine pile', nl: 'Precies een week' }, { fr: 'Fidèle au poste', nl: 'Trouw op post' }],
+      () => st().dailyMax || 0, { fr: n => `Récupérer la carte du jour ${n} jours de suite.`, nl: n => `${n} dagen op rij de kaart van de dag ophalen.` }, [150, 600, 3000]);
+
     // ----- Échanges -----
     tiers('trades', 'trade', 'swap', [1, 10, 50],
       [{ fr: 'Poignée de main', nl: 'Handdruk' }, { fr: 'Marchand', nl: 'Handelaar' }, { fr: 'Roi du marché aux puces', nl: 'Koning van de vlooienmarkt' }],

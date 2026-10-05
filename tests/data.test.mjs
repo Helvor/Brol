@@ -6,8 +6,9 @@ const window = {};
 runInNewContext(readFileSync(new URL('../data/cards.js', import.meta.url), 'utf8'), { window });
 const cards = window.CARDS;
 
-const CATS = ['politique', 'monarchie', 'culture', 'groupe', 'festival', 'sport', 'art', 'monument', 'chateau', 'folklore',
+const CATS = ['politique', 'monarchie', 'culture', 'groupe', 'festival', 'sport', 'science', 'art', 'monument', 'chateau', 'folklore',
   'gastronomie', 'biere', 'enseignement', 'commune', 'province', 'region', 'evenement'];
+const OPTIONAL = ['science']; // catégories ajoutées au générateur, vides tant que data/cards.js n'est pas régénéré
 const RARITIES = ['commune', 'peu-commune', 'rare', 'epique', 'legendaire', 'mythique'];
 
 const errors = [];
@@ -33,7 +34,7 @@ for (const c of cards) {
 // Chaque catégorie doit avoir des cartes, et les grandes catégories toutes les raretés
 for (const cat of CATS) {
   const list = cards.filter(c => c.cat === cat);
-  if (!list.length) { errors.push(`catégorie « ${cat} » vide`); continue; }
+  if (!list.length) { if (!OPTIONAL.includes(cat)) errors.push(`catégorie « ${cat} » vide`); continue; }
   if (list.length >= 100) {
     const missing = RARITIES.filter(r => !list.some(c => c.rarity === r));
     if (missing.length) errors.push(`catégorie « ${cat} » sans ${missing.join(', ')}`);
@@ -44,4 +45,4 @@ if (errors.length) {
   console.error(`✗ données : ${errors.length} problème(s)\n  ` + errors.slice(0, 50).join('\n  '));
   process.exit(1);
 }
-console.log(`✓ données : ${cards.length} cartes, ${CATS.length} catégories`);
+console.log(`✓ données : ${cards.length} cartes, ${new Set(cards.map(c => c.cat)).size} catégories`);

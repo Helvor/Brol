@@ -49,8 +49,8 @@ const span = (st, en) => {
 
 // Familles politiques → couleur (définie dans style.css)
 const PARTIES = {
-  rouge:     ['Q645787', 'Q2532509', 'Q1811565', 'Q939354', 'Q1160192'],
-  bleu:      ['Q533384', 'Q2711996', 'Q2215286', 'Q2636334', 'Q1143062', 'Q106241931', 'Q2133093', 'Q2445771'],
+  rouge:     ['Q645787', 'Q2532509', 'Q1811565', 'Q939354'],
+  bleu:      ['Q533384', 'Q2711996', 'Q2215286', 'Q2636334', 'Q1160192', 'Q106241931', 'Q2133093', 'Q2445771'],
   jaune:     ['Q28982', 'Q1725837'],
   orange:    ['Q750673', 'Q3366715', 'Q113903993', 'Q792293', 'Q1084016', 'Q113184801'],
   turquoise: ['Q840814'],
@@ -61,11 +61,11 @@ const PARTIES = {
 };
 const partyFamily = q => Object.keys(PARTIES).find(k => PARTIES[k].includes(q)) || 'gris';
 const SHORT = {
-  Q645787: 'PS', Q939354: 'Vooruit', Q533384: 'MR', Q1143062: 'Open VLD', Q28982: 'N-VA',
+  Q645787: 'PS', Q939354: 'Vooruit', Q533384: 'MR', Q28982: 'N-VA',
   Q750673: 'CD&V', Q113903993: 'cdH', Q840814: 'Les Engagés', Q655611: 'Ecolo', Q513521: 'Groen',
   Q925616: 'PTB-PVDA', Q682990: 'Vlaams Belang', Q597900: 'Vlaams Blok', Q1470087: 'DéFI',
   Q1725837: 'Volksunie', Q2711996: 'PRL', Q3366715: 'PSC', Q2532509: 'PSB', Q1811565: 'POB',
-  Q1160192: 'sp.a', Q792293: 'Parti catholique', Q2636334: 'Parti libéral', Q2215286: 'PLP',
+  Q1160192: 'Open VLD', Q792293: 'Parti catholique', Q2636334: 'Parti libéral', Q2215286: 'PLP',
   Q19760801: 'Agalev', Q106241931: 'VLD', Q1084016: 'CSP', Q113184801: 'PSC',
 };
 const PARTY_BY_SHORT = Object.fromEntries(Object.entries(SHORT).reverse().map(([q, s]) => [s, q]));
@@ -160,6 +160,30 @@ for (const r of people) {
   else if (!isQ(r.posLabel)) o.ministries.set(key, {
     label: cap(r.posLabel.replace(/^liste des ministres belges du /, 'ministre du ')), pos, st: r.st, en: r.en, cab,
   });
+}
+
+// Parti le plus récent d'abord : affiliations (P102) triées par date, l'affiliation en cours en tête.
+// Sans dates, l'ordre de Wikidata est gardé. Le parti affiché est le premier qui a un nom court connu (SHORT).
+{
+  const ids = [...byPerson.keys()];
+  const aff = new Map();
+  for (let i = 0; i < ids.length; i += 200) {
+    const rows = await sparql(`
+SELECT ?p ?party ?st ?en WHERE {
+  VALUES ?p { ${ids.slice(i, i + 200).map(q => 'wd:' + q).join(' ')} }
+  ?p p:P102 ?s. ?s ps:P102 ?party; wikibase:rank ?rank. FILTER(?rank != wikibase:DeprecatedRank)
+  OPTIONAL { ?s pq:P580 ?st } OPTIONAL { ?s pq:P582 ?en }
+}`);
+    for (const r of rows) {
+      const list = aff.get(qid(r.p)) || [];
+      list.push({ q: qid(r.party), st: year(r.st) || 0, en: r.en ? year(r.en) : Infinity });
+      aff.set(qid(r.p), list);
+    }
+  }
+  for (const [id, list] of aff) {
+    list.sort((a, b) => b.en - a.en || b.st - a.st);
+    byPerson.get(id).parties = new Set(list.map(x => x.q));
+  }
 }
 
 // Gouvernement actuel : composition lue sur Wikipédia (Wikidata est incomplet pour les mandats récents)
@@ -327,6 +351,52 @@ for (const k of kings.sort((a, b) => a.st.localeCompare(b.st))) {
   });
 }
 
+// ---------- Listes choisies à la main : titres Wikipédia → éléments Wikidata ----------
+// Chaque entrée : 'Titre' (Wikipédia FR) ou 'nl:Titel' (Wikipédia NL).
+// Titre introuvable : on cherche l'article le plus proche avec la recherche Wikipédia et on l'indique
+// dans le journal (« Titre corrigé ») pour vérification. Si le résultat est faux, écrire le bon titre dans la liste.
+async function searchTitle(lang, title) {
+  const res = await wikiApi(lang, { action: 'query', list: 'search', srsearch: title.replace(/[()]/g, ' '), srnamespace: '0', srlimit: '1' });
+  const hit = res.query?.search?.[0]?.title;
+  if (!hit) return null;
+  const pp = await wikiApi(lang, { action: 'query', prop: 'pageprops', ppprop: 'wikibase_item', redirects: '1', titles: hit });
+  const q = pp.query.pages[0]?.pageprops?.wikibase_item;
+  if (q) console.warn(`Titre corrigé par recherche : « ${title} » → « ${hit} » (à vérifier)`);
+  return q ? { q, title: hit } : null;
+}
+async function resolveTitles(entries) {
+  const out = new Map(); // qid → entrée
+  const missing = [];
+  for (const lang of ['fr', 'nl']) {
+    const todo = entries.filter(e => (e.title.startsWith('nl:') ? 'nl' : 'fr') === lang);
+    for (let i = 0; i < todo.length; i += 50) {
+      const batch = todo.slice(i, i + 50);
+      const titles = batch.map(e => e.title.replace(/^nl:/, ''));
+      const res = await wikiApi(lang, { action: 'query', prop: 'pageprops', ppprop: 'wikibase_item', redirects: '1', titles: titles.join('|') });
+      const alias = new Map([...(res.query.redirects || []), ...(res.query.normalized || [])].map(r => [r.from, r.to]));
+      const byTitle = new Map(res.query.pages.map(p => [p.title, p.pageprops?.wikibase_item]));
+      batch.forEach((e, k) => {
+        const t = titles[k];
+        const q = byTitle.get(alias.get(t) || t) || byTitle.get(alias.get(alias.get(t)) || '');
+        if (q) out.set(q, e); else missing.push([lang, t, e]);
+      });
+    }
+  }
+  for (const [lang, t, e] of missing) {
+    const hit = await searchTitle(lang, t);
+    if (hit && !out.has(hit.q)) out.set(hit.q, { ...e, title: (lang === 'nl' ? 'nl:' : '') + hit.title });
+    else if (!hit) console.warn('Introuvable sur Wikipédia :', e.title);
+  }
+  return out;
+}
+// Image libre : P18 sur Wikidata, sinon image principale (libre) de l'article Wikipédia (FR, ou NL pour les titres « nl: »)
+async function freePageImage(title, lang = 'fr') {
+  if (title.startsWith('nl:')) [lang, title] = ['nl', title.slice(3)];
+  const res = await wikiApi(lang, { action: 'query', prop: 'pageimages', piprop: 'name', pilicense: 'free', redirects: '1', titles: title });
+  const f = res.query?.pages?.[0]?.pageimage;
+  return f ? f.replace(/_/g, ' ') : null;
+}
+
 // ---------- Culture & sport : personnalités populaires ----------
 // Titres Wikipédia FR. La rareté dépend du nombre de Wikipédias qui ont un article sur la personne.
 const FAMOUS = {
@@ -334,22 +404,11 @@ const FAMOUS = {
   musique: ['Jacques Brel', 'Stromae', 'Angèle (chanteuse)', 'Salvatore Adamo', 'Toots Thielemans', 'Django Reinhardt', 'Lara Fabian', 'Arno (chanteur)', 'Plastic Bertrand', 'Lost Frequencies', 'Selah Sue', 'Annie Cordy'],
   cinema: ['Jean-Claude Van Damme', 'Audrey Hepburn', 'Benoît Poelvoorde', 'Cécile de France', 'Matthias Schoenaerts', 'Jérémie Renier', 'Virginie Efira', 'Chantal Akerman', 'Jaco Van Dormael', 'François Damiens'],
   medias: ['Alex Vizorek', 'Charline Vanhoenacker', 'Bart Peeters', 'Gert Verhulst'],
-  arts: ['René Magritte', 'Adolphe Sax', 'Georges Lemaître', 'Victor Horta', 'Amélie Nothomb', 'Georges Simenon', 'Ernest Solvay'],
+  arts: ['René Magritte', 'Victor Horta', 'Amélie Nothomb', 'Georges Simenon'],
 };
 const DOMAIN_SHORT = { bd: 'BD', musique: 'Musique', cinema: 'Cinéma', medias: 'Médias', arts: 'Arts' };
-const DOMAIN = { bd: 'Bande dessinée', musique: 'Musique', cinema: 'Cinéma', medias: 'Médias', arts: 'Arts & sciences' };
-const famousTitles = Object.entries(FAMOUS).flatMap(([dom, titles]) => titles.map(t => ({ t, dom })));
-const famousQ = new Map();
-for (let i = 0; i < famousTitles.length; i += 50) {
-  const batch = famousTitles.slice(i, i + 50);
-  const res = await wikiApi('fr', { action: 'query', prop: 'pageprops', ppprop: 'wikibase_item', redirects: '1', titles: batch.map(b => b.t).join('|') });
-  const alias = new Map([...(res.query.redirects || []), ...(res.query.normalized || [])].map(r => [r.from, r.to]));
-  const byTitle = new Map(res.query.pages.map(p => [p.title, p.pageprops?.wikibase_item]));
-  for (const b of batch) {
-    const q = byTitle.get(alias.get(b.t) || b.t);
-    if (q) famousQ.set(q, b.dom); else console.warn('Introuvable sur Wikipédia :', b.t);
-  }
-}
+const DOMAIN = { bd: 'Bande dessinée', musique: 'Musique', cinema: 'Cinéma', medias: 'Médias', arts: 'Arts' };
+const famousQ = new Map([...(await resolveTitles(Object.entries(FAMOUS).flatMap(([dom, titles]) => titles.map(title => ({ title, dom })))))].map(([q, e]) => [q, e.dom]));
 const famous = await sparql(`
 SELECT ?p ?pLabel ?desc ?img ?birth ?death ?links WHERE {
   VALUES ?p { ${[...famousQ.keys()].map(q => 'wd:' + q).join(' ')} }
@@ -377,34 +436,6 @@ for (const f of famous) {
   famousCount++;
 }
 console.log(`Personnalités culture & sport : ${famousCount}`);
-
-// ---------- Listes choisies à la main : titres Wikipédia → éléments Wikidata ----------
-// Chaque entrée : 'Titre' (Wikipédia FR) ou 'nl:Titel' (Wikipédia NL).
-async function resolveTitles(entries) {
-  const out = new Map(); // qid → entrée
-  for (const lang of ['fr', 'nl']) {
-    const todo = entries.filter(e => (e.title.startsWith('nl:') ? 'nl' : 'fr') === lang);
-    for (let i = 0; i < todo.length; i += 50) {
-      const batch = todo.slice(i, i + 50);
-      const titles = batch.map(e => e.title.replace(/^nl:/, ''));
-      const res = await wikiApi(lang, { action: 'query', prop: 'pageprops', ppprop: 'wikibase_item', redirects: '1', titles: titles.join('|') });
-      const alias = new Map([...(res.query.redirects || []), ...(res.query.normalized || [])].map(r => [r.from, r.to]));
-      const byTitle = new Map(res.query.pages.map(p => [p.title, p.pageprops?.wikibase_item]));
-      batch.forEach((e, k) => {
-        const t = titles[k];
-        const q = byTitle.get(alias.get(t) || t) || byTitle.get(alias.get(alias.get(t)) || '');
-        if (q) out.set(q, e); else console.warn('Introuvable sur Wikipédia :', e.title);
-      });
-    }
-  }
-  return out;
-}
-// Image libre : P18 sur Wikidata, sinon image principale (libre) de l'article Wikipédia FR
-async function freePageImage(title, lang = 'fr') {
-  const res = await wikiApi(lang, { action: 'query', prop: 'pageimages', piprop: 'name', pilicense: 'free', redirects: '1', titles: title });
-  const f = res.query.pages[0]?.pageimage;
-  return f ? f.replace(/_/g, ' ') : null;
-}
 
 // ---------- Enseignement supérieur ----------
 const SCHOOLS = [
@@ -537,6 +568,42 @@ for (const f of sportRows) {
 }
 console.log(`Sport : ${cards.filter(c => c.cat === 'sport').length}`);
 
+// ---------- Sciences : savants, inventeurs, explorateurs ----------
+const SCIENCES = {
+  'Physique & astronomie': ['Georges Lemaître', 'François Englert', 'Ilya Prigogine', 'Adolphe Quetelet', 'Simon Stevin', 'Jean-Baptiste Van Helmont'],
+  'Médecine & biologie': ['André Vésale', 'Christian de Duve', 'Albert Claude', 'Jules Bordet', 'Corneille Heymans', 'Paul Janssen', 'Peter Piot',
+    'Marc Van Montagu', 'Rembert Dodoens', 'Édouard Van Beneden'],
+  Inventions: ['Adolphe Sax', 'Zénobe Gramme', 'Leo Baekeland', 'Étienne Lenoir', 'Jan Pieter Minckelers', 'Jean-Joseph Merlin', 'Robert Cailliau',
+    'Charles van de Poele', 'Lieven Gevaert', 'Ernest Solvay'],
+  Mathématiques: ['Gérard Mercator', 'Pierre Deligne', 'Ingrid Daubechies', 'Jean Bourgain', 'Grégoire de Saint-Vincent'],
+  'Espace & exploration': ['Frank De Winne', 'Dirk Frimout', 'Adrien de Gerlache', 'Paul Otlet'],
+};
+const sciQ = await resolveTitles(Object.entries(SCIENCES).flatMap(([field, titles]) => titles.map(title => ({ title, field }))));
+const sciRows = await sparql(`
+SELECT ?p ?pLabel ?desc ?img ?birth ?death ?links WHERE {
+  VALUES ?p { ${[...sciQ.keys()].map(q => 'wd:' + q).join(' ')} }
+  ?p wdt:P31 wd:Q5; wikibase:sitelinks ?links.
+  OPTIONAL { ?p wdt:P18 ?img } OPTIONAL { ?p wdt:P569 ?birth } OPTIONAL { ?p wdt:P570 ?death }
+  OPTIONAL { ?p schema:description ?desc. FILTER(LANG(?desc) = "fr") }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,mul,en". }
+}`);
+const sciSeen = new Set();
+for (const f of sciRows) {
+  const id = qid(f.p);
+  if (sciSeen.has(id) || cards.some(c => c.id === id)) continue;
+  sciSeen.add(id);
+  if (!f.img) { console.warn('Pas de photo libre, ignoré :', f.pLabel); continue; }
+  const field = sciQ.get(id).field;
+  const links = +f.links;
+  const b = year(f.birth), d = year(f.death);
+  cards.push({
+    id, cat: 'science', name: f.pLabel, img: file(f.img), rarity: 'commune', family: 'science',
+    subtitle: f.desc ? cap(f.desc) : field, meta: field + (b ? ` · ${b}${d ? '–' + d : ''}` : ''),
+    stats: [['Naissance', b ?? '—'], d ? ['Décès', d] : ['Domaine', field.split(' & ')[0]], ['Wikipédias', links]],
+  });
+}
+console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
+
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [
   'Retable de l\'Agneau mystique', 'Les Époux Arnolfini', 'La Vierge du chancelier Rolin', 'Chasseurs dans la neige (Brueghel)',
@@ -626,10 +693,10 @@ await curated('biere', [
   ['Orval (bière)', 'Trappiste', 'Wallonie'], ['Chimay (bière)', 'Trappiste', 'Wallonie'], ['Westmalle (bière)', 'Trappiste', 'Flandre'],
   ['Rochefort (bière)', 'Trappiste', 'Wallonie'], ['Westvleteren (bière)', 'Trappiste', 'Flandre', 'mythique'], ['Achel (bière)', 'Trappiste', 'Flandre'],
   ['Duvel', 'Blonde forte', 'Flandre'], ['Leffe', 'Abbaye', 'Wallonie'], ['Hoegaarden (bière)', 'Blanche', 'Flandre'],
-  ['Stella Artois', 'Pils', 'Flandre'], ['Jupiler', 'Pils', 'Wallonie'], ['Pauwel Kwak', 'Ambrée', 'Flandre'],
+  ['Stella Artois', 'Pils', 'Flandre'], ['Jupiler', 'Pils', 'Wallonie'], ['Kwak (bière)', 'Ambrée', 'Flandre'],
   ['Delirium Tremens (bière)', 'Blonde forte', 'Flandre'], ['La Chouffe', 'Blonde', 'Wallonie'], ['Kriek', 'Lambic', 'Bruxelles'],
   ['Gueuze', 'Lambic', 'Bruxelles'], ['Lambic', 'Lambic', 'Bruxelles'], ['Tripel Karmeliet', 'Triple', 'Flandre'],
-  ['Brasserie Cantillon', 'Brasserie', 'Bruxelles'], ['Rodenbach (bière)', 'Rouge des Flandres', 'Flandre'], ['Brugse Zot', 'Blonde', 'Flandre'],
+  ['Brasserie Cantillon', 'Brasserie', 'Bruxelles'], ['Rodenbach (bière)', 'Rouge des Flandres', 'Flandre'], ['nl:Brugse Zot', 'Blonde', 'Flandre'],
   ['Grimbergen (bière)', 'Abbaye', 'Flandre'], ['Affligem (bière)', 'Abbaye', 'Flandre'], ['Saison Dupont', 'Saison', 'Wallonie'],
 ], { family: 'biere', thresholds: [25, 15, 9, 5], kindLabel: 'Bière',
   stats: (o, e) => [['Type', e.kind], ['Région', e.region], ['Wikipédias', o.links]] });
@@ -659,30 +726,30 @@ await curated('chateau', [
   stats: (o, e) => [['Type', e.kind], ['Année', o.inc ?? '—'], ['Wikipédias', o.links]] });
 
 await curated('folklore', [
-  ['Carnaval de Binche', 'Carnaval', 'Wallonie', 'unesco'], ['Gille (folklore)', 'Personnage', 'Wallonie'], ['Ducasse de Mons', 'Ducasse', 'Wallonie', 'unesco'],
+  ['Carnaval de Binche', 'Carnaval', 'Wallonie', 'unesco'], ['Gille', 'Personnage', 'Wallonie'], ['Ducasse de Mons', 'Ducasse', 'Wallonie', 'unesco'],
   ['Ommegang de Bruxelles', 'Cortège', 'Bruxelles', 'unesco'], ['Ducasse d\'Ath', 'Ducasse', 'Wallonie', 'unesco'], ['Procession du Saint-Sang', 'Procession', 'Flandre', 'unesco'],
   ['Meyboom', 'Fête', 'Bruxelles', 'unesco'], ['Kattenstoet', 'Cortège', 'Flandre'], ['Marches de l\'Entre-Sambre-et-Meuse', 'Marche', 'Wallonie', 'unesco'],
   ['Carnaval d\'Alost', 'Carnaval', 'Flandre'], ['Cwarmê', 'Carnaval', 'Wallonie', 'unesco'], ['Laetare de Stavelot', 'Carnaval', 'Wallonie'],
-  ['Tchantchès', 'Personnage', 'Wallonie'], ['Saint-Nicolas en Belgique', 'Fête', 'Belgique'], ['Géant processionnel', 'Tradition', 'Belgique', 'unesco'],
-  ['Pêche à la crevette à cheval', 'Tradition', 'Flandre', 'unesco'], ['Fêtes de Wallonie', 'Fête', 'Wallonie'], ['Tour Sainte-Gertrude', 'Procession', 'Wallonie'],
+  ['Tchantchès', 'Personnage', 'Wallonie'], ['Saint-Nicolas (fête)', 'Fête', 'Belgique'], ['Géants et dragons processionnels de Belgique et de France', 'Tradition', 'Belgique', 'unesco'],
+  ['Pêche aux crevettes à cheval à Oostduinkerke', 'Tradition', 'Flandre', 'unesco'], ['Fêtes de Wallonie', 'Fête', 'Wallonie'], ['Tour Sainte-Gertrude', 'Procession', 'Wallonie'],
 ], { family: 'folklore', thresholds: [20, 10, 6, 3], kindLabel: 'Folklore',
   stats: (o, e) => [['Type', e.kind], ['Région', e.region], ['UNESCO', e.extra === 'unesco' ? 'Oui' : '—']] });
 
 await curated('groupe', [
   ['dEUS', 'Rock', 'Flandre'], ['Hooverphonic', 'Trip hop', 'Flandre'], ['Front 242', 'EBM', 'Bruxelles'], ['K\'s Choice', 'Rock', 'Flandre'],
-  ['Girls in Hawaii', 'Indie', 'Wallonie'], ['Technotronic', 'Dance', 'Bruxelles'], ['Vaya Con Dios (groupe)', 'Pop', 'Bruxelles'], ['Soulwax', 'Électro', 'Flandre'],
-  ['Ghinzu', 'Rock', 'Bruxelles'], ['Clouseau (groupe)', 'Pop', 'Flandre'], ['Milk Inc.', 'Dance', 'Flandre'], ['Triggerfinger', 'Rock', 'Flandre'],
+  ['Girls in Hawaii', 'Indie', 'Wallonie'], ['Technotronic', 'Dance', 'Bruxelles'], ['Vaya Con Dios', 'Pop', 'Bruxelles'], ['Soulwax', 'Électro', 'Flandre'],
+  ['Ghinzu', 'Rock', 'Bruxelles'], ['Clouseau', 'Pop', 'Flandre'], ['Milk Inc.', 'Dance', 'Flandre'], ['Triggerfinger', 'Rock', 'Flandre'],
   ['Oscar and the Wolf', 'Pop', 'Flandre'], ['Balthazar (groupe)', 'Indie', 'Flandre'], ['Puggy', 'Pop rock', 'Bruxelles'], ['Telex (groupe)', 'Synthpop', 'Bruxelles'],
-  ['Dimitri Vegas et Like Mike', 'EDM', 'Flandre'], ['Arsenal (groupe)', 'Électro', 'Flandre'], ['Mud Flow', 'Rock', 'Bruxelles'], ['Les Snuls', 'Humour', 'Bruxelles'],
+  ['Dimitri Vegas & Like Mike', 'EDM', 'Flandre'], ['Arsenal (groupe)', 'Électro', 'Flandre'], ['Mud Flow', 'Rock', 'Bruxelles'], ['Les Snuls', 'Humour', 'Bruxelles'],
 ], { family: 'groupe', thresholds: [35, 20, 12, 6], kindLabel: 'Groupe',
   stats: (o, e) => [['Genre', e.kind], ['Formation', o.inc ?? '—'], ['Wikipédias', o.links]] });
 
 await curated('festival', [
   ['Tomorrowland (festival)', 'Électro', 'Flandre'], ['Rock Werchter', 'Rock', 'Flandre'], ['Dour Festival', 'Alternatif', 'Wallonie'],
   ['Francofolies de Spa', 'Chanson', 'Wallonie'], ['Pukkelpop', 'Rock', 'Flandre'], ['Graspop Metal Meeting', 'Metal', 'Flandre'],
-  ['Les Ardentes', 'Hip-hop', 'Wallonie'], ['Couleur Café', 'Musiques du monde', 'Bruxelles'], ['Fêtes de Gand', 'Fête populaire', 'Flandre'],
-  ['Esperanzah!', 'Musiques du monde', 'Wallonie'], ['Lokerse Feesten', 'Rock', 'Flandre'], ['Brussels International Fantastic Film Festival', 'Cinéma', 'Bruxelles'],
-  ['Ronquières Festival', 'Pop', 'Wallonie'], ['Festival international du film francophone de Namur', 'Cinéma', 'Wallonie'], ['Brussels Jazz Marathon', 'Jazz', 'Bruxelles'],
+  ['Les Ardentes', 'Hip-hop', 'Wallonie'], ['Couleur Café', 'Musiques du monde', 'Bruxelles'], ['Gentse Feesten', 'Fête populaire', 'Flandre'],
+  ['Esperanzah!', 'Musiques du monde', 'Wallonie'], ['nl:Lokerse Feesten', 'Rock', 'Flandre'], ['Brussels International Fantastic Film Festival', 'Cinéma', 'Bruxelles'],
+  ['nl:Ronquières Festival', 'Pop', 'Wallonie'], ['Festival international du film francophone de Namur', 'Cinéma', 'Wallonie'], ['Brussels Jazz Weekend', 'Jazz', 'Bruxelles'],
 ], { family: 'festival', thresholds: [25, 14, 8, 4], kindLabel: 'Festival',
   stats: (o, e) => [['Genre', e.kind], ['Création', o.inc ?? '—'], ['Wikipédias', o.links]] });
 
@@ -740,10 +807,12 @@ for (const r of terr) {
   if (r.area) o.area = Math.round(+r.area);
   tm.set(r.t, o);
 }
+// Régions : légendaires. Provinces : épiques pour les 4 plus peuplées, rares pour les autres.
+const provByPop = [...tm.values()].filter(o => o.type === 'province').sort((a, b) => b.pop - a.pop).map(o => o.id);
 for (const o of tm.values()) {
   const name = o.id === 'Q231' ? 'Région wallonne' : provName(o.name);
   cards.push({
-    id: o.id, cat: o.type, name, rarity: o.type === 'region' ? 'legendaire' : 'epique',
+    id: o.id, cat: o.type, name, rarity: o.type === 'region' ? 'legendaire' : provByPop.indexOf(o.id) < 4 ? 'epique' : 'rare',
     img: o.img || o.badge || null, badge: o.badge || null,
     subtitle: o.type === 'region' ? 'Région' : 'Province',
     stats: [
@@ -755,6 +824,8 @@ for (const o of tm.values()) {
 }
 
 // ---------- Événements (écrits à la main) ----------
+// Rareté des événements selon leur importance
+const EVENT_RARITY = { 'ev-541': 'mythique', 'ev-federal': 'mythique', 'ev-question': 'legendaire', 'ev-vote': 'legendaire', 'ev-fusion77': 'epique', 'ev-fusion25': 'epique' };
 const EVENTS = [
   ['ev-541', '541 jours', '2010 – 2011',
     'Record de durée de formation d’un gouvernement : 541 jours entre les élections de juin 2010 et l’installation du gouvernement Di Rupo.',
@@ -776,11 +847,11 @@ const EVENTS = [
     [['Consultation', 1950], ['Abdication', 1951], ['Successeur', 'Baudouin']]],
 ];
 for (const [id, name, subtitle, text, stats] of EVENTS)
-  cards.push({ id, cat: 'evenement', name, rarity: 'mythique', img: null, subtitle, text, stats });
+  cards.push({ id, cat: 'evenement', name, rarity: EVENT_RARITY[id] || 'legendaire', img: null, subtitle, text, stats });
 
 // ---------- Photos alternatives (pour la version « Plein cadre ») ----------
 // On prend une autre photo libre dans la catégorie Commons de la personne, si elle existe.
-const ALT_CATS = new Set(['culture', 'sport', 'monarchie']);
+const ALT_CATS = new Set(['culture', 'sport', 'science', 'monarchie']);
 const altTargets = cards.filter(c => c.img && (ALT_CATS.has(c.cat) || (c.cat === 'politique' && (c.current || ['epique', 'legendaire', 'mythique'].includes(c.rarity)))));
 const commonsCats = new Map();
 for (let i = 0; i < altTargets.length; i += 200) {
@@ -826,9 +897,21 @@ console.log(`Photos alternatives : ${altFound} / ${altTargets.length}`);
 }
 
 // ---------- Rareté relative, catégorie par catégorie ----------
-// Les cartes de chaque catégorie sont classées par notoriété puis réparties selon les mêmes proportions.
-// Ainsi chaque paquet contient toutes les raretés (mythiques compris) et les taux affichés sont justes.
-const QUOTAS = [['mythique', 0.015], ['legendaire', 0.04], ['epique', 0.09], ['rare', 0.18], ['peu-commune', 0.27]];
+// Mythique : uniquement les icônes de la Belgique, choisies à la main (MYTHIQUES), plus les règles fixes
+// (rois de 40 ans de règne, événements majeurs). Le reste de chaque catégorie est classé par notoriété
+// et réparti selon les quotas, jusqu'à légendaire. Notoriété :
+//   - communes : population ;
+//   - politique : carrière (années comme Premier ministre, gouvernements, postes), Wikipédia pour départager ;
+//   - autres : visites des articles sur Wikipédia FR + NL sur les 12 derniers mois (notoriété en Belgique),
+//     à défaut le nombre de Wikipédias.
+const MYTHIQUES = [
+  'Jacques Brel', 'Hergé', 'René Magritte', 'Stromae', 'Eddy Merckx', 'Eden Hazard', 'Adolphe Sax', 'Georges Lemaître',
+  'Wilfried Martens', 'Paul-Henri Spaak', 'Jean-Luc Dehaene', 'Bart De Wever',
+  'Ville de Bruxelles', 'Anvers', 'Bruges', 'Gand', 'Liège',
+  'Atomium', 'Manneken-Pis', 'Grand-Place de Bruxelles', 'Retable de l\'Agneau mystique',
+  'Frite', 'Westvleteren (bière)', 'Tomorrowland (festival)', 'Carnaval de Binche',
+];
+const QUOTAS = [['legendaire', 0.04], ['epique', 0.09], ['rare', 0.18], ['peu-commune', 0.27]];
 const FIXED_CATS = new Set(['monarchie', 'region', 'province', 'evenement']); // trop petites : rareté fixée à la main
 const linkIds = cards.filter(c => isQ(c.id)).map(c => c.id);
 const LINKS = new Map();
@@ -836,26 +919,70 @@ for (let i = 0; i < linkIds.length; i += 300) {
   const rows = await sparql(`SELECT ?x ?links WHERE { VALUES ?x { ${linkIds.slice(i, i + 300).map(q => 'wd:' + q).join(' ')} } ?x wikibase:sitelinks ?links. }`);
   for (const r of rows) LINKS.set(qid(r.x), +r.links);
 }
+{
+  const mq = await resolveTitles(MYTHIQUES.map(title => ({ title })));
+  const byId = new Map(cards.map(c => [c.id, c]));
+  for (const [q, e] of mq) {
+    const c = byId.get(q);
+    if (!c) console.warn('Mythique sans carte (absente du jeu) :', e.title);
+    else if (!FIXED_CATS.has(c.cat)) c.forceRarity = 'mythique';
+  }
+  // Une rareté imposée ailleurs (ex. 'mythique' dans les listes) ne compte que si la carte est dans MYTHIQUES
+  for (const c of cards) if (c.forceRarity === 'mythique' && !mq.has(c.id)) delete c.forceRarity;
+}
+
+// Visites des 12 derniers mois complets sur Wikipédia FR et NL
+const VIEW_CATS = new Set(['culture', 'sport', 'science', 'art', 'monument', 'chateau', 'folklore', 'gastronomie', 'biere', 'enseignement', 'groupe', 'festival']);
+const VIEWS = new Map();
+{
+  const d = new Date(), endM = new Date(d.getFullYear(), d.getMonth(), 0), startM = new Date(endM.getFullYear() - 1, endM.getMonth() + 1, 1);
+  const ym = x => `${x.getFullYear()}${String(x.getMonth() + 1).padStart(2, '0')}`;
+  const range = `${ym(startM)}01/${ym(endM)}${String(endM.getDate()).padStart(2, '0')}`;
+  const ids = cards.filter(c => VIEW_CATS.has(c.cat) && isQ(c.id)).map(c => c.id);
+  const titles = new Map();
+  for (let i = 0; i < ids.length; i += 200) {
+    const rows = await sparql(`SELECT ?x ?fr ?nl WHERE { VALUES ?x { ${ids.slice(i, i + 200).map(q => 'wd:' + q).join(' ')} }
+  OPTIONAL { ?a schema:about ?x; schema:isPartOf <https://fr.wikipedia.org/>; schema:name ?fr }
+  OPTIONAL { ?b schema:about ?x; schema:isPartOf <https://nl.wikipedia.org/>; schema:name ?nl } }`);
+    for (const r of rows) titles.set(qid(r.x), { fr: r.fr, nl: r.nl });
+  }
+  let done = 0;
+  for (const [id, t] of titles) {
+    let v = 0;
+    for (const lang of ['fr', 'nl']) {
+      if (!t[lang]) continue;
+      const url = `https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/${lang}.wikipedia/all-access/user/${encodeURIComponent(t[lang].replace(/ /g, '_'))}/monthly/${range}`;
+      try { v += (await getJSON(url, { delay: 60, label: 'Pageviews' })).items.reduce((a, m) => a + m.views, 0); } catch (_) { /* pas de données */ }
+    }
+    VIEWS.set(id, v);
+    if (++done % 100 === 0) console.log(`Visites Wikipédia : ${done} / ${titles.size}`);
+  }
+}
+
 const num = v => +String(v).replace(/[^\d]/g, '') || 0;
+const spanYears = sp => {
+  const m = String(sp || '').match(/(\d{4})(?:\s*–\s*(\d{4}))?/);
+  if (!m) return 0;
+  const a = +m[1], b = m[2] ? +m[2] : /depuis/.test(sp) ? new Date().getFullYear() : a;
+  return Math.max(0.5, b - a);
+};
 function score(c) {
   const links = LINKS.get(c.id) || 0;
   if (c.cat === 'commune') return num(c.stats[0][1]);
   if (c.cat === 'politique') {
-    let b = links;
-    if (c.posId === PM) b += 80;
-    if (c.current) b += 40;
-    if (c.posId === 'VPM') b += 20;
-    if (REGIONAL[c.posId]) b += 30;
-    b += (c.rolesData || []).filter(r => r.cab).length * 4 + (c.rolesData || []).filter(r => r.pos === MP).length * 2;
-    return b;
+    const roles = c.rolesData || [];
+    const pmYears = roles.filter(r => r.pos === PM).reduce((a, r) => a + spanYears(r.span), 0);
+    const regYears = roles.filter(r => REGIONAL[r.pos]).reduce((a, r) => a + spanYears(r.span), 0);
+    return (pmYears ? 100 + pmYears * 30 : 0) + (c.current ? 40 : 0) + (c.posId === 'VPM' ? 20 : 0) + regYears * 6
+      + new Set(roles.filter(r => r.cab).map(r => r.cab)).size * 5 + roles.filter(r => r.pos === MP).length * 2 + links * 0.1;
   }
-  return links;
+  return VIEWS.has(c.id) ? VIEWS.get(c.id) + links : links;
 }
 const byCat = {};
 for (const c of cards) (byCat[c.cat] ||= []).push(c);
 for (const [cat, list] of Object.entries(byCat)) {
   if (FIXED_CATS.has(cat)) continue;
-  // Raretés imposées à la main (ex. Westvleteren) : déduites des quotas
+  // Raretés imposées à la main (icônes mythiques) : hors quotas
   const forced = list.filter(c => c.forceRarity);
   for (const c of forced) { c.rarity = c.forceRarity; delete c.forceRarity; }
   list.splice(0, list.length, ...list.filter(c => !forced.includes(c)));
@@ -863,9 +990,7 @@ for (const [cat, list] of Object.entries(byCat)) {
   const n = list.length + forced.length;
   let i = 0;
   for (const [rarity, q] of QUOTAS) {
-    let k = Math.round(n * q);
-    if (rarity === 'mythique' && n >= 8) k = Math.max(1, k);
-    k = Math.max(0, k - forced.filter(c => c.rarity === rarity).length);
+    const k = Math.max(0, Math.round(n * q) - forced.filter(c => c.rarity === rarity).length);
     for (const end = Math.min(list.length, i + k); i < end; i++) list[i].rarity = rarity;
   }
   for (; i < list.length; i++) list[i].rarity = 'commune';
@@ -910,7 +1035,7 @@ for (const c of cards) {
   if (!n) continue;
   const nl = {};
   if (n.l && n.l !== c.name) nl.name = cap(n.l.replace(/ van België$/, '').replace(/ \((bier|band|festival|gemeente)\)$/, ''));
-  if (n.d && ['culture', 'sport'].includes(c.cat)) nl.subtitle = cap(n.d);
+  if (n.d && ['culture', 'sport', 'science'].includes(c.cat)) nl.subtitle = cap(n.d);
   if (Object.keys(nl).length) c.nl = nl;
 }
 console.log(`Néerlandais : ${cards.filter(c => c.nl?.name).length} noms traduits, ${Object.keys(POS_NL).length} fonctions`);
