@@ -397,7 +397,9 @@
     </svg>`;
   }
   const packVisual = p => `<div class="pack-visual${p.special ? ' is-foil' : ''}">${packSVG(p)}<div class="sheen"></div>${p.special ? '<div class="foil"></div>' : ''}</div>`;
-  const cardBack = () => `<div class="card-back">${sealSVG({ ring: t('backSeal'), center: 'BROL', color: '#e2b33c', size: 200, centerSize: 52 })}<div class="back-foot">${t('back')}</div></div>`;
+  // Logo de Brol (même dessin que logo.svg et l'icône de l'onglet), au centre du dos des cartes
+  const LOGO = document.querySelector('.brand .logo')?.outerHTML.replace('class="logo"', 'class="back-logo"') || '';
+  const cardBack = () => `<div class="card-back">${sealSVG({ ring: t('backSeal'), center: LOGO ? '' : 'BROL', color: '#e2b33c', size: 200, centerSize: 52 })}${LOGO}<div class="back-foot">${t('back')}</div></div>`;
 
   // ---------- Rendu d'une carte ----------
   function cardHTML(c, { count = 0, finish = 'normal', variants = null } = {}) {
@@ -531,7 +533,33 @@
     renderFree();
     renderDaily();
     renderMissions();
+    renderShowcase();
   }
+  // Vitrine (ordinateur uniquement, masquée sur téléphone) : les cinq plus belles cartes en éventail,
+  // la meilleure au centre, et l'avancement de l'album
+  function renderShowcase() {
+    const box = $('#showcase');
+    if (!box) return;
+    const owned = CARDS.filter(c => totalOf(c.id));
+    const score = c => R[c.rarity].rank * 10 + finTier(bestFinish(c.id)) * 3 + (c.cat === 'edition' ? 6 : 0);
+    const best = owned.sort((a, b) => score(b) - score(a)).slice(0, 5);
+    const order = [3, 1, 0, 2, 4].filter(i => i < best.length).map(i => best[i]); // la meilleure au milieu
+    const n = order.length || 3;
+    const pct = owned.length / CARDS.length;
+    const fan = order.length
+      ? order.map((c, i) => `<div class="sc-card" style="--i:${i};--n:${n};--z:${10 - Math.abs(i - (n - 1) / 2) * 2}">${cardHTML(c, { finish: bestFinish(c.id) })}</div>`).join('')
+      : [0, 1, 2].map(i => `<div class="sc-card is-back" style="--i:${i};--n:3;--z:${10 - Math.abs(i - 1) * 2}"><div class="cell sc-backcell">${cardBack()}</div></div>`).join('');
+    box.innerHTML = `
+      <div class="sc-head"><h3>${t('scTitle')}</h3><span>${t('scCount', fmt(owned.length), fmt(CARDS.length), Math.floor(pct * 100))}</span></div>
+      <div class="sc-bar"><i style="width:${(pct * 100).toFixed(1)}%"></i></div>
+      <div class="sc-fan">${fan}</div>
+      ${order.length ? '' : `<p class="sc-empty">${t('scEmpty')}</p>`}`;
+  }
+  $('#showcase')?.addEventListener('click', e => {
+    const card = e.target.closest('.sc-card .card');
+    if (card) { SFX.tick(); openDetail(card.dataset.id, card.dataset.fin); }
+  });
+
   // Paquets spéciaux : leurs cartes exclusives (floutées tant qu'on ne les a pas) et leur version d'événement
   function packExtras(p) {
     const list = exclOf(p.id), fin = packFinish(p.id);
@@ -557,6 +585,7 @@
     const pips = Array.from({ length: FREE_MAX }, (_, i) => `<span class="pip${i < state.free ? ' on' : ''}"></span>`).join('');
     const timer = state.free >= FREE_MAX ? t('freeFull') : t('freeIn', `${Math.floor(left / 60000)}:${String(Math.floor(left / 1000) % 60).padStart(2, '0')}`);
     const pityLeft = PITY - state.pity;
+    $('#free-box').dataset.title = t('freeTitle'); // titre affiché sur ordinateur seulement
     $('#free-box').innerHTML = `
       <div class="free-line"><span class="pips">${pips}</span><span class="label">${t('free', state.free)} · ${timer}</span></div>
       <div class="pity-line"><span class="pity-bar"><span style="width:${(state.pity / PITY * 100).toFixed(1)}%"></span></span><span class="label">${t('pity', pityLeft)}</span></div>`;
@@ -636,6 +665,10 @@
     const sum = k => res.packs.reduce((a, p) => a + p[k], 0);
     renderWallet();
     current = { pack, n, revealed, newCount: sum('newCount'), bonus: sum('bonus'), usedFree: res.usedFree, cost: res.cost, pityTriggered: res.packs.some(p => p.pityTriggered) };
+    // Solde affiché pendant l'ouverture : paquet payé, bonus des nouvelles cartes ajouté à la fin
+    stageShown = state.coins - current.bonus; stageAnim = 0;
+    $('#stage-coins').textContent = fmt(stageShown);
+    $('#stage-gain').textContent = ''; $('#stage-gain').classList.remove('is-on');
     const { usedFree } = current;
 
     const score = d => R[d.card.rarity].rank + finTier(d.finish) * 1.5 + (d.card.cat === 'edition' ? 4 : 0);
@@ -792,6 +825,8 @@
     const specials = revealed.filter(r => r.finish !== 'normal').length;
     $('#stage-summary').innerHTML = t('summary', newCount, dups, specials, bonus);
     if (bonus) SFX.coin();
+    current.finished = true;
+    stageCoinsSync();
     $('#flip-all').hidden = true;
     tickFree();
     const again = $('#again');
@@ -801,6 +836,19 @@
     $('#to-album').hidden = false;
     $('#stage-close').hidden = false;
     checkAchievements();
+  }
+  // Compteur de pièces de l'ouverture : suit le solde (bonus des nouvelles cartes, succès débloqués)
+  // en montant jusqu'à la nouvelle valeur, avec « +gain »
+  let stageShown = 0, stageAnim = 0;
+  function stageCoinsSync() {
+    const from = stageShown, gain = state.coins - from;
+    if (!gain) return;
+    stageShown = state.coins;
+    const el = $('#stage-coins'), t0 = performance.now(), dur = 600, run = ++stageAnim;
+    const g = $('#stage-gain');
+    if (gain > 0) { g.textContent = `+${fmt(gain)}`; g.classList.remove('is-on'); void g.offsetWidth; g.classList.add('is-on'); }
+    const step = now => { if (run !== stageAnim) return; const k = Math.min(1, (now - t0) / dur); el.textContent = fmt(Math.round(from + gain * k)); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
   }
   function closeStage() {
     stage.hidden = true;
@@ -869,6 +917,7 @@
   }
   function renderWallet() {
     $('#coins').textContent = fmt(state.coins);
+    if (current?.finished && !$('#stage').hidden) stageCoinsSync(); // fin d'ouverture : succès débloqués
     const n = CARDS.filter(c => totalOf(c.id)).length;
     $('#progress-pill').textContent = `${n}/${fmt(CARDS.length)}`;
     const ready = SERIES.filter(s => !state.claimed[s.id] && s.members.every(id => totalOf(id))).length;

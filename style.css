@@ -99,8 +99,9 @@ a { color: inherit; }
 }
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
 /* La case de tête d'un bulletin de vote belge */
-.ballot { width: 22px; height: 22px; background: #111; box-shadow: 0 0 0 1.5px var(--line); display: grid; place-items: center; }
-.ballot::after { content: ""; width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle, var(--danger) 0 3.5px, #fff 4px); }
+.logo { width: 34px; height: 34px; flex: none; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .18)); transition: transform .2s cubic-bezier(.2, .8, .2, 1); }
+.brand:hover .logo { transform: rotate(-6deg) scale(1.06); }
+.card-back .back-logo { position: absolute; left: 50%; top: 50%; width: 30cqw; translate: -50% -50%; filter: drop-shadow(0 1cqw 2cqw rgba(0, 0, 0, .5)); }
 .brand-name { font-family: var(--display); font-weight: 800; font-size: 22px; text-transform: uppercase; letter-spacing: .02em; }
 .tabs { display: flex; gap: 4px; }
 .tab {
@@ -1223,7 +1224,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .mission .m-done { color: var(--gold); font-weight: 800; text-align: center; min-width: 30px; }
 .mission.is-claimed .m-text { color: var(--ink-2); text-decoration: line-through; }
 .binder-summary .late, .detail-info .late, small.late { color: var(--gold); font-family: var(--mono); }
-.shop-head > div:first-child { align-self: flex-start; }
+@media (max-width: 760px) { .shop-head > div:first-child { align-self: flex-start; } }
 @media (max-width: 760px) {
   .tour-q { gap: 10px; padding: 8px 10px; margin-bottom: 8px; flex-wrap: wrap; }
   .tour-img { width: 54px; height: 44px; }
@@ -1280,3 +1281,66 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   .parti-img { width: 90px; }
   .parti-card b { font-size: 21px; }
 }
+
+/* ============ Accueil sur ordinateur : vitrine et tableau du jour (le téléphone garde sa colonne) ============ */
+.showcase { display: none; }
+@media (min-width: 761px) {
+  .shop-head { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.05fr); grid-template-rows: auto auto 1fr;
+    grid-template-areas: "title title title" "show today missions" "show free missions"; gap: 14px 16px; align-items: stretch; }
+  .shop-head > div:first-child { grid-area: title; align-self: end; }
+  .shop-side { display: contents; }
+  .showcase, #daily-box, #free-box, #missions-box { border: 1.5px solid var(--line); border-radius: 8px; background: var(--bg-2); min-width: 0; }
+
+  /* Vitrine : cinq cartes en éventail, la meilleure au centre */
+  .showcase { grid-area: show; display: flex; flex-direction: column; padding: 14px 16px 0; overflow: hidden; position: relative;
+    background: radial-gradient(ellipse 70% 60% at 50% 100%, color-mix(in srgb, var(--gold) 16%, transparent), transparent 70%), var(--bg-2); }
+  .sc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .sc-head h3 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: .03em; }
+  .sc-head span { font-family: var(--mono); font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+  .sc-bar { height: 5px; margin: 8px 0 0; border-radius: 3px; background: var(--bg-3); overflow: hidden; }
+  .sc-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), var(--r-legendaire)); }
+  .sc-fan { position: relative; flex: 1; min-height: 210px; margin-top: 6px; }
+  .sc-card { --w: 128px; --step: min(72px, calc((100% - var(--w) - 56px) / max(1, var(--n) - 1)));
+    position: absolute; bottom: -14px; width: var(--w); z-index: var(--z);
+    left: calc(50% - var(--w) / 2 + (var(--i) - (var(--n) - 1) / 2) * var(--step));
+    transform: rotate(calc((var(--i) - (var(--n) - 1) / 2) * 7deg)); transform-origin: 50% 130%;
+    transition: transform .25s cubic-bezier(.2, .8, .2, 1), bottom .25s cubic-bezier(.2, .8, .2, 1); cursor: pointer; }
+  .sc-card:hover { transform: rotate(0deg) scale(1.06); bottom: 4px; z-index: 20; }
+  .sc-card .card { box-shadow: 0 18px 30px -16px rgba(0, 0, 0, .65); }
+  .sc-card.is-back { cursor: default; }
+  .sc-card.is-back:hover { transform: rotate(calc((var(--i) - (var(--n) - 1) / 2) * 7deg)); bottom: -14px; }
+  .sc-backcell { aspect-ratio: 63 / 88; }
+  .sc-empty { position: absolute; left: 16px; right: 16px; bottom: 12px; z-index: 30; margin: 0; padding: 8px 12px; text-align: center; font-weight: 600; font-size: 13px;
+    border-radius: 6px; background: color-mix(in srgb, var(--bg-2) 88%, transparent); }
+
+  /* Carte du jour : grand bouton qui remplit sa case */
+  #daily-box { grid-area: today; display: flex; padding: 0; border: 0; background: none; }
+  #daily-box .daily-btn, #daily-box .daily-done { flex: 1; width: 100%; padding: 16px; gap: 14px; border-radius: 8px; }
+  #daily-box .daily-gift { width: 52px; height: 52px; }
+  #daily-box .daily-gift svg { width: 28px; height: 28px; }
+  #daily-box b { font-size: 21px; }
+
+  /* Paquets gratuits et garantie */
+  #free-box { grid-area: free; flex-direction: column; align-items: stretch; justify-content: center; gap: 10px; padding: 12px 16px; }
+  #free-box .free-line, #free-box .pity-line { gap: 10px; }
+  #free-box .pity-bar { flex: 1; max-width: none; }
+  #free-box .pity-line .label { flex: 2; }
+  #free-box::before { content: attr(data-title); font-family: var(--display); font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: .03em; color: var(--ink); }
+  #free-box .pip { width: 16px; height: 16px; }
+  #free-box .pips { gap: 8px; }
+
+  #missions-box { grid-area: missions; width: auto; padding: 12px 16px 8px; }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .shop-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "title title" "show today" "show free" "missions missions"; }
+}
+
+/* Solde de pièces pendant l'ouverture des paquets */
+.stage-wallet { position: absolute; top: 16px; right: 16px; z-index: 6; display: flex; align-items: center; gap: 8px; padding: 7px 14px 7px 10px;
+  border-radius: 99px; background: rgba(10, 10, 12, .72); border: 1px solid rgba(226, 179, 60, .45); color: #f6d478;
+  font-family: var(--mono); font-weight: 600; font-size: 16px; }
+.stage-wallet .coin { width: 18px; height: 18px; }
+.stage-wallet em { position: absolute; right: 12px; top: 100%; margin-top: 4px; font-style: normal; font-size: 14px; color: #8ff0b0; opacity: 0; pointer-events: none; }
+.stage-wallet em.is-on { animation: gain-pop 1.8s ease-out forwards; }
+@keyframes gain-pop { 0% { opacity: 0; transform: translateY(-6px); } 15% { opacity: 1; transform: translateY(0); } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(6px); } }
+@media (max-width: 760px) { .stage-wallet { top: 12px; right: 12px; font-size: 14px; padding: 5px 12px 5px 8px; } }
