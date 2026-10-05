@@ -12,6 +12,8 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 - [ ] **Statistiques de tirage** : script `tools/simulate.mjs` qui simule 100 000 paquets de chaque type et compare les taux obtenus aux taux affichés (raretés, versions spéciales, garantie anti-malchance). Il repère aussi les paquets où une rareté manque et où le tirage se reporte sur la rareté voisine.
 - [x] **Tests automatiques** : test navigateur (Playwright) lancé par GitHub Actions à chaque push. Il ouvre un paquet, l'album, la fiche détail et les 5 mini-jeux, passe en NL et en mobile, et échoue à la moindre erreur JavaScript.
 
+- [ ] **Rareté revue** (code prêt, à générer) : mythique réservée à ~25 icônes choisies à la main (`MYTHIQUES` dans le générateur) ; notoriété mesurée par les visites Wikipédia FR + NL sur 12 mois (au lieu du nombre de langues) ; politique classée par carrière (années de Premier ministre, gouvernements, postes) ; événements de épique à mythique, provinces rares ou épiques selon la population. Taux réels affichés paquet par paquet.
+
 ## Phase 2 — Gameplay
 
 - [x] **Fusion de doublons** (bouton Fusionner dans l'album) : 5 doublons standard d'une rareté → une carte au hasard de la rareté au-dessus ; 3 doublons d'une même carte → sa version Holo. Un exemplaire est toujours gardé. Succès associés.

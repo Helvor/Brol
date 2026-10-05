@@ -75,7 +75,7 @@ async function run(name, options) {
     await view('shop');
     const before = await page.evaluate(() => ({ packs: window.RDL.state.stats.packs, price: window.RDL.bulkPrice(window.RDL.PACKS[0]) }));
     check(before.price < 10 * (await page.evaluate(() => window.RDL.PACKS[0].price)), 'le lot de 10 n’est pas moins cher');
-    await click('.buy10');
+    await page.$eval('.buy10', el => el.click()); // le bouton peut se trouver sous la barre fixe du bas sur mobile
     await page.waitForSelector('#stage:not([hidden])');
     await click('#stage-pack');
     await page.waitForSelector('#reveal.is-bulk .slot');

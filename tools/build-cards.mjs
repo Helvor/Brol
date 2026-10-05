@@ -806,10 +806,12 @@ for (const r of terr) {
   if (r.area) o.area = Math.round(+r.area);
   tm.set(r.t, o);
 }
+// Régions : légendaires. Provinces : épiques pour les 4 plus peuplées, rares pour les autres.
+const provByPop = [...tm.values()].filter(o => o.type === 'province').sort((a, b) => b.pop - a.pop).map(o => o.id);
 for (const o of tm.values()) {
   const name = o.id === 'Q231' ? 'Région wallonne' : provName(o.name);
   cards.push({
-    id: o.id, cat: o.type, name, rarity: o.type === 'region' ? 'legendaire' : 'epique',
+    id: o.id, cat: o.type, name, rarity: o.type === 'region' ? 'legendaire' : provByPop.indexOf(o.id) < 4 ? 'epique' : 'rare',
     img: o.img || o.badge || null, badge: o.badge || null,
     subtitle: o.type === 'region' ? 'Région' : 'Province',
     stats: [
@@ -821,6 +823,8 @@ for (const o of tm.values()) {
 }
 
 // ---------- Événements (écrits à la main) ----------
+// Rareté des événements selon leur importance
+const EVENT_RARITY = { 'ev-541': 'mythique', 'ev-federal': 'mythique', 'ev-question': 'legendaire', 'ev-vote': 'legendaire', 'ev-fusion77': 'epique', 'ev-fusion25': 'epique' };
 const EVENTS = [
   ['ev-541', '541 jours', '2010 – 2011',
     'Record de durée de formation d’un gouvernement : 541 jours entre les élections de juin 2010 et l’installation du gouvernement Di Rupo.',
@@ -842,7 +846,7 @@ const EVENTS = [
     [['Consultation', 1950], ['Abdication', 1951], ['Successeur', 'Baudouin']]],
 ];
 for (const [id, name, subtitle, text, stats] of EVENTS)
-  cards.push({ id, cat: 'evenement', name, rarity: 'mythique', img: null, subtitle, text, stats });
+  cards.push({ id, cat: 'evenement', name, rarity: EVENT_RARITY[id] || 'legendaire', img: null, subtitle, text, stats });
 
 // ---------- Photos alternatives (pour la version « Plein cadre ») ----------
 // On prend une autre photo libre dans la catégorie Commons de la personne, si elle existe.
@@ -892,9 +896,21 @@ console.log(`Photos alternatives : ${altFound} / ${altTargets.length}`);
 }
 
 // ---------- Rareté relative, catégorie par catégorie ----------
-// Les cartes de chaque catégorie sont classées par notoriété puis réparties selon les mêmes proportions.
-// Ainsi chaque paquet contient toutes les raretés (mythiques compris) et les taux affichés sont justes.
-const QUOTAS = [['mythique', 0.015], ['legendaire', 0.04], ['epique', 0.09], ['rare', 0.18], ['peu-commune', 0.27]];
+// Mythique : uniquement les icônes de la Belgique, choisies à la main (MYTHIQUES), plus les règles fixes
+// (rois de 40 ans de règne, événements majeurs). Le reste de chaque catégorie est classé par notoriété
+// et réparti selon les quotas, jusqu'à légendaire. Notoriété :
+//   - communes : population ;
+//   - politique : carrière (années comme Premier ministre, gouvernements, postes), Wikipédia pour départager ;
+//   - autres : visites des articles sur Wikipédia FR + NL sur les 12 derniers mois (notoriété en Belgique),
+//     à défaut le nombre de Wikipédias.
+const MYTHIQUES = [
+  'Jacques Brel', 'Hergé', 'René Magritte', 'Stromae', 'Eddy Merckx', 'Eden Hazard', 'Adolphe Sax', 'Georges Lemaître',
+  'Wilfried Martens', 'Paul-Henri Spaak', 'Jean-Luc Dehaene', 'Bart De Wever',
+  'Ville de Bruxelles', 'Anvers', 'Bruges', 'Gand', 'Liège',
+  'Atomium', 'Manneken-Pis', 'Grand-Place de Bruxelles', 'Retable de l\'Agneau mystique',
+  'Frite', 'Westvleteren (bière)', 'Tomorrowland (festival)', 'Carnaval de Binche',
+];
+const QUOTAS = [['legendaire', 0.04], ['epique', 0.09], ['rare', 0.18], ['peu-commune', 0.27]];
 const FIXED_CATS = new Set(['monarchie', 'region', 'province', 'evenement']); // trop petites : rareté fixée à la main
 const linkIds = cards.filter(c => isQ(c.id)).map(c => c.id);
 const LINKS = new Map();
@@ -902,26 +918,70 @@ for (let i = 0; i < linkIds.length; i += 300) {
   const rows = await sparql(`SELECT ?x ?links WHERE { VALUES ?x { ${linkIds.slice(i, i + 300).map(q => 'wd:' + q).join(' ')} } ?x wikibase:sitelinks ?links. }`);
   for (const r of rows) LINKS.set(qid(r.x), +r.links);
 }
+{
+  const mq = await resolveTitles(MYTHIQUES.map(title => ({ title })));
+  const byId = new Map(cards.map(c => [c.id, c]));
+  for (const [q, e] of mq) {
+    const c = byId.get(q);
+    if (!c) console.warn('Mythique sans carte (absente du jeu) :', e.title);
+    else if (!FIXED_CATS.has(c.cat)) c.forceRarity = 'mythique';
+  }
+  // Une rareté imposée ailleurs (ex. 'mythique' dans les listes) ne compte que si la carte est dans MYTHIQUES
+  for (const c of cards) if (c.forceRarity === 'mythique' && !mq.has(c.id)) delete c.forceRarity;
+}
+
+// Visites des 12 derniers mois complets sur Wikipédia FR et NL
+const VIEW_CATS = new Set(['culture', 'sport', 'science', 'art', 'monument', 'chateau', 'folklore', 'gastronomie', 'biere', 'enseignement', 'groupe', 'festival']);
+const VIEWS = new Map();
+{
+  const d = new Date(), endM = new Date(d.getFullYear(), d.getMonth(), 0), startM = new Date(endM.getFullYear() - 1, endM.getMonth() + 1, 1);
+  const ym = x => `${x.getFullYear()}${String(x.getMonth() + 1).padStart(2, '0')}`;
+  const range = `${ym(startM)}01/${ym(endM)}${String(endM.getDate()).padStart(2, '0')}`;
+  const ids = cards.filter(c => VIEW_CATS.has(c.cat) && isQ(c.id)).map(c => c.id);
+  const titles = new Map();
+  for (let i = 0; i < ids.length; i += 200) {
+    const rows = await sparql(`SELECT ?x ?fr ?nl WHERE { VALUES ?x { ${ids.slice(i, i + 200).map(q => 'wd:' + q).join(' ')} }
+  OPTIONAL { ?a schema:about ?x; schema:isPartOf <https://fr.wikipedia.org/>; schema:name ?fr }
+  OPTIONAL { ?b schema:about ?x; schema:isPartOf <https://nl.wikipedia.org/>; schema:name ?nl } }`);
+    for (const r of rows) titles.set(qid(r.x), { fr: r.fr, nl: r.nl });
+  }
+  let done = 0;
+  for (const [id, t] of titles) {
+    let v = 0;
+    for (const lang of ['fr', 'nl']) {
+      if (!t[lang]) continue;
+      const url = `https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/${lang}.wikipedia/all-access/user/${encodeURIComponent(t[lang].replace(/ /g, '_'))}/monthly/${range}`;
+      try { v += (await getJSON(url, { delay: 60, label: 'Pageviews' })).items.reduce((a, m) => a + m.views, 0); } catch (_) { /* pas de données */ }
+    }
+    VIEWS.set(id, v);
+    if (++done % 100 === 0) console.log(`Visites Wikipédia : ${done} / ${titles.size}`);
+  }
+}
+
 const num = v => +String(v).replace(/[^\d]/g, '') || 0;
+const spanYears = sp => {
+  const m = String(sp || '').match(/(\d{4})(?:\s*–\s*(\d{4}))?/);
+  if (!m) return 0;
+  const a = +m[1], b = m[2] ? +m[2] : /depuis/.test(sp) ? new Date().getFullYear() : a;
+  return Math.max(0.5, b - a);
+};
 function score(c) {
   const links = LINKS.get(c.id) || 0;
   if (c.cat === 'commune') return num(c.stats[0][1]);
   if (c.cat === 'politique') {
-    let b = links;
-    if (c.posId === PM) b += 80;
-    if (c.current) b += 40;
-    if (c.posId === 'VPM') b += 20;
-    if (REGIONAL[c.posId]) b += 30;
-    b += (c.rolesData || []).filter(r => r.cab).length * 4 + (c.rolesData || []).filter(r => r.pos === MP).length * 2;
-    return b;
+    const roles = c.rolesData || [];
+    const pmYears = roles.filter(r => r.pos === PM).reduce((a, r) => a + spanYears(r.span), 0);
+    const regYears = roles.filter(r => REGIONAL[r.pos]).reduce((a, r) => a + spanYears(r.span), 0);
+    return (pmYears ? 100 + pmYears * 30 : 0) + (c.current ? 40 : 0) + (c.posId === 'VPM' ? 20 : 0) + regYears * 6
+      + new Set(roles.filter(r => r.cab).map(r => r.cab)).size * 5 + roles.filter(r => r.pos === MP).length * 2 + links * 0.1;
   }
-  return links;
+  return VIEWS.has(c.id) ? VIEWS.get(c.id) + links : links;
 }
 const byCat = {};
 for (const c of cards) (byCat[c.cat] ||= []).push(c);
 for (const [cat, list] of Object.entries(byCat)) {
   if (FIXED_CATS.has(cat)) continue;
-  // Raretés imposées à la main (ex. Westvleteren) : déduites des quotas
+  // Raretés imposées à la main (icônes mythiques) : hors quotas
   const forced = list.filter(c => c.forceRarity);
   for (const c of forced) { c.rarity = c.forceRarity; delete c.forceRarity; }
   list.splice(0, list.length, ...list.filter(c => !forced.includes(c)));
@@ -929,9 +989,7 @@ for (const [cat, list] of Object.entries(byCat)) {
   const n = list.length + forced.length;
   let i = 0;
   for (const [rarity, q] of QUOTAS) {
-    let k = Math.round(n * q);
-    if (rarity === 'mythique' && n >= 8) k = Math.max(1, k);
-    k = Math.max(0, k - forced.filter(c => c.rarity === rarity).length);
+    const k = Math.max(0, Math.round(n * q) - forced.filter(c => c.rarity === rarity).length);
     for (const end = Math.min(list.length, i + k); i < end; i++) list[i].rarity = rarity;
   }
   for (; i < list.length; i++) list[i].rarity = 'commune';

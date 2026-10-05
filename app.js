@@ -422,6 +422,21 @@
     return out.sort((a, b) => R[a.card.rarity].rank - R[b.card.rarity].rank || F[a.finish].rank - F[b.finish].rank);
   }
 
+  // Taux réels par carte pour un paquet : une rareté absente du paquet se reporte sur la plus proche
+  // (vers le bas d'abord), exactement comme dans drawPack.
+  const pctOdds = x => x > 0 ? (x * 100).toFixed(1).replace('.', ',') + ' %' : '—';
+  function packOdds(pack) {
+    const have = new Set(poolOf(pack).map(c => c.rarity));
+    const mapTo = r => { for (let d = 0; d < RARITIES.length; d++) for (const x of [r - d, r + d]) if (x >= 0 && x < RARITIES.length && have.has(RARITIES[x].id)) return x; return r; };
+    const slot = minRank => {
+      const out = RARITIES.map(() => 0), pool = RARITIES.filter((_, i) => i >= minRank), tot = pool.reduce((a, r) => a + r.weight, 0);
+      pool.forEach(r => { out[mapTo(R[r.id].rank)] += r.weight / tot; });
+      return out;
+    };
+    const a = slot(0), b = slot(R[pack.last || 'rare'].rank);
+    return RARITIES.map((r, i) => ({ id: r.id, p: a[i], last: b[i] }));
+  }
+
   // ---------- Boutique ----------
   function renderShop() {
     tickFree();
@@ -437,6 +452,9 @@
           <div><h2>${esc(pl(p, 'title'))}</h2><p>${esc(pl(p, 'desc'))}</p></div>
           <span class="price"><span class="coin"></span>${p.price}</span>
         </div>
+        <button class="linkish odds-btn">${t('packOdds')}</button>
+        <table class="pack-odds" hidden><thead><tr><th></th><th>${t('oddsCards')}</th><th>${t('oddsLast')}</th></tr></thead><tbody>${packOdds(p).filter(o => o.p + o.last > 0).map(o =>
+          `<tr><td><span class="gem" style="background:var(--r-${o.id})"></span>${rl(o.id)}</td><td>${pctOdds(o.p)}</td><td>${pctOdds(o.last)}</td></tr>`).join('')}</tbody></table>
         ${p.special ? `<span class="pack-note">${t(p.event ? 'eventNote' : 'specialNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', BULK)} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
       </div>`;
     }).join('');
@@ -467,6 +485,8 @@
   }
 
   $('#packs').addEventListener('click', e => {
+    const ob = e.target.closest('.odds-btn');
+    if (ob) { const ul = ob.nextElementSibling; ul.hidden = !ul.hidden; return; }
     const el = e.target.closest('.pack-visual, .buy10');
     if (!el || el.disabled) return;
     openPack(shopPacks().find(x => x.id === el.closest('[data-pack]').dataset.pack), el.classList.contains('buy10') ? BULK : 1);
