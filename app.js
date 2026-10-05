@@ -90,7 +90,7 @@
     { id: 'territoires', title: { fr: 'Territoires', nl: 'Grondgebied' }, kicker: { fr: 'Édition géographique', nl: 'Geografische editie' }, big: '565', price: 80,
       desc: { fr: 'Communes, provinces, régions et enseignement.', nl: 'Gemeenten, provincies, gewesten en onderwijs.' },
       body: ['#10261a', '#2c4a5a'], metal: ['#ffd9b8', '#d08a52', '#7c4320'], cats: ['commune', 'province', 'region', 'enseignement'] },
-    // Paquet spécial : 5ᵉ carte légendaire ou mieux (≈ 12 % de mythiques). Pièces uniquement, ni gratuit ni lot de 10.
+    // Paquet spécial : 5ᵉ carte légendaire ou mieux (≈ 12 % de mythiques). Pièces uniquement, jamais gratuit ; lot de 10 possible.
     { id: 'prestige', title: { fr: 'Prestige', nl: 'Prestige' }, kicker: { fr: 'Édition prestige', nl: 'Prestige-editie' }, big: 'L+', price: 600,
       desc: { fr: 'Toutes les cartes. 5ᵉ carte légendaire ou mieux, garantie.', nl: 'Alle kaarten. 5de kaart gegarandeerd legendarisch of beter.' },
       body: ['#050506', '#2a2210'], metal: ['#fff6cf', '#f0c24a', '#8a6410'], cats: null, last: 'legendaire', special: true },
@@ -397,9 +397,15 @@
     </svg>`;
   }
   const packVisual = p => `<div class="pack-visual${p.special ? ' is-foil' : ''}">${packSVG(p)}<div class="sheen"></div>${p.special ? '<div class="foil"></div>' : ''}</div>`;
-  // Logo de Brol (même dessin que logo.svg et l'icône de l'onglet), au centre du dos des cartes
-  const LOGO = document.querySelector('.brand .logo')?.outerHTML.replace('class="logo"', 'class="back-logo"') || '';
-  const cardBack = () => `<div class="card-back">${sealSVG({ ring: t('backSeal'), center: LOGO ? '' : 'BROL', color: '#e2b33c', size: 200, centerSize: 52 })}${LOGO}<div class="back-foot">${t('back')}</div></div>`;
+  // Logo de Brol en version or au centre du dos des cartes : mêmes trois cartes que logo.svg,
+  // les deux du fond en simple filet, celle de devant en or avec le B en creux
+  const BACK_MARK = `<svg class="back-logo" viewBox="-1.3 -0.5 63 63" aria-hidden="true"><defs><linearGradient id="bk-gold" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff1b8"/><stop offset=".45" stop-color="#e2b33c"/><stop offset="1" stop-color="#9c7112"/></linearGradient></defs>
+    <g stroke-linejoin="round"><rect x="13" y="9" width="30" height="42" rx="4.5" fill="#0c1020" stroke="#e2b33c" stroke-width="1.6" opacity=".55" transform="rotate(-18 28 50)"/>
+    <rect x="17" y="8" width="30" height="42" rx="4.5" fill="#0c1020" stroke="#e2b33c" stroke-width="1.6" opacity=".8" transform="rotate(-4 32 50)"/>
+    <rect x="21" y="10" width="30" height="42" rx="4.5" fill="url(#bk-gold)" stroke="#fff1b8" stroke-width="1" transform="rotate(12 36 52)"/>
+    <path transform="rotate(12 36 52)" d="M30.5 19.5v23M30.5 19.5h6.5a5.6 5.6 0 0 1 0 11.2h-6.5M30.5 30.7h7.4a6 6 0 0 1 0 12h-7.4" fill="none" stroke="#0c1020" stroke-width="4.6" stroke-linecap="square"/></g></svg>`;
+  const cardBack = () => `<div class="card-back">${sealSVG({ ring: t('backSeal'), center: '', color: '#e2b33c', size: 200, centerSize: 52 })}${BACK_MARK}<div class="back-foot">${t('back')}</div></div>`;
 
   // ---------- Rendu d'une carte ----------
   function cardHTML(c, { count = 0, finish = 'normal', variants = null } = {}) {
@@ -527,7 +533,7 @@
         <button class="linkish odds-btn">${t('packOdds')}</button>
         <table class="pack-odds" hidden><thead><tr><th></th><th>${t('oddsCards')}</th><th>${t('oddsLast')}</th></tr></thead><tbody>${packOdds(p).filter(o => o.p + o.last > 0).map(o =>
           `<tr><td><span class="gem" style="background:var(--r-${o.id})"></span>${rl(o.id)}</td><td>${pctOdds(o.p)}</td><td>${pctOdds(o.last)}</td></tr>`).join('')}${packOddsExtra(p)}</tbody></table>
-        ${p.special ? `<span class="pack-note">${t(p.event ? 'eventNote' : 'specialNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', BULK)} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
+        ${p.event ? `<span class="pack-note">${t('eventNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', BULK)} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
       </div>`;
     }).join('');
     renderFree();
