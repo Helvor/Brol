@@ -97,6 +97,9 @@
       value: () => CARDS.some(c => ['normal', 'holo', 'plein', 'or'].every(f => countOf(c.id, f))) ? 1 : 0,
       title: { fr: 'Collection complète', nl: 'Volledige set' }, desc: { fr: 'Posséder une même carte dans ses quatre versions.', nl: 'Eenzelfde kaart in alle vier versies bezitten.' } });
 
+    tiers('missions', 'eco', 'clock', [1, 10, 50], [{ fr: 'Au rapport', nl: 'Present' }, { fr: 'Fidèle au poste', nl: 'Trouw op post' }, { fr: 'Agent de terrain', nl: 'Veldagent' }],
+      () => st().missions || 0, { fr: n => `Réclamer ${n} mission${n > 1 ? 's' : ''} du jour.`, nl: n => `${n} dagopdracht${n > 1 ? 'en' : ''} innen.` }, [150, 600, 2000]);
+
     // ----- Éditions limitées et versions d'événement -----
     const eds = CARDS.filter(c => c.cat === 'edition');
     if (eds.length) {

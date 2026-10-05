@@ -13,6 +13,7 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 - [x] **Tests automatiques** : test navigateur (Playwright) lancé par GitHub Actions à chaque push. Il ouvre un paquet, l'album, la fiche détail et les 5 mini-jeux, passe en NL et en mobile, et échoue à la moindre erreur JavaScript.
 
 - [x] **Rareté revue** : mythique réservée à ~25 icônes choisies à la main (`MYTHIQUES` dans le générateur) ; notoriété mesurée par les visites Wikipédia FR + NL sur 12 mois (au lieu du nombre de langues) ; politique classée par carrière (années de Premier ministre, gouvernements, postes) ; événements de épique à mythique, provinces rares ou épiques selon la population. Taux réels affichés paquet par paquet.
+- [x] **Gagner des pièces plus facilement** : paquet gratuit toutes les 2 minutes (5 en réserve), missions du jour (3 par jour, 100 à 300 pièces), revente ×1,5 à partir de 80 % de l'album, plafond des mini-jeux relevé à 2 500 pièces par jour.
 
 ## Phase 2 — Gameplay
 

@@ -149,8 +149,8 @@
   const PACK_SIZE = 5;
   const START_COINS = 1000;
   const NEW_CARD_BONUS = 5;
-  const FREE_EVERY_MS = 3 * 60 * 1000;
-  const FREE_MAX = 3;
+  const FREE_EVERY_MS = 2 * 60 * 1000;
+  const FREE_MAX = 5;
   const PITY = 40; // une légendaire ou mieux au plus tard tous les 40 paquets
   const BULK = 10, BULK_DISCOUNT = 0.9; // lot de 10 paquets : 10 % moins cher, payé en pièces
   const bulkPrice = p => Math.round(p.price * BULK * BULK_DISCOUNT);
@@ -256,7 +256,7 @@
 
   // ---------- Sauvegarde ----------
   // owned : clé « id » pour la version standard, « id|holo » etc. pour les versions spéciales
-  const freshStats = () => ({ packs: 0, cards: 0, free: 0, rarity: {}, finish: {}, packsBy: {}, sold: 0, earned: 0, perfect: 0, doubleLeg: 0, night: 0, pityHits: 0, goldMyth: 0, trades: 0, tradeGift: 0, tradeMyth: 0, tradeFull: 0, fused: 0, fuseHolo: 0, dailyMax: 0, excl: 0 });
+  const freshStats = () => ({ packs: 0, cards: 0, free: 0, rarity: {}, finish: {}, packsBy: {}, sold: 0, earned: 0, perfect: 0, doubleLeg: 0, night: 0, pityHits: 0, goldMyth: 0, trades: 0, tradeGift: 0, tradeMyth: 0, tradeFull: 0, fused: 0, fuseHolo: 0, dailyMax: 0, excl: 0, missions: 0 });
   const fresh = () => ({ coins: START_COINS, owned: {}, packs: 0, free: 1, freeAt: Date.now(), claimed: {}, pity: 0, stats: freshStats(), ach: {}, trade: { pending: {}, done: {} }, daily: { last: null, streak: 0 } });
   let state = load();
   function load() {
@@ -286,7 +286,11 @@
   const totalOf = id => FINISHES.reduce((a, f) => a + countOf(id, f.id), 0);
   const finishesOwned = id => FINISHES.filter(f => countOf(id, f.id) > 0).map(f => f.id);
   const bestFinish = id => finishesOwned(id).pop() || 'normal';
-  const sellValue = (c, fin) => R[c.rarity].sell * F[fin].mult * (c.cat === 'edition' ? 2 : 1); // éditions limitées : valeur doublée
+  // Revente ×1,5 dès 80 % de l'album : c'est là que les nouvelles cartes et les succès se font rares
+  const LATE_AT = 0.8, LATE_MULT = 1.5;
+  const albumShare = () => { const ids = new Set(); for (const [k, n] of Object.entries(state.owned)) if (n > 0) ids.add(k.split('|')[0]); return [...ids].filter(id => BY_ID.has(id)).length / CARDS.length; };
+  const resaleMult = () => albumShare() >= LATE_AT ? LATE_MULT : 1;
+  const sellValue = (c, fin, mult = resaleMult()) => Math.round(R[c.rarity].sell * F[fin].mult * (c.cat === 'edition' ? 2 : 1) * mult); // éditions limitées : valeur doublée
 
   // ---------- Utilitaires ----------
   const $ = s => document.querySelector(s);
@@ -526,6 +530,7 @@
     }).join('');
     renderFree();
     renderDaily();
+    renderMissions();
   }
   // Paquets spéciaux : leurs cartes exclusives (floutées tant qu'on ne les a pas) et leur version d'événement
   function packExtras(p) {
@@ -598,6 +603,9 @@
     const bonus = newCount * NEW_CARD_BONUS;
     state.coins += bonus;
     state.packs++;
+    mission('packs'); mission('new', newCount);
+    mission('epic', revealed.filter(d => R[d.card.rarity].rank >= R.epique.rank).length);
+    mission('special', revealed.filter(d => d.finish !== 'normal').length);
 
     // Statistiques pour les succès
     const st = state.stats;
@@ -835,7 +843,8 @@
 
     let dupes = 0, specials = 0;
     for (const [key, n] of Object.entries(state.owned)) { dupes += Math.max(0, n - 1); if (key.includes('|') && n) specials++; }
-    $('#binder-summary').textContent = t('binderSummary', counts.all[0], fmt(counts.all[1]), specials, state.packs, dupes);
+    $('#binder-summary').textContent = t('binderSummary', counts.all[0], fmt(counts.all[1]), specials, state.packs, dupes) + ' · ' +
+      (counts.all[0] / counts.all[1] >= LATE_AT ? t('lateOn', String(LATE_MULT).replace('.', ',')) : t('lateOff', Math.round(LATE_AT * 100), String(LATE_MULT).replace('.', ',')));
     $('#sell-all').disabled = dupes === 0;
 
     const q = filters.q.trim().toLowerCase();
@@ -888,9 +897,10 @@
   // Doublons revendables : un exemplaire de chaque version est toujours gardé
   function dupValue() {
     let gain = 0, n = 0;
+    const mult = resaleMult();
     for (const [key, cnt] of Object.entries(state.owned)) {
       const [id, fin = 'normal'] = key.split('|');
-      if (cnt > 1 && BY_ID.has(id)) { gain += (cnt - 1) * sellValue(BY_ID.get(id), fin); n += cnt - 1; }
+      if (cnt > 1 && BY_ID.has(id)) { gain += (cnt - 1) * sellValue(BY_ID.get(id), fin, mult); n += cnt - 1; }
     }
     return { n, gain };
   }
@@ -899,6 +909,7 @@
     for (const [key, cnt] of Object.entries(state.owned)) if (cnt > 1 && BY_ID.has(key.split('|')[0])) state.owned[key] = 1;
     state.coins += gain; state.stats.sold += n; state.stats.earned += gain;
     save();
+    mission('sell', n);
     return { n, gain };
   }
   $('#sell-all').addEventListener('click', () => {
@@ -988,7 +999,7 @@
     }
     const res = addCard(randomCard(next.id), 'normal');
     state.stats.fused++;
-    save();
+    save(); mission('fuse');
     return res;
   }
   function fuseHolo(id) {
@@ -998,7 +1009,7 @@
     const res = addCard(c, 'holo');
     state.stats.fused++; state.stats.fuseHolo++;
     state.stats.finish.holo = (state.stats.finish.holo || 0) + 1;
-    save();
+    save(); mission('fuse');
     return res;
   }
 
@@ -1064,7 +1075,7 @@
     $('#daily-box').innerHTML = ready
       ? `<button class="daily-btn" id="daily-open"><span class="daily-gift">${ACH_GIFT}</span><span><b>${t('dailyTitle')}</b><small>${dailyMin(streak + 1) === 'commune' ? t('dailyNextAny', streak + 1) : t('dailyNext', streak + 1, rl(dailyMin(streak + 1)))}</small></span></button>`
       : `<div class="daily-done"><span class="daily-gift">${ACH_GIFT}</span><span><b>${t('dailyDone')}</b><small>${t('dailyStreak', streak)}</small></span></div>`;
-    $('.tab[data-view="shop"]').classList.toggle('has-dot', ready);
+    renderShopDot();
   }
   const ACH_GIFT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><rect x="4" y="9" width="16" height="11" rx="1"/><path d="M12 9v11M4 13h16M12 9c-2-4-6-4-6-1s6 1 6 1 6 2 6-1-4-3-6 1"/></svg>';
   const dailyDlg = $('#daily');
@@ -1092,6 +1103,84 @@
       setTimeout(() => SFX.reveal(rank), 250);
       $('#daily-body .daily-hint').hidden = true; $('#daily-body .daily-after').hidden = false;
     } else if (e.target === dailyDlg || e.target.closest('#daily-close')) dailyDlg.close();
+  });
+
+  // ---------- Missions du jour ----------
+  // Trois missions par jour, tirées au sort à partir de la date (même jour, mêmes missions), de 100 à 300 pièces.
+  // Les autres parties du jeu signalent leurs actions avec mission(type, nombre).
+  const MISSIONS = [
+    { id: 'packs5',  kind: 'packs',   target: 5,  reward: 150, fr: n => `Ouvrir ${n} paquets`, nl: n => `${n} pakjes openen` },
+    { id: 'packs15', kind: 'packs',   target: 15, reward: 300, fr: n => `Ouvrir ${n} paquets`, nl: n => `${n} pakjes openen` },
+    { id: 'new10',   kind: 'new',     target: 10, reward: 200, fr: n => `Obtenir ${n} nouvelles cartes`, nl: n => `${n} nieuwe kaarten krijgen` },
+    { id: 'epic',    kind: 'epic',    target: 1,  reward: 150, fr: () => 'Obtenir une carte épique ou mieux', nl: () => 'Een epische kaart of beter krijgen' },
+    { id: 'special', kind: 'special', target: 1,  reward: 200, fr: () => 'Obtenir une version spéciale', nl: () => 'Een speciale versie krijgen' },
+    { id: 'sell10',  kind: 'sell',    target: 10, reward: 100, fr: n => `Revendre ${n} doublons`, nl: n => `${n} dubbels verkopen` },
+    { id: 'fuse',    kind: 'fuse',    target: 1,  reward: 150, fr: () => 'Faire une fusion', nl: () => 'Een fusie maken' },
+    { id: 'games2',  kind: 'games',   target: 2,  reward: 150, fr: n => `Jouer à ${n} mini-jeux différents`, nl: n => `${n} verschillende minispellen spelen` },
+    { id: 'belgle',  kind: 'belgle',  target: 1,  reward: 200, fr: () => 'Trouver la carte du Belgle', nl: () => 'De Belgle-kaart raden' },
+  ];
+  const MISSION = Object.fromEntries(MISSIONS.map(m => [m.id, m]));
+  const MISSIONS_PER_DAY = 3;
+  const strHash = str => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+  const ml = m => m[L()](m.target);
+  function missionsToday() {
+    const day = ymd(now());
+    if (state.missions?.day !== day) {
+      // Presque tout l'album : plus de mission « nouvelles cartes », devenue trop difficile
+      const pool = MISSIONS.filter(m => m.kind !== 'new' || albumShare() < 0.9).sort((a, b) => strHash(day + a.id) - strHash(day + b.id));
+      const ids = [];
+      for (const m of pool) if (ids.length < MISSIONS_PER_DAY && !ids.some(id => MISSION[id].kind === m.kind)) ids.push(m.id);
+      state.missions = { day, ids, prog: {}, games: [], claimed: {} };
+    }
+    return state.missions;
+  }
+  const missionReady = (m, id) => !m.claimed[id] && (m.prog[MISSION[id].kind] || 0) >= MISSION[id].target;
+  function mission(kind, n = 1, key = null) {
+    if (n <= 0) return;
+    const m = missionsToday();
+    if (kind === 'games') { if (m.games.includes(key)) return; m.games.push(key); }
+    m.prog[kind] = (m.prog[kind] || 0) + n;
+    save();
+    if ($('#view-shop').classList.contains('is-active') && stage.hidden) renderMissions();
+    else renderShopDot();
+  }
+  function claimMission(id) {
+    const m = missionsToday();
+    if (!m.ids.includes(id) || !missionReady(m, id)) return 0;
+    m.claimed[id] = true;
+    state.coins += MISSION[id].reward; state.stats.missions = (state.stats.missions || 0) + 1;
+    save();
+    return MISSION[id].reward;
+  }
+  function renderMissions() {
+    const m = missionsToday();
+    const rows = m.ids.map(id => {
+      const x = MISSION[id], have = Math.min(m.prog[x.kind] || 0, x.target), claimed = !!m.claimed[id], ready = missionReady(m, id);
+      return `<div class="mission${ready ? ' is-ready' : ''}${claimed ? ' is-claimed' : ''}">
+        <span class="m-text">${esc(ml(x))}</span>
+        <span class="m-bar"><i style="width:${(have / x.target * 100).toFixed(0)}%"></i></span>
+        <span class="m-prog">${have}/${x.target}</span>
+        ${claimed ? '<span class="m-done">✓</span>' : ready ? `<button class="btn btn-gold m-claim" data-mission="${id}">+${x.reward}</button>`
+          : `<span class="price"><span class="coin"></span>${x.reward}</span>`}
+      </div>`;
+    }).join('');
+    const all = m.ids.every(id => m.claimed[id]);
+    $('#missions-box').innerHTML = `<h3>${t('missionsTitle')}${all ? ` <small>${t('missionsAll')}</small>` : ''}</h3>${rows}`;
+    renderShopDot();
+  }
+  // Point sur l'onglet Paquets : carte du jour à prendre ou mission à réclamer
+  function renderShopDot() {
+    const m = missionsToday();
+    $('.tab[data-view="shop"]').classList.toggle('has-dot', dailyReady() || m.ids.some(id => missionReady(m, id)));
+  }
+  $('#missions-box').addEventListener('click', e => {
+    const b = e.target.closest('[data-mission]');
+    if (!b) return;
+    const gain = claimMission(b.dataset.mission);
+    if (!gain) return;
+    SFX.coin(); toast(t('coinsPlus', fmt(gain)));
+    renderWallet(); renderMissions();
+    checkAchievements();
   });
 
   // ---------- Export / import de la sauvegarde ----------
@@ -1224,7 +1313,7 @@
         ${c.party && !c.stats.some(([k]) => k === 'Parti') ? `<dt>${t('party')}</dt><dd>${esc(c.party)}</dd>` : ''}
         ${statsOf(c).map(([k, v]) => `<dt>${esc(window.I18N.statKey(k))}</dt><dd>${esc(tv(v))}</dd>`).join('')}
         <dt>${t('copies')}</dt><dd>${cnt}${finish !== 'normal' ? ` (${fl(finish)})` : ''}</dd>
-        <dt>${t('value')}</dt><dd>${t('coins', sellValue(c, finish))}</dd>
+        <dt>${t('value')}</dt><dd>${t('coins', sellValue(c, finish))}${resaleMult() > 1 ? ` <small class="late">${t('lateBonus', String(LATE_MULT).replace('.', ','))}</small>` : ''}</dd>
       </dl>
       ${SERIES_OF.has(id) ? `<h4>${t('seriesH')}</h4><p class="series-list">${SERIES_OF.get(id).map(s => `<button class="chip-s" data-series="${s.id}">${esc(sl(s, 'title'))}</button>`).join('')}</p>` : ''}
       ${known.length ? `<h4>${t('knownFor')}</h4><ul class="known">${known.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
@@ -1237,7 +1326,7 @@
     if (sell) sell.onclick = () => {
       const v = sellValue(c, finish);
       state.owned[keyOf(id, finish)]--; state.coins += v; state.stats.sold++; state.stats.earned += v;
-      save(); renderWallet();
+      save(); renderWallet(); mission('sell');
       SFX.coin(); toast(t('coinsPlus', v));
       openDetail(id, finish);
       if ($('#view-binder').classList.contains('is-active')) renderBinder();
@@ -1327,6 +1416,7 @@
     // pour la simulation de l'économie (tools/simulate.mjs) et les tests
     PACKS, SERIES, RARITIES, BULK, bulkPrice, buyPacks, sellDuplicates, dupValue, claimSeries,
     EVENT_PACKS, activeEvents, fuseRarity, fuseHolo, fuseAvailable, claimDaily, dailyReady, drawPack, exclOf, packById,
+    mission, missionsToday, claimMission, MISSION, resaleMult, sellValue,
   };
 
   applyStatic();

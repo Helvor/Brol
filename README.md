@@ -16,9 +16,10 @@ Puis ouvrir http://localhost:5173. La collection est sauvegardée dans le naviga
 - Raretés relatives : dans chaque catégorie, les cartes sont classées par notoriété puis réparties selon les mêmes proportions, si bien que chaque paquet contient des mythiques et que les taux affichés sont justes pour tous les paquets.
 - Paquet spécial Prestige (600 pièces, 5ᵉ carte légendaire ou mieux) et lot de 10 paquets à −10 % sur les autres.
 - Paquets spéciaux (Prestige et paquets d'événement) : chacun a 3 cartes exclusives en « Édition limitée » (liste `EDITIONS` dans le générateur ; une carte sur huit paquets, une sur quatre en Prestige) et sa propre version introuvable ailleurs : Noir et or, Rouge (Saint-Nicolas), Confettis, Pavé, Iris, Lion, Tricolore, Coq (`FINISHES` dans `app.js`, 1,5 % par carte, 3 % en Prestige).
+- Paquets gratuits : un toutes les 2 minutes, jusqu'à 5 en réserve. Missions du jour : 3 missions tirées au sort chaque jour (100 à 300 pièces). À partir de 80 % de l'album, les doublons se revendent ×1,5.
 - Garantie anti-malchance : une légendaire ou mieux au plus tard tous les 40 paquets (`PITY` dans `app.js`).
 - Séries thématiques et 65 succès (`achievements.js`), dont des succès secrets.
-- Onglet Jeux (`games.js`) : Formation de gouvernement, Belgle (carte du jour), Chronologie, Tour de Belgique, Plus ou moins. Gains plafonnés à 1 500 pièces par jour.
+- Onglet Jeux (`games.js`) : Formation de gouvernement, Belgle (carte du jour), Chronologie, Tour de Belgique, Plus ou moins. Gains plafonnés à 2 500 pièces par jour.
 - Onglet Échanges (`trade.js`) : échange de doublons entre amis par QR code ou par lien, sans serveur. QR codes générés et lus dans le navigateur (`vendor/` : qrcode-generator, MIT ; jsQR, Apache-2.0).
 - Fusion des doublons (bouton Fusionner dans l'album), carte du jour avec série, paquets d'événement limités dans le temps (`EVENT_PACKS` dans `app.js`) et export/import de la partie (bas de page).
 - Sons synthétisés par le navigateur (`sfx.js`), sans fichier audio. Bouton pour couper le son.

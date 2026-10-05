@@ -302,6 +302,28 @@ async function features() {
       check(/saxophone/i.test(await page.textContent('#detail ul.known')), 'Adolphe Sax sans le saxophone');
       await page.click('#detail-close');
     });
+    await step('missions du jour et bonus d’album', async () => {
+      const r = await page.evaluate(() => {
+        const R = window.RDL, m = R.missionsToday(), out = { n: m.ids.length, kinds: new Set(m.ids.map(id => R.MISSION[id].kind)).size };
+        const id = m.ids[0], x = R.MISSION[id];
+        out.early = R.claimMission(id);
+        R.mission(x.kind, x.target, x.kind === 'games' ? 'a' : null);
+        if (x.kind === 'games') for (let i = 1; i < x.target; i++) R.mission('games', 1, 'g' + i);
+        const before = R.state.coins; out.gain = R.claimMission(id); out.coins = R.state.coins - before; out.twice = R.claimMission(id);
+        out.reward = x.reward;
+        // Bonus de revente : ×1 avant 80 % de l'album, ×1,5 après
+        out.multBefore = R.resaleMult();
+        for (const c of R.CARDS.slice(0, Math.ceil(R.CARDS.length * 0.8))) R.state.owned[c.id] ||= 1;
+        out.multAfter = R.resaleMult();
+        const myth = R.CARDS.find(c => c.rarity === 'mythique' && c.cat !== 'edition');
+        out.myth = R.sellValue(myth, 'normal');
+        return out;
+      });
+      check(r.n === 3 && r.kinds === 3, 'trois missions différentes attendues : ' + JSON.stringify(r));
+      check(r.early === 0, 'mission réclamée avant d’être faite');
+      check(r.gain === r.reward && r.coins === r.reward && r.twice === 0, 'récompense de mission : ' + JSON.stringify(r));
+      check(r.multBefore === 1 && r.multAfter === 1.5 && r.myth === 510, 'bonus d’album : ' + JSON.stringify(r));
+    });
     await step('fusion des doublons', async () => {
       const ids = await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'rare'); window.RDL.state.owned[C[0].id] = 4; window.RDL.state.owned[C[1].id] = 3; window.RDL.save(); return [C[0].id, C[1].id]; });
       await page.click('.tab[data-view="binder"]');

@@ -88,7 +88,7 @@
   const T = (k, ...a) => { const v = k.split('.').reduce((o, p) => o?.[p], TX[L()]) ?? k.split('.').reduce((o, p) => o?.[p], TX.fr); return typeof v === 'function' ? v(...a) : v; };
 
   // ---------- Récompenses (plafonnées par jour) ----------
-  const DAILY_CAP = 1500;
+  const DAILY_CAP = 2500;
   const todayKey = () => new Date().toISOString().slice(0, 10);
   function G() {
     const s = API.state;
@@ -113,7 +113,7 @@
     API.save(); API.renderWallet();
     return give;
   }
-  function played(id) { G().played[id] = true; API.save(); }
+  function played(id) { G().played[id] = true; API.save(); API.mission?.('games', 1, id); }
   const done = () => { API.save(); API.checkAchievements(); };
 
   // ---------- Menu ----------
@@ -350,6 +350,7 @@
       g.streak = g.last === yesterday ? g.streak + 1 : 1;
       g.last = g.day; g.maxStreak = Math.max(g.maxStreak, g.streak);
       SFX.fanfare(false);
+      API.mission?.('belgle');
       setTimeout(() => reward(200 - 25 * (g.guesses.length - 1)), 500);
     } else if (g.guesses.length >= 6) {
       g.done = true; g.streak = 0; SFX.error();

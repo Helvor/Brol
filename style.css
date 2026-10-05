@@ -1192,3 +1192,20 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .slot .tag.ev, .slot .tag.ed { background: var(--tagc); color: #111; box-shadow: 0 0 14px var(--tagc); }
 .pack-odds .odds-x td + td { white-space: normal; }
 .pack-odds .odds-x td:first-child { white-space: normal; }
+
+/* Missions du jour */
+.missions-box { width: min(360px, 100%); border: 1.5px solid var(--line); border-radius: 6px; background: var(--bg-2); padding: 10px 14px 6px; }
+.missions-box h3 { margin: 0 0 4px; font-family: var(--display); font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: .03em; }
+.missions-box h3 small { font-family: var(--mono); font-weight: 500; font-size: 11px; text-transform: none; letter-spacing: 0; color: var(--ink-2); margin-left: 6px; }
+.mission { display: grid; grid-template-columns: 1fr 54px auto auto; align-items: center; gap: 4px 10px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.mission:first-of-type { border-top: 0; }
+.mission .m-text { line-height: 1.25; }
+.mission .m-bar { height: 5px; border-radius: 3px; background: var(--bg-3); overflow: hidden; }
+.mission .m-bar i { display: block; height: 100%; background: var(--gold); }
+.mission .m-prog { font-family: var(--mono); font-size: 11px; color: var(--ink-2); min-width: 34px; text-align: right; }
+.mission .price { font-size: 13px; }
+.mission .m-claim { padding: 3px 10px; font-size: 13px; animation: daily-glow 2.4s ease-in-out infinite; }
+.mission .m-done { color: var(--gold); font-weight: 800; text-align: center; min-width: 30px; }
+.mission.is-claimed .m-text { color: var(--ink-2); text-decoration: line-through; }
+.binder-summary .late, .detail-info .late, small.late { color: var(--gold); font-family: var(--mono); }
+.shop-head > div:first-child { align-self: flex-start; }
