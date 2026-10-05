@@ -578,6 +578,64 @@ const SCIENCES = {
   Mathématiques: ['Gérard Mercator', 'Pierre Deligne', 'Ingrid Daubechies', 'Jean Bourgain', 'Grégoire de Saint-Vincent'],
   'Espace & exploration': ['Frank De Winne', 'Dirk Frimout', 'Adrien de Gerlache', 'Paul Otlet'],
 };
+// Ce qui a rendu chaque savant célèbre (fiche détail) : titre de la liste → [[FR…], [NL…], sous-titre FR, sous-titre NL].
+// Le sous-titre est facultatif : il remplace la description Wikidata quand elle est trompeuse ou absente.
+const KNOWN = {
+  'Georges Lemaître': [['La théorie du Big Bang (« atome primitif », 1931)', 'L’expansion de l’Univers (loi de Hubble-Lemaître, 1927)'],
+    ['De oerknaltheorie (“oeratoom”, 1931)', 'De uitdijing van het heelal (wet van Hubble-Lemaître, 1927)']],
+  'François Englert': [['Le mécanisme de Brout-Englert-Higgs (1964)', 'Prix Nobel de physique 2013'], ['Het Brout-Englert-Higgsmechanisme (1964)', 'Nobelprijs voor de Natuurkunde 2013']],
+  'Ilya Prigogine': [['La thermodynamique hors d’équilibre et les structures dissipatives', 'Prix Nobel de chimie 1977'],
+    ['De thermodynamica buiten evenwicht en dissipatieve structuren', 'Nobelprijs voor de Scheikunde 1977']],
+  'Adolphe Quetelet': [['L’indice de masse corporelle (IMC)', 'L’« homme moyen », pionnier de la statistique sociale', 'La fondation de l’Observatoire royal de Belgique'],
+    ['De body-mass index (BMI)', 'De “gemiddelde mens”, pionier van de sociale statistiek', 'De oprichting van de Koninklijke Sterrenwacht van België']],
+  'Simon Stevin': [['La notation décimale (De Thiende, 1585)', 'Le plan incliné et l’équilibre des forces', 'Les mots néerlandais « wiskunde » et « natuurkunde »'],
+    ['De decimale notatie (De Thiende, 1585)', 'Het hellend vlak en het krachtenevenwicht', 'De woorden “wiskunde” en “natuurkunde”']],
+  'Jean-Baptiste Van Helmont': [['L’invention du mot « gaz »', 'L’expérience du saule, sur la croissance des plantes'], ['Het woord “gas”', 'Het wilgenexperiment, over de groei van planten']],
+  'André Vésale': [['De humani corporis fabrica (1543)', 'La fondation de l’anatomie moderne'], ['De humani corporis fabrica (1543)', 'De grondslag van de moderne anatomie']],
+  'Christian de Duve': [['La découverte des lysosomes et des peroxysomes', 'Prix Nobel de médecine 1974'], ['De ontdekking van lysosomen en peroxisomen', 'Nobelprijs voor de Geneeskunde 1974']],
+  'Albert Claude': [['La microscopie électronique de la cellule et le fractionnement cellulaire', 'Prix Nobel de médecine 1974'],
+    ['Elektronenmicroscopie van de cel en celfractionering', 'Nobelprijs voor de Geneeskunde 1974']],
+  'Jules Bordet': [['La bactérie de la coqueluche (Bordetella pertussis)', 'Prix Nobel de médecine 1919, pour ses travaux sur l’immunité'],
+    ['De kinkhoestbacterie (Bordetella pertussis)', 'Nobelprijs voor de Geneeskunde 1919, voor zijn werk over immuniteit']],
+  'Corneille Heymans': [['Le rôle du sinus carotidien dans la régulation de la respiration', 'Prix Nobel de médecine 1938'],
+    ['De rol van de sinus caroticus bij de regeling van de ademhaling', 'Nobelprijs voor de Geneeskunde 1938']],
+  'Paul Janssen': [['La fondation de Janssen Pharmaceutica', 'Plus de 80 médicaments, dont l’halopéridol et le fentanyl'],
+    ['De oprichting van Janssen Pharmaceutica', 'Meer dan 80 geneesmiddelen, waaronder haloperidol en fentanyl']],
+  'Peter Piot': [['La codécouverte du virus Ebola (1976)', 'La direction de l’ONUSIDA, dont il a été le premier directeur'],
+    ['De mede-ontdekking van het ebolavirus (1976)', 'De leiding van UNAIDS, als eerste directeur']],
+  'Marc Van Montagu': [['Les premières plantes génétiquement modifiées (plasmide Ti d’Agrobacterium)', 'Prix mondial de l’alimentation 2013'],
+    ['De eerste genetisch gewijzigde planten (Ti-plasmide van Agrobacterium)', 'World Food Prize 2013']],
+  'Rembert Dodoens': [['Le Cruydeboeck (1554), grand herbier de la Renaissance'], ['Het Cruydeboeck (1554), groot kruidboek van de renaissance'],
+    'Médecin et botaniste flamand', 'Vlaams arts en botanicus'],
+  'Édouard Van Beneden': [['La méiose et le rôle des chromosomes dans la fécondation (1883)'], ['De meiose en de rol van chromosomen bij de bevruchting (1883)']],
+  'Adolphe Sax': [['Le saxophone (breveté en 1846)', 'Les saxhorns'], ['De saxofoon (gepatenteerd in 1846)', 'De saxhoorns'],
+    'Facteur d’instruments, inventeur du saxophone', 'Instrumentenbouwer, uitvinder van de saxofoon'],
+  'Zénobe Gramme': [['La dynamo Gramme, première génératrice électrique industrielle'], ['De dynamo van Gramme, eerste industriële elektrische generator']],
+  'Leo Baekeland': [['La bakélite (1907), premier plastique synthétique', 'Le papier photographique Velox'], ['Bakeliet (1907), de eerste synthetische kunststof', 'Het Velox-fotopapier'],
+    'Chimiste belgo-américain, né à Gand', 'Belgisch-Amerikaans scheikundige, geboren in Gent'],
+  'Étienne Lenoir': [['Le premier moteur à combustion interne commercialisé (1860)'], ['De eerste commercieel verkochte verbrandingsmotor (1860)']],
+  'Jan Pieter Minckelers': [['Le gaz d’éclairage tiré du charbon (1785)'], ['Lichtgas uit steenkool (1785)'],
+    'Chimiste né à Maastricht, professeur à Louvain', 'Scheikundige uit Maastricht, professor in Leuven'],
+  'Jean-Joseph Merlin': [['Les patins à roulettes', 'Des automates et des instruments de musique'], ['De rolschaats', 'Automaten en muziekinstrumenten']],
+  'Robert Cailliau': [['Le World Wide Web, avec Tim Berners-Lee au CERN (1990)'], ['Het World Wide Web, met Tim Berners-Lee bij CERN (1990)']],
+  'Charles van de Poele': [['Le tramway électrique à perche (trolley) aux États-Unis'], ['De elektrische tram met trolleystang in de Verenigde Staten'],
+    'Inventeur belgo-américain', 'Belgisch-Amerikaans uitvinder'],
+  'Lieven Gevaert': [['La fondation de Gevaert (aujourd’hui Agfa-Gevaert) : papiers et films photographiques'], ['De oprichting van Gevaert (nu Agfa-Gevaert): fotopapier en film'],
+    'Industriel de la photographie', 'Fotografie-industrieel'],
+  'Ernest Solvay': [['Le procédé Solvay de fabrication de la soude (1861)', 'Les conseils Solvay de physique (1911)'],
+    ['Het solvayproces voor de productie van soda (1861)', 'De Solvayconferenties over natuurkunde (1911)']],
+  'Gérard Mercator': [['La projection de Mercator (1569)', 'Le mot « atlas » pour un recueil de cartes'], ['De mercatorprojectie (1569)', 'Het woord “atlas” voor een kaartenboek']],
+  'Pierre Deligne': [['La démonstration des conjectures de Weil (1974)', 'Médaille Fields 1978, prix Abel 2013'], ['Het bewijs van de vermoedens van Weil (1974)', 'Fieldsmedaille 1978, Abelprijs 2013']],
+  'Ingrid Daubechies': [['Les ondelettes de Daubechies, utilisées pour compresser les images (JPEG 2000)'], ['De Daubechies-wavelets, gebruikt om beelden te comprimeren (JPEG 2000)']],
+  'Jean Bourgain': [['L’analyse harmonique et les équations aux dérivées partielles', 'Médaille Fields 1994'], ['Harmonische analyse en partiële differentiaalvergelijkingen', 'Fieldsmedaille 1994']],
+  'Grégoire de Saint-Vincent': [['La quadrature de l’hyperbole, précurseur du logarithme naturel'], ['De kwadratuur van de hyperbool, voorloper van de natuurlijke logaritme']],
+  'Frank De Winne': [['Le premier commandant européen de la Station spatiale internationale (2009)'], ['De eerste Europese commandant van het internationale ruimtestation (2009)']],
+  'Dirk Frimout': [['Le premier Belge dans l’espace (navette Atlantis, 1992)'], ['De eerste Belg in de ruimte (spaceshuttle Atlantis, 1992)']],
+  'Adrien de Gerlache': [['L’expédition de la Belgica, premier hivernage en Antarctique (1897–1899)'], ['De Belgica-expeditie, eerste overwintering op Antarctica (1897–1899)']],
+  'Paul Otlet': [['Le Mundaneum et la Classification décimale universelle', 'Un précurseur d’Internet'], ['Het Mundaneum en de Universele Decimale Classificatie', 'Een voorloper van het internet'],
+    'Bibliographe, fondateur du Mundaneum', 'Bibliograaf, oprichter van het Mundaneum'],
+};
+for (const t of Object.values(SCIENCES).flat()) if (!KNOWN[t]) console.warn('Savant sans « connu pour » :', t);
 const sciQ = await resolveTitles(Object.entries(SCIENCES).flatMap(([field, titles]) => titles.map(title => ({ title, field }))));
 const sciRows = await sparql(`
 SELECT ?p ?pLabel ?desc ?img ?birth ?death ?links WHERE {
@@ -593,12 +651,14 @@ for (const f of sciRows) {
   if (sciSeen.has(id) || cards.some(c => c.id === id)) continue;
   sciSeen.add(id);
   if (!f.img) { console.warn('Pas de photo libre, ignoré :', f.pLabel); continue; }
-  const field = sciQ.get(id).field;
+  const { field, title } = sciQ.get(id);
+  const [known, knownNl, sub, subNl] = KNOWN[title.replace(/^nl:/, '')] || [];
   const links = +f.links;
   const b = year(f.birth), d = year(f.death);
   cards.push({
     id, cat: 'science', name: f.pLabel, img: file(f.img), rarity: 'commune', family: 'science',
-    subtitle: f.desc ? cap(f.desc) : field, meta: field + (b ? ` · ${b}${d ? '–' + d : ''}` : ''),
+    known, nl: knownNl ? { known: knownNl, ...(subNl && { subtitle: subNl }) } : undefined,
+    subtitle: sub || (f.desc ? cap(f.desc) : field), meta: field + (b ? ` · ${b}${d ? '–' + d : ''}` : ''),
     stats: [['Naissance', b ?? '—'], d ? ['Décès', d] : ['Domaine', field.split(' & ')[0]], ['Wikipédias', links]],
   });
 }
@@ -1109,8 +1169,8 @@ for (const c of cards) {
   if (!n || c.cat === 'edition') continue; // noms et textes néerlandais écrits à la main
   const nl = {};
   if (n.l && n.l !== c.name) nl.name = cap(n.l.replace(/ van België$/, '').replace(/ \((bier|band|festival|gemeente)\)$/, ''));
-  if (n.d && ['culture', 'sport', 'science'].includes(c.cat)) nl.subtitle = cap(n.d);
-  if (Object.keys(nl).length) c.nl = nl;
+  if (n.d && ['culture', 'sport', 'science'].includes(c.cat) && !c.nl?.subtitle) nl.subtitle = cap(n.d);
+  if (Object.keys(nl).length) c.nl = { ...c.nl, ...nl };
 }
 console.log(`Néerlandais : ${cards.filter(c => c.nl?.name).length} noms traduits, ${Object.keys(POS_NL).length} fonctions`);
 

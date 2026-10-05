@@ -1222,6 +1222,7 @@
       ? `<div class="versions">${owned.map(f => `<button class="ver${f === finish ? ' is-active' : ''}" data-fin="${f}"><span class="fin-dot d-${f}"></span>${fl(f)}<small>×${countOf(id, f)}</small></button>`).join('')}</div>` : '';
     const roles = window.I18N.roles(c);
     const text = window.I18N.text(c);
+    const known = window.I18N.known(c);
     $('#detail-body').innerHTML = `
       <div class="kicker" style="color:var(--r-${c.rarity})"><span class="gem" style="background:var(--r-${c.rarity})"></span>${rl(c.rarity)}${finish !== 'normal' ? ` · <span class="fin-word d-${finish}"${F[finish].pack ? ` style="color:${F[finish].color}"` : ''}>${fl(finish)}</span>` : ''} · <span style="color:var(--ink-2)">${cl(c.cat)}</span></div>
       <h2>${esc(nm(c))}</h2>
@@ -1235,6 +1236,7 @@
         <dt>${t('value')}</dt><dd>${t('coins', sellValue(c, finish))}</dd>
       </dl>
       ${SERIES_OF.has(id) ? `<h4>${t('seriesH')}</h4><p class="series-list">${SERIES_OF.get(id).map(s => `<button class="chip-s" data-series="${s.id}">${esc(sl(s, 'title'))}</button>`).join('')}</p>` : ''}
+      ${known.length ? `<h4>${t('knownFor')}</h4><ul class="known">${known.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       ${roles.length ? `<h4>${t('career')}</h4><ul>${roles.slice(0, 10).map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       <div class="links">${links.join('')}</div>
       ${cnt > 1 ? `<button class="btn" id="sell-one">${t('sellOne', sellValue(c, finish))}</button>` : ''}`;

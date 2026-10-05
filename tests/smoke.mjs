@@ -295,6 +295,13 @@ async function features() {
       await page.click('.tab[data-view="shop"]');
       check(await page.locator('.pack-card[data-pack="saint-nicolas"] .ex-thumb').count() === 3, 'cartes exclusives absentes de la boutique');
     });
+    await step('fiche d’un savant : connu pour', async () => {
+      const id = await page.evaluate(() => { const c = window.RDL.CARDS.find(c => c.name === 'Adolphe Sax'); window.RDL.state.owned[c.id] = 1; window.RDL.save(); return c.id; });
+      await page.evaluate(id => window.RDL.openDetail(id), id);
+      await page.waitForSelector('#detail[open] ul.known li');
+      check(/saxophone/i.test(await page.textContent('#detail ul.known')), 'Adolphe Sax sans le saxophone');
+      await page.click('#detail-close');
+    });
     await step('fusion des doublons', async () => {
       const ids = await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'rare'); window.RDL.state.owned[C[0].id] = 4; window.RDL.state.owned[C[1].id] = 3; window.RDL.save(); return [C[0].id, C[1].id]; });
       await page.click('.tab[data-view="binder"]');
