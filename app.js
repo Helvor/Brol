@@ -260,7 +260,7 @@
 
   // ---------- Sauvegarde ----------
   // owned : clé « id » pour la version standard, « id|holo » etc. pour les versions spéciales
-  const freshStats = () => ({ packs: 0, cards: 0, free: 0, rarity: {}, finish: {}, packsBy: {}, sold: 0, earned: 0, perfect: 0, doubleLeg: 0, night: 0, pityHits: 0, goldMyth: 0, trades: 0, tradeGift: 0, tradeMyth: 0, tradeFull: 0, fused: 0, fuseHolo: 0, dailyMax: 0, excl: 0, missions: 0 });
+  const freshStats = () => ({ packs: 0, cards: 0, free: 0, rarity: {}, finish: {}, packsBy: {}, sold: 0, earned: 0, perfect: 0, doubleLeg: 0, night: 0, pityHits: 0, goldMyth: 0, trades: 0, tradeGift: 0, tradeMyth: 0, tradeFull: 0, fused: 0, fuseHolo: 0, dailyMax: 0, excl: 0, missions: 0, weekly: 0 });
   const fresh = () => ({ coins: START_COINS, owned: {}, packs: 0, free: 1, freeAt: Date.now(), claimed: {}, pity: 0, stats: freshStats(), ach: {}, trade: { pending: {}, done: {} }, daily: { last: null, streak: 0 } });
   let state = load();
   function load() {
@@ -526,9 +526,11 @@
     const ev = nextEvent();
     $('#event-line').innerHTML = activeEvents().length ? '' : ev ? t('nextEvent', esc(pl(ev.p, 'title')), fmtDay(ev.start)) : '';
     $('#packs').innerHTML = shopPacks().map(p => {
-      const locked = (state.coins < p.price && (!state.free || p.special)) || !leftToday(p) || (p.missing && missingCount() < PACK_SIZE);
+      const tickets = state.tickets?.[p.id] || 0;
+      const locked = (state.coins < p.price && !tickets && (!state.free || p.special)) || !leftToday(p) || (p.missing && missingCount() < PACK_SIZE);
       return `
       <div class="pack-card${locked ? ' is-locked' : ''}${p.special ? ' is-special' : ''}${p.event ? ' is-event' : ''}" data-pack="${p.id}">
+        ${tickets ? `<span class="ticket-ribbon">${t('ticketBadge', tickets)}</span>` : ''}
         ${p.event ? `<span class="event-ribbon">${t('eventUntil', fmtDay(eventWindow(p)[1]))}</span>` : ''}
         ${packVisual(p)}
         <div class="pack-info">
@@ -546,6 +548,7 @@
     renderFree();
     renderDaily();
     renderMissions();
+    renderWeekly();
     renderShowcase();
   }
   // Vitrine (ordinateur uniquement, masquée sur téléphone) : les cinq plus belles cartes en éventail,
@@ -630,9 +633,10 @@
     buyError = null;
     if (pack.perDay && leftToday(pack) < n) { buyError = 'perDay'; return null; }
     if (pack.missing && missingCount() < PACK_SIZE) { buyError = 'albumFull'; return null; }
-    let usedFree = false;
+    let usedFree = false, usedTicket = false;
     const cost = n === 1 ? pack.price : bulkPrice(pack);
-    if (n === 1 && state.free > 0 && !pack.special) { state.free--; usedFree = true; if (state.free === FREE_MAX - 1) state.freeAt = Date.now(); }
+    if (n === 1 && state.tickets?.[pack.id] > 0) { state.tickets[pack.id]--; usedTicket = true; }
+    else if (n === 1 && state.free > 0 && !pack.special) { state.free--; usedFree = true; if (state.free === FREE_MAX - 1) state.freeAt = Date.now(); }
     else if (state.coins >= cost) state.coins -= cost;
     else return null;
     const packs = Array.from({ length: n }, () => rollPack(pack, usedFree));
@@ -641,7 +645,7 @@
       state.perDay.n[pack.id] = (state.perDay.n[pack.id] || 0) + n;
     }
     save();
-    return { packs, usedFree, cost: usedFree ? 0 : cost };
+    return { packs, usedFree, usedTicket, cost: usedFree || usedTicket ? 0 : cost };
   }
   function rollPack(pack, usedFree) {
     const forceLegend = state.pity >= PITY - 1;
@@ -659,6 +663,7 @@
     state.packs++;
     mission('packs'); mission('new', newCount);
     mission('epic', revealed.filter(d => R[d.card.rarity].rank >= R.epique.rank).length);
+    mission('legend', revealed.filter(d => R[d.card.rarity].rank >= R.legendaire.rank).length);
     mission('special', revealed.filter(d => d.finish !== 'normal').length);
 
     // Statistiques pour les succès
@@ -689,7 +694,7 @@
     for (const d of revealed.slice(0, 15)) { const p = photoOf(d.card, d.finish); if (p) new Image().src = imgUrl(p); }
     const sum = k => res.packs.reduce((a, p) => a + p[k], 0);
     renderWallet();
-    current = { pack, n, revealed, newCount: sum('newCount'), bonus: sum('bonus'), usedFree: res.usedFree, cost: res.cost, pityTriggered: res.packs.some(p => p.pityTriggered) };
+    current = { pack, n, revealed, newCount: sum('newCount'), bonus: sum('bonus'), usedFree: res.usedFree, usedTicket: res.usedTicket, cost: res.cost, pityTriggered: res.packs.some(p => p.pityTriggered) };
     // Solde affiché pendant l'ouverture : paquet payé, bonus des nouvelles cartes ajouté à la fin
     stageShown = state.coins - current.bonus; stageAnim = 0;
     $('#stage-coins').textContent = fmt(stageShown);
@@ -706,7 +711,7 @@
     stage.style.setProperty('--hot', hot);
     document.body.style.overflow = 'hidden';
     $('#reveal').innerHTML = '';
-    $('#stage-summary').textContent = usedFree ? t('freePack') : t('paid', fmt(current.cost));
+    $('#stage-summary').textContent = current.usedTicket ? t('ticketUsed') : usedFree ? t('freePack') : t('paid', fmt(current.cost));
     ['#flip-all', '#again', '#to-album', '#stage-close'].forEach(s => { $(s).hidden = true; });
     $('#stage-hint').hidden = false;
     $('#stage-hint').textContent = t('hint');
@@ -857,7 +862,7 @@
     const again = $('#again');
     again.hidden = false;
     if (n > 1) { again.textContent = t('again10', n, fmt(bulkPrice(pack))); again.disabled = state.coins < bulkPrice(pack); }
-    else { const free = state.free && !pack.special; again.textContent = t('again', free ? null : pack.price); again.disabled = (!free && state.coins < pack.price) || !leftToday(pack) || (pack.missing && missingCount() < PACK_SIZE); }
+    else { const free = (state.free && !pack.special) || state.tickets?.[pack.id] > 0; again.textContent = t('again', free ? null : pack.price); again.disabled = (!free && state.coins < pack.price) || !leftToday(pack) || (pack.missing && missingCount() < PACK_SIZE); }
     $('#to-album').hidden = false;
     $('#stage-close').hidden = false;
     checkAchievements();
@@ -1026,6 +1031,7 @@
     const s = SERIES.find(x => x.id === id);
     if (!s || state.claimed[s.id] || !s.members.every(m => totalOf(m))) return 0;
     state.claimed[s.id] = true; state.coins += s.reward; save();
+    mission('series');
     return s.reward;
   }
   function openSeriesInAlbum(id) {
@@ -1214,8 +1220,9 @@
     const m = missionsToday();
     if (kind === 'games') { if (m.games.includes(key)) return; m.games.push(key); }
     m.prog[kind] = (m.prog[kind] || 0) + n;
+    weeklyProgress(kind, n);
     save();
-    if ($('#view-shop').classList.contains('is-active') && stage.hidden) renderMissions();
+    if ($('#view-shop').classList.contains('is-active') && stage.hidden) { renderMissions(); renderWeekly(); }
     else renderShopDot();
   }
   function claimMission(id) {
@@ -1223,6 +1230,7 @@
     if (!m.ids.includes(id) || !missionReady(m, id)) return 0;
     m.claimed[id] = true;
     state.coins += MISSION[id].reward; state.stats.missions = (state.stats.missions || 0) + 1;
+    mission('mission');
     save();
     return MISSION[id].reward;
   }
@@ -1245,7 +1253,7 @@
   // Point sur l'onglet Paquets : carte du jour à prendre ou mission à réclamer
   function renderShopDot() {
     const m = missionsToday();
-    $('.tab[data-view="shop"]').classList.toggle('has-dot', dailyReady() || m.ids.some(id => missionReady(m, id)));
+    $('.tab[data-view="shop"]').classList.toggle('has-dot', dailyReady() || m.ids.some(id => missionReady(m, id)) || weeklyReady());
   }
   $('#missions-box').addEventListener('click', e => {
     const b = e.target.closest('[data-mission]');
@@ -1255,6 +1263,63 @@
     SFX.coin(); toast(t('coinsPlus', fmt(gain)));
     renderWallet(); renderMissions();
     checkAchievements();
+  });
+
+  // ---------- Défi de la semaine ----------
+  // Un grand objectif par semaine (lundi → dimanche), tiré au sort à partir de la semaine.
+  // Récompense : un ticket Prestige (un paquet Prestige offert) et des pièces.
+  const WEEKLY = [
+    { id: 'packs50',   kind: 'packs',   target: 50, fr: n => `Ouvrir ${n} paquets`, nl: n => `${n} pakjes openen` },
+    { id: 'new40',     kind: 'new',     target: 40, fr: n => `Obtenir ${n} nouvelles cartes`, nl: n => `${n} nieuwe kaarten krijgen` },
+    { id: 'special6',  kind: 'special', target: 6,  fr: n => `Obtenir ${n} versions spéciales`, nl: n => `${n} speciale versies krijgen` },
+    { id: 'legend3',   kind: 'legend',  target: 3,  fr: n => `Obtenir ${n} cartes légendaires ou mieux`, nl: n => `${n} legendarische kaarten of beter krijgen` },
+    { id: 'mission12', kind: 'mission', target: 12, fr: n => `Réclamer ${n} missions du jour`, nl: n => `${n} dagopdrachten innen` },
+    { id: 'belgle4',   kind: 'belgle',  target: 4,  fr: n => `Trouver le Belgle ${n} jours`, nl: n => `De Belgle ${n} dagen raden` },
+    { id: 'fuse5',     kind: 'fuse',    target: 5,  fr: n => `Faire ${n} fusions`, nl: n => `${n} fusies maken` },
+    { id: 'series1',   kind: 'series',  target: 1,  fr: () => 'Compléter une série', nl: () => 'Een reeks vervolledigen' },
+  ];
+  const WEEKLY_COINS = 400;
+  const weekKey = (d = now()) => { const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = x.getUTCDay() || 7; x.setUTCDate(x.getUTCDate() + 4 - day);
+    const y0 = new Date(Date.UTC(x.getUTCFullYear(), 0, 1)); return `${x.getUTCFullYear()}-W${Math.ceil(((x - y0) / 864e5 + 1) / 7)}`; };
+  const daysLeftInWeek = () => 7 - ((now().getDay() + 6) % 7);
+  function weeklyNow() {
+    const wk = weekKey();
+    if (state.weekly?.week !== wk) {
+      const pool = WEEKLY.filter(w => w.kind !== 'new' || albumShare() < 0.85).filter(w => w.kind !== 'series' || SERIES.some(x => !state.claimed[x.id]));
+      const pickW = pool.slice().sort((a, b) => strHash(wk + a.id) - strHash(wk + b.id))[0];
+      state.weekly = { week: wk, id: pickW.id, prog: 0, claimed: false };
+    }
+    return state.weekly;
+  }
+  function weeklyProgress(kind, n) {
+    const w = weeklyNow();
+    if (WEEKLY.find(x => x.id === w.id)?.kind === kind && !w.claimed) w.prog += n;
+  }
+  const weeklyReady = () => { const w = weeklyNow(); return !w.claimed && w.prog >= WEEKLY.find(x => x.id === w.id).target; };
+  function claimWeekly() {
+    if (!weeklyReady()) return false;
+    const w = weeklyNow();
+    w.claimed = true;
+    state.tickets ||= {}; state.tickets.prestige = (state.tickets.prestige || 0) + 1;
+    state.coins += WEEKLY_COINS; state.stats.weekly = (state.stats.weekly || 0) + 1;
+    save();
+    return true;
+  }
+  function renderWeekly() {
+    const box = $('#weekly-box');
+    if (!box) return;
+    const w = weeklyNow(), x = WEEKLY.find(y => y.id === w.id), have = Math.min(w.prog, x.target);
+    box.innerHTML = `
+      <div class="wk-text"><small>${t('weeklyTitle')} · ${w.claimed ? t('weeklyDone') : t('weeklyLeft', daysLeftInWeek())}</small><b>${esc(x[L()](x.target))}</b></div>
+      <div class="wk-prog"><span class="wk-bar"><i style="width:${(have / x.target * 100).toFixed(0)}%"></i></span><span class="wk-num">${have}/${x.target}</span></div>
+      ${w.claimed ? '<span class="wk-done">✓</span>' : weeklyReady() ? `<button class="btn btn-gold" id="weekly-claim">${t('weeklyClaim')}</button>`
+        : `<span class="wk-reward">${t('weeklyReward', fmt(WEEKLY_COINS))}</span>`}`;
+    box.classList.toggle('is-ready', weeklyReady());
+  }
+  $('#weekly-box')?.addEventListener('click', e => {
+    if (!e.target.closest('#weekly-claim') || !claimWeekly()) return;
+    SFX.achievement(); toast(t('weeklyGot', fmt(WEEKLY_COINS)));
+    renderWallet(); renderShop(); checkAchievements();
   });
 
   // ---------- Export / import de la sauvegarde ----------
@@ -1490,7 +1555,7 @@
     // pour la simulation de l'économie (tools/simulate.mjs) et les tests
     PACKS, SERIES, RARITIES, BULK, bulkPrice, buyPacks, sellDuplicates, dupValue, claimSeries,
     EVENT_PACKS, activeEvents, fuseRarity, fuseHolo, fuseAvailable, claimDaily, dailyReady, drawPack, exclOf, packById,
-    mission, missionsToday, claimMission, MISSION, resaleMult, sellValue,
+    mission, missionsToday, claimMission, MISSION, resaleMult, sellValue, weeklyNow, claimWeekly, WEEKLY,
   };
 
   // ---------- Version installable (PWA) ----------
