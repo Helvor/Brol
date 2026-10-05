@@ -848,6 +848,69 @@ for (const o of comm.values()) {
   });
 }
 
+// ---------- Bourgmestres ----------
+// Chef de l'exécutif (P6) de chaque commune, avec photo libre uniquement. Wikidata n'est pas à jour depuis les
+// élections communales de 2024 : on n'affiche jamais « en fonction », seulement les années du mandat
+// (« depuis 2011 », « 1995–2012 »). Une personne qui a déjà une carte (député, ministre…) garde sa carte :
+// le mandat s'ajoute à son parcours. Rareté : selon la population de la commune.
+{
+  const ids = [...comm.keys()];
+  const rows = [];
+  for (let i = 0; i < ids.length; i += 200) rows.push(...await sparql(`
+SELECT ?c ?p ?pLabel ?st ?en ?img ?birth WHERE {
+  VALUES ?c { ${ids.slice(i, i + 200).map(q => 'wd:' + q).join(' ')} }
+  ?c p:P6 ?s. ?s ps:P6 ?p. ?p wdt:P31 wd:Q5.
+  OPTIONAL { ?s pq:P580 ?st } OPTIONAL { ?s pq:P582 ?en } OPTIONAL { ?p wdt:P18 ?img } OPTIONAL { ?p wdt:P569 ?birth }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,nl,mul". }
+}`));
+  const mayors = new Map();
+  for (const r of rows) {
+    const id = qid(r.p), c = comm.get(qid(r.c));
+    const o = mayors.get(id) || { id, name: r.pLabel, img: file(r.img), birth: year(r.birth), terms: new Map() };
+    o.img ||= file(r.img);
+    o.terms.set(c.id + (r.st || ''), { c, st: r.st, en: r.en });
+    mayors.set(id, o);
+  }
+  // Parti le plus récent (même règle que pour les autres politiques)
+  const parties = new Map();
+  const mids = [...mayors.keys()];
+  for (let i = 0; i < mids.length; i += 200) {
+    const aff = await sparql(`SELECT ?p ?party ?st ?en WHERE { VALUES ?p { ${mids.slice(i, i + 200).map(q => 'wd:' + q).join(' ')} }
+  ?p p:P102 ?s. ?s ps:P102 ?party; wikibase:rank ?rank. FILTER(?rank != wikibase:DeprecatedRank) OPTIONAL { ?s pq:P580 ?st } OPTIONAL { ?s pq:P582 ?en } }`);
+    for (const r of aff) (parties.get(qid(r.p)) || parties.set(qid(r.p), []).get(qid(r.p))).push({ q: qid(r.party), st: year(r.st) || 0, en: r.en ? year(r.en) : Infinity });
+  }
+  const de = n => /^[AEIOUYÉÈÊH]/i.test(n) ? `d’${n}` : `de ${n}`;
+  const termSpan = t => t.en ? span(t.st, t.en) : t.st ? `depuis ${year(t.st)}` : '';
+  let added = 0, merged = 0;
+  for (const o of mayors.values()) {
+    // Mandats du plus récent au plus ancien
+    const terms = [...o.terms.values()].sort((a, b) => (b.st || '').localeCompare(a.st || ''));
+    const rolesData = terms.map(t => ({ pos: 'MAYOR', commune: t.c.id, fr: `Bourgmestre ${de(t.c.name)}`, span: termSpan(t) }));
+    const roles = rolesData.map(r => r.fr + (r.span ? ` (${r.span})` : ''));
+    const existing = cards.find(c => c.id === o.id);
+    if (existing) { // déjà une carte : le mandat rejoint le parcours
+      existing.rolesData = [...(existing.rolesData || []), ...rolesData];
+      existing.roles = [...(existing.roles || []), ...roles];
+      merged++;
+      continue;
+    }
+    if (!o.img || isQ(o.name)) continue;
+    const main = terms[0];
+    const list = (parties.get(o.id) || []).sort((a, b) => b.en - a.en || b.st - a.st);
+    const partyQ = list.map(x => x.q).find(q => SHORT[q]) || list[0]?.q;
+    const party = partyQ ? (SHORT[partyQ] || null) : null;
+    const prov = main.c.prov ? (/^[AEIOUÉ]/.test(main.c.prov) ? `Province d’${main.c.prov}` : `Province de ${main.c.prov}`) : 'Bruxelles-Capitale';
+    cards.push({
+      id: o.id, cat: 'bourgmestre', name: o.name, img: o.img, rarity: 'commune', mayorOf: main.c.id, pop: main.c.pop,
+      subtitle: `Bourgmestre ${de(main.c.name)}`, meta: [prov, termSpan(main)].filter(Boolean).join(' · '),
+      party, family: partyFamily(partyQ), rolesData, roles,
+      stats: [['Naissance', o.birth ?? '—'], ['Parti', party || '—'], ['Habitants', main.c.pop ? main.c.pop.toLocaleString('fr-BE') : '—']],
+    });
+    added++;
+  }
+  console.log(`Bourgmestres : ${added} cartes, ${merged} mandats ajoutés à des cartes existantes`);
+}
+
 // ---------- Provinces & régions ----------
 const terr = await sparql(`
 SELECT ?t ?tLabel ?type ?img ?coa ?flag ?pop ?area ?capLabel WHERE {
@@ -1141,6 +1204,7 @@ const spanYears = sp => {
 function score(c) {
   const links = LINKS.get(c.id) || 0;
   if (c.cat === 'commune') return num(c.stats[0][1]);
+  if (c.cat === 'bourgmestre') return (c.pop || 0) + links; // la taille de la commune d'abord
   if (c.cat === 'politique') {
     const roles = c.rolesData || [];
     const pmYears = roles.filter(r => r.pos === PM).reduce((a, r) => a + spanYears(r.span), 0);
@@ -1167,6 +1231,7 @@ for (const [cat, list] of Object.entries(byCat)) {
   }
   for (; i < list.length; i++) list[i].rarity = 'commune';
 }
+for (const c of cards) delete c.pop;
 {
   const table = {};
   for (const c of cards) { table[c.cat] ||= {}; table[c.cat][c.rarity] = (table[c.cat][c.rarity] || 0) + 1; }

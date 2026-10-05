@@ -1,6 +1,6 @@
 # Brol
 
-Jeu local d'ouverture de paquets de cartes sur la Belgique : politique, monarchie, culture, sport, art, gastronomie, enseignement, communes, provinces, régions et événements. Seules les entrées avec une image libre (Wikimedia Commons) ont une carte.
+Jeu local d'ouverture de paquets de cartes sur la Belgique : politique, bourgmestres, monarchie, culture, sport, art, gastronomie, enseignement, communes, provinces, régions et événements. Seules les entrées avec une image libre (Wikimedia Commons) ont une carte.
 
 ## Lancer
 
@@ -35,6 +35,7 @@ Le script interroge Wikidata (et Wikipédia pour la composition du gouvernement 
 
 - Personnalités : mythique = Premier ministre 6 ans ou plus, légendaire = Premier ministre, épique = ministre-président régional, rare = ministre fédéral, peu commune / commune = député fédéral avec photo (3 législatures ou plus / sinon). Membres du gouvernement actuel : au moins rare, épique pour les vice-Premiers.
 - Rois : légendaire, mythique pour un règne de 40 ans ou plus.
+- Bourgmestres (chef de l'exécutif de la commune sur Wikidata, avec photo libre) : rareté selon la population de la commune. Wikidata n'étant pas à jour depuis les élections de 2024, la carte indique les années du mandat sans dire « en fonction ». Une personne qui a déjà une carte (député, ministre…) garde la sienne, avec le mandat ajouté à son parcours.
 - Culture & sport (liste `FAMOUS` dans le script, titres Wikipédia FR) : rareté selon le nombre de Wikipédias qui ont un article (légendaire ≥ 90, épique ≥ 55, rare ≥ 30, peu commune ≥ 15).
 - Communes, selon la population : légendaire ≥ 150 000, épique ≥ 60 000, rare ≥ 25 000, peu commune ≥ 12 000, sinon commune.
 - Provinces : épique. Régions : légendaire. Événements (écrits à la main) : mythique.

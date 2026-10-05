@@ -176,6 +176,10 @@
     return VAL[p] || p;
   };
 
+  // Bourgmestre : « Burgemeester van » + nom néerlandais de la commune (lu sur sa carte)
+  const communeNl = id => { const c = (window.CARDS || []).find(x => x.id === id); return c ? (c.nl?.name || c.name) : ''; };
+  const mayorNl = id => `Burgemeester van ${communeNl(id)}`;
+
   window.I18N = {
     get lang() { return lang; },
     set(l) { lang = UI[l] ? l : 'fr'; try { localStorage.setItem('rdl-lang', lang); } catch (_) {} document.documentElement.lang = lang; },
@@ -187,6 +191,7 @@
     subtitle(c) {
       if (lang !== 'nl') return c.subtitle || '';
       if (c.cat === 'politique' && c.posId) return capF(SPECIAL_POS[c.posId] || window.POS_NL?.[c.posId]) || c.subtitle;
+      if (c.mayorOf) return mayorNl(c.mayorOf);
       if (c.nl?.subtitle) return c.nl.subtitle;
       return tMetaPart(c.subtitle || '');
     },
@@ -195,7 +200,7 @@
     roles(c) {
       if (c.rolesData) {
         return c.rolesData.map(r => {
-          const label = lang === 'nl' ? capF(SPECIAL_POS[r.pos] || window.POS_NL?.[r.pos]) || r.fr : r.fr;
+          const label = lang !== 'nl' ? r.fr : r.pos === 'MAYOR' ? mayorNl(r.commune) : capF(SPECIAL_POS[r.pos] || window.POS_NL?.[r.pos]) || r.fr;
           const extra = r.leg ? ' — ' + window.I18N.t('leg', r.leg) : r.cab ? ` — ${window.I18N.t('gov')} ${r.cab}` : '';
           const when = r.live ? ` (${window.I18N.t('live')})` : r.span ? ` (${lang === 'nl' ? r.span.replace('depuis', 'sinds') : r.span})` : '';
           return label + extra + when;
