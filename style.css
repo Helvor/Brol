@@ -1334,3 +1334,13 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 @media (min-width: 761px) and (max-width: 1100px) {
   .shop-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "title title" "show today" "show free" "missions missions"; }
 }
+
+/* Solde de pièces pendant l'ouverture des paquets */
+.stage-wallet { position: absolute; top: 16px; right: 16px; z-index: 6; display: flex; align-items: center; gap: 8px; padding: 7px 14px 7px 10px;
+  border-radius: 99px; background: rgba(10, 10, 12, .72); border: 1px solid rgba(226, 179, 60, .45); color: #f6d478;
+  font-family: var(--mono); font-weight: 600; font-size: 16px; }
+.stage-wallet .coin { width: 18px; height: 18px; }
+.stage-wallet em { position: absolute; right: 12px; top: 100%; margin-top: 4px; font-style: normal; font-size: 14px; color: #8ff0b0; opacity: 0; pointer-events: none; }
+.stage-wallet em.is-on { animation: gain-pop 1.8s ease-out forwards; }
+@keyframes gain-pop { 0% { opacity: 0; transform: translateY(-6px); } 15% { opacity: 1; transform: translateY(0); } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(6px); } }
+@media (max-width: 760px) { .stage-wallet { top: 12px; right: 12px; font-size: 14px; padding: 5px 12px 5px 8px; } }

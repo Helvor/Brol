@@ -665,6 +665,10 @@
     const sum = k => res.packs.reduce((a, p) => a + p[k], 0);
     renderWallet();
     current = { pack, n, revealed, newCount: sum('newCount'), bonus: sum('bonus'), usedFree: res.usedFree, cost: res.cost, pityTriggered: res.packs.some(p => p.pityTriggered) };
+    // Solde affiché pendant l'ouverture : paquet payé, bonus des nouvelles cartes ajouté à la fin
+    stageShown = state.coins - current.bonus; stageAnim = 0;
+    $('#stage-coins').textContent = fmt(stageShown);
+    $('#stage-gain').textContent = ''; $('#stage-gain').classList.remove('is-on');
     const { usedFree } = current;
 
     const score = d => R[d.card.rarity].rank + finTier(d.finish) * 1.5 + (d.card.cat === 'edition' ? 4 : 0);
@@ -821,6 +825,8 @@
     const specials = revealed.filter(r => r.finish !== 'normal').length;
     $('#stage-summary').innerHTML = t('summary', newCount, dups, specials, bonus);
     if (bonus) SFX.coin();
+    current.finished = true;
+    stageCoinsSync();
     $('#flip-all').hidden = true;
     tickFree();
     const again = $('#again');
@@ -830,6 +836,19 @@
     $('#to-album').hidden = false;
     $('#stage-close').hidden = false;
     checkAchievements();
+  }
+  // Compteur de pièces de l'ouverture : suit le solde (bonus des nouvelles cartes, succès débloqués)
+  // en montant jusqu'à la nouvelle valeur, avec « +gain »
+  let stageShown = 0, stageAnim = 0;
+  function stageCoinsSync() {
+    const from = stageShown, gain = state.coins - from;
+    if (!gain) return;
+    stageShown = state.coins;
+    const el = $('#stage-coins'), t0 = performance.now(), dur = 600, run = ++stageAnim;
+    const g = $('#stage-gain');
+    if (gain > 0) { g.textContent = `+${fmt(gain)}`; g.classList.remove('is-on'); void g.offsetWidth; g.classList.add('is-on'); }
+    const step = now => { if (run !== stageAnim) return; const k = Math.min(1, (now - t0) / dur); el.textContent = fmt(Math.round(from + gain * k)); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
   }
   function closeStage() {
     stage.hidden = true;
@@ -898,6 +917,7 @@
   }
   function renderWallet() {
     $('#coins').textContent = fmt(state.coins);
+    if (current?.finished && !$('#stage').hidden) stageCoinsSync(); // fin d'ouverture : succès débloqués
     const n = CARDS.filter(c => totalOf(c.id)).length;
     $('#progress-pill').textContent = `${n}/${fmt(CARDS.length)}`;
     const ready = SERIES.filter(s => !state.claimed[s.id] && s.members.every(id => totalOf(id))).length;
