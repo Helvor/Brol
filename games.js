@@ -1,4 +1,4 @@
-// Mini-jeux : Formation de gouvernement, Belgle, Chronologie, Tour de Belgique, Plus ou moins
+// Mini-jeux : Formation de gouvernement, Belgle, Chronologie, Tour de Belgique, Plus ou moins, Qui suis-je ?, Le Parti
 (() => {
   'use strict';
   const API = window.RDL;
@@ -33,6 +33,14 @@
         conclave: 'Conclave budgétaire interminable. +14 jours.', bhv: 'Le dossier BHV refait surface. +21 jours.',
         vacances: 'Vacances parlementaires. +20 jours.', clarif: 'Mission de clarification : tu pioches 2 cartes.',
       },
+      // Qui suis-je ?
+      q_name: 'Qui suis-je ?', q_desc: 'Des indices un par un, quatre noms possibles. Plus tu trouves tôt, plus tu marques. 5 manches.',
+      q_round: (i, n) => `Manche ${i}/${n}`, q_clue: 'Indice', q_more: 'Indice suivant', q_photo: 'Photo floutée', q_pts: n => `${n} points en jeu`,
+      q_ok: n => `Bien joué ! +${n} points`, q_ko: 'Raté, voici un nouvel indice', q_lost: 'Perdu, c’était :', q_next: 'Manche suivante', q_end: 'Voir le score',
+      q_total: n => `${n} points sur 500`,
+      // Le Parti
+      l_name: 'Le Parti', l_desc: 'Un ou une politique, quatre partis : lequel est le bon ? 10 questions.',
+      l_round: (i, n) => `Question ${i}/${n}`, l_q: 'De quel parti ?', l_total: n => `${n} bonnes réponses sur 10`,
       // Belgle
       b_name: 'Belgle', b_desc: 'Une carte mystère par jour, la même pour tout le monde. 6 essais, un indice à chaque erreur.',
       b_ph: 'Tape un nom…', b_guess: 'Proposer', b_hints: 'Indices', b_cat: 'Catégorie', b_rar: 'Rareté', b_sub: 'Description', b_era: 'Époque',
@@ -74,6 +82,12 @@
         conclave: 'Eindeloos begrotingsconclaaf. +14 dagen.', bhv: 'Het dossier BHV duikt weer op. +21 dagen.',
         vacances: 'Parlementair reces. +20 dagen.', clarif: 'Verkennersopdracht: je trekt 2 kaarten.',
       },
+      q_name: 'Wie ben ik?', q_desc: 'Hints één voor één, vier mogelijke namen. Hoe sneller je het vindt, hoe meer punten. 5 rondes.',
+      q_round: (i, n) => `Ronde ${i}/${n}`, q_clue: 'Hint', q_more: 'Volgende hint', q_photo: 'Wazige foto', q_pts: n => `${n} punten te winnen`,
+      q_ok: n => `Goed zo! +${n} punten`, q_ko: 'Fout, hier is een nieuwe hint', q_lost: 'Verloren, het was:', q_next: 'Volgende ronde', q_end: 'Naar de score',
+      q_total: n => `${n} punten op 500`,
+      l_name: 'De Partij', l_desc: 'Een politicus, vier partijen: welke is de juiste? 10 vragen.',
+      l_round: (i, n) => `Vraag ${i}/${n}`, l_q: 'Van welke partij?', l_total: n => `${n} juiste antwoorden op 10`,
       b_name: 'Belgle', b_desc: 'Elke dag een mysteriekaart, voor iedereen dezelfde. 6 pogingen, een hint bij elke fout.',
       b_ph: 'Typ een naam…', b_guess: 'Raden', b_hints: 'Hints', b_cat: 'Categorie', b_rar: 'Zeldzaamheid', b_sub: 'Omschrijving', b_era: 'Periode',
       b_place: 'Plaats', b_init: 'Initialen', b_win: n => `Gevonden in ${n} poging${n > 1 ? 'en' : ''}!`, b_lose: 'Verloren! Het was…', b_share: 'Score kopiëren',
@@ -107,6 +121,8 @@
     g.chrono ||= { best: 0 };
     g.tour ||= { best: 0, bull: 0 };
     g.pom ||= { best: 0 };
+    g.qui ||= { best: 0, played: 0 };
+    g.parti ||= { best: 0, perfect: 0 };
     g.played ||= {};
     g.coins ||= { day: null, amount: 0 };
     return g;
@@ -131,6 +147,8 @@
     { id: 'chrono', icon: 'clock', name: 'c_name', desc: 'c_desc', best: g => g.chrono.best || '—' },
     { id: 'tour', icon: 'map', name: 't_name', desc: 't_desc', best: g => g.tour.best ? fmt(g.tour.best) : '—' },
     { id: 'pom', icon: 'gem', name: 'p_name', desc: 'p_desc', best: g => g.pom.best || '—' },
+    { id: 'qui', icon: 'medal', name: 'q_name', desc: 'q_desc', best: g => g.qui.best || '—' },
+    { id: 'parti', icon: 'swap', name: 'l_name', desc: 'l_desc', best: g => g.parti.best ? `${g.parti.best}/10` : '—' },
   ];
   const icon = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">${window.ACH_ICONS[n]}</svg>`;
 
@@ -619,6 +637,157 @@
     if (e.key === 'ArrowDown') { e.preventDefault(); pomAnswer(false); }
   });
 
-  const START = { formation: startFormation, belgle: startBelgle, chrono: startChrono, tour: startTour, pom: startPom };
+
+  // =====================================================================
+  // 6. Qui suis-je ?
+  // =====================================================================
+  // Une carte mystère et quatre noms de la même catégorie. Les indices arrivent un par un (statistiques,
+  // domaine, description, photo floutée) ; une erreur révèle l'indice suivant et grise le nom choisi.
+  const QUI_POINTS = [100, 75, 50, 30, 15];
+  const QUI_POOL = BELGLE_POOL.filter(c => c.cat !== 'commune' || ['legendaire', 'mythique'].includes(c.rarity));
+  function quiClues(c) {
+    const words = c.name.toLowerCase().split(/[\s'’-]+/).filter(w => w.length > 3);
+    const leaks = t => words.some(w => String(t).toLowerCase().includes(w)); // un indice ne doit pas contenir le nom
+    const clues = [];
+    for (const [k, v] of c.stats) if (k !== 'Wikipédias' && v !== '—' && v !== '' && v !== 0 && !leaks(v)) clues.push(`${window.I18N.statKey(k)} : ${window.I18N.tv(v)}`);
+    clues.push(window.RDL.catLabel(c.cat));
+    const meta = window.I18N.meta(c), sub = window.I18N.subtitle(c);
+    if (meta && !leaks(meta)) clues.push(meta);
+    if (sub && !leaks(sub)) clues.push(sub);
+    // Indices du plus vague au plus précis, quatre au plus, puis la photo floutée
+    return [...new Set(clues)].slice(0, 4);
+  }
+  let Q = null;
+  function startQui() {
+    played('qui');
+    const rounds = shuffle(QUI_POOL.slice()).slice(0, 5).map(c => {
+      const same = QUI_POOL.filter(x => x.cat === c.cat && x.id !== c.id);
+      const decoys = shuffle(same.length >= 3 ? same : QUI_POOL.filter(x => x.id !== c.id)).slice(0, 3);
+      return { c, clues: quiClues(c), choices: shuffle([c, ...decoys]), shown: 1, wrong: [], result: null };
+    });
+    Q = { rounds, i: 0, total: 0 };
+    renderQui();
+  }
+  const quiMax = r => r.clues.length + 1; // indices + photo
+  function quiPoints(r) { return QUI_POINTS[Math.min(r.shown - 1, QUI_POINTS.length - 1)]; }
+  function quiNextClue(r) {
+    if (r.shown < quiMax(r)) { r.shown++; return true; }
+    r.result = 'lost'; SFX.error(); return false;
+  }
+  function quiAnswer(id) {
+    const r = Q.rounds[Q.i];
+    if (r.result || r.wrong.includes(id)) return;
+    if (id === r.c.id) {
+      r.result = 'ok'; r.points = quiPoints(r); Q.total += r.points; SFX.reveal(r.shown <= 2 ? 5 : 3);
+    } else {
+      r.wrong.push(id); SFX.error();
+      if (r.wrong.length >= 3 || !quiNextClue(r)) r.result = 'lost';
+    }
+    renderQui();
+  }
+  function quiNext() {
+    Q.i++;
+    if (Q.i >= Q.rounds.length) {
+      const g = G().qui; g.played++; if (Q.total > g.best) g.best = Q.total;
+      if (Q.total >= 400) SFX.fanfare(Q.total >= 450);
+      reward(Math.round(Q.total / 2));
+      done();
+    }
+    renderQui();
+  }
+  function renderQui() {
+    const ended = Q.i >= Q.rounds.length;
+    const stats = `<span class="gstat"><small>${T('q_round', Math.min(Q.i + 1, 5), 5)}</small><b>${Q.total}</b></span><span class="gstat"><small>${T('best')}</small><b>${G().qui.best}</b></span>`;
+    if (ended) {
+      area().innerHTML = header('q_name', stats) + `<div class="game-result win"><b>${T('q_total', Q.total)}</b>
+        <span>${Q.rounds.map(r => r.result === 'ok' ? (r.points >= 75 ? '🟩' : '🟨') : '🟥').join('')}</span>
+        <button class="btn btn-gold" id="q-again">${T('again')}</button></div>`;
+      $('#q-again').addEventListener('click', startQui);
+      return;
+    }
+    const r = Q.rounds[Q.i], c = r.c, over = !!r.result;
+    const photo = r.shown > r.clues.length || over;
+    area().innerHTML = header('q_name', stats) + `
+      <div class="qui">
+        <div class="qui-clues">
+          ${r.clues.slice(0, r.shown).map((x, k) => `<div class="qui-clue"><small>${T('q_clue')} ${k + 1}</small>${esc(x)}</div>`).join('')}
+          ${photo ? `<div class="qui-photo${over ? '' : ' is-blur'}" style="background-image:url('${imgUrl(c.img, 400)}')">${over ? '' : `<small>${T('q_photo')}</small>`}</div>` : ''}
+          ${over ? `<div class="qui-res ${r.result}"><div><b>${r.result === 'ok' ? T('q_ok', r.points) : T('q_lost')}</b><span>${esc(nm(c))}</span></div><button class="btn btn-gold" id="q-next">${Q.i === 4 ? T('q_end') : T('q_next')}</button></div>`
+            : `<div class="qui-foot"><span>${T('q_pts', quiPoints(r))}</span>${r.shown < quiMax(r) ? `<button class="btn btn-line" id="q-more">${T('q_more')}</button>` : ''}</div>`}
+        </div>
+        <div class="qui-choices">${r.choices.map(x => {
+          const cls = over ? (x.id === c.id ? ' is-ok' : r.wrong.includes(x.id) ? ' is-ko' : ' is-off') : r.wrong.includes(x.id) ? ' is-ko' : '';
+          return `<button class="qui-choice${cls}" data-q="${esc(x.id)}"${over || r.wrong.includes(x.id) ? ' disabled' : ''}>${esc(nm(x))}</button>`;
+        }).join('')}</div>
+      </div>`;
+    area().querySelectorAll('[data-q]').forEach(b => b.addEventListener('click', () => quiAnswer(b.dataset.q)));
+    $('#q-more')?.addEventListener('click', () => { quiNextClue(r); SFX.tick(); renderQui(); });
+    $('#q-next')?.addEventListener('click', quiNext);
+  }
+
+  // =====================================================================
+  // 7. Le Parti
+  // =====================================================================
+  // Politiques des partis actuels (ministres, élus de plusieurs législatures, membres du gouvernement en place),
+  // quatre partis proposés dont au moins deux du même groupe linguistique que la bonne réponse.
+  const CURRENT_PARTIES = Object.fromEntries(PARTIES.map(p => [p.name, p]));
+  const PARTI_POOL = CARDS.filter(c => c.cat === 'politique' && c.img && CURRENT_PARTIES[c.party] && (c.current || c.rarity !== 'commune'));
+  let LP = null;
+  function startParti() {
+    played('parti');
+    const rounds = shuffle(PARTI_POOL.slice()).slice(0, 10).map(c => {
+      const right = CURRENT_PARTIES[c.party];
+      const sameGroup = shuffle(PARTIES.filter(p => p !== right && (p.group === right.group || p.group === 'bi' || right.group === 'bi')));
+      const others = shuffle(PARTIES.filter(p => p !== right && !sameGroup.includes(p)));
+      const wrong = [...sameGroup.slice(0, 2), ...others].slice(0, 3);
+      if (wrong.length < 3) wrong.push(...shuffle(PARTIES.filter(p => p !== right && !wrong.includes(p))).slice(0, 3 - wrong.length));
+      return { c, right, choices: shuffle([right, ...wrong]), answer: null };
+    });
+    LP = { rounds, i: 0, score: 0 };
+    renderParti();
+  }
+  function partiAnswer(id) {
+    const r = LP.rounds[LP.i];
+    if (r.answer) return;
+    r.answer = id;
+    if (id === r.right.id) { LP.score++; SFX.reveal(3); } else SFX.error();
+    renderParti();
+    setTimeout(() => {
+      LP.i++;
+      if (LP.i >= LP.rounds.length) {
+        const g = G().parti; if (LP.score > g.best) g.best = LP.score; if (LP.score === 10) g.perfect = 1;
+        if (LP.score >= 8) SFX.fanfare(LP.score === 10);
+        reward(LP.score * 15 + (LP.score === 10 ? 100 : 0));
+        done();
+      }
+      renderParti();
+    }, id === r.right.id ? 900 : 1600);
+  }
+  function renderParti() {
+    const ended = LP.i >= LP.rounds.length;
+    const stats = `<span class="gstat"><small>${T('l_round', Math.min(LP.i + 1, 10), 10)}</small><b>${LP.score}</b></span><span class="gstat"><small>${T('best')}</small><b>${G().parti.best}</b></span>`;
+    if (ended) {
+      area().innerHTML = header('l_name', stats) + `<div class="game-result win"><b>${T('l_total', LP.score)}</b>
+        <span>${LP.rounds.map(r => r.answer === r.right.id ? '🟩' : '🟥').join('')}</span><button class="btn btn-gold" id="l-again">${T('again')}</button></div>`;
+      $('#l-again').addEventListener('click', startParti);
+      return;
+    }
+    const r = LP.rounds[LP.i], c = r.c;
+    area().innerHTML = header('l_name', stats) + `
+      <div class="parti">
+        <div class="parti-card">
+          <span class="parti-img" style="background-image:url('${imgUrl(c.img, 400)}')"></span>
+          <div><b>${esc(nm(c))}</b><small>${esc(window.I18N.subtitle(c))}</small>${c.meta ? `<small>${esc(window.I18N.meta(c))}</small>` : ''}</div>
+        </div>
+        <p class="parti-q">${T('l_q')}</p>
+        <div class="parti-choices">${r.choices.map(p => {
+          const cls = r.answer ? (p.id === r.right.id ? ' is-ok' : p.id === r.answer ? ' is-ko' : ' is-off') : '';
+          return `<button class="parti-choice${cls}" data-p="${p.id}" style="--fam: var(--p-${p.fam})"${r.answer ? ' disabled' : ''}>${esc(p.name)}</button>`;
+        }).join('')}</div>
+      </div>`;
+    area().querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => partiAnswer(b.dataset.p)));
+  }
+
+  const START = { formation: startFormation, belgle: startBelgle, chrono: startChrono, tour: startTour, pom: startPom, qui: startQui, parti: startParti };
   window.GAMES_UI = { renderMenu, TX };
 })();
