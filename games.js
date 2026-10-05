@@ -47,8 +47,12 @@
       t_where: 'Où se trouve…', t_next: 'Manche suivante', t_end: 'Voir le résultat', t_round: (i, n) => `Manche ${i}/${n}`,
       t_dist: (d, p) => `${d} km · ${p} points`, t_total: s => `Score final : ${s} / 10 000`,
       // Plus ou moins
-      p_name: 'Plus ou moins', p_desc: 'Plus ou moins d’habitants ? Plus ou moins connu dans le monde ? Enchaîne les bonnes réponses.',
-      p_more: 'Plus', p_less: 'Moins', p_pop: 'habitants', p_wiki: 'Wikipédias', p_qpop: (b, a) => `Plus ou moins d’habitants à ${b} qu’à ${a} ?`, p_qwiki: (b, a) => `${b} : plus ou moins d’articles Wikipédia que ${a} ?`,
+      p_name: 'Plus ou moins', p_desc: 'Plus ou moins d’habitants ? Plus grande ? Née avant ou après ? Enchaîne les bonnes réponses.',
+      p_pop: 'habitants', p_born: 'naissance',
+      p_mode_pop: 'Habitants', p_mode_area: 'Superficie', p_mode_birth: 'Année de naissance',
+      p_q_pop: (b, a) => `${b} a-t-elle plus ou moins d’habitants que ${a} ?`, p_q_area: (b, a) => `${b} est-elle plus grande ou plus petite que ${a} ?`,
+      p_q_birth: (b, a) => `${b} est né(e) avant ou après ${a} ?`,
+      p_more_pop: '▲ Plus', p_less_pop: '▼ Moins', p_more_area: '▲ Plus grande', p_less_area: '▼ Plus petite', p_more_birth: '▲ Après', p_less_birth: '▼ Avant',
       p_over: n => `Perdu ! Série de ${n}.`, p_streak: n => `Série : ${n}`,
     },
     nl: {
@@ -80,8 +84,12 @@
       t_name: 'Ronde van België', t_desc: 'Klik op de kaart waar de plaats ligt. 10 rondes, maximaal 1.000 punten per ronde.',
       t_where: 'Waar ligt…', t_next: 'Volgende ronde', t_end: 'Resultaat bekijken', t_round: (i, n) => `Ronde ${i}/${n}`,
       t_dist: (d, p) => `${d} km · ${p} punten`, t_total: s => `Eindscore: ${s} / 10.000`,
-      p_name: 'Meer of minder', p_desc: 'Meer of minder inwoners? Meer of minder bekend in de wereld? Hoe lang hou je het vol?',
-      p_more: 'Meer', p_less: 'Minder', p_pop: 'inwoners', p_wiki: 'Wikipedia’s', p_qpop: (b, a) => `Heeft ${b} meer of minder inwoners dan ${a}?`, p_qwiki: (b, a) => `Heeft ${b} meer of minder Wikipedia-artikels dan ${a}?`,
+      p_name: 'Meer of minder', p_desc: 'Meer of minder inwoners? Groter of kleiner? Vroeger of later geboren? Hoe lang hou je het vol?',
+      p_pop: 'inwoners', p_born: 'geboren',
+      p_mode_pop: 'Inwoners', p_mode_area: 'Oppervlakte', p_mode_birth: 'Geboortejaar',
+      p_q_pop: (b, a) => `Heeft ${b} meer of minder inwoners dan ${a}?`, p_q_area: (b, a) => `Is ${b} groter of kleiner dan ${a}?`,
+      p_q_birth: (b, a) => `Is ${b} vóór of na ${a} geboren?`,
+      p_more_pop: '▲ Meer', p_less_pop: '▼ Minder', p_more_area: '▲ Groter', p_less_area: '▼ Kleiner', p_more_birth: '▲ Later', p_less_birth: '▼ Vroeger',
       p_over: n => `Verloren! Reeks van ${n}.`, p_streak: n => `Reeks: ${n}`,
     },
   };
@@ -458,7 +466,27 @@
     const x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(x));
   };
-  const TOUR_POOL = CARDS.filter(c => c.coord && c.cat !== 'edition' && (c.cat !== 'commune' || c.rarity !== 'commune'));
+  // Régions et provinces exclues : un seul point pour une grande zone, impossible à « placer » justement
+  const TOUR_POOL = CARDS.filter(c => c.coord && !['edition', 'region', 'province'].includes(c.cat) && (c.cat !== 'commune' || c.rarity !== 'commune'));
+  // Repères de la carte : provinces (couleur de leur région) et quelques grandes villes.
+  // Le nom d'une ville est masqué quand c'est justement elle qu'il faut placer.
+  const PROV_REGION = { 'Flandre-Occidentale': 'fl', 'Flandre-Orientale': 'fl', Anvers: 'fl', Limbourg: 'fl', 'Brabant flamand': 'fl', Bruxelles: 'bx' };
+  const ringPath = r => 'M' + r.map(p => proj(p).map(v => v.toFixed(1)).join(',')).join('L') + 'Z';
+  const TOUR_CITIES = ['Ville de Bruxelles', 'Bruxelles', 'Anvers', 'Gand', 'Liège', 'Charleroi', 'Namur', 'Bruges', 'Hasselt', 'Mons', 'Arlon', 'Louvain']
+    .map(n => CARDS.find(c => c.cat === 'commune' && c.name === n && c.coord)).filter((c, i, a) => c && a.indexOf(c) === i);
+  function tourBase(hideId) {
+    const provs = (window.BE_PROVINCES || []).map(p => {
+      return `<path d="${p.rings.map(ringPath).join('')}" class="tour-prov r-${PROV_REGION[p.fr] || 'wa'}"/>`;
+    }).join('');
+    // Bord extérieur : les provinces redessinées en trait épais, sous leur remplissage
+    const edge = (window.BE_PROVINCES || []).map(p => `<path d="${p.rings.map(ringPath).join('')}"/>`).join('');
+    const cities = TOUR_CITIES.filter(c => c.id !== hideId).map(c => {
+      const [x, y] = proj(c.coord);
+      const n = nm(c).replace(/^Ville de |^Stad /, '');
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" class="tour-city"/><text x="${(x + 9).toFixed(1)}" y="${(y + 5).toFixed(1)}" class="tour-city-name">${esc(n)}</text>`;
+    }).join('');
+    return `<g class="tour-edge">${edge}</g>` + provs + cities;
+  }
   let TR = null;
   function startTour() {
     played('tour');
@@ -508,7 +536,7 @@
         <div><small>${T('t_where')}</small><b>${esc(nm(c))}</b><span>${esc(window.RDL.catLabel(c.cat))} · ${esc(window.I18N.subtitle(c))}</span></div>
         ${TR.guess ? `<div class="tour-score"><b>${TR.guess.score}</b><small>${T('t_dist', Math.round(TR.guess.d), TR.guess.score)}</small><button class="btn btn-gold" id="t-next">${TR.i === 9 ? T('t_end') : T('t_next')}</button></div>` : ''}
       </div>`}
-      <svg class="tour-map${TR.guess || ended ? '' : ' is-active'}" viewBox="-20 -20 ${W + 40} ${H + 40}"><path d="${path}" class="tour-land"/>${marks}</svg>`;
+      <svg class="tour-map${TR.guess || ended ? '' : ' is-active'}" viewBox="-20 -20 ${W + 40} ${H + 40}">${window.BE_PROVINCES ? '' : `<path d="${path}" class="tour-land"/>`}${tourBase(ended ? null : c.id)}${marks}</svg>`;
     if (!ended && !TR.guess) area().querySelector('.tour-map').addEventListener('click', tourClick);
     $('#t-next')?.addEventListener('click', tourNext);
     $('#t-again')?.addEventListener('click', startTour);
@@ -517,11 +545,17 @@
   // =====================================================================
   // 5. Plus ou moins
   // =====================================================================
-  const num = v => +String(v).replace(/[^\d]/g, '') || 0;
+  // Un critère choisi au départ et gardé toute la série. La carte de droite porte les deux réponses.
+  const statOf = (c, k) => (c.stats.find(([key]) => key === k) || [])[1];
+  const num = v => typeof v === 'number' ? v : parseFloat(String(v).replace(/\s/g, '').replace(',', '.')) || 0;
+  const famous = c => c.cat !== 'politique' || ['rare', 'epique', 'legendaire', 'mythique'].includes(c.rarity);
   const POM = {
-    pop: CARDS.filter(c => c.cat === 'commune' && c.rarity !== 'commune').map(c => ({ c, v: num(c.stats[0][1]) })).filter(x => x.v),
-    wiki: CARDS.filter(c => c.img && c.stats.some(([k]) => k === 'Wikipédias')).map(c => ({ c, v: num(c.stats.find(([k]) => k === 'Wikipédias')[1]) })).filter(x => x.v),
+    pop: CARDS.filter(c => c.cat === 'commune' && c.rarity !== 'commune').map(c => ({ c, v: num(statOf(c, 'Habitants')), show: statOf(c, 'Habitants') })),
+    area: CARDS.filter(c => c.cat === 'commune' && c.rarity !== 'commune').map(c => ({ c, v: num(statOf(c, 'Superficie')), show: statOf(c, 'Superficie') })),
+    birth: CARDS.filter(c => c.img && c.cat !== 'edition' && famous(c) && typeof statOf(c, 'Naissance') === 'number').map(c => ({ c, v: statOf(c, 'Naissance'), show: statOf(c, 'Naissance') })),
   };
+  for (const k of Object.keys(POM)) POM[k] = POM[k].filter(x => x.v);
+  const POM_MODES = Object.keys(POM).filter(k => POM[k].length > 10);
   let P = null;
   function pomPair(mode, keep) {
     const pool = POM[mode];
@@ -529,26 +563,24 @@
     do { b = pick(pool); } while (keep && (b.c.id === keep.c.id || b.v === keep.v));
     return b;
   }
-  function startPom() {
+  function startPom(mode) {
     played('pom');
-    const mode = pick(['pop', 'wiki']);
+    const g = G().pom;
+    mode = POM_MODES.includes(mode) ? mode : POM_MODES.includes(g.mode) ? g.mode : POM_MODES[0];
+    g.mode = mode;
     const a = pick(POM[mode]);
-    P = { mode, a, b: pomPair(mode, a), streak: 0, over: false, reveal: false };
+    P = { mode, a, b: pomPair(mode, a), streak: 0, over: false, reveal: false, ok: null };
     renderPom();
   }
   function pomAnswer(more) {
     if (P.over || P.reveal) return;
     const ok = more ? P.b.v >= P.a.v : P.b.v <= P.a.v;
-    P.reveal = true;
+    P.reveal = true; P.ok = ok;
     renderPom();
     if (ok) {
       P.streak++; SFX.reveal(Math.min(5, 2 + Math.floor(P.streak / 3)));
       if (P.streak % 5 === 0) reward(30);
-      setTimeout(() => {
-        // Changer de mode de temps en temps
-        if (Math.random() < 0.3) { P.mode = P.mode === 'pop' ? 'wiki' : 'pop'; P.a = pick(POM[P.mode]); } else P.a = P.b;
-        P.b = pomPair(P.mode, P.a); P.reveal = false; renderPom();
-      }, 1100);
+      setTimeout(() => { P.a = P.b; P.b = pomPair(P.mode, P.a); P.reveal = false; P.ok = null; renderPom(); }, 1200);
     } else {
       P.over = true; SFX.error();
       const g = G().pom; if (P.streak > g.best) g.best = P.streak;
@@ -556,26 +588,36 @@
     }
   }
   function renderPom() {
-    const unit = P.mode === 'pop' ? T('p_pop') : T('p_wiki');
-    const side = (x, show) => `<div class="pom-card">
+    const m = P.mode;
+    const value = x => `${esc(tvP(x.show))}${m === 'pop' ? ` <em>${T('p_pop')}</em>` : m === 'birth' ? ` <em>${T('p_born')}</em>` : ''}`;
+    const side = (x, guess) => `<div class="pom-card${guess && P.ok === true ? ' is-ok' : ''}${guess && P.ok === false ? ' is-ko' : ''}">
       <span class="pom-img" style="background-image:url('${imgUrl(x.c.img || '', 400)}')"></span>
       <div class="pom-info"><b>${esc(nm(x.c))}</b><small>${esc(window.I18N.subtitle(x.c))}</small>
-      <span class="pom-val">${show ? `${fmt(x.v)} <em>${unit}</em>` : '?'}</span></div></div>`;
-    area().innerHTML = header('p_name', `<span class="gstat"><small>${T('p_streak', '').replace(/\s*$/, '')}</small><b>${P.streak}</b></span><span class="gstat"><small>${T('best')}</small><b>${G().pom.best}</b></span>`) + `
+      ${!guess || P.reveal || P.over ? `<span class="pom-val">${value(x)}</span>`
+        : `<div class="pom-btns"><button class="btn btn-gold" id="p-more">${T('p_more_' + m)}</button><button class="btn btn-line" id="p-less">${T('p_less_' + m)}</button></div>`}
+      </div></div>`;
+    const modes = POM_MODES.map(k => `<button class="chip${k === m ? ' is-active' : ''}" data-pmode="${k}">${T('p_mode_' + k)}</button>`).join('');
+    area().innerHTML = header('p_name', `<span class="gstat"><small>${T('p_streak', '').replace(/\s*:?\s*$/, '')}</small><b>${P.streak}</b></span><span class="gstat"><small>${T('best')}</small><b>${G().pom.best}</b></span>`) + `
+      <div class="pom-modes">${modes}</div>
+      <p class="pom-q">${esc(T('p_q_' + m, nm(P.b.c), nm(P.a.c)))}</p>
       <div class="pom">
-        ${side(P.a, true)}
-        <div class="pom-mid">
-          <b class="pom-vs">VS</b>
-          <p>${esc(T(P.mode === 'pop' ? 'p_qpop' : 'p_qwiki', nm(P.b.c), nm(P.a.c)))}</p>
-          ${P.over ? `<div class="game-result lose"><b>${T('p_over', P.streak)}</b><button class="btn btn-gold" id="p-again">${T('again')}</button></div>`
-            : `<div class="pom-btns"><button class="btn btn-gold" id="p-more">▲ ${T('p_more')}</button><button class="btn btn-line" id="p-less">▼ ${T('p_less')}</button></div>`}
-        </div>
-        ${side(P.b, P.reveal || P.over)}
-      </div>`;
+        ${side(P.a, false)}
+        <b class="pom-vs">VS</b>
+        ${side(P.b, true)}
+      </div>
+      ${P.over ? `<div class="game-result lose"><b>${T('p_over', P.streak)}</b><button class="btn btn-gold" id="p-again">${T('again')}</button></div>` : ''}`;
     $('#p-more')?.addEventListener('click', () => pomAnswer(true));
     $('#p-less')?.addEventListener('click', () => pomAnswer(false));
-    $('#p-again')?.addEventListener('click', startPom);
+    $('#p-again')?.addEventListener('click', () => startPom(P.mode));
+    area().querySelectorAll('[data-pmode]').forEach(b => b.addEventListener('click', () => { if (b.dataset.pmode !== P.mode || P.over) startPom(b.dataset.pmode); }));
   }
+  const tvP = v => typeof v === 'number' ? String(v) : window.I18N.tv(v);
+  // Flèches du clavier : ↑ plus, ↓ moins (seulement quand le jeu est affiché)
+  document.addEventListener('keydown', e => {
+    if (!P || P.over || P.reveal || !document.querySelector('#p-more') || e.target.closest?.('input, textarea')) return;
+    if (e.key === 'ArrowUp') { e.preventDefault(); pomAnswer(true); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); pomAnswer(false); }
+  });
 
   const START = { formation: startFormation, belgle: startBelgle, chrono: startChrono, tour: startTour, pom: startPom };
   window.GAMES_UI = { renderMenu, TX };
