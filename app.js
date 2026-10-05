@@ -211,6 +211,7 @@
         s.claimed ||= {}; s.ach ||= {}; s.pity ||= 0;
         s.trade ||= {}; s.trade.pending ||= {}; s.trade.done ||= {};
         s.daily ||= { last: null, streak: 0 };
+        if (s.achSeen === undefined) s.achSeen = Date.now(); // parties d'avant : rien n'est « nouveau »
         s.stats = { ...freshStats(), ...(s.stats || {}) };
         if (!s.stats.packs && s.packs) s.stats.packs = s.packs;
         return s;
@@ -1001,36 +1002,54 @@
       if (a.value() >= a.target) { state.ach[a.id] = Date.now(); state.coins += a.reward; unlocked.push(a); }
     }
     if (!unlocked.length) return;
-    save(); renderWallet();
+    save(); renderWallet(); renderAchDot();
     achQueue.push(...unlocked);
     if (!achShowing) showNextAch();
-    if ($('#view-ach').classList.contains('is-active')) renderAch();
+    if ($('#view-ach').classList.contains('is-active')) { renderAch(); markAchSeen(); }
   }
+  function markAchSeen() { state.achSeen = Date.now(); save(); renderAchDot(); }
   function showNextAch() {
     const a = achQueue.shift();
     const el = $('#ach-toast');
     if (!a) { achShowing = false; el.classList.remove('is-on'); return; }
     achShowing = true;
-    el.innerHTML = `<span class="medal">${achIcon(a.icon)}</span><span class="ach-toast-text"><small>${t('achUnlocked')}</small><b>${esc(a.title[L()])}</b></span><em>+${fmt(a.reward)}</em>`;
+    el.innerHTML = `<span class="medal">${achIcon(a.icon)}</span><span class="ach-toast-text"><small>${t('achUnlocked')}</small><b>${esc(a.title[L()])}</b><span>${esc(a.desc[L()])}</span></span><em>+${fmt(a.reward)}</em>`;
     el.classList.remove('is-on'); void el.offsetWidth; el.classList.add('is-on');
     SFX.achievement();
     setTimeout(showNextAch, 3200);
   }
   const achIcon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">${window.ACH_ICONS[name] || window.ACH_ICONS.star}</svg>`;
+  // Succès débloqués depuis la dernière visite de l'onglet (state.achSeen) : point sur l'onglet et étiquette « nouveau »
+  const isUnseen = a => state.ach[a.id] > (state.achSeen || 0);
+  function renderAchDot() { $('.tab[data-view="ach"]').classList.toggle('has-dot', achievements.list.some(isUnseen)); }
+  function ago(ts) {
+    if (!(ts > 1e12)) return '';
+    const rtf = new Intl.RelativeTimeFormat(L() === 'nl' ? 'nl-BE' : 'fr-BE', { numeric: 'auto' });
+    const s = Math.round((ts - Date.now()) / 1000);
+    for (const [u, n] of [['day', 86400], ['hour', 3600], ['minute', 60]]) if (Math.abs(s) >= n) return rtf.format(Math.round(s / n), u);
+    return rtf.format(0, 'minute');
+  }
   function renderAch() {
     const all = achievements.list;
     const unlocked = all.filter(a => state.ach[a.id]);
+    const recent = [...unlocked].sort((a, b) => state.ach[b.id] - state.ach[a.id]).slice(0, 6);
     const coins = unlocked.reduce((s, a) => s + a.reward, 0);
     $('#ach-summary').textContent = t('achSummary', unlocked.length, all.length, fmt(coins));
     $('#ach-bar').style.width = (unlocked.length / all.length * 100).toFixed(1) + '%';
-    $('#ach-list').innerHTML = Object.keys(achievements.GROUPS).map(g => {
+    const recentHTML = recent.length ? `<section class="ach-group ach-recent"><h2>${t('achRecent')}</h2><div class="ach-grid">${recent.map(a => `
+      <div class="ach is-got${isUnseen(a) ? ' is-new' : ''}">
+        <span class="medal">${achIcon(a.icon)}</span>
+        <div class="ach-body"><b>${esc(a.title[L()])}${isUnseen(a) ? `<i class="ach-new">${t('achNew')}</i>` : ''}</b><p>${esc(a.desc[L()])}</p><small class="ach-prog">${esc(ago(state.ach[a.id]))}</small></div>
+        <span class="price"><span class="coin"></span>${fmt(a.reward)}</span>
+      </div>`).join('')}</div></section>` : '';
+    $('#ach-list').innerHTML = recentHTML + Object.keys(achievements.GROUPS).map(g => {
       const items = all.filter(a => a.group === g);
       const done = items.filter(a => state.ach[a.id]).length;
       return `<section class="ach-group"><h2>${achievements.GROUPS[g][L()]} <small>${done}/${items.length}</small></h2><div class="ach-grid">${items.map(a => {
         const got = !!state.ach[a.id];
         const hidden = a.secret && !got;
         const v = Math.min(a.value(), a.target);
-        return `<div class="ach${got ? ' is-got' : ''}${hidden ? ' is-secret' : ''}">
+        return `<div class="ach${got ? ' is-got' : ''}${hidden ? ' is-secret' : ''}${got && isUnseen(a) ? ' is-new' : ''}">
           <span class="medal">${hidden ? '<b>?</b>' : achIcon(a.icon)}</span>
           <div class="ach-body">
             <b>${hidden ? t('secret') : esc(a.title[L()])}</b>
@@ -1150,7 +1169,7 @@
     if (view === 'binder') renderBinder();
     if (view === 'shop') renderShop();
     if (view === 'series') renderSeries();
-    if (view === 'ach') renderAch();
+    if (view === 'ach') { renderAch(); markAchSeen(); }
     if (view === 'games') window.GAMES_UI?.renderMenu();
     if (view === 'trade') window.TRADE_UI?.render();
     window.scrollTo(0, 0);
@@ -1178,4 +1197,5 @@
   renderWallet();
   renderShop();
   checkAchievements();
+  renderAchDot();
 })();

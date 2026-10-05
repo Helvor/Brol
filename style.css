@@ -684,7 +684,8 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   background: radial-gradient(circle at 35% 30%, #fff3c4, #e2b33c 50%, #9c7112); }
 .ach-toast .medal svg { width: 24px; height: 24px; }
 .ach-toast-text small { display: block; font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #e2b33c; }
-.ach-toast-text b { font-family: var(--display); font-weight: 800; font-size: 20px; text-transform: uppercase; }
+.ach-toast-text b { display: block; font-family: var(--display); font-weight: 800; font-size: 20px; text-transform: uppercase; line-height: 1.05; }
+.ach-toast-text > span { display: block; font-size: 13px; color: #c9c7c0; margin-top: 2px; }
 .ach-toast em { font-style: normal; font-family: var(--mono); font-weight: 600; color: #f6d478; margin-left: 6px; }
 
 @media (max-width: 760px) {
@@ -883,8 +884,8 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .t-x:hover { border-color: var(--danger); color: var(--danger); }
 .d-normal { box-shadow: inset 0 0 0 2px var(--ink-2); }
 
-.t-tray { position: sticky; top: 72px; z-index: 5; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 22px; align-items: end; padding: 14px 16px; margin-bottom: 24px;
-  border: 1.5px solid var(--ink); border-radius: 6px; background: var(--bg-2); box-shadow: 0 12px 30px -20px rgba(0, 0, 0, .5); }
+.t-tray { position: sticky; top: 68px; z-index: 30; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 22px; align-items: end; padding: 14px 16px; margin-bottom: 24px;
+  border: 1.5px solid var(--ink); border-radius: 6px; background: var(--bg-2); box-shadow: 0 -10px 0 var(--bg), 0 12px 30px -20px rgba(0, 0, 0, .5); }
 .t-pickers { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 32px; align-items: start; }
 .t-pickers .small { margin: -6px 0 12px; }
 .t-dups, .t-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px 12px; }
@@ -922,7 +923,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   .t-offer { flex-direction: column; align-items: stretch; }
   .t-offer-btns { flex-direction: row; }
   .t-offer-sides, .t-pickers, .t-incoming, .t-qr-wrap { grid-template-columns: 1fr; gap: 18px; }
-  .t-tray { top: 62px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; padding: 10px 12px; }
+  .t-tray { top: 62px; box-shadow: 0 -10px 0 var(--bg), 0 12px 30px -20px rgba(0, 0, 0, .5); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; padding: 10px 12px; }
   .t-tray-go { grid-column: 1 / -1; }
   .t-tray-go .btn { width: 100%; justify-content: center; }
   .t-tray .t-item { padding: 4px 0; }
@@ -1037,3 +1038,11 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 @media (max-width: 760px) {
   .daily-dlg[open] { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
 }
+
+/* Succès : derniers débloqués et « nouveau » */
+.ach-recent .ach { opacity: 1; }
+.ach.is-new { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.ach-new { display: inline-block; margin-left: 8px; padding: 1px 6px; border-radius: 2px; vertical-align: 2px;
+  font-style: normal; font-family: var(--display); font-weight: 700; font-size: 11px; letter-spacing: .08em; background: var(--gold-hi); color: #1a1300; }
+/* Dans la grille des doublons à échanger, le compteur reste dans la carte (il ne déborde plus sous la barre) */
+.t-dups .count-badge { top: 4px; right: 4px; }
