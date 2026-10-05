@@ -805,6 +805,26 @@ for (const c of altTargets) {
 }
 console.log(`Photos alternatives : ${altFound} / ${altTargets.length}`);
 
+// ---------- Nettoyage avant le calcul des raretés ----------
+// Pas d'image libre → pas de carte (sauf les événements, qui n'en ont jamais).
+// Une même entité dans deux catégories (ex. Ulla Werbrouck, judokate et députée) : une seule carte,
+// celle hors Politique, car l'identifiant sert de clé dans les sauvegardes.
+{
+  const keep = new Map();
+  for (const c of cards) {
+    if (!c.img && c.cat !== 'evenement') { console.warn("Pas d'image libre, ignoré :", c.name, `(${c.cat})`); continue; }
+    const prev = keep.get(c.id);
+    if (prev) {
+      const drop = prev.cat === 'politique' ? prev : c;
+      console.warn('Doublon, carte gardée en', drop === prev ? c.cat : prev.cat, ':', c.name);
+      if (drop === prev) keep.set(c.id, c);
+      continue;
+    }
+    keep.set(c.id, c);
+  }
+  cards.splice(0, cards.length, ...cards.filter(c => keep.get(c.id) === c));
+}
+
 // ---------- Rareté relative, catégorie par catégorie ----------
 // Les cartes de chaque catégorie sont classées par notoriété puis réparties selon les mêmes proportions.
 // Ainsi chaque paquet contient toutes les raretés (mythiques compris) et les taux affichés sont justes.
