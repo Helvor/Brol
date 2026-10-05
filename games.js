@@ -141,6 +141,7 @@
   const done = () => { API.save(); API.checkAchievements(); };
 
   // ---------- Menu ----------
+  let active = null; // jeu affiché (voir isActive plus bas)
   const GAMES = [
     { id: 'formation', icon: 'crown', name: 'f_name', desc: 'f_desc', best: g => g.formation.best ? `${g.formation.best} ${T('f_days').toLowerCase()}` : '—' },
     { id: 'belgle', icon: 'star', name: 'b_name', desc: 'b_desc', best: g => g.belgle.day === todayKey() && g.belgle.done ? (g.belgle.todayWon ? '✓' : '✗') : '—' },
@@ -153,6 +154,7 @@
   const icon = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">${window.ACH_ICONS[n]}</svg>`;
 
   function renderMenu() {
+    active = null;
     const g = G();
     $('#games-title').textContent = T('title');
     $('#games-intro').textContent = T('intro').replace('{cap}', fmt(DAILY_CAP));
@@ -166,10 +168,13 @@
   function header(nameKey, extra = '') {
     return `<div class="game-head"><button class="btn btn-line game-back">${T('back')}</button><h2>${T(nameKey)}</h2><div class="game-extra">${extra}</div></div>`;
   }
+  // Jeu affiché : les mises à jour différées (setTimeout) d'un jeu quitté entre-temps ne doivent pas
+  // redessiner l'écran par-dessus le jeu suivant
+  const isActive = id => active === id && $('#view-games').classList.contains('is-active');
   document.addEventListener('click', e => {
-    if (e.target.closest('.game-back')) { SFX.tick(); renderMenu(); window.scrollTo(0, 0); return; }
+    if (e.target.closest('.game-back')) { SFX.tick(); active = null; renderMenu(); window.scrollTo(0, 0); return; }
     const tile = e.target.closest('.game-tile[data-game]');
-    if (tile) { SFX.open(); START[tile.dataset.game](); window.scrollTo(0, 0); }
+    if (tile) { SFX.open(); active = tile.dataset.game; START[tile.dataset.game](); window.scrollTo(0, 0); }
   });
 
   // =====================================================================
@@ -598,11 +603,11 @@
     if (ok) {
       P.streak++; SFX.reveal(Math.min(5, 2 + Math.floor(P.streak / 3)));
       if (P.streak % 5 === 0) reward(30);
-      setTimeout(() => { P.a = P.b; P.b = pomPair(P.mode, P.a); P.reveal = false; P.ok = null; renderPom(); }, 1200);
+      setTimeout(() => { if (!isActive('pom')) return; P.a = P.b; P.b = pomPair(P.mode, P.a); P.reveal = false; P.ok = null; renderPom(); }, 1200);
     } else {
       P.over = true; SFX.error();
       const g = G().pom; if (P.streak > g.best) g.best = P.streak;
-      setTimeout(() => { reward(P.streak * 8); done(); renderPom(); }, 900);
+      setTimeout(() => { reward(P.streak * 8); done(); if (isActive('pom')) renderPom(); }, 900);
     }
   }
   function renderPom() {
@@ -753,6 +758,7 @@
     if (id === r.right.id) { LP.score++; SFX.reveal(3); } else SFX.error();
     renderParti();
     setTimeout(() => {
+      if (!isActive('parti') || LP.rounds[LP.i] !== r) return; // jeu quitté ou relancé entre-temps
       LP.i++;
       if (LP.i >= LP.rounds.length) {
         const g = G().parti; if (LP.score > g.best) g.best = LP.score; if (LP.score === 10) g.perfect = 1;
