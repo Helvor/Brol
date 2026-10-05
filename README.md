@@ -17,6 +17,7 @@ Puis ouvrir http://localhost:5173. La collection est sauvegardée dans le naviga
 - Garantie anti-malchance : une légendaire ou mieux au plus tard tous les 40 paquets (`PITY` dans `app.js`).
 - Séries thématiques et 65 succès (`achievements.js`), dont des succès secrets.
 - Onglet Jeux (`games.js`) : Formation de gouvernement, Belgle (carte du jour), Chronologie, Tour de Belgique, Plus ou moins. Gains plafonnés à 1 500 pièces par jour.
+- Onglet Échanges (`trade.js`) : échange de doublons entre amis par QR code ou par lien, sans serveur. QR codes générés et lus dans le navigateur (`vendor/` : qrcode-generator, MIT ; jsQR, Apache-2.0).
 - Sons synthétisés par le navigateur (`sfx.js`), sans fichier audio. Bouton pour couper le son.
 
 ## Régénérer les cartes

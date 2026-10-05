@@ -4,7 +4,7 @@
 
   const UI = {
     fr: {
-      'tab.shop': 'Paquets', 'tab.binder': 'Album', 'tab.series': 'Séries', 'tab.ach': 'Succès', 'tab.games': 'Jeux',
+      'tab.shop': 'Paquets', 'tab.binder': 'Album', 'tab.series': 'Séries', 'tab.ach': 'Succès', 'tab.games': 'Jeux', 'tab.trade': 'Échanges',
       'shop.title': 'Paquets', 'binder.title': 'Album', 'series.title': 'Séries', 'ach.title': 'Succès',
       'search': 'Rechercher', 'owned': 'Possédées', 'specials': 'Versions spéciales', 'sellAll': 'Vendre les doublons',
       'allRarities': 'Toutes les raretés', 'all': 'Tout', 'liveGov': 'Gouvernement actuel',
@@ -39,7 +39,7 @@
       'gov': 'Gouv.', 'live': 'en fonction', 'leg': n => `${n}ᵉ législature`,
     },
     nl: {
-      'tab.shop': 'Pakjes', 'tab.binder': 'Album', 'tab.series': 'Reeksen', 'tab.ach': 'Prestaties', 'tab.games': 'Spellen',
+      'tab.shop': 'Pakjes', 'tab.binder': 'Album', 'tab.series': 'Reeksen', 'tab.ach': 'Prestaties', 'tab.games': 'Spellen', 'tab.trade': 'Ruilen',
       'shop.title': 'Pakjes', 'binder.title': 'Album', 'series.title': 'Reeksen', 'ach.title': 'Prestaties',
       'search': 'Zoeken', 'owned': 'In bezit', 'specials': 'Speciale versies', 'sellAll': 'Dubbels verkopen',
       'allRarities': 'Alle zeldzaamheden', 'all': 'Alles', 'liveGov': 'Huidige regering',

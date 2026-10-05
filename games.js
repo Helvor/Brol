@@ -142,7 +142,7 @@
   }
   document.addEventListener('click', e => {
     if (e.target.closest('.game-back')) { SFX.tick(); renderMenu(); window.scrollTo(0, 0); return; }
-    const tile = e.target.closest('.game-tile');
+    const tile = e.target.closest('.game-tile[data-game]');
     if (tile) { SFX.open(); START[tile.dataset.game](); window.scrollTo(0, 0); }
   });
 
