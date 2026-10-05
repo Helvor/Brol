@@ -493,12 +493,13 @@
       // Si la rareté tirée n'existe pas dans ce paquet, on prend la plus proche (vers le bas d'abord).
       // Si elle existe mais que toutes ses cartes sont déjà sorties dans ce paquet (petits paquets, ex. Tour des
       // Flandres), on accepte un doublon plutôt que de changer de rareté : les taux affichés restent exacts.
+      // Sauf pour le paquet Nouveautés, qui promet cinq cartes différentes absentes de l'album.
       for (let d = 0; d < RARITIES.length && !list.length; d++) {
         for (const r of [rank - d, rank + d]) {
           if (r < 0 || r >= RARITIES.length || list.length) continue;
           const same = pool.filter(c => c.rarity === RARITIES[r].id);
           list = same.filter(c => !taken.has(c.id));
-          if (!list.length) list = same;
+          if (!list.length && !pack.missing) list = same; // jamais de doublon dans le paquet Nouveautés
         }
       }
       const card = list[Math.floor(Math.random() * list.length)];
