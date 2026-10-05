@@ -272,6 +272,41 @@
     </svg>`;
   }
 
+  // Motifs des paquets spéciaux, dessinés dans le corps du paquet (300 × 430), derrière le sceau
+  const star = (x, y, r) => { let d = ''; for (let i = 0; i < 10; i++) { const a = Math.PI / 5 * i - Math.PI / 2, q = i % 2 ? r * .45 : r; d += (i ? 'L' : 'M') + (x + q * Math.cos(a)).toFixed(1) + ' ' + (y + q * Math.sin(a)).toFixed(1); } return d + 'Z'; };
+  const scatter = (n, seed, f) => { let v = seed; const rnd = () => (v = (v * 9301 + 49297) % 233280) / 233280; return Array.from({ length: n }, (_, i) => f(rnd() * 300, 30 + rnd() * 370, rnd(), i)).join(''); };
+  const rays = (n, c1, c2, op) => Array.from({ length: n }, (_, i) => { const a = 2 * Math.PI * i / n, b = 2 * Math.PI * (i + .5) / n, R0 = 420;
+    return `<path d="M150 202L${(150 + R0 * Math.cos(a)).toFixed(0)} ${(202 + R0 * Math.sin(a)).toFixed(0)}L${(150 + R0 * Math.cos(b)).toFixed(0)} ${(202 + R0 * Math.sin(b)).toFixed(0)}Z" fill="${i % 2 ? c2 : c1}" opacity="${op}"/>`; }).join('');
+  const PACK_ART = {
+    prestige: (k, p) => `${Array.from({ length: 34 }, (_, i) => `<circle cx="150" cy="202" r="${14 + i * 8}" fill="none" stroke="${p.metal[1]}" stroke-width=".6" opacity=".16"/>`).join('')}
+      ${rays(36, p.metal[1], 'transparent', .07)}
+      <rect x="10" y="70" width="280" height="330" fill="none" stroke="${p.metal[1]}" stroke-width="1.4" opacity=".7"/>
+      <rect x="15" y="75" width="270" height="320" fill="none" stroke="${p.metal[1]}" stroke-width=".6" opacity=".55"/>
+      ${[120, 150, 180].map(x => `<path d="${star(x, 96, 7)}" fill="${p.metal[1]}"/>`).join('')}`,
+    'saint-nicolas': (k, p) => `${scatter(26, 7, (x, y, r) => `<path d="${star(x, y, 3 + r * 5)}" fill="${p.metal[0]}" opacity="${(.25 + r * .45).toFixed(2)}"/>`)}
+      <g opacity=".22" fill="${p.metal[1]}"><path d="M150 70c-34 22-52 60-52 100v118h104V170c0-40-18-78-52-100z"/><path d="M150 70c-14 30-16 70-6 110" stroke="${p.body[0]}" stroke-width="4" fill="none"/>
+      <rect x="143" y="130" width="14" height="70" fill="${p.body[0]}"/><rect x="125" y="150" width="50" height="14" fill="${p.body[0]}"/></g>`,
+    carnaval: (k, p) => `<defs><pattern id="hq${k}" width="40" height="60" patternUnits="userSpaceOnUse"><path d="M20 0L40 30L20 60L0 30Z" fill="${p.metal[1]}" opacity=".16"/><path d="M0 0L20 0L0 30ZM40 0L20 0L40 30ZM0 60L20 60L0 30ZM40 60L20 60L40 30Z" fill="#ffd23f" opacity=".1"/></pattern></defs>
+      <rect x="0" y="18" width="300" height="394" fill="url(#hq${k})"/>
+      ${scatter(40, 3, (x, y, r, i) => i % 3 ? `<rect x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="6" height="3" fill="${['#ffd23f', '#5fe0ff', '#ff5fa8'][i % 3]}" transform="rotate(${(r * 180).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})" opacity=".8"/>` : `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="2.2" fill="#fff" opacity=".7"/>`)}`,
+    ronde: (k, p) => `<defs><pattern id="cb${k}" width="36" height="24" patternUnits="userSpaceOnUse"><rect x="2" y="2" width="32" height="9" rx="4" fill="#fff" opacity=".08"/><rect x="-16" y="14" width="32" height="9" rx="4" fill="#fff" opacity=".08"/><rect x="20" y="14" width="32" height="9" rx="4" fill="#fff" opacity=".08"/></pattern></defs>
+      <rect x="0" y="18" width="300" height="394" fill="url(#cb${k})"/>
+      <path d="M0 300L300 250L300 270L0 320Z" fill="${p.metal[1]}" opacity=".85"/><path d="M0 320L300 270L300 276L0 326Z" fill="#111" opacity=".9"/>`,
+    iris: (k, p) => `<g transform="translate(150 215) scale(1.25)" fill="#f2c400" opacity=".28">
+      <path d="M0-95C22-70 22-35 0-10C-22-35-22-70 0-95Z"/><path d="M-6-8C-50-30-90-10-95 30C-60 40-25 25-6-8Z"/><path d="M6-8C50-30 90-10 95 30C60 40 25 25 6-8Z"/>
+      <path d="M-4 0C-30 30-30 70-10 95L10 95C30 70 30 30 4 0Z" opacity=".7"/><rect x="-40" y="-14" width="80" height="12" rx="6"/></g>`,
+    'onze-juillet': (k, p) => `<defs><pattern id="lz${k}" width="30" height="40" patternUnits="userSpaceOnUse"><path d="M15 0L30 20L15 40L0 20Z" fill="#f2c400" opacity=".14"/></pattern></defs>
+      <rect x="0" y="18" width="300" height="394" fill="url(#lz${k})"/>
+      <path d="M-20 360L320 120L320 160L-20 400Z" fill="#f2c400" opacity=".2"/>`,
+    'fete-nationale': (k, p) => `<rect x="0" y="18" width="100" height="394" fill="#000" opacity=".55"/><rect x="100" y="18" width="100" height="394" fill="#f2c400" opacity=".35"/><rect x="200" y="18" width="100" height="394" fill="#e1001e" opacity=".45"/>
+      <path d="M130 96L135 80L143 90L150 76L157 90L165 80L170 96Z" fill="${p.metal[0]}" opacity=".9"/><rect x="130" y="96" width="40" height="5" fill="${p.metal[0]}" opacity=".9"/>`,
+    wallonie: (k, p) => rays(28, '#f2c400', '#c8102e', .22),
+    sciences: (k, p) => `<defs><pattern id="gp${k}" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0H0V12" fill="none" stroke="${p.metal[1]}" stroke-width=".4" opacity=".25"/></pattern></defs>
+      <rect x="0" y="18" width="300" height="394" fill="url(#gp${k})"/>
+      <g fill="none" stroke="${p.metal[1]}" stroke-width="1.6" opacity=".35">${[0, 60, 120].map(a => `<ellipse cx="150" cy="202" rx="128" ry="44" transform="rotate(${a} 150 202)"/>`).join('')}</g>
+      ${[[278, 202], [86, 91], [86, 313]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="${p.metal[0]}" opacity=".8"/>`).join('')}`,
+  };
+
   function packSVG(p) {
     const k = ++uid;
     const zig = (y0, dir) => {
@@ -289,6 +324,7 @@
       </defs>
       <rect x="0" y="18" width="300" height="394" fill="url(#b${k})"/>
       <rect x="0" y="18" width="300" height="394" fill="url(#l${k})"/>
+      ${PACK_ART[p.id] ? `<clipPath id="c${k}"><rect x="0" y="18" width="300" height="394"/></clipPath><g clip-path="url(#c${k})">${PACK_ART[p.id](k, p)}</g>` : ''}
       <path d="${zig(18, 1)}" fill="url(#m${k})"/><path d="${zig(18, 1)}" fill="url(#r${k})"/>
       <path d="${zig(412, -1)}" fill="url(#m${k})"/><path d="${zig(412, -1)}" fill="url(#r${k})"/>
       <line x1="10" y1="62" x2="290" y2="62" stroke="${p.metal[1]}" stroke-width="1" stroke-dasharray="5 5" opacity=".6"/>
@@ -297,10 +333,10 @@
       <text x="282" y="92" text-anchor="end" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="11" fill="${p.metal[1]}" opacity=".8">${t('cards5')}</text>
       <g transform="translate(60 112)">${sealSVG({ ring: t('seal'), center: p.big, color: p.metal[1], size: 180, px: 180, centerSize: p.big.length > 2 ? 52 : 66 })}</g>
       <text x="150" y="334" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="600" font-size="13" letter-spacing="4" fill="${p.metal[1]}">${esc(pl(p, 'kicker').toUpperCase())}</text>
-      <text x="150" y="374" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="${title.length > 10 ? 38 : 44}" letter-spacing="1" fill="url(#m${k})">${esc(title)}</text>
+      <text x="150" y="374" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="${title.length > 13 ? 34 : title.length > 10 ? 38 : 44}" letter-spacing="1" fill="url(#m${k})"${title.length > 10 ? ' textLength="268" lengthAdjust="spacingAndGlyphs"' : ''}>${esc(title)}</text>
     </svg>`;
   }
-  const packVisual = p => `<div class="pack-visual">${packSVG(p)}<div class="sheen"></div></div>`;
+  const packVisual = p => `<div class="pack-visual${p.special ? ' is-foil' : ''}">${packSVG(p)}<div class="sheen"></div>${p.special ? '<div class="foil"></div>' : ''}</div>`;
   const cardBack = () => `<div class="card-back">${sealSVG({ ring: t('backSeal'), center: 'BROL', color: '#e2b33c', size: 200, centerSize: 52 })}<div class="back-foot">${t('back')}</div></div>`;
 
   // ---------- Rendu d'une carte ----------
