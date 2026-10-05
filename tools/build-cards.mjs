@@ -997,9 +997,39 @@ async function commonsApi(params) {
 const BAD_FILE = /signat|unterschrift|handtekening|firma|podpis|autograph|hommage|homenaje|buste|bust|statue|standbeeld|sculpt|beeld|plaque|gedenk|memorial|grave|graf|tomb|cimeti|begraaf|friedhof|cemetery|rue |straat|street|maison|huis|house|school|[eé]cole|stamp|timbre|postzegel|coin|munt|banknote|billet|medal|m[eé]daille|logo|coat|wapen|blason|map|carte|poster|affiche|cover|pochette|book|livre|boek|mural|graffiti|\.svg$|\.tif/i;
 // Nature du fichier (P31) refusée : signature, sculpture, statue, buste, tombe, plaque, timbre, pièce, billet
 const BAD_KIND = new Set(['Q188675', 'Q860861', 'Q179700', 'Q241045', 'Q173387', 'Q721747', 'Q37930', 'Q41207', 'Q47524', 'Q4006']);
-const ALT_SKIP = new Set([]); // fichiers vérifiés à l'œil et refusés malgré tout (photo d'une autre personne…)
+// Fichiers vérifiés à l'œil et refusés malgré tout : personne perdue dans une foule, objet, statue, document…
+const ALT_SKIP = new Set([
+  "Van links naar rechts Joseph Bech , Dr Drees en Achilk N van Acker, Bestanddeelnr 909-3036.jpg",
+  "CamilleHuysmans1966.jpg",
+  "Benelux Regeringsconferentie in Congresgebouw, Den Haag links minister Luns en r, Bestanddeelnr 922-3494.jpg",
+  "Flickr - europeanpeoplesparty - EPP debates on EU Constitution - Paris 8-9 March 2005 (41).jpg",
+  "Pact van Brussel. Paul-Henri Spaak spreekt, Bestanddeelnr 902-6330.jpg",
+  "Flickr - europeanpeoplesparty - EPP Political Bureau 9 November 2006 (104).jpg",
+  "Belgische Minister President G. Eyskens en minister van Buitenlandse Zaken P. Ha, Bestanddeelnr 922-0717.jpg",
+  "Hubert Pierlot Arthur Vanderpoorten Leopold III Paul-Henri Spaak generaal Henri Denis Kasteel van Wijnendale 25 mei 1940.jpg",
+  "Calotte UCL 1921.jpg",
+  "Bilateral Meeting Belgium (011110505) (51497184405).jpg",
+  "Leopold I 26 June 1831.png",
+  "Albert de Belgique (1875-1934), prince de Belgique, duc de Saxe, prince de Saxe-Cobourg-Gotha et héritier présomptif de , ND6644.jpg",
+  "Llegada de los reyes de Bélgica, Balduino y Fabiola al muelle de San Sebastián (13 de 14) - Fondo Marín-Kutxa Fototeka.jpg",
+  "Secretary Kerry Stands With Belgian King Philippe at the Royal Palace in Brussels (26025841495).jpg",
+  "Opdracht Uitgeverij Bruna te Utrecht, Georges Simenon bij aankomst Schiphol, Bestanddeelnr 917-7512.jpg",
+  "Victor Horta.jpg",
+  "Willy Vandersteen with Spike and Suzy in a shopping mall in Hasselt.jpg",
+  "Grab Marc Sleen.jpg",
+  "Lost Frequencies - Superbloom Festival 2023 - DSC3536.jpg",
+  "Wezembeek-Oppem Etterbeek Otlet (1) - 316438 - onroerenderfgoed.jpg",
+  "Portret van de cartograaf Gerardus Mercator, RP-P-OB-62.847.jpg",
+  "UBH Portr BS Vesalius A 1514 8.jpg",
+  "With Prigogine.jpg",
+  "Edouard van Beneden in front of the Aquarium et musée de zoologie.jpg",
+  "Lieven Gevaert (tugboat, 1995) - IMO 9120140, Leopoldlock, Port of Antwerp, pic8.JPG",
+]);
+// Personnes sans photo alternative convenable sur Commons (vérifié à l'œil) : Achille van Acker, Gaston Eyskens, Wilfried Martens, Annelies Verlinden, Albert Ier, Baudouin Ier, Georges Simenon, Lost Frequencies, Paul Otlet, Gérard Mercator
+const ALT_NONE = new Set(["Q14997", "Q14999", "Q313809", "Q99767918", "Q55008046", "Q12976", "Q128790", "Q18857432", "Q1868", "Q6353"]);
 let altFound = 0;
 for (const c of altTargets) {
+  if (ALT_NONE.has(c.id)) continue;
   const found = await commonsApi({ action: 'query', list: 'search', srnamespace: '6', srlimit: '15', srsearch: `haswbstatement:P180=${c.id} filetype:bitmap` });
   const hits = (found.query?.search || []).filter(h => !BAD_FILE.test(h.title) && h.title.replace(/^File:/, '') !== c.img && !ALT_SKIP.has(h.title.replace(/^File:/, '')));
   if (!hits.length) continue;
