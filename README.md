@@ -44,6 +44,8 @@ Versions spéciales (Holo, Plein cadre, Dorée) : tirées pour chaque carte, ind
 Taux de tirage, versions spéciales, prix des paquets, bonus, paquets gratuits et valeurs de revente : en haut de `app.js`.
 Après un changement, `node tools/simulate.mjs [minutes] [parties]` mesure l'effet sur l'économie (pièces gagnées au fil du temps par un joueur normal et par un joueur qui achète pour revendre).
 
+`node tools/check-odds.mjs [paquets]` ouvre 100 000 paquets de chaque type avec le vrai code du jeu et compare les taux obtenus aux taux affichés (raretés des cartes 1 à 4 et de la 5ᵉ, versions spéciales, versions d'événement, cartes exclusives) ; il vérifie aussi la garantie anti-malchance. Il échoue au moindre écart que le hasard n'explique pas.
+
 Carte du Tour de Belgique : contour simplifié © contributeurs OpenStreetMap (`data/belgium.js`).
 
 Images : Wikimedia Commons, chargées en ligne. Le lien « Crédit de l'image » de chaque carte mène à l'auteur et à la licence.

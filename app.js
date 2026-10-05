@@ -487,11 +487,15 @@
       const last = i === PACK_SIZE - 1;
       const rank = R[pickRarity(last ? (forceLegend ? R.legendaire.rank : R[pack.last || 'rare'].rank) : 0)].rank;
       let list = [];
-      // Si la rareté tirée n'existe pas dans ce paquet, on prend la plus proche (vers le bas d'abord)
+      // Si la rareté tirée n'existe pas dans ce paquet, on prend la plus proche (vers le bas d'abord).
+      // Si elle existe mais que toutes ses cartes sont déjà sorties dans ce paquet (petits paquets, ex. Tour des
+      // Flandres), on accepte un doublon plutôt que de changer de rareté : les taux affichés restent exacts.
       for (let d = 0; d < RARITIES.length && !list.length; d++) {
         for (const r of [rank - d, rank + d]) {
           if (r < 0 || r >= RARITIES.length || list.length) continue;
-          list = pool.filter(c => c.rarity === RARITIES[r].id && !taken.has(c.id));
+          const same = pool.filter(c => c.rarity === RARITIES[r].id);
+          list = same.filter(c => !taken.has(c.id));
+          if (!list.length) list = same;
         }
       }
       const card = list[Math.floor(Math.random() * list.length)];
@@ -1578,6 +1582,7 @@
     PACKS, SERIES, RARITIES, BULK, bulkPrice, buyPacks, sellDuplicates, dupValue, claimSeries,
     EVENT_PACKS, activeEvents, fuseRarity, fuseHolo, fuseAvailable, claimDaily, dailyReady, drawPack, exclOf, packById,
     mission, missionsToday, claimMission, MISSION, resaleMult, sellValue, weeklyNow, claimWeekly, WEEKLY, statsOf,
+    packOdds, exclChance, packFinish, PACK_SIZE, PITY, RARITIES_W: RARITIES,
   };
 
   // ---------- Version installable (PWA) ----------
