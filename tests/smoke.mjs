@@ -235,11 +235,69 @@ async function trade() {
   }
 }
 
+// Carte du jour, fusion, paquets d'événement (date simulée) et export/import de la sauvegarde
+async function features() {
+  console.log('fonctions');
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 }, acceptDownloads: true });
+  await ctx.addInitScript(() => { window.BROL_NOW = '2026-12-01T12:00:00'; });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  page.on('dialog', d => d.accept());
+  await page.route(url => !url.href.startsWith(URL), r => r.abort());
+  const step = async (label, fn) => {
+    try { await fn(); check(!errors.length, 'erreur JavaScript : ' + errors.join(' | ')); console.log(`  ✓ ${label}`); }
+    catch (e) {
+      mkdirSync(OUT, { recursive: true });
+      await page.screenshot({ path: OUT + 'fonctions.png' }).catch(() => {});
+      throw new Error(`[fonctions] ${label} : ${e.message.split('\n')[0]}`);
+    }
+  };
+  try {
+    await page.goto(URL);
+    await step('carte du jour, une seule fois par jour', async () => {
+      await page.click('#daily-open');
+      await page.waitForSelector('#daily[open] .daily-slot');
+      await page.click('.daily-slot');
+      await page.click('#daily-close');
+      check(await page.locator('#daily-open').count() === 0, 'la carte du jour est encore disponible');
+      check(await page.evaluate(() => window.RDL.claimDaily()) === null, 'deuxième carte du jour le même jour');
+      const r = await page.evaluate(() => { const s = window.RDL.state; s.daily = { last: '2026-11-30', streak: 6 }; return window.RDL.claimDaily(); });
+      check(r.streak === 7 && ['legendaire', 'mythique'].includes(r.card.rarity), 'pas de légendaire au 7ᵉ jour');
+    });
+    await step('paquet d’événement en vente à sa date', async () => {
+      check(await page.locator('.pack-card[data-pack="saint-nicolas"] .event-ribbon').count() === 1, 'paquet Saint-Nicolas absent le 1ᵉʳ décembre');
+      const r = await page.evaluate(() => { const R = window.RDL; R.state.coins = 1000; const sn = R.activeEvents()[0]; const free = R.state.free; const res = R.buyPacks(sn, 1); return { cats: res.packs[0].revealed.map(d => d.card.cat), free: R.state.free === free }; });
+      check(r.cats.every(c => ['gastronomie', 'biere', 'folklore'].includes(c)), 'cartes hors thème dans le paquet Saint-Nicolas');
+      check(r.free, 'le paquet d’événement a utilisé un paquet gratuit');
+    });
+    await step('fusion des doublons', async () => {
+      const ids = await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'rare'); window.RDL.state.owned[C[0].id] = 4; window.RDL.state.owned[C[1].id] = 3; window.RDL.save(); return [C[0].id, C[1].id]; });
+      await page.click('.tab[data-view="binder"]');
+      await page.click('#fuse-btn');
+      await page.click('[data-fuse="rare"]');
+      await page.waitForSelector('.fuse-result');
+      const r = await page.evaluate(ids => [window.RDL.countOf(ids[0], 'normal'), window.RDL.countOf(ids[1], 'normal'), window.RDL.state.stats.fused], ids);
+      check(r[0] === 1 && r[1] === 1 && r[2] === 1, 'fusion incorrecte : ' + r);
+      await page.click('#fuse-close');
+    });
+    await step('export puis import de la sauvegarde', async () => {
+      await page.evaluate(() => { window.RDL.state.coins = 4321; window.RDL.save(); });
+      const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#export')]);
+      const file = await dl.path();
+      await page.evaluate(() => { window.RDL.state.coins = 1; window.RDL.save(); });
+      await page.setInputFiles('#import-file', file);
+      await page.waitForFunction(() => window.RDL?.state.coins === 4321, null, { timeout: 5000 });
+    });
+  } finally { await ctx.close(); }
+}
+
 try {
   await waitForServer();
   await run('ordinateur', { viewport: { width: 1366, height: 860 } });
   await run('mobile', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await trade();
+  await features();
   console.log('✓ site : tout fonctionne');
 } catch (e) {
   failed = true;

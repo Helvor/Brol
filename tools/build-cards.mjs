@@ -162,6 +162,30 @@ for (const r of people) {
   });
 }
 
+// Parti le plus récent d'abord : affiliations (P102) triées par date, l'affiliation en cours en tête.
+// Sans dates, l'ordre de Wikidata est gardé. Le parti affiché est le premier qui a un nom court connu (SHORT).
+{
+  const ids = [...byPerson.keys()];
+  const aff = new Map();
+  for (let i = 0; i < ids.length; i += 200) {
+    const rows = await sparql(`
+SELECT ?p ?party ?st ?en WHERE {
+  VALUES ?p { ${ids.slice(i, i + 200).map(q => 'wd:' + q).join(' ')} }
+  ?p p:P102 ?s. ?s ps:P102 ?party; wikibase:rank ?rank. FILTER(?rank != wikibase:DeprecatedRank)
+  OPTIONAL { ?s pq:P580 ?st } OPTIONAL { ?s pq:P582 ?en }
+}`);
+    for (const r of rows) {
+      const list = aff.get(qid(r.p)) || [];
+      list.push({ q: qid(r.party), st: year(r.st) || 0, en: r.en ? year(r.en) : Infinity });
+      aff.set(qid(r.p), list);
+    }
+  }
+  for (const [id, list] of aff) {
+    list.sort((a, b) => b.en - a.en || b.st - a.st);
+    byPerson.get(id).parties = new Set(list.map(x => x.q));
+  }
+}
+
 // Gouvernement actuel : composition lue sur Wikipédia (Wikidata est incomplet pour les mandats récents)
 const CURRENT_GOV = 'Gouvernement_De_Wever';
 const wt = (await wikiApi('fr', { action: 'parse', page: CURRENT_GOV, prop: 'wikitext' })).parse.wikitext;
@@ -327,6 +351,51 @@ for (const k of kings.sort((a, b) => a.st.localeCompare(b.st))) {
   });
 }
 
+// ---------- Listes choisies à la main : titres Wikipédia → éléments Wikidata ----------
+// Chaque entrée : 'Titre' (Wikipédia FR) ou 'nl:Titel' (Wikipédia NL).
+// Titre introuvable : on cherche l'article le plus proche avec la recherche Wikipédia et on l'indique
+// dans le journal (« Titre corrigé ») pour vérification. Si le résultat est faux, écrire le bon titre dans la liste.
+async function searchTitle(lang, title) {
+  const res = await wikiApi(lang, { action: 'query', list: 'search', srsearch: title.replace(/[()]/g, ' '), srnamespace: '0', srlimit: '1' });
+  const hit = res.query?.search?.[0]?.title;
+  if (!hit) return null;
+  const pp = await wikiApi(lang, { action: 'query', prop: 'pageprops', ppprop: 'wikibase_item', redirects: '1', titles: hit });
+  const q = pp.query.pages[0]?.pageprops?.wikibase_item;
+  if (q) console.warn(`Titre corrigé par recherche : « ${title} » → « ${hit} » (à vérifier)`);
+  return q ? { q, title: hit } : null;
+}
+async function resolveTitles(entries) {
+  const out = new Map(); // qid → entrée
+  const missing = [];
+  for (const lang of ['fr', 'nl']) {
+    const todo = entries.filter(e => (e.title.startsWith('nl:') ? 'nl' : 'fr') === lang);
+    for (let i = 0; i < todo.length; i += 50) {
+      const batch = todo.slice(i, i + 50);
+      const titles = batch.map(e => e.title.replace(/^nl:/, ''));
+      const res = await wikiApi(lang, { action: 'query', prop: 'pageprops', ppprop: 'wikibase_item', redirects: '1', titles: titles.join('|') });
+      const alias = new Map([...(res.query.redirects || []), ...(res.query.normalized || [])].map(r => [r.from, r.to]));
+      const byTitle = new Map(res.query.pages.map(p => [p.title, p.pageprops?.wikibase_item]));
+      batch.forEach((e, k) => {
+        const t = titles[k];
+        const q = byTitle.get(alias.get(t) || t) || byTitle.get(alias.get(alias.get(t)) || '');
+        if (q) out.set(q, e); else missing.push([lang, t, e]);
+      });
+    }
+  }
+  for (const [lang, t, e] of missing) {
+    const hit = await searchTitle(lang, t);
+    if (hit && !out.has(hit.q)) out.set(hit.q, { ...e, title: (lang === 'nl' ? 'nl:' : '') + hit.title });
+    else if (!hit) console.warn('Introuvable sur Wikipédia :', e.title);
+  }
+  return out;
+}
+// Image libre : P18 sur Wikidata, sinon image principale (libre) de l'article Wikipédia FR
+async function freePageImage(title, lang = 'fr') {
+  const res = await wikiApi(lang, { action: 'query', prop: 'pageimages', piprop: 'name', pilicense: 'free', redirects: '1', titles: title });
+  const f = res.query.pages[0]?.pageimage;
+  return f ? f.replace(/_/g, ' ') : null;
+}
+
 // ---------- Culture & sport : personnalités populaires ----------
 // Titres Wikipédia FR. La rareté dépend du nombre de Wikipédias qui ont un article sur la personne.
 const FAMOUS = {
@@ -334,22 +403,11 @@ const FAMOUS = {
   musique: ['Jacques Brel', 'Stromae', 'Angèle (chanteuse)', 'Salvatore Adamo', 'Toots Thielemans', 'Django Reinhardt', 'Lara Fabian', 'Arno (chanteur)', 'Plastic Bertrand', 'Lost Frequencies', 'Selah Sue', 'Annie Cordy'],
   cinema: ['Jean-Claude Van Damme', 'Audrey Hepburn', 'Benoît Poelvoorde', 'Cécile de France', 'Matthias Schoenaerts', 'Jérémie Renier', 'Virginie Efira', 'Chantal Akerman', 'Jaco Van Dormael', 'François Damiens'],
   medias: ['Alex Vizorek', 'Charline Vanhoenacker', 'Bart Peeters', 'Gert Verhulst'],
-  arts: ['René Magritte', 'Adolphe Sax', 'Georges Lemaître', 'Victor Horta', 'Amélie Nothomb', 'Georges Simenon', 'Ernest Solvay'],
+  arts: ['René Magritte', 'Victor Horta', 'Amélie Nothomb', 'Georges Simenon'],
 };
 const DOMAIN_SHORT = { bd: 'BD', musique: 'Musique', cinema: 'Cinéma', medias: 'Médias', arts: 'Arts' };
-const DOMAIN = { bd: 'Bande dessinée', musique: 'Musique', cinema: 'Cinéma', medias: 'Médias', arts: 'Arts & sciences' };
-const famousTitles = Object.entries(FAMOUS).flatMap(([dom, titles]) => titles.map(t => ({ t, dom })));
-const famousQ = new Map();
-for (let i = 0; i < famousTitles.length; i += 50) {
-  const batch = famousTitles.slice(i, i + 50);
-  const res = await wikiApi('fr', { action: 'query', prop: 'pageprops', ppprop: 'wikibase_item', redirects: '1', titles: batch.map(b => b.t).join('|') });
-  const alias = new Map([...(res.query.redirects || []), ...(res.query.normalized || [])].map(r => [r.from, r.to]));
-  const byTitle = new Map(res.query.pages.map(p => [p.title, p.pageprops?.wikibase_item]));
-  for (const b of batch) {
-    const q = byTitle.get(alias.get(b.t) || b.t);
-    if (q) famousQ.set(q, b.dom); else console.warn('Introuvable sur Wikipédia :', b.t);
-  }
-}
+const DOMAIN = { bd: 'Bande dessinée', musique: 'Musique', cinema: 'Cinéma', medias: 'Médias', arts: 'Arts' };
+const famousQ = new Map([...(await resolveTitles(Object.entries(FAMOUS).flatMap(([dom, titles]) => titles.map(title => ({ title, dom })))))].map(([q, e]) => [q, e.dom]));
 const famous = await sparql(`
 SELECT ?p ?pLabel ?desc ?img ?birth ?death ?links WHERE {
   VALUES ?p { ${[...famousQ.keys()].map(q => 'wd:' + q).join(' ')} }
@@ -377,34 +435,6 @@ for (const f of famous) {
   famousCount++;
 }
 console.log(`Personnalités culture & sport : ${famousCount}`);
-
-// ---------- Listes choisies à la main : titres Wikipédia → éléments Wikidata ----------
-// Chaque entrée : 'Titre' (Wikipédia FR) ou 'nl:Titel' (Wikipédia NL).
-async function resolveTitles(entries) {
-  const out = new Map(); // qid → entrée
-  for (const lang of ['fr', 'nl']) {
-    const todo = entries.filter(e => (e.title.startsWith('nl:') ? 'nl' : 'fr') === lang);
-    for (let i = 0; i < todo.length; i += 50) {
-      const batch = todo.slice(i, i + 50);
-      const titles = batch.map(e => e.title.replace(/^nl:/, ''));
-      const res = await wikiApi(lang, { action: 'query', prop: 'pageprops', ppprop: 'wikibase_item', redirects: '1', titles: titles.join('|') });
-      const alias = new Map([...(res.query.redirects || []), ...(res.query.normalized || [])].map(r => [r.from, r.to]));
-      const byTitle = new Map(res.query.pages.map(p => [p.title, p.pageprops?.wikibase_item]));
-      batch.forEach((e, k) => {
-        const t = titles[k];
-        const q = byTitle.get(alias.get(t) || t) || byTitle.get(alias.get(alias.get(t)) || '');
-        if (q) out.set(q, e); else console.warn('Introuvable sur Wikipédia :', e.title);
-      });
-    }
-  }
-  return out;
-}
-// Image libre : P18 sur Wikidata, sinon image principale (libre) de l'article Wikipédia FR
-async function freePageImage(title, lang = 'fr') {
-  const res = await wikiApi(lang, { action: 'query', prop: 'pageimages', piprop: 'name', pilicense: 'free', redirects: '1', titles: title });
-  const f = res.query.pages[0]?.pageimage;
-  return f ? f.replace(/_/g, ' ') : null;
-}
 
 // ---------- Enseignement supérieur ----------
 const SCHOOLS = [
@@ -536,6 +566,42 @@ for (const f of sportRows) {
   });
 }
 console.log(`Sport : ${cards.filter(c => c.cat === 'sport').length}`);
+
+// ---------- Sciences : savants, inventeurs, explorateurs ----------
+const SCIENCES = {
+  'Physique & astronomie': ['Georges Lemaître', 'François Englert', 'Ilya Prigogine', 'Adolphe Quetelet', 'Simon Stevin', 'Jean-Baptiste Van Helmont'],
+  'Médecine & biologie': ['André Vésale', 'Christian de Duve', 'Albert Claude', 'Jules Bordet', 'Corneille Heymans', 'Paul Janssen', 'Peter Piot',
+    'Marc Van Montagu', 'Rembert Dodoens', 'Édouard Van Beneden'],
+  Inventions: ['Adolphe Sax', 'Zénobe Gramme', 'Leo Baekeland', 'Étienne Lenoir', 'Jean-Pierre Minckelers', 'Jean-Joseph Merlin', 'Robert Cailliau',
+    'Charles Van Depoele', 'Lieven Gevaert', 'Ernest Solvay'],
+  Mathématiques: ['Gérard Mercator', 'Pierre Deligne', 'Ingrid Daubechies', 'Jean Bourgain', 'Grégoire de Saint-Vincent'],
+  'Espace & exploration': ['Frank De Winne', 'Dirk Frimout', 'Adrien de Gerlache', 'Paul Otlet'],
+};
+const sciQ = await resolveTitles(Object.entries(SCIENCES).flatMap(([field, titles]) => titles.map(title => ({ title, field }))));
+const sciRows = await sparql(`
+SELECT ?p ?pLabel ?desc ?img ?birth ?death ?links WHERE {
+  VALUES ?p { ${[...sciQ.keys()].map(q => 'wd:' + q).join(' ')} }
+  ?p wdt:P31 wd:Q5; wikibase:sitelinks ?links.
+  OPTIONAL { ?p wdt:P18 ?img } OPTIONAL { ?p wdt:P569 ?birth } OPTIONAL { ?p wdt:P570 ?death }
+  OPTIONAL { ?p schema:description ?desc. FILTER(LANG(?desc) = "fr") }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,mul,en". }
+}`);
+const sciSeen = new Set();
+for (const f of sciRows) {
+  const id = qid(f.p);
+  if (sciSeen.has(id) || cards.some(c => c.id === id)) continue;
+  sciSeen.add(id);
+  if (!f.img) { console.warn('Pas de photo libre, ignoré :', f.pLabel); continue; }
+  const field = sciQ.get(id).field;
+  const links = +f.links;
+  const b = year(f.birth), d = year(f.death);
+  cards.push({
+    id, cat: 'science', name: f.pLabel, img: file(f.img), rarity: 'commune', family: 'science',
+    subtitle: f.desc ? cap(f.desc) : field, meta: field + (b ? ` · ${b}${d ? '–' + d : ''}` : ''),
+    stats: [['Naissance', b ?? '—'], d ? ['Décès', d] : ['Domaine', field.split(' & ')[0]], ['Wikipédias', links]],
+  });
+}
+console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
 
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [
@@ -780,7 +846,7 @@ for (const [id, name, subtitle, text, stats] of EVENTS)
 
 // ---------- Photos alternatives (pour la version « Plein cadre ») ----------
 // On prend une autre photo libre dans la catégorie Commons de la personne, si elle existe.
-const ALT_CATS = new Set(['culture', 'sport', 'monarchie']);
+const ALT_CATS = new Set(['culture', 'sport', 'science', 'monarchie']);
 const altTargets = cards.filter(c => c.img && (ALT_CATS.has(c.cat) || (c.cat === 'politique' && (c.current || ['epique', 'legendaire', 'mythique'].includes(c.rarity)))));
 const commonsCats = new Map();
 for (let i = 0; i < altTargets.length; i += 200) {
@@ -910,7 +976,7 @@ for (const c of cards) {
   if (!n) continue;
   const nl = {};
   if (n.l && n.l !== c.name) nl.name = cap(n.l.replace(/ van België$/, '').replace(/ \((bier|band|festival|gemeente)\)$/, ''));
-  if (n.d && ['culture', 'sport'].includes(c.cat)) nl.subtitle = cap(n.d);
+  if (n.d && ['culture', 'sport', 'science'].includes(c.cat)) nl.subtitle = cap(n.d);
   if (Object.keys(nl).length) c.nl = nl;
 }
 console.log(`Néerlandais : ${cards.filter(c => c.nl?.name).length} noms traduits, ${Object.keys(POS_NL).length} fonctions`);

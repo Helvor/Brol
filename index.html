@@ -42,8 +42,12 @@
         <div>
           <h1 data-i18n="shop.title">Paquets</h1>
           <ul id="odds" class="odds"></ul>
+          <p id="event-line" class="event-line"></p>
         </div>
-        <div id="free-box" class="free-box"></div>
+        <div class="shop-side">
+          <div id="daily-box" class="daily-box"></div>
+          <div id="free-box" class="free-box"></div>
+        </div>
       </div>
       <div id="packs" class="packs"></div>
     </section>
@@ -59,6 +63,7 @@
           <select id="f-rarity"></select>
           <label class="check"><input id="f-owned" type="checkbox"><span></span><em data-i18n="owned">Possédées</em></label>
           <label class="check"><input id="f-special" type="checkbox"><span></span><em data-i18n="specials">Versions spéciales</em></label>
+          <button id="fuse-btn" class="btn btn-line" data-i18n="fuse">Fusionner</button>
           <button id="sell-all" class="btn btn-line" data-i18n="sellAll">Vendre les doublons</button>
         </div>
       </div>
@@ -137,11 +142,24 @@
     </div>
   </dialog>
 
+  <dialog id="fuse" class="side-dlg">
+    <button class="close" id="fuse-close" aria-label="×">×</button>
+    <div id="fuse-body"></div>
+  </dialog>
+
+  <dialog id="daily" class="daily-dlg">
+    <button class="close" id="daily-close" aria-label="×">×</button>
+    <div id="daily-body"></div>
+  </dialog>
+
   <div id="toast" class="toast" role="status"></div>
   <div id="ach-toast" class="ach-toast" role="status"></div>
 
   <footer class="foot">
     <p data-i18n-html="credits"></p>
+    <button id="export" class="linkish" data-i18n="export">Exporter ma partie</button>
+    <button id="import" class="linkish" data-i18n="import">Importer une partie</button>
+    <input id="import-file" type="file" accept="application/json,.json" hidden>
     <span class="version" id="version">dev</span>
     <button id="reset" class="linkish" data-i18n="reset">Réinitialiser la partie</button>
   </footer>
