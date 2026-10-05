@@ -24,6 +24,7 @@
       <button class="tab is-active" data-view="shop" data-i18n="tab.shop">Paquets</button>
       <button class="tab" data-view="binder"><span data-i18n="tab.binder">Album</span> <span id="progress-pill" class="tab-count"></span></button>
       <button class="tab" data-view="series"><span data-i18n="tab.series">Séries</span> <span id="series-dot" class="dot" hidden></span></button>
+      <button class="tab" data-view="trade" data-i18n="tab.trade">Échanges</button>
       <button class="tab" data-view="games" data-i18n="tab.games">Jeux</button>
       <button class="tab" data-view="ach" data-i18n="tab.ach">Succès</button>
     </nav>
@@ -74,6 +75,16 @@
         </div>
       </div>
       <div id="series-grid" class="series-grid"></div>
+    </section>
+
+    <section id="view-trade" class="view">
+      <div class="binder-head">
+        <div>
+          <h1 id="trade-title">Échanges</h1>
+          <p class="muted" id="trade-intro"></p>
+        </div>
+      </div>
+      <div id="trade-area"></div>
     </section>
 
     <section id="view-games" class="view">
@@ -141,5 +152,6 @@
   <script src="achievements.js"></script>
   <script src="app.js"></script>
   <script src="games.js"></script>
+  <script src="trade.js"></script>
 </body>
 </html>

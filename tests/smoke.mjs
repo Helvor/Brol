@@ -80,6 +80,11 @@ async function run(name, options) {
     await page.keyboard.press('Escape');
   });
 
+  await step('onglet Échanges', async () => {
+    await view('trade');
+    check(await page.locator('#t-new').count() === 1, 'onglet Échanges vide');
+  });
+
   await step('séries et succès', async () => {
     await view('series');
     check(await page.locator('.series').count() >= 5, 'séries manquantes');
@@ -116,10 +121,91 @@ async function run(name, options) {
   await page.close();
 }
 
+// Échange complet entre deux joueurs (deux navigateurs séparés, donc deux sauvegardes)
+async function trade() {
+  console.log('échange');
+  const player = async (name, owned) => {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 } });
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on('pageerror', e => errors.push(`${name} : ${e.message}`));
+    page.on('dialog', d => d.accept());
+    await page.route(url => !url.href.startsWith(URL), r => r.abort());
+    await page.goto(URL);
+    await page.evaluate(o => { Object.assign(window.RDL.state.owned, o); window.RDL.save(); }, owned);
+    await page.reload();
+    return { page, errors, count: (id, fin = 'normal') => page.evaluate(([id, fin]) => window.RDL.countOf(id, fin), [id, fin]) };
+  };
+  const step = async (label, fn) => { await fn(); console.log(`  ✓ ${label}`); };
+  const ids = await (async () => {
+    const page = await browser.newPage(); await page.goto(URL);
+    const r = await page.evaluate(() => { const C = window.RDL.CARDS; return [C.find(c => c.rarity === 'commune').id, C.find(c => c.rarity === 'mythique').id, C.find(c => c.cat === 'biere').id]; });
+    await page.close(); return r;
+  })();
+  const [give, giveHolo, want] = ids;
+  const A = await player('A', { [give]: 3, [giveHolo + '|holo']: 2, [want]: 1 });
+  const B = await player('B', { [want]: 2 });
+  let offer, reply;
+  try {
+    await step('A propose un échange', async () => {
+      await A.page.click('.tab[data-view="trade"]');
+      await A.page.click('#t-new');
+      await A.page.click(`.t-pick[data-id="${give}"][data-fin="normal"]`);
+      await A.page.click(`.t-pick[data-id="${giveHolo}"][data-fin="holo"]`);
+      await A.page.fill('#t-search', await A.page.evaluate(id => window.RDL.BY_ID.get(id).name, want));
+      await A.page.click(`.t-finbtn[data-id="${want}"][data-fin="normal"]`);
+      await A.page.click('#t-create');
+      await A.page.waitForSelector('#t-qr svg');
+      offer = await A.page.inputValue('#trade-link');
+      check(await A.count(give) === 2 && await A.count(giveHolo, 'holo') === 1, 'cartes non mises de côté');
+    });
+    await step('B accepte', async () => {
+      await B.page.goto(offer);
+      await B.page.click('#t-accept');
+      await B.page.waitForSelector('#t-qr svg');
+      reply = await B.page.inputValue('#trade-link');
+      check(await B.count(want) === 1 && await B.count(give) === 1 && await B.count(giveHolo, 'holo') === 1, 'cartes de B incorrectes');
+    });
+    await step('A termine l’échange, une seule fois', async () => {
+      await A.page.goto(reply);
+      await A.page.waitForSelector('.game-result.win');
+      check(await A.count(want) === 2, 'A n’a pas reçu la carte');
+      await A.page.goto(URL); await A.page.goto(reply); await A.page.waitForSelector('.game-result');
+      check(await A.count(want) === 2, 'la réponse a servi deux fois');
+      await B.page.goto(URL); await B.page.goto(offer); await B.page.waitForSelector('#t-qr svg');
+      check(await B.count(want) === 1, 'l’offre a servi deux fois');
+    });
+    await step('annulation et doublons manquants', async () => {
+      await A.page.goto(URL);
+      await A.page.click('.tab[data-view="trade"]');
+      await A.page.click('#t-new');
+      await A.page.click(`.t-pick[data-id="${give}"][data-fin="normal"]`);
+      await A.page.fill('#t-search', await A.page.evaluate(id => window.RDL.BY_ID.get(id).name, giveHolo));
+      await A.page.click(`.t-finbtn[data-id="${giveHolo}"][data-fin="or"]`);
+      await A.page.click('#t-create');
+      await A.page.waitForSelector('#trade-link');
+      const second = await A.page.inputValue('#trade-link');
+      await B.page.goto(URL); await B.page.goto(second); await B.page.waitForSelector('#t-accept');
+      check(await B.page.isDisabled('#t-accept'), 'acceptation possible sans le doublon demandé');
+      await A.page.click('#t-done');
+      await A.page.click('.t-cancel');
+      check(await A.count(give) === 2 && await A.page.locator('.t-offer').count() === 0, 'annulation incorrecte');
+    });
+    const errors = [...A.errors, ...B.errors];
+    check(!errors.length, 'erreur JavaScript : ' + errors.join(' | '));
+  } catch (e) {
+    mkdirSync(OUT, { recursive: true });
+    await A.page.screenshot({ path: OUT + 'echange-A.png' }).catch(() => {});
+    await B.page.screenshot({ path: OUT + 'echange-B.png' }).catch(() => {});
+    throw new Error(`[échange] ${e.message.split('\n')[0]}`);
+  }
+}
+
 try {
   await waitForServer();
   await run('ordinateur', { viewport: { width: 1366, height: 860 } });
   await run('mobile', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await trade();
   console.log('✓ site : tout fonctionne');
 } catch (e) {
   failed = true;

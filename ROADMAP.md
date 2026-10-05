@@ -12,6 +12,7 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 ## Phase 2 — Gameplay
 
 - [ ] **Fusion de doublons** : 5 exemplaires d'une rareté → une carte au hasard de la rareté au-dessus (dans la même catégorie) ; 3 exemplaires d'une même carte → sa version Holo. Écran de fusion dans l'album et succès associés.
+- [x] **Échanges par QR code ou lien** (onglet Échanges, sans serveur) : doublons uniquement, version précise de chaque carte, cartes mises de côté pendant l'échange, chaque échange ne sert qu'une fois, scanner intégré, succès d'échange. Limite connue : sans serveur, rien n'empêche un joueur de tricher (comme pour les pièces aujourd'hui).
 - [ ] **Export/import de la sauvegarde** : télécharger sa partie dans un fichier et la réimporter. Ça protège d'un cache effacé et permet de passer d'un appareil ou d'une adresse à l'autre en attendant les comptes. Le format servira aussi à migrer les parties vers le serveur en phase 5.
 - [ ] **Partager une carte** : générer une image (PNG) d'une carte, avec sa version spéciale, pour la partager par message ou sur les réseaux (Web Share API sur mobile, téléchargement sinon). Garder le crédit de l'image sur le visuel.
 - [ ] **Mode daltonien et accessibilité** : distinguer les raretés autrement que par la couleur (forme de la gemme, motif), navigation complète au clavier, contrastes vérifiés dans les deux thèmes.
@@ -32,4 +33,4 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 ## Phase 5 — En ligne
 
 - [ ] **Comptes et sauvegarde sur serveur** (Supabase envisagé) : connexion, sauvegarde dans le cloud, reprise d'une partie locale par import.
-- [ ] **Marché d'échange entre joueurs** : proposer et accepter des échanges ; tirages et inventaires vérifiés côté serveur pour éviter la triche.
+- [ ] **Marché d'échange entre joueurs** : annonces visibles par tous, échanges à distance sans se croiser ; tirages et inventaires vérifiés côté serveur pour éviter la triche.

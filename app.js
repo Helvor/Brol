@@ -133,8 +133,8 @@
 
   // ---------- Sauvegarde ----------
   // owned : clé « id » pour la version standard, « id|holo » etc. pour les versions spéciales
-  const freshStats = () => ({ packs: 0, cards: 0, free: 0, rarity: {}, finish: {}, packsBy: {}, sold: 0, earned: 0, perfect: 0, doubleLeg: 0, night: 0, pityHits: 0, goldMyth: 0 });
-  const fresh = () => ({ coins: START_COINS, owned: {}, packs: 0, free: 1, freeAt: Date.now(), claimed: {}, pity: 0, stats: freshStats(), ach: {} });
+  const freshStats = () => ({ packs: 0, cards: 0, free: 0, rarity: {}, finish: {}, packsBy: {}, sold: 0, earned: 0, perfect: 0, doubleLeg: 0, night: 0, pityHits: 0, goldMyth: 0, trades: 0, tradeGift: 0, tradeMyth: 0, tradeFull: 0 });
+  const fresh = () => ({ coins: START_COINS, owned: {}, packs: 0, free: 1, freeAt: Date.now(), claimed: {}, pity: 0, stats: freshStats(), ach: {}, trade: { pending: {}, done: {} } });
   let state = load();
   function load() {
     try {
@@ -142,6 +142,7 @@
       if (s && typeof s.coins === 'number') {
         if (s.free === undefined) { s.free = FREE_MAX; s.freeAt = Date.now(); s.coins = Math.max(s.coins, START_COINS); }
         s.claimed ||= {}; s.ach ||= {}; s.pity ||= 0;
+        s.trade ||= {}; s.trade.pending ||= {}; s.trade.done ||= {};
         s.stats = { ...freshStats(), ...(s.stats || {}) };
         if (!s.stats.packs && s.packs) s.stats.packs = s.packs;
         return s;
@@ -872,6 +873,7 @@
     if (view === 'series') renderSeries();
     if (view === 'ach') renderAch();
     if (view === 'games') window.GAMES_UI?.renderMenu();
+    if (view === 'trade') window.TRADE_UI?.render();
     window.scrollTo(0, 0);
   }
   $$('[data-view]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); SFX.tick(); show(el.dataset.view); }));
@@ -886,6 +888,8 @@
   window.RDL = {
     CARDS, BY_ID, get state() { return state; }, save, renderWallet, checkAchievements, totalOf,
     esc, imgUrl, fmt, toast, SFX, catLabel: cl, rarityLabel: rl,
+    // pour les échanges (trade.js)
+    cardHTML, countOf, keyOf, FINISHES, finishLabel: fl, rarityRank: id => R[id].rank, show, openDetail,
   };
 
   applyStatic();

@@ -10,6 +10,7 @@
     series:  { fr: 'Séries',     nl: 'Reeksen' },
     eco:     { fr: 'Économie',   nl: 'Economie' },
     games:   { fr: 'Jeux',       nl: 'Spellen' },
+    trade:   { fr: 'Échanges',   nl: 'Ruilen' },
     secret:  { fr: 'Secrets',    nl: 'Geheimen' },
   };
 
@@ -138,6 +139,17 @@
     tiers('g-pom', 'games', 'gem', [10, 25], [{ fr: 'Bon instinct', nl: 'Goed instinct' }, { fr: 'Encyclopédie vivante', nl: 'Wandelende encyclopedie' }],
       gv('pom', 'best'), { fr: n => `Enchaîner ${n} bonnes réponses à Plus ou moins.`, nl: n => `${n} juiste antwoorden op rij in Meer of minder.` }, [300, 1200]);
 
+    // ----- Échanges -----
+    tiers('trades', 'trade', 'swap', [1, 10, 50],
+      [{ fr: 'Poignée de main', nl: 'Handdruk' }, { fr: 'Marchand', nl: 'Handelaar' }, { fr: 'Roi du marché aux puces', nl: 'Koning van de vlooienmarkt' }],
+      () => st().trades, { fr: n => `Réaliser ${n} échange${n > 1 ? 's' : ''}.`, nl: n => `${n} ruil${n > 1 ? 'en' : ''} afronden.` }, [100, 400, 1500]);
+    add({ id: 'trade-gift', group: 'trade', icon: 'gift', target: 1, reward: 150, value: () => st().tradeGift,
+      title: { fr: 'Saint-Nicolas', nl: 'Sinterklaas' }, desc: { fr: 'Offrir des cartes sans rien demander en retour.', nl: 'Kaarten weggeven zonder iets terug te vragen.' } });
+    add({ id: 'trade-full', group: 'trade', icon: 'swap', target: 1, reward: 300, value: () => st().tradeFull,
+      title: { fr: 'Grand marchandage', nl: 'Groot ruilfestijn' }, desc: { fr: 'Réaliser un échange de cinq cartes contre cinq.', nl: 'Een ruil van vijf kaarten tegen vijf afronden.' } });
+    add({ id: 'trade-myth', group: 'trade', icon: 'crown', target: 1, reward: 500, value: () => st().tradeMyth,
+      title: { fr: 'Transfert du siècle', nl: 'Transfer van de eeuw' }, desc: { fr: 'Échanger une carte mythique.', nl: 'Een mythische kaart ruilen.' } });
+
     // ----- Secrets -----
     const has = name => CARDS.some(c => c.name === name && totalOf(c.id));
     add({ id: 'escaveche', group: 'secret', secret: true, icon: 'cup', target: 5, reward: 541,
@@ -180,6 +192,7 @@
     coin: '<circle cx="12" cy="12" r="8"/><path d="M14.5 9.5a3 3 0 1 0 0 5M8 11h5M8 13h5"/>',
     clock: '<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',
     moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+    swap: '<path d="M4 8h14l-4-4M20 16H6l4 4"/>',
     clover: '<circle cx="9" cy="9" r="3.5"/><circle cx="15" cy="9" r="3.5"/><circle cx="9" cy="15" r="3.5"/><circle cx="15" cy="15" r="3.5"/><path d="M12 12l5 9"/>',
   };
 })();
