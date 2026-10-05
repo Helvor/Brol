@@ -29,7 +29,10 @@
       'summary': (n, d, s, b) => `<b>${n}</b> nouvelle${n > 1 ? 's' : ''} · ${d} doublon${d > 1 ? 's' : ''}${s ? ` · <b>${s}</b> version${s > 1 ? 's' : ''} spéciale${s > 1 ? 's' : ''}` : ''}${b ? ` · <b>+${b}</b> pièces` : ''}`,
       'pityHit': 'Garantie anti-malchance déclenchée !',
       'again': p => p === null ? 'Rouvrir · gratuit' : `Rouvrir · ${p}`,
-      'again10': (n, p) => `Rouvrir ×${n} · ${p}`, 'specialNote': 'Paquet spécial · pièces uniquement', 'packOdds': 'Taux de ce paquet', 'oddsCards': 'cartes 1–4', 'oddsLast': '5ᵉ carte', 'bulk': n => `×${n}`, 'bulkOff': n => `−${n} %`,
+      'again10': (n, p) => `Rouvrir ×${n} · ${p}`, 'specialNote': 'Paquet spécial · pièces uniquement',
+      'edTag': 'Édition limitée', 'edStatPack': 'Paquet', 'edStatNo': 'N°', 'edStatPrice': 'Prix', 'edFrom': 'Du', 'edTo': 'Au',
+      'edWhere': p => `Paquet ${p}`, 'exclLine': (n, got) => `${n} cartes exclusives${got ? ` · ${got}/${n}` : ''}`,
+      'evFinLine': f => `Version ${f}, introuvable ailleurs`, 'oddsExcl': 'Édition limitée', 'perPack': 'par paquet', 'perCard': 'par carte', 'packOdds': 'Taux de ce paquet', 'oddsCards': 'cartes 1–4', 'oddsLast': '5ᵉ carte', 'bulk': n => `×${n}`, 'bulkOff': n => `−${n} %`,
       'binderSummary': (o, t, s, p, d) => `${o} sur ${t} cartes · ${s} version${s > 1 ? 's' : ''} spéciale${s > 1 ? 's' : ''} · ${p} paquet${p > 1 ? 's' : ''} · ${d} doublon${d > 1 ? 's' : ''}`,
       'emptyOwned': 'Aucune carte ici pour l’instant.', 'emptyAll': 'Aucune carte ne correspond.',
       'more': n => `Afficher plus (${n})`,
@@ -73,7 +76,10 @@
       'summary': (n, d, s, b) => `<b>${n}</b> nieuw · ${d} dubbel${d > 1 ? 's' : ''}${s ? ` · <b>${s}</b> speciale versie${s > 1 ? 's' : ''}` : ''}${b ? ` · <b>+${b}</b> munten` : ''}`,
       'pityHit': 'Pechgarantie geactiveerd!',
       'again': p => p === null ? 'Nog een · gratis' : `Nog een · ${p}`,
-      'again10': (n, p) => `Nog ×${n} · ${p}`, 'specialNote': 'Speciaal pakje · alleen met munten', 'packOdds': 'Kansen van dit pakje', 'oddsCards': 'kaarten 1–4', 'oddsLast': '5de kaart', 'bulk': n => `×${n}`, 'bulkOff': n => `−${n} %`,
+      'again10': (n, p) => `Nog ×${n} · ${p}`, 'specialNote': 'Speciaal pakje · alleen met munten',
+      'edTag': 'Beperkte editie', 'edStatPack': 'Pakje', 'edStatNo': 'Nr.', 'edStatPrice': 'Prijs', 'edFrom': 'Van', 'edTo': 'Tot',
+      'edWhere': p => `Pakje ${p}`, 'exclLine': (n, got) => `${n} exclusieve kaarten${got ? ` · ${got}/${n}` : ''}`,
+      'evFinLine': f => `Versie ${f}, nergens anders te vinden`, 'oddsExcl': 'Beperkte editie', 'perPack': 'per pakje', 'perCard': 'per kaart', 'packOdds': 'Kansen van dit pakje', 'oddsCards': 'kaarten 1–4', 'oddsLast': '5de kaart', 'bulk': n => `×${n}`, 'bulkOff': n => `−${n} %`,
       'binderSummary': (o, t, s, p, d) => `${o} van ${t} kaarten · ${s} speciale versie${s > 1 ? 's' : ''} · ${p} pakje${p > 1 ? 's' : ''} · ${d} dubbel${d > 1 ? 's' : ''}`,
       'emptyOwned': 'Hier nog geen kaarten.', 'emptyAll': 'Geen kaarten gevonden.',
       'more': n => `Meer tonen (${n})`,
@@ -168,7 +174,7 @@
     t(key, ...args) { const v = UI[lang][key] ?? UI.fr[key]; return typeof v === 'function' ? v(...args) : v; },
     tv,
     name: c => (lang === 'nl' && (EVENTS[c.id]?.name || c.nl?.name)) || c.name,
-    text: c => (lang === 'nl' && EVENTS[c.id]?.text) || c.text,
+    text: c => (lang === 'nl' && (EVENTS[c.id]?.text || c.nl?.text)) || c.text,
     subtitle(c) {
       if (lang !== 'nl') return c.subtitle || '';
       if (c.cat === 'politique' && c.posId) return capF(SPECIAL_POS[c.posId] || window.POS_NL?.[c.posId]) || c.subtitle;

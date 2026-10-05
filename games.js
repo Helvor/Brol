@@ -316,7 +316,7 @@
   // =====================================================================
   // 2. Belgle (carte du jour)
   // =====================================================================
-  const BELGLE_POOL = CARDS.filter(c => c.img && !['province', 'region', 'evenement'].includes(c.cat) &&
+  const BELGLE_POOL = CARDS.filter(c => c.img && !['province', 'region', 'evenement', 'edition'].includes(c.cat) &&
     (c.cat === 'commune' ? ['legendaire', 'mythique', 'epique'].includes(c.rarity) : ['rare', 'epique', 'legendaire', 'mythique'].includes(c.rarity)))
     .sort((a, b) => a.id.localeCompare(b.id));
   function dailyCard(day) {
@@ -397,7 +397,7 @@
   // =====================================================================
   // 3. Chronologie
   // =====================================================================
-  const CHRONO_POOL = CARDS.map(c => {
+  const CHRONO_POOL = CARDS.filter(c => c.cat !== 'edition').map(c => {
     const y = yearOf(c);
     if (!y) return null;
     return typeof y === 'number' ? { c, year: y, kind: 'event' } : { c, year: y.year, kind: y.kind };
@@ -457,7 +457,7 @@
     const x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(x));
   };
-  const TOUR_POOL = CARDS.filter(c => c.coord && (c.cat !== 'commune' || c.rarity !== 'commune'));
+  const TOUR_POOL = CARDS.filter(c => c.coord && c.cat !== 'edition' && (c.cat !== 'commune' || c.rarity !== 'commune'));
   let TR = null;
   function startTour() {
     played('tour');

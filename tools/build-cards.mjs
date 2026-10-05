@@ -849,6 +849,80 @@ const EVENTS = [
 for (const [id, name, subtitle, text, stats] of EVENTS)
   cards.push({ id, cat: 'evenement', name, rarity: EVENT_RARITY[id] || 'legendaire', img: null, subtitle, text, stats });
 
+// ---------- Éditions limitées : cartes exclusives aux paquets spéciaux ----------
+// Trois cartes par paquet spécial (une épique, une légendaire, une mythique), qu'on ne trouve nulle part ailleurs.
+// Le paquet est l'identifiant utilisé dans app.js (PACKS et EVENT_PACKS). Rareté fixée à la main.
+// [titre Wikipédia FR, paquet, rareté, nom FR, nom NL, texte FR, texte NL, options]
+// Options : img (image imposée, à la place de P18), artwork (tableau ou affiche, affiché en entier).
+const EDITIONS = [
+  ['Ordre de Léopold', 'prestige', 'mythique', 'Ordre de Léopold', 'Leopoldsorde',
+    'La plus haute distinction honorifique belge, créée en 1832 par Léopold Ier.', 'De hoogste Belgische onderscheiding, in 1832 ingesteld door Leopold I.'],
+  ['Armoiries de la Belgique', 'prestige', 'legendaire', 'Grandes armoiries', 'Groot wapen van België',
+    'Le lion belge entouré des bannières des neuf provinces d’origine, sous la devise « L’union fait la force ».', 'De Belgische leeuw tussen de banieren van de negen oorspronkelijke provincies, onder de wapenspreuk “Eendracht maakt macht”.'],
+  ['Butte du Lion', 'prestige', 'epique', 'Butte du Lion', 'Leeuw van Waterloo',
+    'Colline artificielle de 40 mètres élevée en 1826 sur le champ de bataille de Waterloo.', 'Kunstmatige heuvel van 40 meter, in 1826 opgeworpen op het slagveld van Waterloo.'],
+  ['Nicolas de Myre', 'saint-nicolas', 'mythique', 'Saint Nicolas de Myre', 'Sint-Nicolaas van Myra',
+    'Évêque de Myre au IVᵉ siècle, patron des enfants, à l’origine de la fête du 6 décembre.', 'Bisschop van Myra in de 4de eeuw, patroonheilige van de kinderen, oorsprong van het feest op 6 december.', { artwork: true }],
+  ['Cougnou', 'saint-nicolas', 'legendaire', 'Cougnou', 'Cougnou',
+    'Pain brioché en forme d’enfant emmailloté, des fêtes de fin d’année.', 'Briochebrood in de vorm van een ingebakerd kindje, voor de eindejaarsfeesten.'],
+  ['Massepain', 'saint-nicolas', 'epique', 'Massepain', 'Marsepein',
+    'Pâte d’amande moulée en fruits et en figurines, un classique des souliers de Saint-Nicolas.', 'Amandelspijs in de vorm van fruit en figuurtjes, een klassieker in de schoen van Sinterklaas.', { img: 'Lebensmittel-Marzipan1-Asio.jpg' }],
+  ['Bal du Rat mort', 'carnaval', 'mythique', 'Bal du Rat Mort', 'Bal du Rat Mort',
+    'Le grand bal masqué d’Ostende, depuis 1898. James Ensor en a dessiné l’affiche.', 'Het grote gemaskerde bal van Oostende, sinds 1898. James Ensor tekende de affiche.', { artwork: true }],
+  ['Carnaval des Ours', 'carnaval', 'legendaire', 'Carnaval des Ours', 'Berencarnaval',
+    'Le carnaval d’Andenne, la ville de l’ours.', 'Het carnaval van Andenne, de stad van de beer.'],
+  ['Chinels', 'carnaval', 'epique', 'Chinels', 'Chinels',
+    'Les personnages bossus et bruyants du carnaval de Fosses-la-Ville.', 'De gebochelde, luidruchtige figuren van het carnaval van Fosses-la-Ville.'],
+  ['Mur de Grammont', 'ronde', 'mythique', 'Mur de Grammont', 'Muur van Geraardsbergen',
+    'Côte pavée couronnée par sa chapelle, monument du cyclisme flamand.', 'Kasseihelling met de kapel op de top, monument van de Vlaamse wielersport.'],
+  ['Koppenberg', 'ronde', 'legendaire', 'Koppenberg', 'Koppenberg',
+    'Côte pavée si raide que les coureurs doivent parfois mettre pied à terre.', 'Zo steile kasseihelling dat renners soms te voet verder moeten.'],
+  ['Vieux Quaremont', 'ronde', 'epique', 'Vieux Quaremont', 'Oude Kwaremont',
+    'Longue montée pavée de plus de 2 km, juge du final du Tour des Flandres.', 'Lange kasseiklim van ruim 2 km, scherprechter in de finale van de Ronde.'],
+  ['Iris pseudacorus', 'iris', 'mythique', 'Iris des marais', 'Gele lis',
+    'L’iris jaune des marais de la Senne, emblème de la Région bruxelloise.', 'De gele lis uit de moerassen van de Zenne, symbool van het Brussels Gewest.', { img: 'Illustration Iris pseudacorus0.jpg', artwork: true }],
+  ['Jeanneke-Pis', 'iris', 'legendaire', 'Jeanneke-Pis', 'Jeanneke Pis',
+    'La petite sœur de Manneken-Pis, installée en 1987 dans l’impasse de la Fidélité.', 'Het zusje van Manneken Pis, sinds 1987 in de Getrouwheidsgang.'],
+  ['Het Zinneke', 'iris', 'epique', 'Zinneke Pis', 'Het Zinneke',
+    'Le chien de Tom Frantzen (1998), hommage aux Bruxellois de toutes origines.', 'De hond van Tom Frantzen (1998), eerbetoon aan de Brusselaars van alle origines.'],
+  ['Bataille de Courtrai (1302)', 'onze-juillet', 'mythique', 'Bataille des Éperons d’or', 'Guldensporenslag',
+    'Le 11 juillet 1302, les milices flamandes battent la chevalerie française à Courtrai.', 'Op 11 juli 1302 verslaan de Vlaamse milities de Franse ridders bij Kortrijk.', { img: 'Bataille de Courtrai (1302) - Français 2813.png', artwork: true }],
+  ['Drapeau de Flandre', 'onze-juillet', 'legendaire', 'Lion des Flandres', 'Vlaamse Leeuw',
+    'Le lion noir sur fond d’or, drapeau de la Communauté flamande.', 'De zwarte leeuw op een gouden veld, vlag van de Vlaamse Gemeenschap.'],
+  ['Jan Breydel', 'onze-juillet', 'epique', 'Breydel et De Coninck', 'Breydel en De Coninck',
+    'Les meneurs de la révolte brugeoise de 1302, statufiés sur le Markt de Bruges.', 'De leiders van de Brugse opstand van 1302, in brons op de Brugse Markt.'],
+  ['Révolution belge', 'fete-nationale', 'mythique', 'Révolution belge', 'Belgische Revolutie',
+    'Les Journées de septembre 1830 à Bruxelles, prélude à l’indépendance.', 'De Septemberdagen van 1830 in Brussel, aanloop naar de onafhankelijkheid.', { artwork: true }],
+  ['Drapeau de la Belgique', 'fete-nationale', 'legendaire', 'Drapeau belge', 'Belgische vlag',
+    'Noir, jaune, rouge : les couleurs du duché de Brabant, adoptées en 1831.', 'Zwart, geel, rood: de kleuren van het hertogdom Brabant, aangenomen in 1831.'],
+  ['Colonne du Congrès', 'fete-nationale', 'epique', 'Colonne du Congrès', 'Congreskolom',
+    'Colonne de 47 mètres en hommage au Congrès national, au pied de laquelle repose le Soldat inconnu.', 'Zuil van 47 meter ter ere van het Nationaal Congres, met aan de voet het graf van de Onbekende Soldaat.'],
+  ['Échasseurs namurois', 'wallonie', 'mythique', 'Échasseurs namurois', 'Steltlopers van Namen',
+    'Joutes sur échasses attestées à Namur depuis 1411, temps fort des Fêtes de Wallonie.', 'Steltgevechten in Namen, al sinds 1411, hoogtepunt van de Feesten van Wallonië.'],
+  ['Drapeau de la Wallonie', 'wallonie', 'legendaire', 'Coq hardi', 'Waalse haan',
+    'Le coq rouge sur fond jaune, emblème de la Wallonie depuis 1913.', 'De rode haan op een geel veld, embleem van Wallonië sinds 1913.'],
+  ['Perron de Liège', 'wallonie', 'epique', 'Perron liégeois', 'Luikse Perron',
+    'Colonne surmontée d’une pomme de pin, symbole des libertés liégeoises.', 'Zuil met een dennenappel, symbool van de Luikse vrijheden.'],
+];
+{
+  const eds = await resolveTitles(EDITIONS.map(([title, pack, rarity, name, nlName, text, nlText, opt = {}]) => ({ title, pack, rarity, name, nlName, text, nlText, ...opt })));
+  const rows = await sparql(`SELECT ?x ?img WHERE { VALUES ?x { ${[...eds.keys()].map(q => 'wd:' + q).join(' ')} } OPTIONAL { ?x wdt:P18 ?img } }`);
+  const p18 = new Map(rows.map(r => [qid(r.x), file(r.img)]));
+  let n = 0;
+  for (const [id, e] of eds) {
+    const img = e.img || p18.get(id) || await freePageImage(e.title);
+    if (!img) { console.warn('Édition limitée sans image, ignorée :', e.name); continue; }
+    cards.push({
+      id, cat: 'edition', pack: e.pack, name: e.name, rarity: e.rarity, img, artwork: e.artwork || undefined,
+      emblem: /\.svg$/i.test(img) || undefined, subtitle: 'Édition limitée', text: e.text,
+      nl: { name: e.nlName, subtitle: 'Beperkte editie', text: e.nlText },
+      stats: [['Édition', e.pack]], // remplacées dans le jeu par l'édition, le numéro et la période de vente
+    });
+    n++;
+  }
+  console.log(`Éditions limitées : ${n} / ${EDITIONS.length}`);
+}
+
 // ---------- Photos alternatives (pour la version « Plein cadre ») ----------
 // On prend une autre photo libre dans la catégorie Commons de la personne, si elle existe.
 const ALT_CATS = new Set(['culture', 'sport', 'science', 'monarchie']);
@@ -912,7 +986,7 @@ const MYTHIQUES = [
   'Frite', 'Westvleteren (bière)', 'Tomorrowland (festival)', 'Carnaval de Binche',
 ];
 const QUOTAS = [['legendaire', 0.04], ['epique', 0.09], ['rare', 0.18], ['peu-commune', 0.27]];
-const FIXED_CATS = new Set(['monarchie', 'region', 'province', 'evenement']); // trop petites : rareté fixée à la main
+const FIXED_CATS = new Set(['monarchie', 'region', 'province', 'evenement', 'edition']); // trop petites : rareté fixée à la main
 const linkIds = cards.filter(c => isQ(c.id)).map(c => c.id);
 const LINKS = new Map();
 for (let i = 0; i < linkIds.length; i += 300) {
@@ -1032,7 +1106,7 @@ const POS_NL = {};
 for (const q of nlIds) if (NL.get(q)?.l && cards.every(c => c.id !== q)) POS_NL[q] = NL.get(q).l;
 for (const c of cards) {
   const n = NL.get(c.id);
-  if (!n) continue;
+  if (!n || c.cat === 'edition') continue; // noms et textes néerlandais écrits à la main
   const nl = {};
   if (n.l && n.l !== c.name) nl.name = cap(n.l.replace(/ van België$/, '').replace(/ \((bier|band|festival|gemeente)\)$/, ''));
   if (n.d && ['culture', 'sport', 'science'].includes(c.cat)) nl.subtitle = cap(n.d);

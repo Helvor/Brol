@@ -12,8 +12,8 @@
   const $ = s => document.querySelector(s);
   const area = () => $('#trade-area');
   const MAX = 5;
-  const FIN_CODE = { normal: '', holo: 'h', plein: 'p', or: 'o' };
-  const CODE_FIN = { h: 'holo', p: 'plein', o: 'or' };
+  const FIN_CODE = { normal: '', holo: 'h', plein: 'p', or: 'o', noir: 'n', rouge: 'r', confetti: 'c', pave: 'k', iris: 'i', lion: 'l', tricolore: 't', coq: 'w' };
+  const CODE_FIN = Object.fromEntries(Object.entries(FIN_CODE).filter(([, c]) => c).map(([f, c]) => [c, f]));
 
   // ---------- Textes ----------
   const TX = {
@@ -295,7 +295,7 @@
     if (!list.length) { box.innerHTML = `<p class="t-empty">${T(C.missing && !q ? 'no_missing' : 'no_result')}</p>`; return; }
     box.innerHTML = `<p class="t-count">${T('results', total)}</p>` + list.map(c => {
       const n = API.totalOf(c.id);
-      return `<div class="t-result">${item({ id: c.id, fin: 'normal' }, { note: n ? T('owned_n', n) : T('missing'), bad: !n })}<div class="t-fins">${API.FINISHES.map(f =>
+      return `<div class="t-result">${item({ id: c.id, fin: 'normal' }, { note: n ? T('owned_n', n) : T('missing'), bad: !n })}<div class="t-fins">${API.finishesFor(c).map(f =>
         `<button class="t-finbtn${inList(C.want, { id: c.id, fin: f.id }) ? ' is-on' : ''}" data-id="${esc(c.id)}" data-fin="${f.id}"><span class="fin-dot d-${f.id}"></span>${esc(API.finishLabel(f.id))}</button>`).join('')}</div></div>`;
     }).join('') + (total > list.length ? `<p class="t-empty">${T('refine', total - list.length)}</p>` : '');
   }

@@ -29,6 +29,7 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 - [ ] **Version installable (PWA)** : manifeste, icônes, service worker. Le jeu s'ouvre hors ligne ; les images Commons déjà vues restent en cache.
 - [x] **Carte du jour** : une carte et 20 pièces par jour ; série de jours consécutifs (rare ou mieux dès le 3ᵉ jour, épique dès le 5ᵉ, légendaire tous les 7 jours).
 - [x] **Calendrier d'événements belges** (Carnaval, Tour des Flandres, Fête de l'Iris, 11 juillet, 21 juillet, Fêtes de Wallonie, Saint-Nicolas ; dates mobiles calculées) : paquets limités dans le temps (Fête nationale le 21 juillet, Carnaval de Binche, Saint-Nicolas, Tour des Flandres, Fêtes de Wallonie, 11 juillet…), avec des chances accrues dans les catégories concernées.
+- [x] **Cartes exclusives des paquets spéciaux** : 3 cartes « Édition limitée » par paquet spécial (24 en tout, de l'Ordre de Léopold aux Échasseurs namurois), une série et des succès associés ; une version propre à chaque paquet (Rouge à la Saint-Nicolas, Pavé au Tour des Flandres…), avec un taux bas.
 
 ## Phase 4 — Contenu
 
