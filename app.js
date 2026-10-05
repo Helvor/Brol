@@ -531,7 +531,33 @@
     renderFree();
     renderDaily();
     renderMissions();
+    renderShowcase();
   }
+  // Vitrine (ordinateur uniquement, masquée sur téléphone) : les cinq plus belles cartes en éventail,
+  // la meilleure au centre, et l'avancement de l'album
+  function renderShowcase() {
+    const box = $('#showcase');
+    if (!box) return;
+    const owned = CARDS.filter(c => totalOf(c.id));
+    const score = c => R[c.rarity].rank * 10 + finTier(bestFinish(c.id)) * 3 + (c.cat === 'edition' ? 6 : 0);
+    const best = owned.sort((a, b) => score(b) - score(a)).slice(0, 5);
+    const order = [3, 1, 0, 2, 4].filter(i => i < best.length).map(i => best[i]); // la meilleure au milieu
+    const n = order.length || 3;
+    const pct = owned.length / CARDS.length;
+    const fan = order.length
+      ? order.map((c, i) => `<div class="sc-card" style="--i:${i};--n:${n};--z:${10 - Math.abs(i - (n - 1) / 2) * 2}">${cardHTML(c, { finish: bestFinish(c.id) })}</div>`).join('')
+      : [0, 1, 2].map(i => `<div class="sc-card is-back" style="--i:${i};--n:3;--z:${10 - Math.abs(i - 1) * 2}"><div class="cell sc-backcell">${cardBack()}</div></div>`).join('');
+    box.innerHTML = `
+      <div class="sc-head"><h3>${t('scTitle')}</h3><span>${t('scCount', fmt(owned.length), fmt(CARDS.length), Math.floor(pct * 100))}</span></div>
+      <div class="sc-bar"><i style="width:${(pct * 100).toFixed(1)}%"></i></div>
+      <div class="sc-fan">${fan}</div>
+      ${order.length ? '' : `<p class="sc-empty">${t('scEmpty')}</p>`}`;
+  }
+  $('#showcase')?.addEventListener('click', e => {
+    const card = e.target.closest('.sc-card .card');
+    if (card) { SFX.tick(); openDetail(card.dataset.id, card.dataset.fin); }
+  });
+
   // Paquets spéciaux : leurs cartes exclusives (floutées tant qu'on ne les a pas) et leur version d'événement
   function packExtras(p) {
     const list = exclOf(p.id), fin = packFinish(p.id);
@@ -557,6 +583,7 @@
     const pips = Array.from({ length: FREE_MAX }, (_, i) => `<span class="pip${i < state.free ? ' on' : ''}"></span>`).join('');
     const timer = state.free >= FREE_MAX ? t('freeFull') : t('freeIn', `${Math.floor(left / 60000)}:${String(Math.floor(left / 1000) % 60).padStart(2, '0')}`);
     const pityLeft = PITY - state.pity;
+    $('#free-box').dataset.title = t('freeTitle'); // titre affiché sur ordinateur seulement
     $('#free-box').innerHTML = `
       <div class="free-line"><span class="pips">${pips}</span><span class="label">${t('free', state.free)} · ${timer}</span></div>
       <div class="pity-line"><span class="pity-bar"><span style="width:${(state.pity / PITY * 100).toFixed(1)}%"></span></span><span class="label">${t('pity', pityLeft)}</span></div>`;
