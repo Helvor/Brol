@@ -69,6 +69,23 @@ async function run(name, options) {
     check(await page.evaluate(() => window.RDL.state.stats.packs) === before + 1, 'paquet non compté');
   });
 
+  await step('lot de 10 paquets', async () => {
+    await page.click('#stage-close', { force: true }).catch(() => {});
+    await page.evaluate(() => { window.RDL.state.coins = 2000; window.RDL.save(); });
+    await view('shop');
+    const before = await page.evaluate(() => ({ packs: window.RDL.state.stats.packs, price: window.RDL.bulkPrice(window.RDL.PACKS[0]) }));
+    check(before.price < 10 * (await page.evaluate(() => window.RDL.PACKS[0].price)), 'le lot de 10 n’est pas moins cher');
+    await click('.buy10');
+    await page.waitForSelector('#stage:not([hidden])');
+    await click('#stage-pack');
+    await page.waitForSelector('#reveal.is-bulk .slot');
+    check(await page.locator('#reveal .slot').count() === 50, 'le lot ne contient pas 50 cartes');
+    await click('#flip-all');
+    await page.waitForSelector('#to-album:not([hidden])', { timeout: 30000 });
+    check(await page.locator('#reveal .slot.is-flipped').count() === 50, 'toutes les cartes du lot ne sont pas retournées');
+    check(await page.evaluate(() => window.RDL.state.stats.packs) === before.packs + 10, 'lot non compté comme 10 paquets');
+  });
+
   await step('album et fiche détail', async () => {
     await click('#to-album');
     await page.waitForSelector('#view-binder.is-active');
@@ -152,6 +169,7 @@ async function trade() {
       await A.page.click('#t-new');
       await A.page.click(`.t-pick[data-id="${give}"][data-fin="normal"]`);
       await A.page.click(`.t-pick[data-id="${giveHolo}"][data-fin="holo"]`);
+      await A.page.evaluate(() => { const c = document.querySelector('#t-missing'); c.checked = false; c.dispatchEvent(new Event('change')); });
       await A.page.fill('#t-search', await A.page.evaluate(id => window.RDL.BY_ID.get(id).name, want));
       await A.page.click(`.t-finbtn[data-id="${want}"][data-fin="normal"]`);
       await A.page.click('#t-create');
@@ -180,6 +198,7 @@ async function trade() {
       await A.page.click('.tab[data-view="trade"]');
       await A.page.click('#t-new');
       await A.page.click(`.t-pick[data-id="${give}"][data-fin="normal"]`);
+      await A.page.evaluate(() => { const c = document.querySelector('#t-missing'); c.checked = false; c.dispatchEvent(new Event('change')); });
       await A.page.fill('#t-search', await A.page.evaluate(id => window.RDL.BY_ID.get(id).name, giveHolo));
       await A.page.click(`.t-finbtn[data-id="${giveHolo}"][data-fin="or"]`);
       await A.page.click('#t-create');

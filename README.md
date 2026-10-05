@@ -38,6 +38,7 @@ Le script interroge Wikidata (et Wikipédia pour la composition du gouvernement 
 Versions spéciales (Holo, Plein cadre, Dorée) : tirées pour chaque carte, indépendamment de la rareté ; la version Plein cadre utilise une autre photo libre de la catégorie Commons quand il y en a une. Listes choisies à la main dans le script : `FAMOUS` (culture), `SPORTS`, `ARTWORKS`, `SCHOOLS`, `DISHES`.
 
 Taux de tirage, versions spéciales, prix des paquets, bonus, paquets gratuits et valeurs de revente : en haut de `app.js`.
+Après un changement, `node tools/simulate.mjs [minutes] [parties]` mesure l'effet sur l'économie (pièces gagnées au fil du temps par un joueur normal et par un joueur qui achète pour revendre).
 
 Carte du Tour de Belgique : contour simplifié © contributeurs OpenStreetMap (`data/belgium.js`).
 

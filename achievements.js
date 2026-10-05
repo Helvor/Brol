@@ -14,6 +14,8 @@
     secret:  { fr: 'Secrets',    nl: 'Geheimen' },
   };
 
+  const REWARD_SCALE = 1 / 3;
+
   window.buildAchievements = ctx => {
     const { CARDS, state, totalOf, countOf, SERIES, PACKS } = ctx;
     const st = () => state.stats;
@@ -171,6 +173,8 @@
     add({ id: 'manneken', group: 'secret', secret: true, icon: 'star', target: 1, reward: 300, value: () => has('Manneken-Pis') ? 1 : 0,
       title: { fr: 'Le plus vieux bourgeois', nl: 'De oudste burger' }, desc: { fr: 'Obtenir le Manneken-Pis.', nl: 'Manneken Pis krijgen.' } });
 
+    // Récompenses divisées par trois (économie revue avec tools/simulate.mjs), sauf les succès secrets
+    for (const a of list) if (!a.secret) a.reward = Math.max(10, Math.round(a.reward * REWARD_SCALE / 10) * 10);
     return { list, GROUPS };
   };
 
