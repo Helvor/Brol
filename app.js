@@ -6,13 +6,13 @@
   // ---------- Réglages ----------
   const RARITIES = [
     // sell : valeur de revente d'un doublon. Un paquet revendu en entier rapporte en moyenne
-    // un peu moins de la moitié de son prix (vérifié avec tools/simulate.mjs) : acheter pour revendre ne paie pas.
-    { id: 'commune',     label: { fr: 'Commune',     nl: 'Gewoon' },        weight: 50,   sell: 1 },
-    { id: 'peu-commune', label: { fr: 'Peu commune', nl: 'Ongewoon' },      weight: 26,   sell: 2 },
-    { id: 'rare',        label: { fr: 'Rare',        nl: 'Zeldzaam' },      weight: 15.5, sell: 5 },
-    { id: 'epique',      label: { fr: 'Épique',      nl: 'Episch' },        weight: 6,    sell: 12 },
-    { id: 'legendaire',  label: { fr: 'Légendaire',  nl: 'Legendarisch' },  weight: 2.2,  sell: 40 },
-    { id: 'mythique',    label: { fr: 'Mythique',    nl: 'Mythisch' },      weight: 0.3,  sell: 120 },
+    // environ 60 % de son prix (vérifié avec tools/simulate.mjs) : acheter pour revendre ne paie pas.
+    { id: 'commune',     label: { fr: 'Commune',     nl: 'Gewoon' },        weight: 50,   sell: 2 },
+    { id: 'peu-commune', label: { fr: 'Peu commune', nl: 'Ongewoon' },      weight: 26,   sell: 3 },
+    { id: 'rare',        label: { fr: 'Rare',        nl: 'Zeldzaam' },      weight: 15.5, sell: 8 },
+    { id: 'epique',      label: { fr: 'Épique',      nl: 'Episch' },        weight: 6,    sell: 18 },
+    { id: 'legendaire',  label: { fr: 'Légendaire',  nl: 'Legendarisch' },  weight: 2.2,  sell: 60 },
+    { id: 'mythique',    label: { fr: 'Mythique',    nl: 'Mythisch' },      weight: 0.3,  sell: 180 },
   ];
   const R = Object.fromEntries(RARITIES.map((r, i) => [r.id, { ...r, rank: i }]));
   const rl = id => R[id].label[L()];
@@ -71,6 +71,10 @@
     { id: 'territoires', title: { fr: 'Territoires', nl: 'Grondgebied' }, kicker: { fr: 'Édition géographique', nl: 'Geografische editie' }, big: '565', price: 80,
       desc: { fr: 'Communes, provinces, régions et enseignement.', nl: 'Gemeenten, provincies, gewesten en onderwijs.' },
       body: ['#10261a', '#2c4a5a'], metal: ['#ffd9b8', '#d08a52', '#7c4320'], cats: ['commune', 'province', 'region', 'enseignement'] },
+    // Paquet spécial : 5ᵉ carte légendaire ou mieux (≈ 12 % de mythiques). Pièces uniquement, ni gratuit ni lot de 10.
+    { id: 'prestige', title: { fr: 'Prestige', nl: 'Prestige' }, kicker: { fr: 'Édition prestige', nl: 'Prestige-editie' }, big: 'L+', price: 600,
+      desc: { fr: 'Toutes les cartes. 5ᵉ carte légendaire ou mieux, garantie.', nl: 'Alle kaarten. 5de kaart gegarandeerd legendarisch of beter.' },
+      body: ['#050506', '#2a2210'], metal: ['#fff6cf', '#f0c24a', '#8a6410'], cats: null, last: 'legendaire', special: true },
   ];
   const pl = (p, k) => p[k][L()];
 
@@ -305,7 +309,7 @@
     const taken = new Set();
     for (let i = 0; i < PACK_SIZE; i++) {
       const last = i === PACK_SIZE - 1;
-      const rank = R[pickRarity(last ? (forceLegend ? R.legendaire.rank : R.rare.rank) : 0)].rank;
+      const rank = R[pickRarity(last ? (forceLegend ? R.legendaire.rank : R[pack.last || 'rare'].rank) : 0)].rank;
       let list = [];
       // Si la rareté tirée n'existe pas dans ce paquet, on prend la plus proche (vers le bas d'abord)
       for (let d = 0; d < RARITIES.length && !list.length; d++) {
@@ -325,15 +329,15 @@
   function renderShop() {
     tickFree();
     $('#packs').innerHTML = PACKS.map(p => {
-      const locked = state.coins < p.price && !state.free;
+      const locked = state.coins < p.price && (!state.free || p.special);
       return `
-      <div class="pack-card${locked ? ' is-locked' : ''}" data-pack="${p.id}">
+      <div class="pack-card${locked ? ' is-locked' : ''}${p.special ? ' is-special' : ''}" data-pack="${p.id}">
         ${packVisual(p)}
         <div class="pack-info">
           <div><h2>${esc(pl(p, 'title'))}</h2><p>${esc(pl(p, 'desc'))}</p></div>
           <span class="price"><span class="coin"></span>${p.price}</span>
         </div>
-        <button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', BULK)} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>
+        ${p.special ? `<span class="pack-note">${t('specialNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', BULK)} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
       </div>`;
     }).join('');
     renderFree();
@@ -377,7 +381,7 @@
     tickFree();
     let usedFree = false;
     const cost = n === 1 ? pack.price : bulkPrice(pack);
-    if (n === 1 && state.free > 0) { state.free--; usedFree = true; if (state.free === FREE_MAX - 1) state.freeAt = Date.now(); }
+    if (n === 1 && state.free > 0 && !pack.special) { state.free--; usedFree = true; if (state.free === FREE_MAX - 1) state.freeAt = Date.now(); }
     else if (state.coins >= cost) state.coins -= cost;
     else return null;
     const packs = Array.from({ length: n }, () => rollPack(pack, usedFree));
@@ -587,7 +591,7 @@
     const again = $('#again');
     again.hidden = false;
     if (n > 1) { again.textContent = t('again10', n, fmt(bulkPrice(pack))); again.disabled = state.coins < bulkPrice(pack); }
-    else { again.textContent = t('again', state.free ? null : pack.price); again.disabled = !state.free && state.coins < pack.price; }
+    else { const free = state.free && !pack.special; again.textContent = t('again', free ? null : pack.price); again.disabled = !free && state.coins < pack.price; }
     $('#to-album').hidden = false;
     $('#stage-close').hidden = false;
     checkAchievements();

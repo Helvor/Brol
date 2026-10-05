@@ -86,6 +86,21 @@ async function run(name, options) {
     check(await page.evaluate(() => window.RDL.state.stats.packs) === before.packs + 10, 'lot non compté comme 10 paquets');
   });
 
+  await step('paquet Prestige (légendaire ou mieux garantie)', async () => {
+    const r = await page.evaluate(() => {
+      const R = window.RDL, prestige = R.PACKS.find(p => p.special);
+      R.state.coins = prestige.price * 30; R.state.free = 3;
+      let ok = true;
+      for (let i = 0; i < 30; i++) {
+        const res = R.buyPacks(prestige, 1);
+        ok = ok && res && res.packs[0].revealed.some(d => R.rarityRank(d.card.rarity) >= R.rarityRank('legendaire'));
+      }
+      return { ok, free: R.state.free };
+    });
+    check(r.ok, 'un paquet Prestige sans légendaire ou mieux');
+    check(r.free === 3, 'le paquet Prestige a utilisé un paquet gratuit');
+  });
+
   await step('album et fiche détail', async () => {
     await click('#to-album');
     await page.waitForSelector('#view-binder.is-active');

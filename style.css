@@ -968,3 +968,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   .t-pickers[data-tab="give"] .t-pick-want, .t-pickers[data-tab="want"] .t-pick-give { display: none; }
   .t-pickers h3 { display: none; }
 }
+
+/* Paquet spécial (Prestige) */
+.pack-card.is-special .pack-visual { filter: drop-shadow(0 18px 24px rgba(0, 0, 0, .28)) drop-shadow(0 0 18px rgba(240, 194, 74, .35)); }
+.pack-note { font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
