@@ -4,15 +4,15 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 
 ## Phase 1 — Données fiables
 
-- [ ] **Parti le plus récent** (code prêt, à générer) : n'afficher que le dernier parti connu (exemple : Maggie De Block apparaît en « sp.a »). Dans `tools/build-cards.mjs`, trier les affiliations Wikidata (P102) par date et prendre la plus récente.
-- [ ] **Titres Wikipédia introuvables** (recherche de secours ajoutée au générateur, à générer puis vérifier les lignes « Titre corrigé » du journal) : corriger Pauwel Kwak, Brugse Zot, Gille, Saint-Nicolas, Géant processionnel, Pêche à la crevette à cheval, Vaya Con Dios, Clouseau, Dimitri Vegas & Like Mike, Fêtes de Gand, Lokerse Feesten, Ronquières Festival, Brussels Jazz Marathon (voir `tools/build.log`).
+- [x] **Parti le plus récent** : dernier parti connu d'après les dates Wikidata (P102). La table des partis du générateur confondait Open Vld (Q1160192, aujourd'hui « Anders ») avec le sp.a : Maggie De Block, De Croo, Verhofstadt… apparaissaient en « sp.a » et en rouge. Corrigé (Open VLD, bleu).
+- [x] **Titres Wikipédia introuvables** : titres corrigés dans le générateur (Jan Pieter Minckelers, Kwak, Brugse Zot et Lokerse Feesten via Wikipédia NL, Saint-Nicolas (fête), Gentse Feesten, Brussels Jazz Weekend…). Ronquières Festival n'a pas d'image libre et reste sans carte.
 - [x] **Économie revue** : revente des doublons ramenée à environ 60 % du prix d'un paquet (avant : 3,7 fois le prix, d'où des milliers de pièces en quelques minutes), récompenses des succès divisées par trois (sauf secrets). Mesuré avec `tools/simulate.mjs`, qui fait jouer deux joueurs types pendant une ou deux heures avec le vrai code du jeu.
 - [x] **Paquet Prestige** (600 pièces) : toutes les cartes, 5ᵉ carte légendaire ou mieux garantie (≈ 12 % de mythiques). Pièces uniquement.
 - [x] **Lot de 10 paquets** : 10 % moins cher, payé en pièces, une rangée par paquet à l'ouverture.
 - [ ] **Statistiques de tirage** : script `tools/simulate.mjs` qui simule 100 000 paquets de chaque type et compare les taux obtenus aux taux affichés (raretés, versions spéciales, garantie anti-malchance). Il repère aussi les paquets où une rareté manque et où le tirage se reporte sur la rareté voisine.
 - [x] **Tests automatiques** : test navigateur (Playwright) lancé par GitHub Actions à chaque push. Il ouvre un paquet, l'album, la fiche détail et les 5 mini-jeux, passe en NL et en mobile, et échoue à la moindre erreur JavaScript.
 
-- [ ] **Rareté revue** (code prêt, à générer) : mythique réservée à ~25 icônes choisies à la main (`MYTHIQUES` dans le générateur) ; notoriété mesurée par les visites Wikipédia FR + NL sur 12 mois (au lieu du nombre de langues) ; politique classée par carrière (années de Premier ministre, gouvernements, postes) ; événements de épique à mythique, provinces rares ou épiques selon la population. Taux réels affichés paquet par paquet.
+- [x] **Rareté revue** : mythique réservée à ~25 icônes choisies à la main (`MYTHIQUES` dans le générateur) ; notoriété mesurée par les visites Wikipédia FR + NL sur 12 mois (au lieu du nombre de langues) ; politique classée par carrière (années de Premier ministre, gouvernements, postes) ; événements de épique à mythique, provinces rares ou épiques selon la population. Taux réels affichés paquet par paquet.
 
 ## Phase 2 — Gameplay
 
@@ -32,7 +32,7 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 
 ## Phase 4 — Contenu
 
-- [ ] **Nouvelle catégorie Sciences** (code prêt dans le générateur et le jeu ; le paquet apparaît dès que les cartes sont générées) : scientifiques et inventeurs belges (Lemaître, Sax, Solvay, Vésale, Mercator, Englert, de Duve…), avec photos libres et rareté relative comme les autres catégories. Vendue dans un nouveau paquet « Sciences ».
+- [x] **Nouvelle catégorie Sciences** (35 cartes) : scientifiques et inventeurs belges (Lemaître, Sax, Solvay, Vésale, Mercator, Englert, de Duve…), avec photos libres et rareté relative comme les autres catégories. Vendue dans un nouveau paquet « Sciences ».
 - [ ] **Mise à jour automatique des données** : GitHub Action mensuelle qui relance `node tools/build-cards.mjs --fresh` et ouvre une pull request avec les changements (nouveaux ministres, populations, photos). Ajouter un garde-fou : signaler les cartes disparues, pour ne pas casser les collections existantes.
 
 ## Phase 5 — En ligne

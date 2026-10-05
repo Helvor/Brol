@@ -49,8 +49,8 @@ const span = (st, en) => {
 
 // Familles politiques → couleur (définie dans style.css)
 const PARTIES = {
-  rouge:     ['Q645787', 'Q2532509', 'Q1811565', 'Q939354', 'Q1160192'],
-  bleu:      ['Q533384', 'Q2711996', 'Q2215286', 'Q2636334', 'Q1143062', 'Q106241931', 'Q2133093', 'Q2445771'],
+  rouge:     ['Q645787', 'Q2532509', 'Q1811565', 'Q939354'],
+  bleu:      ['Q533384', 'Q2711996', 'Q2215286', 'Q2636334', 'Q1160192', 'Q106241931', 'Q2133093', 'Q2445771'],
   jaune:     ['Q28982', 'Q1725837'],
   orange:    ['Q750673', 'Q3366715', 'Q113903993', 'Q792293', 'Q1084016', 'Q113184801'],
   turquoise: ['Q840814'],
@@ -61,11 +61,11 @@ const PARTIES = {
 };
 const partyFamily = q => Object.keys(PARTIES).find(k => PARTIES[k].includes(q)) || 'gris';
 const SHORT = {
-  Q645787: 'PS', Q939354: 'Vooruit', Q533384: 'MR', Q1143062: 'Open VLD', Q28982: 'N-VA',
+  Q645787: 'PS', Q939354: 'Vooruit', Q533384: 'MR', Q28982: 'N-VA',
   Q750673: 'CD&V', Q113903993: 'cdH', Q840814: 'Les Engagés', Q655611: 'Ecolo', Q513521: 'Groen',
   Q925616: 'PTB-PVDA', Q682990: 'Vlaams Belang', Q597900: 'Vlaams Blok', Q1470087: 'DéFI',
   Q1725837: 'Volksunie', Q2711996: 'PRL', Q3366715: 'PSC', Q2532509: 'PSB', Q1811565: 'POB',
-  Q1160192: 'sp.a', Q792293: 'Parti catholique', Q2636334: 'Parti libéral', Q2215286: 'PLP',
+  Q1160192: 'Open VLD', Q792293: 'Parti catholique', Q2636334: 'Parti libéral', Q2215286: 'PLP',
   Q19760801: 'Agalev', Q106241931: 'VLD', Q1084016: 'CSP', Q113184801: 'PSC',
 };
 const PARTY_BY_SHORT = Object.fromEntries(Object.entries(SHORT).reverse().map(([q, s]) => [s, q]));
@@ -389,10 +389,11 @@ async function resolveTitles(entries) {
   }
   return out;
 }
-// Image libre : P18 sur Wikidata, sinon image principale (libre) de l'article Wikipédia FR
+// Image libre : P18 sur Wikidata, sinon image principale (libre) de l'article Wikipédia (FR, ou NL pour les titres « nl: »)
 async function freePageImage(title, lang = 'fr') {
+  if (title.startsWith('nl:')) [lang, title] = ['nl', title.slice(3)];
   const res = await wikiApi(lang, { action: 'query', prop: 'pageimages', piprop: 'name', pilicense: 'free', redirects: '1', titles: title });
-  const f = res.query.pages[0]?.pageimage;
+  const f = res.query?.pages?.[0]?.pageimage;
   return f ? f.replace(/_/g, ' ') : null;
 }
 
@@ -572,8 +573,8 @@ const SCIENCES = {
   'Physique & astronomie': ['Georges Lemaître', 'François Englert', 'Ilya Prigogine', 'Adolphe Quetelet', 'Simon Stevin', 'Jean-Baptiste Van Helmont'],
   'Médecine & biologie': ['André Vésale', 'Christian de Duve', 'Albert Claude', 'Jules Bordet', 'Corneille Heymans', 'Paul Janssen', 'Peter Piot',
     'Marc Van Montagu', 'Rembert Dodoens', 'Édouard Van Beneden'],
-  Inventions: ['Adolphe Sax', 'Zénobe Gramme', 'Leo Baekeland', 'Étienne Lenoir', 'Jean-Pierre Minckelers', 'Jean-Joseph Merlin', 'Robert Cailliau',
-    'Charles Van Depoele', 'Lieven Gevaert', 'Ernest Solvay'],
+  Inventions: ['Adolphe Sax', 'Zénobe Gramme', 'Leo Baekeland', 'Étienne Lenoir', 'Jan Pieter Minckelers', 'Jean-Joseph Merlin', 'Robert Cailliau',
+    'Charles van de Poele', 'Lieven Gevaert', 'Ernest Solvay'],
   Mathématiques: ['Gérard Mercator', 'Pierre Deligne', 'Ingrid Daubechies', 'Jean Bourgain', 'Grégoire de Saint-Vincent'],
   'Espace & exploration': ['Frank De Winne', 'Dirk Frimout', 'Adrien de Gerlache', 'Paul Otlet'],
 };
@@ -692,10 +693,10 @@ await curated('biere', [
   ['Orval (bière)', 'Trappiste', 'Wallonie'], ['Chimay (bière)', 'Trappiste', 'Wallonie'], ['Westmalle (bière)', 'Trappiste', 'Flandre'],
   ['Rochefort (bière)', 'Trappiste', 'Wallonie'], ['Westvleteren (bière)', 'Trappiste', 'Flandre', 'mythique'], ['Achel (bière)', 'Trappiste', 'Flandre'],
   ['Duvel', 'Blonde forte', 'Flandre'], ['Leffe', 'Abbaye', 'Wallonie'], ['Hoegaarden (bière)', 'Blanche', 'Flandre'],
-  ['Stella Artois', 'Pils', 'Flandre'], ['Jupiler', 'Pils', 'Wallonie'], ['Pauwel Kwak', 'Ambrée', 'Flandre'],
+  ['Stella Artois', 'Pils', 'Flandre'], ['Jupiler', 'Pils', 'Wallonie'], ['Kwak (bière)', 'Ambrée', 'Flandre'],
   ['Delirium Tremens (bière)', 'Blonde forte', 'Flandre'], ['La Chouffe', 'Blonde', 'Wallonie'], ['Kriek', 'Lambic', 'Bruxelles'],
   ['Gueuze', 'Lambic', 'Bruxelles'], ['Lambic', 'Lambic', 'Bruxelles'], ['Tripel Karmeliet', 'Triple', 'Flandre'],
-  ['Brasserie Cantillon', 'Brasserie', 'Bruxelles'], ['Rodenbach (bière)', 'Rouge des Flandres', 'Flandre'], ['Brugse Zot', 'Blonde', 'Flandre'],
+  ['Brasserie Cantillon', 'Brasserie', 'Bruxelles'], ['Rodenbach (bière)', 'Rouge des Flandres', 'Flandre'], ['nl:Brugse Zot', 'Blonde', 'Flandre'],
   ['Grimbergen (bière)', 'Abbaye', 'Flandre'], ['Affligem (bière)', 'Abbaye', 'Flandre'], ['Saison Dupont', 'Saison', 'Wallonie'],
 ], { family: 'biere', thresholds: [25, 15, 9, 5], kindLabel: 'Bière',
   stats: (o, e) => [['Type', e.kind], ['Région', e.region], ['Wikipédias', o.links]] });
@@ -725,30 +726,30 @@ await curated('chateau', [
   stats: (o, e) => [['Type', e.kind], ['Année', o.inc ?? '—'], ['Wikipédias', o.links]] });
 
 await curated('folklore', [
-  ['Carnaval de Binche', 'Carnaval', 'Wallonie', 'unesco'], ['Gille (folklore)', 'Personnage', 'Wallonie'], ['Ducasse de Mons', 'Ducasse', 'Wallonie', 'unesco'],
+  ['Carnaval de Binche', 'Carnaval', 'Wallonie', 'unesco'], ['Gille', 'Personnage', 'Wallonie'], ['Ducasse de Mons', 'Ducasse', 'Wallonie', 'unesco'],
   ['Ommegang de Bruxelles', 'Cortège', 'Bruxelles', 'unesco'], ['Ducasse d\'Ath', 'Ducasse', 'Wallonie', 'unesco'], ['Procession du Saint-Sang', 'Procession', 'Flandre', 'unesco'],
   ['Meyboom', 'Fête', 'Bruxelles', 'unesco'], ['Kattenstoet', 'Cortège', 'Flandre'], ['Marches de l\'Entre-Sambre-et-Meuse', 'Marche', 'Wallonie', 'unesco'],
   ['Carnaval d\'Alost', 'Carnaval', 'Flandre'], ['Cwarmê', 'Carnaval', 'Wallonie', 'unesco'], ['Laetare de Stavelot', 'Carnaval', 'Wallonie'],
-  ['Tchantchès', 'Personnage', 'Wallonie'], ['Saint-Nicolas en Belgique', 'Fête', 'Belgique'], ['Géant processionnel', 'Tradition', 'Belgique', 'unesco'],
-  ['Pêche à la crevette à cheval', 'Tradition', 'Flandre', 'unesco'], ['Fêtes de Wallonie', 'Fête', 'Wallonie'], ['Tour Sainte-Gertrude', 'Procession', 'Wallonie'],
+  ['Tchantchès', 'Personnage', 'Wallonie'], ['Saint-Nicolas (fête)', 'Fête', 'Belgique'], ['Géants et dragons processionnels de Belgique et de France', 'Tradition', 'Belgique', 'unesco'],
+  ['Pêche aux crevettes à cheval à Oostduinkerke', 'Tradition', 'Flandre', 'unesco'], ['Fêtes de Wallonie', 'Fête', 'Wallonie'], ['Tour Sainte-Gertrude', 'Procession', 'Wallonie'],
 ], { family: 'folklore', thresholds: [20, 10, 6, 3], kindLabel: 'Folklore',
   stats: (o, e) => [['Type', e.kind], ['Région', e.region], ['UNESCO', e.extra === 'unesco' ? 'Oui' : '—']] });
 
 await curated('groupe', [
   ['dEUS', 'Rock', 'Flandre'], ['Hooverphonic', 'Trip hop', 'Flandre'], ['Front 242', 'EBM', 'Bruxelles'], ['K\'s Choice', 'Rock', 'Flandre'],
-  ['Girls in Hawaii', 'Indie', 'Wallonie'], ['Technotronic', 'Dance', 'Bruxelles'], ['Vaya Con Dios (groupe)', 'Pop', 'Bruxelles'], ['Soulwax', 'Électro', 'Flandre'],
-  ['Ghinzu', 'Rock', 'Bruxelles'], ['Clouseau (groupe)', 'Pop', 'Flandre'], ['Milk Inc.', 'Dance', 'Flandre'], ['Triggerfinger', 'Rock', 'Flandre'],
+  ['Girls in Hawaii', 'Indie', 'Wallonie'], ['Technotronic', 'Dance', 'Bruxelles'], ['Vaya Con Dios', 'Pop', 'Bruxelles'], ['Soulwax', 'Électro', 'Flandre'],
+  ['Ghinzu', 'Rock', 'Bruxelles'], ['Clouseau', 'Pop', 'Flandre'], ['Milk Inc.', 'Dance', 'Flandre'], ['Triggerfinger', 'Rock', 'Flandre'],
   ['Oscar and the Wolf', 'Pop', 'Flandre'], ['Balthazar (groupe)', 'Indie', 'Flandre'], ['Puggy', 'Pop rock', 'Bruxelles'], ['Telex (groupe)', 'Synthpop', 'Bruxelles'],
-  ['Dimitri Vegas et Like Mike', 'EDM', 'Flandre'], ['Arsenal (groupe)', 'Électro', 'Flandre'], ['Mud Flow', 'Rock', 'Bruxelles'], ['Les Snuls', 'Humour', 'Bruxelles'],
+  ['Dimitri Vegas & Like Mike', 'EDM', 'Flandre'], ['Arsenal (groupe)', 'Électro', 'Flandre'], ['Mud Flow', 'Rock', 'Bruxelles'], ['Les Snuls', 'Humour', 'Bruxelles'],
 ], { family: 'groupe', thresholds: [35, 20, 12, 6], kindLabel: 'Groupe',
   stats: (o, e) => [['Genre', e.kind], ['Formation', o.inc ?? '—'], ['Wikipédias', o.links]] });
 
 await curated('festival', [
   ['Tomorrowland (festival)', 'Électro', 'Flandre'], ['Rock Werchter', 'Rock', 'Flandre'], ['Dour Festival', 'Alternatif', 'Wallonie'],
   ['Francofolies de Spa', 'Chanson', 'Wallonie'], ['Pukkelpop', 'Rock', 'Flandre'], ['Graspop Metal Meeting', 'Metal', 'Flandre'],
-  ['Les Ardentes', 'Hip-hop', 'Wallonie'], ['Couleur Café', 'Musiques du monde', 'Bruxelles'], ['Fêtes de Gand', 'Fête populaire', 'Flandre'],
-  ['Esperanzah!', 'Musiques du monde', 'Wallonie'], ['Lokerse Feesten', 'Rock', 'Flandre'], ['Brussels International Fantastic Film Festival', 'Cinéma', 'Bruxelles'],
-  ['Ronquières Festival', 'Pop', 'Wallonie'], ['Festival international du film francophone de Namur', 'Cinéma', 'Wallonie'], ['Brussels Jazz Marathon', 'Jazz', 'Bruxelles'],
+  ['Les Ardentes', 'Hip-hop', 'Wallonie'], ['Couleur Café', 'Musiques du monde', 'Bruxelles'], ['Gentse Feesten', 'Fête populaire', 'Flandre'],
+  ['Esperanzah!', 'Musiques du monde', 'Wallonie'], ['nl:Lokerse Feesten', 'Rock', 'Flandre'], ['Brussels International Fantastic Film Festival', 'Cinéma', 'Bruxelles'],
+  ['nl:Ronquières Festival', 'Pop', 'Wallonie'], ['Festival international du film francophone de Namur', 'Cinéma', 'Wallonie'], ['Brussels Jazz Weekend', 'Jazz', 'Bruxelles'],
 ], { family: 'festival', thresholds: [25, 14, 8, 4], kindLabel: 'Festival',
   stats: (o, e) => [['Genre', e.kind], ['Création', o.inc ?? '—'], ['Wikipédias', o.links]] });
 
