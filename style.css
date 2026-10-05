@@ -922,10 +922,17 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .tour-q span { font-size: 13px; color: var(--ink-2); }
 .tour-score { margin-left: auto; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .tour-score > b { font-family: var(--mono); font-size: 30px; color: var(--gold); }
-.tour-map { width: 100%; max-width: 900px; max-height: 62vh; display: block; margin: 0 auto; }
+.tour-map { width: 100%; max-width: 900px; max-height: max(320px, calc(100vh - 400px)); display: block; margin: 0 auto; }
+.tour-prov { stroke: var(--bg); stroke-width: 2.5; stroke-linejoin: round; pointer-events: none; }
+.tour-prov.r-fl { fill: color-mix(in srgb, #f2c400 16%, var(--bg-3)); }
+.tour-prov.r-wa { fill: color-mix(in srgb, #c8102e 10%, var(--bg-3)); }
+.tour-prov.r-bx { fill: color-mix(in srgb, #1d4f9e 22%, var(--bg-3)); }
+.tour-city { fill: var(--ink); stroke: var(--bg); stroke-width: 2; pointer-events: none; }
+.tour-city-name { font-family: var(--text); font-weight: 600; font-size: 15px; fill: var(--ink); paint-order: stroke; stroke: var(--bg); stroke-width: 4px; pointer-events: none; }
+.tour-edge path { fill: none; stroke: var(--ink-2); stroke-width: 5; stroke-linejoin: round; pointer-events: none; }
 .tour-map.is-active { cursor: crosshair; }
 .tour-land { fill: var(--bg-3); stroke: var(--ink-2); stroke-width: 2; stroke-linejoin: round; }
-.tour-map.is-active:hover .tour-land { fill: color-mix(in srgb, var(--gold) 10%, var(--bg-3)); }
+.tour-map.is-active:hover .tour-prov { filter: brightness(1.04); }
 .tour-guess { fill: var(--danger); stroke: #fff; stroke-width: 3; }
 .tour-true { fill: var(--r-peu-commune); stroke: #fff; stroke-width: 3; }
 .tour-line { stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: 8 6; }
@@ -1217,3 +1224,15 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .mission.is-claimed .m-text { color: var(--ink-2); text-decoration: line-through; }
 .binder-summary .late, .detail-info .late, small.late { color: var(--gold); font-family: var(--mono); }
 .shop-head > div:first-child { align-self: flex-start; }
+@media (max-width: 760px) {
+  .tour-q { gap: 10px; padding: 8px 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .tour-img { width: 54px; height: 44px; }
+  .tour-q b { font-size: 19px; }
+  .tour-q span { font-size: 12px; }
+  .tour-score { flex-direction: row; align-items: center; width: 100%; margin-left: 0; gap: 10px; }
+  .tour-score > b { font-size: 22px; }
+  .tour-score .btn { margin-left: auto; padding: 8px 12px; }
+  .tour-map { max-height: none; }
+  .tour-city-name { font-size: 21px; }
+  .tour-city { r: 7; }
+}

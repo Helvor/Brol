@@ -468,6 +468,25 @@
   };
   // Régions et provinces exclues : un seul point pour une grande zone, impossible à « placer » justement
   const TOUR_POOL = CARDS.filter(c => c.coord && !['edition', 'region', 'province'].includes(c.cat) && (c.cat !== 'commune' || c.rarity !== 'commune'));
+  // Repères de la carte : provinces (couleur de leur région) et quelques grandes villes.
+  // Le nom d'une ville est masqué quand c'est justement elle qu'il faut placer.
+  const PROV_REGION = { 'Flandre-Occidentale': 'fl', 'Flandre-Orientale': 'fl', Anvers: 'fl', Limbourg: 'fl', 'Brabant flamand': 'fl', Bruxelles: 'bx' };
+  const ringPath = r => 'M' + r.map(p => proj(p).map(v => v.toFixed(1)).join(',')).join('L') + 'Z';
+  const TOUR_CITIES = ['Ville de Bruxelles', 'Bruxelles', 'Anvers', 'Gand', 'Liège', 'Charleroi', 'Namur', 'Bruges', 'Hasselt', 'Mons', 'Arlon', 'Louvain']
+    .map(n => CARDS.find(c => c.cat === 'commune' && c.name === n && c.coord)).filter((c, i, a) => c && a.indexOf(c) === i);
+  function tourBase(hideId) {
+    const provs = (window.BE_PROVINCES || []).map(p => {
+      return `<path d="${p.rings.map(ringPath).join('')}" class="tour-prov r-${PROV_REGION[p.fr] || 'wa'}"/>`;
+    }).join('');
+    // Bord extérieur : les provinces redessinées en trait épais, sous leur remplissage
+    const edge = (window.BE_PROVINCES || []).map(p => `<path d="${p.rings.map(ringPath).join('')}"/>`).join('');
+    const cities = TOUR_CITIES.filter(c => c.id !== hideId).map(c => {
+      const [x, y] = proj(c.coord);
+      const n = nm(c).replace(/^Ville de |^Stad /, '');
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" class="tour-city"/><text x="${(x + 9).toFixed(1)}" y="${(y + 5).toFixed(1)}" class="tour-city-name">${esc(n)}</text>`;
+    }).join('');
+    return `<g class="tour-edge">${edge}</g>` + provs + cities;
+  }
   let TR = null;
   function startTour() {
     played('tour');
@@ -517,7 +536,7 @@
         <div><small>${T('t_where')}</small><b>${esc(nm(c))}</b><span>${esc(window.RDL.catLabel(c.cat))} · ${esc(window.I18N.subtitle(c))}</span></div>
         ${TR.guess ? `<div class="tour-score"><b>${TR.guess.score}</b><small>${T('t_dist', Math.round(TR.guess.d), TR.guess.score)}</small><button class="btn btn-gold" id="t-next">${TR.i === 9 ? T('t_end') : T('t_next')}</button></div>` : ''}
       </div>`}
-      <svg class="tour-map${TR.guess || ended ? '' : ' is-active'}" viewBox="-20 -20 ${W + 40} ${H + 40}"><path d="${path}" class="tour-land"/>${marks}</svg>`;
+      <svg class="tour-map${TR.guess || ended ? '' : ' is-active'}" viewBox="-20 -20 ${W + 40} ${H + 40}">${window.BE_PROVINCES ? '' : `<path d="${path}" class="tour-land"/>`}${tourBase(ended ? null : c.id)}${marks}</svg>`;
     if (!ended && !TR.guess) area().querySelector('.tour-map').addEventListener('click', tourClick);
     $('#t-next')?.addEventListener('click', tourNext);
     $('#t-again')?.addEventListener('click', startTour);
