@@ -410,6 +410,12 @@ async function features() {
       await page.waitForSelector('.fuse-result');
       const r = await page.evaluate(ids => [window.RDL.countOf(ids[0], 'normal'), window.RDL.countOf(ids[1], 'normal'), window.RDL.state.stats.fused], ids);
       check(r[0] === 1 && r[1] === 1 && r[2] === 1, 'fusion incorrecte : ' + r);
+      // Holo d'une carte déjà possédée : « Nouvelle version », pas « Nouvelle »
+      await page.evaluate(() => { const c = window.RDL.CARDS.find(x => x.rarity === 'epique'); window.RDL.state.owned[c.id] = 4; delete window.RDL.state.owned[c.id + '|holo']; window.__holo = c.id; });
+      await page.click('#fuse-close'); await page.click('#fuse-btn');
+      await page.click(await page.evaluate(() => `[data-holo="${window.__holo}"]:not([data-max])`));
+      const holoTag = await page.textContent('.fuse-result .tag-inline');
+      check(/^Nouvelle version/.test(holoTag), 'Holo d’une carte possédée : ' + holoTag);
       // « Max » : toutes les fusions possibles d'un coup, la fenêtre ne remonte pas en haut
       await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'commune').slice(0, 5); C.forEach(c => window.RDL.state.owned[c.id] = 5); });
       await page.click('#fuse-close'); await page.click('#fuse-btn');

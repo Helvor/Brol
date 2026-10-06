@@ -1161,6 +1161,11 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .fuse-result small { color: var(--ink-2); }
 .tag-inline { display: inline-block; font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px; background: var(--gold-hi); color: #1a1300; }
 .tag-inline.dup { background: var(--bg-3); color: var(--ink-2); }
+/* Nouvelle version d'une carte déjà possédée : contour doré, pas le fond plein d'une nouvelle carte */
+.tag-inline.ver, .slot .tag.ver { background: #17140b; color: var(--gold-hi, #f6d478); box-shadow: inset 0 0 0 1.5px var(--gold-hi, #f6d478); }
+.slot .tag { white-space: nowrap; }
+.slot .tag.ver { font-size: 12px; letter-spacing: .04em; }
+.fuse-lot .cell.is-ver { outline: 2px dashed var(--gold); outline-offset: 3px; border-radius: 6px; }
 
 .daily-dlg { max-width: 360px; text-align: center; color: #f1eee6; padding-top: 44px; }
 .daily-dlg .close { top: 0; right: 0; color: #c9c7c0; }

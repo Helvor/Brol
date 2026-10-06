@@ -159,6 +159,16 @@
   const PACK_SIZE = 5;
   const START_COINS = 1000;
   const NEW_CARD_BONUS = 5;
+  // Ce qu'apporte une carte tirée, avant de l'ajouter : une nouvelle carte (absente de l'album, toutes versions
+  // confondues), une nouvelle version d'une carte qu'on a déjà (Holo, Or…), ou un doublon de la même version.
+  const gotKind = (id, finish) => !totalOf(id) ? 'card' : !countOf(id, finish) ? 'version' : 'dup';
+  // Étiquette : « Nouvelle », « Nouvelle version · Holo », « Doublon · Or » (court dans la grille du lot de 10)
+  const gotLabel = (got, finish, short = false) => {
+    const fin = finish !== 'normal' ? ` · ${fl(finish)}` : '';
+    if (got === 'version') return short ? t('newVerShort') : t('newVer') + fin;
+    if (short) return got === 'card' ? t('new') : '';
+    return (got === 'card' ? t('new') : t('dup')) + fin;
+  };
   const FREE_EVERY_MS = 2 * 60 * 1000;
   const FREE_MAX = 5;
   const PITY = 40; // une légendaire ou mieux au plus tard tous les 40 paquets
@@ -679,15 +689,14 @@
   function rollPack(pack, usedFree) {
     const forceLegend = state.pity >= PITY - 1;
     const drawn = drawPack(pack, forceLegend);
-    let newCount = 0;
+    let newCount = 0, newVer = 0;
     const revealed = drawn.map(d => {
-      const key = keyOf(d.card.id, d.finish);
-      const before = state.owned[key] || 0;
-      state.owned[key] = before + 1;
-      if (!before) newCount++;
-      return { ...d, isNew: before === 0 };
+      const got = gotKind(d.card.id, d.finish), key = keyOf(d.card.id, d.finish);
+      state.owned[key] = (state.owned[key] || 0) + 1;
+      if (got === 'card') newCount++; else if (got === 'version') newVer++;
+      return { ...d, got, isNew: got === 'card' };
     });
-    const bonus = newCount * NEW_CARD_BONUS;
+    const bonus = (newCount + newVer) * NEW_CARD_BONUS; // une nouvelle version rapporte le bonus aussi
     state.coins += bonus;
     state.packs++;
     mission('packs'); mission('new', newCount);
@@ -713,7 +722,7 @@
     const pityTriggered = forceLegend && legends > 0;
     if (pityTriggered) st.pityHits++;
     state.pity = legends ? 0 : state.pity + 1;
-    return { revealed, newCount, bonus, pityTriggered };
+    return { revealed, newCount, newVer, bonus, pityTriggered };
   }
 
   function openPack(pack, n = 1) {
@@ -723,7 +732,7 @@
     for (const d of revealed.slice(0, 15)) { const p = photoOf(d.card, d.finish); if (p) new Image().src = imgUrl(p); }
     const sum = k => res.packs.reduce((a, p) => a + p[k], 0);
     renderWallet();
-    current = { pack, n, revealed, newCount: sum('newCount'), bonus: sum('bonus'), usedFree: res.usedFree, usedTicket: res.usedTicket, cost: res.cost, pityTriggered: res.packs.some(p => p.pityTriggered) };
+    current = { pack, n, revealed, newCount: sum('newCount'), newVer: sum('newVer'), bonus: sum('bonus'), usedFree: res.usedFree, usedTicket: res.usedTicket, cost: res.cost, pityTriggered: res.packs.some(p => p.pityTriggered) };
     // Solde affiché pendant l'ouverture : paquet payé, bonus des nouvelles cartes ajouté à la fin
     stageShown = state.coins - current.bonus; stageAnim = 0;
     $('#stage-coins').textContent = fmt(stageShown);
@@ -792,16 +801,16 @@
     flipRun++; autoFlipping = false;
     const bulk = current.n > 1;
     $('#reveal').classList.toggle('is-bulk', bulk);
-    $('#reveal').innerHTML = current.revealed.map(({ card, finish, isNew }, i) => {
+    $('#reveal').innerHTML = current.revealed.map(({ card, finish, got }, i) => {
       const rank = R[card.rarity].rank;
       const special = finish !== 'normal';
       const ed = card.cat === 'edition', ev = F[finish].pack;
-      const tag = (ed ? t('edTag') + ' · ' : '') + (bulk ? (isNew ? t('new') : '') : (isNew ? t('new') : t('dup')) + (special ? ` · ${fl(finish)}` : ''));
+      const tag = (ed ? t('edTag') + ' · ' : '') + gotLabel(got, finish, bulk);
       const hit = ev ? F[finish].color : ed ? packById(card.pack).metal[1] : finish === 'or' ? '#f6d478' : special && rank < R.epique.rank ? '#9fe8ff' : `var(--r-${card.rarity})`;
       return `
       <div class="slot${rank >= R.epique.rank || special || ed ? ' tease' : ''}${rank >= R.legendaire.rank || finTier(finish) >= F.plein.rank || ed ? ' big-hit' : ''}${ed ? ' is-ed' : ''}"
            style="--hit: ${hit}; --dx: calc(${2 - i % PACK_SIZE} * (var(--w) + 22px)); --dr: ${(i % PACK_SIZE - 2) * 6}deg; animation-delay: ${bulk ? Math.floor(i / PACK_SIZE) * 70 + (i % PACK_SIZE) * 25 : i * 90}ms" data-i="${i}">
-        ${tag ? `<span class="tag${isNew ? '' : ' dup'}${special ? ' special' : ''}${ev ? ' ev' : ''}${ed ? ' ed' : ''}"${ev || ed ? ` style="--tagc:${hit}"` : ''}>${tag}</span>` : ''}
+        ${tag ? `<span class="tag${got === 'card' ? '' : got === 'version' ? ' ver' : ' dup'}${special && got !== 'version' ? ' special' : ''}${ev ? ' ev' : ''}${ed ? ' ed' : ''}"${ev || ed ? ` style="--tagc:${hit}"` : ''}>${tag}</span>` : ''}
         <div class="inner">
           <div class="face back">${cardBack()}</div>
           <div class="face front">${cardHTML(card, { finish })}</div>
@@ -879,10 +888,10 @@
   });
 
   function finishReveal() {
-    const { pack, n, newCount, bonus, revealed } = current;
-    const dups = revealed.length - newCount;
+    const { pack, n, newCount, newVer, bonus, revealed } = current;
+    const dups = revealed.length - newCount - newVer;
     const specials = revealed.filter(r => r.finish !== 'normal').length;
-    $('#stage-summary').innerHTML = t('summary', newCount, dups, specials, bonus);
+    $('#stage-summary').innerHTML = t('summary', newCount, dups, specials, bonus, newVer);
     if (bonus) SFX.coin();
     current.finished = true;
     stageCoinsSync();
@@ -1103,10 +1112,9 @@
   const holoCandidates = () => CARDS.filter(c => countOf(c.id, 'normal') > HOLO_COST);
   const holoMax = id => Math.floor((countOf(id, 'normal') - 1) / HOLO_COST); // un exemplaire standard est toujours gardé
   function addCard(card, finish) {
-    const key = keyOf(card.id, finish);
-    const isNew = !state.owned[key];
+    const got = gotKind(card.id, finish), key = keyOf(card.id, finish);
     state.owned[key] = (state.owned[key] || 0) + 1;
-    return { card, finish, isNew };
+    return { card, finish, got, isNew: got === 'card' };
   }
   function fuseRarity(rarity) {
     const next = RARITIES[R[rarity].rank + 1];
@@ -1132,17 +1140,19 @@
   }
 
   const fuseDlg = $('#fuse');
+  const fuseManyLabel = rs => t('fuseMany', rs.length, rs.filter(r => r.got === 'card').length, rs.filter(r => r.got === 'version').length);
   // Résultat d'une ou plusieurs fusions : la carte obtenue, ou le lot (les plus rares d'abord)
   function fuseResultHTML(results) {
     if (!results?.length) return '';
     if (results.length === 1) {
       const r = results[0];
       return `<div class="fuse-result"><div class="cell">${cardHTML(r.card, { finish: r.finish })}</div>
-        <div><span class="tag-inline${r.isNew ? '' : ' dup'}">${r.isNew ? t('new') : t('dup')}</span><b>${esc(nm(r.card))}</b><small>${rl(r.card.rarity)}${r.finish !== 'normal' ? ' · ' + fl(r.finish) : ''}</small></div></div>`;
+        <div><span class="tag-inline${r.got === 'card' ? '' : r.got === 'version' ? ' ver' : ' dup'}">${gotLabel(r.got, r.finish)}</span><b>${esc(nm(r.card))}</b><small>${rl(r.card.rarity)}${r.finish !== 'normal' ? ' · ' + fl(r.finish) : ''}</small></div></div>`;
     }
-    const best = results.slice().sort((a, b) => R[b.card.rarity].rank - R[a.card.rarity].rank || b.isNew - a.isNew).slice(0, 8);
-    return `<div class="fuse-result is-many"><b>${t('fuseMany', results.length, results.filter(r => r.isNew).length)}</b>
-      <div class="fuse-lot">${best.map(r => `<div class="cell${r.isNew ? ' is-new' : ''}">${cardHTML(r.card, { finish: r.finish })}</div>`).join('')}</div>
+    const rank = r => r.got === 'card' ? 2 : r.got === 'version' ? 1 : 0;
+    const best = results.slice().sort((a, b) => R[b.card.rarity].rank - R[a.card.rarity].rank || rank(b) - rank(a)).slice(0, 8);
+    return `<div class="fuse-result is-many"><b>${fuseManyLabel(results)}</b>
+      <div class="fuse-lot">${best.map(r => `<div class="cell${r.got === 'card' ? ' is-new' : r.got === 'version' ? ' is-ver' : ''}">${cardHTML(r.card, { finish: r.finish })}</div>`).join('')}</div>
       ${results.length > best.length ? `<small>${t('fuseMore', results.length - best.length)}</small>` : ''}</div>`;
   }
   function renderFuse(results = null) {
@@ -1187,8 +1197,8 @@
     renderFuse(results);
     const again = fuseDlg.querySelector(sel)?.closest('.fuse-row, .fuse-holo');
     fuseDlg.scrollTop = again ? scroll + again.getBoundingClientRect().top - before : scroll;
-    toast(results.length === 1 ? t('fuseGot', nm(top.card), rl(top.card.rarity) + (top.finish !== 'normal' ? ' · ' + fl(top.finish) : ''), top.isNew)
-      : t('fuseMany', results.length, results.filter(r => r.isNew).length));
+    toast(results.length === 1 ? t('fuseGot', nm(top.card), rl(top.card.rarity) + (top.finish !== 'normal' ? ' · ' + fl(top.finish) : ''), top.got)
+      : fuseManyLabel(results));
     renderWallet(); if ($('#view-binder').classList.contains('is-active')) renderBinder();
     checkAchievements();
   });
@@ -1232,7 +1242,7 @@
         <div class="inner"><div class="face back">${cardBack()}</div><div class="face front">${cardHTML(res.card, { finish: res.finish })}</div></div>
       </div>
       <p class="daily-hint">${t('dailyHint')}</p>
-      <p class="daily-after" hidden>${res.isNew ? t('new') : t('dup')} · +${DAILY_COINS} ${t('coinsWord')} · ${dailyMin(res.streak + 1) === 'commune' ? t('dailyCome') : t('dailyTomorrow', rl(dailyMin(res.streak + 1)))}</p>`;
+      <p class="daily-after" hidden>${gotLabel(res.got, res.finish)} · +${DAILY_COINS} ${t('coinsWord')} · ${dailyMin(res.streak + 1) === 'commune' ? t('dailyCome') : t('dailyTomorrow', rl(dailyMin(res.streak + 1)))}</p>`;
     dailyDlg.showModal();
     renderWallet(); renderDaily();
     checkAchievements();
