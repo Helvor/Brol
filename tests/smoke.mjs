@@ -391,6 +391,15 @@ async function features() {
       await page.unroute(API_RE); await page.unroute(IMG);
       check(r.w === 1080 && r.h === 1350 && r.png > 20000 && r.photo === '1', 'image de partage : ' + JSON.stringify(r));
     });
+    await step('signaler un bug (issue GitHub pré-remplie)', async () => {
+      await page.click('#bug');
+      await page.waitForSelector('#bug-dlg[open]');
+      await page.$eval('#bug-actions a', a => a.click()); // texte vide : refusé, message dans la fenêtre
+      check(await page.isVisible('#bug-msg') && await page.$eval('#bug-dlg', d => d.open), 'signalement vide accepté');
+      const r = await page.evaluate(() => window.RDL.bugReport('Le paquet ne s’ouvre pas', true));
+      check(r.web.startsWith('https://github.com/Helvor/Brol/issues/new?') && r.body.includes('Le paquet ne s’ouvre pas') && r.body.includes('Version') && !r.body.includes('owned'), 'lien de signalement : ' + r.web.slice(0, 120));
+      await page.click('#bug-close');
+    });
     await step('fusion des doublons', async () => {
       const ids = await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'rare'); window.RDL.state.owned[C[0].id] = 4; window.RDL.state.owned[C[1].id] = 3; window.RDL.save(); return [C[0].id, C[1].id]; });
       await page.click('.tab[data-view="binder"]');
