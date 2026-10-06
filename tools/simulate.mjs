@@ -57,7 +57,7 @@ async function simulate(strategy) {
       let pack = belgique, n = 1;
       if (strategy === 'farmeur') {
         pack = smallest[0];
-        if (s.free === 0 && s.coins >= R.bulkPrice(pack)) n = R.BULK;
+        if (s.free === 0 && s.coins >= R.bulkPrice(pack)) n = R.bulkOf(pack);
       }
       const res = R.buyPacks(pack, n);
       if (!res) { advance(30); collect(); if (strategy === 'normal' || s.free) continue; const v = R.sellDuplicates(); sold += v.gain; continue; }
