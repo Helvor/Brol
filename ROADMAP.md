@@ -35,6 +35,7 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 ## Phase 4 — Contenu
 
 - [x] **Nouvelle catégorie Sciences** (35 cartes) : scientifiques et inventeurs belges (Lemaître, Sax, Solvay, Vésale, Mercator, Englert, de Duve…), avec photos libres et rareté relative comme les autres catégories. Vendue dans un nouveau paquet « Sciences ».
+- [x] **Bourgmestres à jour** : le bourgmestre en fonction vient de l'infobox Wikipédia NL de chaque commune (FR en secours), avec les titulaires empêchés et les faisant fonction (Namur, Anvers, Brasschaat…). Wikidata ne sert plus que pour les mandats terminés ; les anciens bourgmestres gardent leur carte (« Ancien bourgmestre de… »).
 - [ ] **Mise à jour automatique des données** : GitHub Action mensuelle qui relance `node tools/build-cards.mjs --fresh` et ouvre une pull request avec les changements (nouveaux ministres, populations, photos). Ajouter un garde-fou : signaler les cartes disparues, pour ne pas casser les collections existantes.
 
 ## Phase 5 — En ligne

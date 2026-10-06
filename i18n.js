@@ -178,7 +178,8 @@
 
   // Bourgmestre : « Burgemeester van » + nom néerlandais de la commune (lu sur sa carte)
   const communeNl = id => { const c = (window.CARDS || []).find(x => x.id === id); return c ? (c.nl?.name || c.name) : ''; };
-  const mayorNl = id => `Burgemeester van ${communeNl(id)}`;
+  const MAYOR_NL = { ff: 'Waarnemend burgemeester', emp: 'Titelvoerend burgemeester', old: 'Voormalig burgemeester' }; // faisant fonction / empêché / ancien
+  const mayorNl = (id, kind) => `${MAYOR_NL[kind] || 'Burgemeester'} van ${communeNl(id)}`;
 
   window.I18N = {
     get lang() { return lang; },
@@ -191,7 +192,7 @@
     subtitle(c) {
       if (lang !== 'nl') return c.subtitle || '';
       if (c.cat === 'politique' && c.posId) return capF(SPECIAL_POS[c.posId] || window.POS_NL?.[c.posId]) || c.subtitle;
-      if (c.mayorOf) return mayorNl(c.mayorOf);
+      if (c.mayorOf) return mayorNl(c.mayorOf, c.mayorKind);
       if (c.nl?.subtitle) return c.nl.subtitle;
       return tMetaPart(c.subtitle || '');
     },
@@ -200,7 +201,7 @@
     roles(c) {
       if (c.rolesData) {
         return c.rolesData.map(r => {
-          const label = lang !== 'nl' ? r.fr : r.pos === 'MAYOR' ? mayorNl(r.commune) : capF(SPECIAL_POS[r.pos] || window.POS_NL?.[r.pos]) || r.fr;
+          const label = lang !== 'nl' ? r.fr : r.pos === 'MAYOR' ? mayorNl(r.commune, r.kind) : capF(SPECIAL_POS[r.pos] || window.POS_NL?.[r.pos]) || r.fr;
           const extra = r.leg ? ' — ' + window.I18N.t('leg', r.leg) : r.cab ? ` — ${window.I18N.t('gov')} ${r.cab}` : '';
           const when = r.live ? ` (${window.I18N.t('live')})` : r.span ? ` (${lang === 'nl' ? r.span.replace('depuis', 'sinds') : r.span})` : '';
           return label + extra + when;

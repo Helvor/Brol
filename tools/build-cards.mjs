@@ -289,11 +289,14 @@ for (const o of byPerson.values()) {
     meta = legNums.length === 1 ? legLabel(last) : legRange(legNums);
   } else meta = mpTerms.length ? span(mpTerms[0].st, mpTerms.at(-1).en) : '';
 
+  // La fonction actuelle (lue sur Wikipédia) ne se répète pas avec la même fonction encore ouverte sur Wikidata
+  const notNow = t => !(o.current && !t.en && t.cab?.name === o.current.cab.name);
+  const pmPast = pmTerms.filter(notNow), minPast = ministries.filter(notNow);
   const roles = [
     ...(o.current ? [`${o.current.role} — ${o.current.cab.name} (en fonction)`] : []),
-    ...pmTerms.map(t => `Premier ministre${t.cab ? ` — Gouv. ${t.cab.name}` : ''}${span(t.st, t.en) ? ` (${span(t.st, t.en)})` : ''}`),
+    ...pmPast.map(t => `Premier ministre${t.cab ? ` — Gouv. ${t.cab.name}` : ''}${span(t.st, t.en) ? ` (${span(t.st, t.en)})` : ''}`),
     ...regional.map(t => `${t.label}${span(t.st, t.en) ? ` (${span(t.st, t.en)})` : ''}`),
-    ...ministries.map(t => `${t.label}${t.cab ? ` — Gouv. ${t.cab.name}` : ''}${span(t.st, t.en) ? ` (${span(t.st, t.en)})` : ''}`),
+    ...minPast.map(t => `${t.label}${t.cab ? ` — Gouv. ${t.cab.name}` : ''}${span(t.st, t.en) ? ` (${span(t.st, t.en)})` : ''}`),
     ...(legNums.length
       ? legNums.map(n => 'Député fédéral — ' + legLabel(legislatures.find(l => l.n === n)))
       : mpTerms.length ? [`Député fédéral${span(mpTerms[0].st, mpTerms.at(-1).en) ? ` (${span(mpTerms[0].st, mpTerms.at(-1).en)})` : ''}`] : []),
@@ -301,9 +304,9 @@ for (const o of byPerson.values()) {
   // Version structurée du parcours, pour l'afficher dans les deux langues
   const rolesData = [
     ...(o.current ? [{ pos: o.current.vpm ? 'VPM' : o.current.pm ? PM : 'MIN', fr: o.current.role, cab: o.current.cab.name, live: true }] : []),
-    ...pmTerms.map(t => ({ pos: PM, fr: 'Premier ministre', cab: t.cab?.name, span: span(t.st, t.en) })),
+    ...pmPast.map(t => ({ pos: PM, fr: 'Premier ministre', cab: t.cab?.name, span: span(t.st, t.en) })),
     ...regional.map(t => ({ pos: t.pos, fr: t.label, span: span(t.st, t.en) })),
-    ...ministries.map(t => ({ pos: t.pos, fr: t.label, cab: t.cab?.name, span: span(t.st, t.en) })),
+    ...minPast.map(t => ({ pos: t.pos, fr: t.label, cab: t.cab?.name, span: span(t.st, t.en) })),
     ...(legNums.length
       ? legNums.map(n => { const l = legislatures.find(x => x.n === n); return { pos: MP, fr: 'Député fédéral', leg: n, span: l.st ? span(l.st, l.en) : '' }; })
       : mpTerms.length ? [{ pos: MP, fr: 'Député fédéral', span: span(mpTerms[0].st, mpTerms.at(-1).en) }] : []),
@@ -848,69 +851,6 @@ for (const o of comm.values()) {
   });
 }
 
-// ---------- Bourgmestres ----------
-// Chef de l'exécutif (P6) de chaque commune, avec photo libre uniquement. Wikidata n'est pas à jour depuis les
-// élections communales de 2024 : on n'affiche jamais « en fonction », seulement les années du mandat
-// (« depuis 2011 », « 1995–2012 »). Une personne qui a déjà une carte (député, ministre…) garde sa carte :
-// le mandat s'ajoute à son parcours. Rareté : selon la population de la commune.
-{
-  const ids = [...comm.keys()];
-  const rows = [];
-  for (let i = 0; i < ids.length; i += 200) rows.push(...await sparql(`
-SELECT ?c ?p ?pLabel ?st ?en ?img ?birth WHERE {
-  VALUES ?c { ${ids.slice(i, i + 200).map(q => 'wd:' + q).join(' ')} }
-  ?c p:P6 ?s. ?s ps:P6 ?p. ?p wdt:P31 wd:Q5.
-  OPTIONAL { ?s pq:P580 ?st } OPTIONAL { ?s pq:P582 ?en } OPTIONAL { ?p wdt:P18 ?img } OPTIONAL { ?p wdt:P569 ?birth }
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,nl,mul". }
-}`));
-  const mayors = new Map();
-  for (const r of rows) {
-    const id = qid(r.p), c = comm.get(qid(r.c));
-    const o = mayors.get(id) || { id, name: r.pLabel, img: file(r.img), birth: year(r.birth), terms: new Map() };
-    o.img ||= file(r.img);
-    o.terms.set(c.id + (r.st || ''), { c, st: r.st, en: r.en });
-    mayors.set(id, o);
-  }
-  // Parti le plus récent (même règle que pour les autres politiques)
-  const parties = new Map();
-  const mids = [...mayors.keys()];
-  for (let i = 0; i < mids.length; i += 200) {
-    const aff = await sparql(`SELECT ?p ?party ?st ?en WHERE { VALUES ?p { ${mids.slice(i, i + 200).map(q => 'wd:' + q).join(' ')} }
-  ?p p:P102 ?s. ?s ps:P102 ?party; wikibase:rank ?rank. FILTER(?rank != wikibase:DeprecatedRank) OPTIONAL { ?s pq:P580 ?st } OPTIONAL { ?s pq:P582 ?en } }`);
-    for (const r of aff) (parties.get(qid(r.p)) || parties.set(qid(r.p), []).get(qid(r.p))).push({ q: qid(r.party), st: year(r.st) || 0, en: r.en ? year(r.en) : Infinity });
-  }
-  const de = n => /^[AEIOUYÉÈÊH]/i.test(n) ? `d’${n}` : `de ${n}`;
-  const termSpan = t => t.en ? span(t.st, t.en) : t.st ? `depuis ${year(t.st)}` : '';
-  let added = 0, merged = 0;
-  for (const o of mayors.values()) {
-    // Mandats du plus récent au plus ancien
-    const terms = [...o.terms.values()].sort((a, b) => (b.st || '').localeCompare(a.st || ''));
-    const rolesData = terms.map(t => ({ pos: 'MAYOR', commune: t.c.id, fr: `Bourgmestre ${de(t.c.name)}`, span: termSpan(t) }));
-    const roles = rolesData.map(r => r.fr + (r.span ? ` (${r.span})` : ''));
-    const existing = cards.find(c => c.id === o.id);
-    if (existing) { // déjà une carte : le mandat rejoint le parcours
-      existing.rolesData = [...(existing.rolesData || []), ...rolesData];
-      existing.roles = [...(existing.roles || []), ...roles];
-      merged++;
-      continue;
-    }
-    if (!o.img || isQ(o.name)) continue;
-    const main = terms[0];
-    const list = (parties.get(o.id) || []).sort((a, b) => b.en - a.en || b.st - a.st);
-    const partyQ = list.map(x => x.q).find(q => SHORT[q]) || list[0]?.q;
-    const party = partyQ ? (SHORT[partyQ] || null) : null;
-    const prov = main.c.prov ? (/^[AEIOUÉ]/.test(main.c.prov) ? `Province d’${main.c.prov}` : `Province de ${main.c.prov}`) : 'Bruxelles-Capitale';
-    cards.push({
-      id: o.id, cat: 'bourgmestre', name: o.name, img: o.img, rarity: 'commune', mayorOf: main.c.id, pop: main.c.pop,
-      subtitle: `Bourgmestre ${de(main.c.name)}`, meta: [prov, termSpan(main)].filter(Boolean).join(' · '),
-      party, family: partyFamily(partyQ), rolesData, roles,
-      stats: [['Naissance', o.birth ?? '—'], ['Parti', party || '—'], ['Habitants', main.c.pop ? main.c.pop.toLocaleString('fr-BE') : '—']],
-    });
-    added++;
-  }
-  console.log(`Bourgmestres : ${added} cartes, ${merged} mandats ajoutés à des cartes existantes`);
-}
-
 // ---------- Provinces & régions ----------
 const terr = await sparql(`
 SELECT ?t ?tLabel ?type ?img ?coa ?flag ?pop ?area ?capLabel WHERE {
@@ -1090,12 +1030,11 @@ const ALT_SKIP = new Set([
 ]);
 // Personnes sans photo alternative convenable sur Commons (vérifié à l'œil) : Achille van Acker, Gaston Eyskens, Wilfried Martens, Annelies Verlinden, Albert Ier, Baudouin Ier, Georges Simenon, Lost Frequencies, Paul Otlet, Gérard Mercator
 const ALT_NONE = new Set(["Q14997", "Q14999", "Q313809", "Q99767918", "Q55008046", "Q12976", "Q128790", "Q18857432", "Q1868", "Q6353"]);
-let altFound = 0;
-for (const c of altTargets) {
-  if (ALT_NONE.has(c.id)) continue;
-  const found = await commonsApi({ action: 'query', list: 'search', srnamespace: '6', srlimit: '15', srsearch: `haswbstatement:P180=${c.id} filetype:bitmap` });
-  const hits = (found.query?.search || []).filter(h => !BAD_FILE.test(h.title) && h.title.replace(/^File:/, '') !== c.img && !ALT_SKIP.has(h.title.replace(/^File:/, '')));
-  if (!hits.length) continue;
+// Une photo de Commons qui représente cette personne et elle seule (P180), assez grande, ni signature ni statue…
+async function strictDepict(id, skip = null) {
+  const found = await commonsApi({ action: 'query', list: 'search', srnamespace: '6', srlimit: '15', srsearch: `haswbstatement:P180=${id} filetype:bitmap` });
+  const hits = (found.query?.search || []).filter(h => !BAD_FILE.test(h.title) && h.title.replace(/^File:/, '') !== skip && !ALT_SKIP.has(h.title.replace(/^File:/, '')));
+  if (!hits.length) return null;
   const ents = await commonsApi({ action: 'wbgetentities', ids: hits.map(h => 'M' + h.pageid).join('|'), props: 'claims' });
   const info = await commonsApi({ action: 'query', prop: 'imageinfo', iiprop: 'size|mime', titles: hits.map(h => h.title).join('|') });
   const size = new Map((info.query?.pages || []).map(p => [p.title, p.imageinfo?.[0]]));
@@ -1104,12 +1043,204 @@ for (const c of altTargets) {
     const depicts = (st.P180 || []).map(x => x.mainsnak?.datavalue?.value?.id);
     const kinds = (st.P31 || []).map(x => x.mainsnak?.datavalue?.value?.id);
     const ii = size.get(h.title);
-    return depicts.length === 1 && depicts[0] === c.id && !kinds.some(k => BAD_KIND.has(k)) &&
+    return depicts.length === 1 && depicts[0] === id && !kinds.some(k => BAD_KIND.has(k)) &&
       ii && /jpeg|png/.test(ii.mime) && ii.width >= 500 && ii.height >= 500 && ii.width / ii.height < 1.9;
   });
-  if (pick) { c.alt = pick.title.replace(/^File:/, ''); altFound++; }
+  return pick ? pick.title.replace(/^File:/, '') : null;
+}
+let altFound = 0;
+for (const c of altTargets) {
+  if (ALT_NONE.has(c.id)) continue;
+  const alt = await strictDepict(c.id, c.img);
+  if (alt) { c.alt = alt; altFound++; }
 }
 console.log(`Photos alternatives : ${altFound} / ${altTargets.length}`);
+
+// Photo d'un bourgmestre sans photo sur Wikidata, dans l'ordre : fichier Commons qui le représente seul (P180),
+// image libre de son article Wikipédia, fichier de sa catégorie Commons portant son nom de famille.
+// Les photos trouvées ainsi sont listées dans tools/.mayor-photos.txt pour être relues à l'œil
+// (refus dans MAYOR_PHOTO_NONE, choix manuel dans MAYOR_PHOTO).
+const MAYOR_PHOTO = {};
+// Relu à l'œil et refusé : Fernand Van Trimpont (photo d'événement), Vincent De Wolf (photo de foule)
+const MAYOR_PHOTO_NONE = new Set(['Q134592361', 'Q3559574']);
+async function mayorPhoto(id, who, term) {
+  const okFile = f => f && !BAD_FILE.test(f) && !ALT_SKIP.has(f) && /\.(jpe?g|png)$/i.test(f);
+  const dep = await strictDepict(id);
+  if (dep) return dep;
+  if (term.link) {
+    const f = await freePageImage(term.link, term.lang);
+    if (okFile(f)) return f;
+  }
+  if (who.cat) {
+    const surname = who.name.split(' ').filter(w => w.length > 2 && !/^(de|van|der|den|le|la|du)$/i.test(w)).pop();
+    const r = await commonsApi({ action: 'query', list: 'categorymembers', cmtitle: 'Category:' + who.cat, cmtype: 'file', cmlimit: '30' });
+    const files = (r.query?.categorymembers || []).map(m => m.title.replace(/^File:/, '')).filter(f => okFile(f) && surname && f.toLowerCase().includes(surname.toLowerCase()));
+    if (files.length) {
+      const info = await commonsApi({ action: 'query', prop: 'imageinfo', iiprop: 'size', titles: files.map(f => 'File:' + f).join('|') });
+      const big = (info.query?.pages || []).filter(p => p.imageinfo?.[0]?.width >= 400 && p.imageinfo[0].height >= 400 && p.imageinfo[0].width / p.imageinfo[0].height < 1.6);
+      if (big.length) return big[0].title.replace(/^File:/, '');
+    }
+  }
+  return null;
+}
+
+// ---------- Bourgmestres ----------
+// Qui est bourgmestre aujourd'hui : l'infobox de la commune sur Wikipédia NL, tenue à jour (élections de 2024,
+// titulaire « empêché » devenu ministre et son remplaçant « faisant fonction »…) ; la FR en secours.
+// Wikidata (P6) n'est pas à jour : il ne sert plus que pour les mandats terminés (avec une date de fin).
+// Photo libre uniquement : celle de Wikidata (P18), sinon un fichier de Commons qui représente la personne seule.
+// Une personne qui a déjà une carte (député, ministre…) garde sa carte : le mandat s'ajoute à son parcours.
+{
+  const de = n => /^[AEIOUYÉÈÊH]/i.test(n) ? `d’${n}` : `de ${n}`;
+  const KIND_FR = { ff: 'Bourgmestre faisant fonction', emp: 'Bourgmestre empêché', old: 'Ancien bourgmestre' };
+  const KIND_FR_F = { ...KIND_FR, emp: 'Bourgmestre empêchée', old: 'Ancienne bourgmestre' };
+  const label = (kind, c, female) => `${(female ? KIND_FR_F : KIND_FR)[kind] || 'Bourgmestre'} ${de(c.name)}`;
+  const ids = [...comm.keys()];
+
+  // 1. Articles Wikipédia des communes, puis le paramètre « burgemeester » / « bourgmestre » de leur infobox
+  const titles = { nl: new Map(), fr: new Map() };
+  for (let i = 0; i < ids.length; i += 200) {
+    for (const r of await sparql(`SELECT ?c ?t ?w WHERE { VALUES ?c { ${ids.slice(i, i + 200).map(q => 'wd:' + q).join(' ')} }
+  ?a schema:about ?c; schema:isPartOf ?w; schema:name ?t. FILTER(?w IN (<https://nl.wikipedia.org/>, <https://fr.wikipedia.org/>)) }`)) {
+      titles[r.w.includes('//nl.') ? 'nl' : 'fr'].set(r.t, qid(r.c));
+    }
+  }
+  // Une ligne d'infobox → personnes, avec leur statut : « [[A]] (titelvoerend) - B (waarnemend) », « [[A]]<br>(waarnemend) »…
+  const parseMayors = raw => {
+    const out = [];
+    const txt = raw.replace(/<\/?(small|span)[^>]*>/gi, '').replace(/\{\{(?:Lien|Link)\|[^}]*?\|?([^|}]+)\}\}/gi, '[[$1]]').replace(/<!--.*?-->/g, '');
+    for (const seg of txt.split(/<br\s*\/?>|\s[-–]\s|;/i)) {
+      const kind = /titelvoerend|verhinderd|empêch/i.test(seg) ? 'emp' : /waarnemend|faisant fonction|\bf\.?f\.?\b|wnd\.?|a\.i\./i.test(seg) ? 'ff' : null;
+      const head = seg.split('(')[0];
+      const link = head.match(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/);
+      const name = (link ? (link[2] || link[1]) : head.replace(/\[\[|\]\]|'{2,3}/g, '')).replace(/\s+/g, ' ').trim();
+      if (name && /\p{L}{2,}/u.test(name) && !/^\d/.test(name)) out.push({ name, link: link?.[1]?.trim() || null, kind });
+      else if (kind && out.length) out.at(-1).kind ||= kind; // « (waarnemend) » sur sa propre ligne
+    }
+    return out;
+  };
+  const infobox = { nl: new Map(), fr: new Map() };
+  for (const lang of ['nl', 'fr']) {
+    const list = [...titles[lang].keys()];
+    for (let i = 0; i < list.length; i += 40) {
+      const r = await wikiApi(lang, { action: 'query', prop: 'revisions', rvprop: 'content', rvslots: 'main', titles: list.slice(i, i + 40).join('|'), redirects: '1' });
+      const back = new Map([...(r.query?.normalized || []), ...(r.query?.redirects || [])].map(x => [x.to, x.from]));
+      for (const pg of r.query?.pages || []) {
+        let t = pg.title; while (back.has(t) && !titles[lang].has(t)) t = back.get(t);
+        const id = titles[lang].get(t), txt = pg.revisions?.[0]?.slots?.main?.content || '';
+        const m = txt.match(lang === 'nl' ? /\|\s*burgemeester\s*=\s*([^\n]*)/i : /\|\s*bourgmestre\s*=\s*([^\n]*)/i);
+        if (!id || !m) continue;
+        // Infobox FR souvent en retard : une ligne qui annonce un mandat terminé (« (2013-24) ») ne vaut rien
+        if (lang === 'fr' && /\(\s*\d{4}\s*[-–]\s*(19|20)?\d{2}\s*\)/.test(m[1])) continue;
+        infobox[lang].set(id, parseMayors(m[1]));
+      }
+    }
+  }
+  // 2. Bourgmestre en fonction : NL d'abord ; le faisant fonction l'emporte sur le titulaire empêché
+  const current = new Map(); // commune → [{ name, link, lang, kind }]
+  for (const id of ids) {
+    const nl = infobox.nl.get(id) || [], fr = infobox.fr.get(id) || [];
+    const people = (nl.length ? nl.map(p => ({ ...p, lang: 'nl' })) : fr.map(p => ({ ...p, lang: 'fr' }))).slice(0, 2);
+    if (people.length === 2 && !people.some(p => p.kind)) people.length = 1; // deux noms sans statut : on garde le premier
+    // Lien manquant d'un côté : on le cherche dans l'autre infobox (même nom)
+    for (const p of people) if (!p.link) { const o = (p.lang === 'nl' ? fr : nl).find(x => x.link && x.name.toLowerCase() === p.name.toLowerCase()); if (o) { p.link = o.link; p.lang = p.lang === 'nl' ? 'fr' : 'nl'; } }
+    if (people.length) current.set(id, people);
+  }
+  // Liens → Wikidata
+  const qOfLink = new Map();
+  for (const lang of ['nl', 'fr']) {
+    const links = [...new Set([...current.values()].flat().filter(p => p.link && p.lang === lang).map(p => p.link))];
+    for (let i = 0; i < links.length; i += 50) {
+      const r = await wikiApi(lang, { action: 'query', prop: 'pageprops', ppprop: 'wikibase_item', titles: links.slice(i, i + 50).join('|'), redirects: '1' });
+      const back = new Map([...(r.query?.normalized || []), ...(r.query?.redirects || [])].map(x => [x.to, x.from]));
+      for (const pg of r.query?.pages || []) {
+        if (!pg.pageprops?.wikibase_item) continue;
+        let t = pg.title; qOfLink.set(lang + ':' + t, pg.pageprops.wikibase_item);
+        while (back.has(t)) { t = back.get(t); qOfLink.set(lang + ':' + t, pg.pageprops.wikibase_item); }
+      }
+    }
+  }
+  for (const people of current.values()) for (const p of people) p.q = p.link ? qOfLink.get(p.lang + ':' + p.link) || null : null;
+
+  // 3. Mandats terminés (Wikidata P6 avec date de fin) et début des mandats en cours
+  const rows = [];
+  for (let i = 0; i < ids.length; i += 200) rows.push(...await sparql(`
+SELECT ?c ?p ?pLabel ?st ?en WHERE {
+  VALUES ?c { ${ids.slice(i, i + 200).map(q => 'wd:' + q).join(' ')} }
+  ?c p:P6 ?s. ?s ps:P6 ?p. ?p wdt:P31 wd:Q5. OPTIONAL { ?s pq:P580 ?st } OPTIONAL { ?s pq:P582 ?en }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,nl,mul". }
+}`));
+  // Nom sans lien dans l'infobox : on le retrouve parmi les bourgmestres de la commune sur Wikidata
+  const norm = n => (n || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, ' ').trim();
+  for (const [cid, people] of current) for (const p of people) if (!p.q) p.q = rows.find(r => qid(r.c) === cid && norm(r.pLabel) === norm(p.name))?.p.split('/').pop() || null;
+  // 4. Les personnes : nom, photo, naissance, partis
+  const mayors = new Map();
+  const add = (id, c, term) => { const o = mayors.get(id) || { id, terms: [] }; o.terms.push({ c, ...term }); mayors.set(id, o); };
+  for (const r of rows) {
+    const c = comm.get(qid(r.c)), id = qid(r.p);
+    if (current.get(c.id)?.some(p => p.q === id)) continue; // toujours en fonction : le mandat actuel suffit
+    // Mandat « en cours » sur Wikidata mais plus d'après Wikipédia : ancien bourgmestre, date de fin inconnue
+    if (!r.en) { add(id, c, current.has(c.id) ? { kind: 'old', st: r.st } : { st: r.st }); continue; } // commune sans infobox : Wikidata seul
+    add(id, c, { st: r.st, en: r.en });
+  }
+  for (const [cid, people] of current) for (const p of people) if (p.q) {
+    // Début du mandat : celui de Wikidata s'il est ouvert, à défaut rien (on ne l'invente pas)
+    const st = rows.filter(r => qid(r.c) === cid && qid(r.p) === p.q && !r.en).map(r => r.st).filter(Boolean).sort().at(-1);
+    add(p.q, comm.get(cid), { live: true, kind: p.kind, st, link: p.link, lang: p.lang });
+  }
+  const pids = [...mayors.keys()];
+  const info = new Map(), parties = new Map();
+  for (let i = 0; i < pids.length; i += 200) {
+    const vals = pids.slice(i, i + 200).map(q => 'wd:' + q).join(' ');
+    for (const r of await sparql(`SELECT ?p ?pLabel ?img ?birth ?cat ?sex WHERE { VALUES ?p { ${vals} } ?p wdt:P31 wd:Q5.
+  OPTIONAL { ?p wdt:P18 ?img } OPTIONAL { ?p wdt:P569 ?birth } OPTIONAL { ?p wdt:P373 ?cat } OPTIONAL { ?p wdt:P21 ?sex }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,nl,mul". } }`)) {
+      const o = info.get(qid(r.p)) || { name: r.pLabel, img: file(r.img), birth: year(r.birth), cat: r.cat, female: qid(r.sex) === 'Q6581072' };
+      o.img ||= file(r.img); o.cat ||= r.cat; info.set(qid(r.p), o);
+    }
+    for (const r of await sparql(`SELECT ?p ?party ?st ?en WHERE { VALUES ?p { ${vals} }
+  ?p p:P102 ?s. ?s ps:P102 ?party; wikibase:rank ?rank. FILTER(?rank != wikibase:DeprecatedRank) OPTIONAL { ?s pq:P580 ?st } OPTIONAL { ?s pq:P582 ?en } }`))
+      (parties.get(qid(r.p)) || parties.set(qid(r.p), []).get(qid(r.p))).push({ q: qid(r.party), st: year(r.st) || 0, en: r.en ? year(r.en) : Infinity });
+  }
+  // 5. Cartes
+  const termSpan = t => t.kind === 'old' ? '' : t.live ? (t.st ? `depuis ${year(t.st)}` : '') : span(t.st, t.en);
+  let added = 0, merged = 0, live = 0, depicted = 0;
+  const foundPhotos = [];
+  for (const o of mayors.values()) {
+    const who = info.get(o.id);
+    if (!who) continue; // pas un humain sur Wikidata
+    const terms = o.terms.sort((a, b) => (b.live ? 1 : 0) - (a.live ? 1 : 0) || (b.st || b.en || '').localeCompare(a.st || a.en || ''));
+    const rolesData = terms.map(t => ({ pos: 'MAYOR', commune: t.c.id, fr: label(t.kind, t.c, who.female), ...(t.kind ? { kind: t.kind } : {}), ...(t.live && t.kind !== 'emp' ? { live: true } : { span: termSpan(t) }) }));
+    const roles = rolesData.map(r => r.fr + (r.live ? ' (en fonction)' : r.span ? ` (${r.span})` : ''));
+    const main = terms[0], isLive = main.live && main.kind !== 'emp';
+    if (isLive) live++;
+    const existing = cards.find(c => c.id === o.id);
+    if (existing) { // déjà une carte : le mandat rejoint le parcours
+      existing.rolesData = [...(existing.rolesData || []), ...rolesData];
+      existing.roles = [...(existing.roles || []), ...roles];
+      merged++;
+      continue;
+    }
+    let img = who.img;
+    if (!img && isLive && !MAYOR_PHOTO_NONE.has(o.id)) { img = MAYOR_PHOTO[o.id] || await mayorPhoto(o.id, who, main); if (img) { depicted++; foundPhotos.push(`${who.name} (${main.c.name}) : ${img}`); } }
+    if (!img || isQ(who.name)) continue;
+    const list = (parties.get(o.id) || []).sort((a, b) => b.en - a.en || b.st - a.st);
+    const partyQ = list.map(x => x.q).find(q => SHORT[q]) || list[0]?.q;
+    const party = partyQ ? (SHORT[partyQ] || null) : null;
+    const c = main.c;
+    const prov = c.prov ? (/^[AEIOUÉ]/.test(c.prov) ? `Province d’${c.prov}` : `Province de ${c.prov}`) : 'Bruxelles-Capitale';
+    cards.push({
+      id: o.id, cat: 'bourgmestre', name: who.name, img, rarity: 'commune', mayorOf: c.id, ...(main.kind ? { mayorKind: main.kind } : {}), pop: c.pop,
+      ...(isLive ? { current: true } : {}),
+      subtitle: label(main.kind, c, who.female), meta: [prov, isLive ? 'En fonction' : termSpan(main)].filter(Boolean).join(' · '),
+      party, family: partyFamily(partyQ), rolesData, roles,
+      stats: [['Naissance', who.birth ?? '—'], ['Parti', party || '—'], ['Habitants', c.pop ? c.pop.toLocaleString('fr-BE') : '—']],
+    });
+    added++;
+  }
+  console.log(`Bourgmestres : ${current.size} communes lues sur Wikipédia, ${live} en fonction ; ${added} cartes (dont ${depicted} photos trouvées hors Wikidata), ${merged} mandats ajoutés à des cartes existantes`);
+  writeFileSync(new URL('.mayor-photos.txt', import.meta.url), foundPhotos.join('\n') + '\n'); // à relire à l'œil
+}
 
 // ---------- Nettoyage avant le calcul des raretés ----------
 // Pas d'image libre → pas de carte (sauf les événements, qui n'en ont jamais).

@@ -111,7 +111,9 @@
 
   // ---------- Récompenses (plafonnées par jour) ----------
   const DAILY_CAP = 2500;
-  const todayKey = () => new Date().toISOString().slice(0, 10);
+  // Jour en heure locale (comme le reste de l'app) : en UTC, le jour changeait à 1 h ou 2 h du matin en Belgique
+  const dayKey = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const todayKey = () => dayKey(new Date());
   function G() {
     const s = API.state;
     s.games ||= {};
@@ -377,7 +379,7 @@
     if (card.id === target.id) {
       g.done = true; g.todayWon = true; g.won++;
       if (g.guesses.length === 1) g.first = 1;
-      const yesterday = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+      const [y, m, d] = g.day.split('-').map(Number), yesterday = dayKey(new Date(y, m - 1, d - 1));
       g.streak = g.last === yesterday ? g.streak + 1 : 1;
       g.last = g.day; g.maxStreak = Math.max(g.maxStreak, g.streak);
       SFX.fanfare(false);

@@ -186,7 +186,7 @@ a { color: inherit; }
   background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, .06) 0deg 6deg, transparent 6deg 18deg);
   mask: radial-gradient(circle, #000 0%, transparent 55%);
   opacity: 0; transition: opacity .6s ease; pointer-events: none;
-  animation: spin 40s linear infinite;
+  animation: spin 40s linear infinite; will-change: rotate;
 }
 .stage.is-hot .stage-rays { opacity: 1; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--hot) 35%, transparent) 0deg 6deg, transparent 6deg 18deg); }
 @keyframes spin { to { rotate: 360deg; } }
@@ -233,8 +233,12 @@ a { color: inherit; }
 .slot:not(.is-flipped):hover .inner { transform: translateY(-8px); }
 .slot.is-flipped { cursor: zoom-in; }
 /* Anticipation : le dos d'une carte épique ou mieux luit avant d'être retourné */
-.slot.tease .back .card-back { animation: tease 1.2s ease-in-out infinite; }
-@keyframes tease { 50% { box-shadow: 0 0 0 2px var(--hit), 0 0 34px 6px var(--hit); } }
+/* Lueur des dos prometteurs : l'ombre est fixe, seule son opacité varie (animée par la carte graphique, sans repeindre) */
+.slot.tease .back::after { content: ""; position: absolute; inset: 0; border-radius: 4.5%/3.2%; pointer-events: none;
+  box-shadow: 0 0 0 2px var(--hit), 0 0 34px 6px var(--hit); opacity: 0; will-change: opacity; animation: tease 1.2s ease-in-out infinite; }
+@keyframes tease { 50% { opacity: 1; } }
+/* Face cachée : ses reflets animés ne tournent pas pour rien */
+.slot:not(.is-flipped) .front *, .slot:not(.is-flipped) .front *::before, .slot:not(.is-flipped) .front *::after { animation-play-state: paused; }
 .slot.big-hit.is-flipped .inner { animation: pop .8s cubic-bezier(.2, .9, .3, 1.3); }
 @keyframes pop { 0% { transform: rotateY(180deg) scale(1); } 40% { transform: rotateY(180deg) scale(1.12); } 100% { transform: rotateY(180deg) scale(1); } }
 .slot .tag {
@@ -1078,6 +1082,8 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .stage.is-bulk .stage-pack { margin-top: 14vh; }
 .reveal.is-bulk { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px 12px; width: min(820px, 100%); padding: 16px 0 24px; }
 .reveal.is-bulk .slot { --w: 100%; width: auto; }
+/* Lot de 10 : 50 cartes à l'écran, les reflets animés des cadres et finitions restent figés (ils tournent dans la vue détail) */
+.reveal.is-bulk .card, .reveal.is-bulk .card *, .reveal.is-bulk .card *::before, .reveal.is-bulk .card *::after { animation: none; }
 .reveal.is-bulk .slot .tag { font-size: 10px; top: -9px; padding: 2px 6px; letter-spacing: .06em; white-space: nowrap; }
 @media (max-width: 760px) {
   .buy10 { align-self: stretch; justify-content: center; padding: 7px 8px; font-size: 14px; gap: 6px; }
@@ -1391,3 +1397,22 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 /* Clavier : contour bien visible sur tout ce qui se joue au clavier */
 :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .grid .card:focus-visible, .sc-card .card:focus-visible, .pack-visual:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; border-radius: 6px; }
+
+/* iPhone en mode app (écran d'accueil) : la barre d'état et la Dynamic Island passent par-dessus la page,
+   on décale tout ce qui est collé en haut de l'écran. Ailleurs, les marges valent 0. */
+:root { --sat: env(safe-area-inset-top, 0px); --sal: env(safe-area-inset-left, 0px); --sar: env(safe-area-inset-right, 0px); }
+.topbar { height: calc(60px + var(--sat)); padding-top: var(--sat); padding-left: calc(32px + var(--sal)); padding-right: calc(32px + var(--sar)); }
+.stage { padding-top: calc(40px + var(--sat)); }
+.stage-wallet { top: calc(16px + var(--sat)); }
+.ach-toast { top: calc(76px + var(--sat)); }
+.t-tray { top: calc(68px + var(--sat)); }
+@media (max-width: 760px) {
+  .topbar { height: calc(54px + var(--sat)); padding-left: calc(14px + var(--sal)); padding-right: calc(14px + var(--sar)); }
+  .stage { padding-top: calc(70px + var(--sat)); }
+  .stage-wallet { top: calc(12px + var(--sat)); }
+  .ach-toast { top: calc(64px + var(--sat)); }
+  .t-tray { top: calc(62px + var(--sat)); }
+  .close, .side-dlg .close { top: calc(10px + var(--sat)); }
+  .detail-inner { padding-top: calc(16px + var(--sat)); }
+  .side-dlg { padding-top: calc(18px + var(--sat)); }
+}

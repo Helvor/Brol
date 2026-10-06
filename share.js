@@ -31,6 +31,17 @@
       img.src = src;
     });
   }
+  // Special:FilePath redirige sans en-tête CORS : le navigateur refuserait de dessiner la photo dans le canvas.
+  // L'API de Commons (origin=*) donne directement l'adresse finale sur upload.wikimedia.org, qui l'autorise.
+  async function commonsImage(file, width) {
+    if (!file) return null;
+    try {
+      const q = new URLSearchParams({ action: 'query', titles: 'File:' + file, prop: 'imageinfo', iiprop: 'url', iiurlwidth: width, format: 'json', origin: '*' });
+      const r = await fetch('https://commons.wikimedia.org/w/api.php?' + q);
+      const info = Object.values((await r.json()).query?.pages || {})[0]?.imageinfo?.[0];
+      return await loadImage(info?.thumburl || info?.url);
+    } catch (_) { return null; }
+  }
   const rr = (ctx, x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); };
   function gradient(ctx, x, y, w, h, stops, angle = 135) {
     const a = angle * Math.PI / 180, cx = x + w / 2, cy = y + h / 2, d = Math.hypot(w, h) / 2;
@@ -65,7 +76,7 @@
     const L = window.I18N.lang, ed = c.cat === 'edition' && API.packById(c.pack);
     const fin = API.FINISHES.find(f => f.id === finish) || API.FINISHES[0];
     const photoFile = (finish === 'plein' && c.alt) || c.img;
-    const photo = c.cat === 'evenement' ? null : await loadImage(photoFile ? API.imgUrl(photoFile, 900) : null);
+    const photo = c.cat === 'evenement' ? null : await commonsImage(photoFile, 900);
     const logo = await loadImage('logo.svg');
 
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
@@ -131,14 +142,26 @@
     ctx.restore();
     const name = window.I18N.name(c).toUpperCase();
     ctx.fillStyle = ink; ctx.textBaseline = 'alphabetic';
-    let fs = 64; ctx.font = `800 ${fs}px ${DISPLAY}`;
-    let lines = wrap(ctx, name, iw - 60, 2);
-    if (lines.length > 1) { fs = 54; ctx.font = `800 ${fs}px ${DISPLAY}`; lines = wrap(ctx, name, iw - 60, 2); }
+    // Nom en entier sur deux lignes au plus : on réduit la taille jusqu'à ce qu'il tienne (les longs noms nobles…)
+    let fs = 64, lines;
+    for (; ; fs -= 2) {
+      ctx.font = `800 ${fs}px ${DISPLAY}`;
+      lines = wrap(ctx, name, iw - 60, 99);
+      if (fs <= 34 || (lines.length <= (fs > 54 ? 1 : 2) && lines.every(l => ctx.measureText(l).width <= iw - 60))) break;
+    }
+    if (lines.length > 2) { lines = wrap(ctx, name, iw - 60, 2); }
     let ty = by + bandH - 60 - (lines.length - 1) * fs * 0.95;
     for (const l of lines) { ctx.fillText(l, ix + 30, ty); ty += fs * 0.95; }
+    // Ligne du bas : sous-titre à gauche, parti à droite (sans jamais se chevaucher)
+    let partyW = 0;
+    if (c.party) {
+      ctx.font = `700 22px ${DISPLAY}`; ctx.textAlign = 'right';
+      const party = wrap(ctx, c.party.toUpperCase(), iw / 2 - 40, 1)[0];
+      partyW = ctx.measureText(party).width + 20;
+      ctx.fillText(party, ix + iw - 30, by + bandH - 26); ctx.textAlign = 'left';
+    }
     ctx.font = `500 24px ${TEXT}`; ctx.globalAlpha = 0.92;
-    ctx.fillText(wrap(ctx, window.I18N.subtitle(c), iw - 60, 1)[0] || '', ix + 30, by + bandH - 26); ctx.globalAlpha = 1;
-    if (c.party) { ctx.font = `700 24px ${DISPLAY}`; ctx.textAlign = 'right'; ctx.fillText(c.party.toUpperCase(), ix + iw - 26, by + 56); ctx.textAlign = 'left'; }
+    ctx.fillText(wrap(ctx, window.I18N.subtitle(c), iw - 60 - partyW, 1)[0] || '', ix + 30, by + bandH - 26); ctx.globalAlpha = 1;
     // Statistiques
     const sy = iy + ih - statsH;
     ctx.fillStyle = full ? 'rgba(8,8,10,.82)' : finish === 'or' || finish === 'noir' ? '#0d0b06' : '#111216'; ctx.fillRect(ix, sy, iw, statsH);
@@ -166,6 +189,7 @@
     ctx.fillStyle = '#e2b33c'; ctx.font = `700 24px ${DISPLAY}`;
     ctx.fillText(location.host ? location.host.toUpperCase() : 'BROL', W / 2, H - 34);
     ctx.textAlign = 'left';
+    cv.dataset.photo = photo ? '1' : '0';
     return cv;
   }
 
