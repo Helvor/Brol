@@ -3,6 +3,7 @@
   'use strict';
   const API = window.RDL;
   const { CARDS, esc, imgUrl, fmt, toast, SFX } = API;
+  const bgPos = f => API.focusOf?.(f) ? `;background-position:${API.focusOf(f)}` : ''; // cadrage sur le visage
   const L = () => window.I18N.lang;
   const nm = c => window.I18N.name(c);
   const $ = s => document.querySelector(s);
@@ -333,7 +334,7 @@
         const pid = PARTY_OF[x.c.party]; const p = PARTIES.find(q => q.id === pid); const st = F.parties[pid];
         const useless = st.status !== 'open';
         return `<button class="mini${useless ? ' is-useless' : ''}" data-i="${i}" style="--fam: var(--p-${p.fam})">
-          <span class="mini-img" style="background-image:url('${imgUrl(x.c.img, 200)}')"></span>
+          <span class="mini-img" style="background-image:url('${imgUrl(x.c.img, 200)}')${bgPos(x.c.img)}"></span>
           <span class="mini-party">${p.name}</span>
           <b>${esc(nm(x.c))}</b>
           <span class="mini-foot"><span class="gem" style="background:var(--r-${x.c.rarity})"></span>+${influence(x)}${x.guest ? ` · ${T('f_guest')}` : ''}</span>
@@ -409,7 +410,7 @@
     const squares = g.guesses.map(id => id === c.id ? '🟩' : '🟥').join('') + '⬜'.repeat(Math.max(0, 6 - g.guesses.length));
     area().innerHTML = header('b_name', `<span class="gstat"><small>${T('today')}</small><b>${g.day}</b></span><span class="gstat"><small>🔥</small><b>${g.streak}</b></span>`) + `
       <div class="belgle">
-        <div class="belgle-photo"><img src="${imgUrl(c.img, 500)}" alt="" style="filter: blur(${blur}px) ${g.done ? '' : 'grayscale(.3)'}"></div>
+        <div class="belgle-photo"><img src="${imgUrl(c.img, 500)}" alt="" style="object-position:${API.focusOf?.(c.img) || 'center 20%'}; filter: blur(${blur}px) ${g.done ? '' : 'grayscale(.3)'}"></div>
         <div class="belgle-side">
           <h3>${T('b_hints')}</h3>
           <dl class="belgle-hints">${hints.slice(0, shown).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
@@ -463,7 +464,7 @@
     renderChrono();
   }
   const chronoTile = (x, reveal) => `<div class="ctile${x.c.cat === 'evenement' ? ' is-event' : ''}">
-      ${x.c.img ? `<span class="ctile-img" style="background-image:url('${imgUrl(x.c.img, 200)}')"></span>` : `<span class="ctile-img ctile-ev">${esc(String(x.year))}</span>`}
+      ${x.c.img ? `<span class="ctile-img" style="background-image:url('${imgUrl(x.c.img, 200)}')${bgPos(x.c.img)}"></span>` : `<span class="ctile-img ctile-ev">${esc(String(x.year))}</span>`}
       <b>${esc(nm(x.c))}</b><small>${TX[L()].c_kind[x.kind] || ''}</small>
       ${reveal ? `<span class="ctile-year">${x.year}</span>` : '<span class="ctile-year">?</span>'}</div>`;
   function renderChrono() {
@@ -557,7 +558,7 @@
     area().innerHTML = header('t_name', `<span class="gstat"><small>${T('t_round', Math.min(TR.i + 1, 10), 10)}</small><b>${fmt(TR.total)}</b></span><span class="gstat"><small>${T('best')}</small><b>${fmt(G().tour.best)}</b></span>`) + `
       ${ended ? `<div class="game-result win"><b>${T('t_total', fmt(TR.total))}</b><span>${TR.scores.map(s => s >= 700 ? '🟩' : s >= 300 ? '🟨' : '🟥').join('')}</span><button class="btn btn-gold" id="t-again">${T('again')}</button></div>` : `
       <div class="tour-q">
-        ${c.img ? `<span class="tour-img" style="background-image:url('${imgUrl(c.img, 200)}')"></span>` : ''}
+        ${c.img ? `<span class="tour-img" style="background-image:url('${imgUrl(c.img, 200)}')${bgPos(c.img)}"></span>` : ''}
         <div><small>${T('t_where')}</small><b>${esc(nm(c))}</b><span>${esc(window.RDL.catLabel(c.cat))} · ${esc(window.I18N.subtitle(c))}</span></div>
         ${TR.guess ? `<div class="tour-score"><b>${TR.guess.score}</b><small>${T('t_dist', Math.round(TR.guess.d), TR.guess.score)}</small><button class="btn btn-gold" id="t-next">${TR.i === 9 ? T('t_end') : T('t_next')}</button></div>` : ''}
       </div>`}
@@ -616,7 +617,7 @@
     const m = P.mode;
     const value = x => `${esc(tvP(x.show))}${m === 'pop' ? ` <em>${T('p_pop')}</em>` : m === 'birth' ? ` <em>${T('p_born')}</em>` : ''}`;
     const side = (x, guess) => `<div class="pom-card${guess && P.ok === true ? ' is-ok' : ''}${guess && P.ok === false ? ' is-ko' : ''}">
-      <span class="pom-img" style="background-image:url('${imgUrl(x.c.img || '', 400)}')"></span>
+      <span class="pom-img" style="background-image:url('${imgUrl(x.c.img || '', 400)}')${bgPos(x.c.img || '')}"></span>
       <div class="pom-info"><b>${esc(nm(x.c))}</b><small>${esc(window.I18N.subtitle(x.c))}</small>
       ${!guess || P.reveal || P.over ? `<span class="pom-val">${value(x)}</span>`
         : `<div class="pom-btns"><button class="btn btn-gold" id="p-more">${T('p_more_' + m)}</button><button class="btn btn-line" id="p-less">${T('p_less_' + m)}</button></div>`}
@@ -718,7 +719,7 @@
       <div class="qui">
         <div class="qui-clues">
           ${r.clues.slice(0, r.shown).map((x, k) => `<div class="qui-clue"><small>${T('q_clue')} ${k + 1}</small>${esc(x)}</div>`).join('')}
-          ${photo ? `<div class="qui-photo${over ? '' : ' is-blur'}" style="background-image:url('${imgUrl(c.img, 400)}')">${over ? '' : `<small>${T('q_photo')}</small>`}</div>` : ''}
+          ${photo ? `<div class="qui-photo${over ? '' : ' is-blur'}" style="background-image:url('${imgUrl(c.img, 400)}')${bgPos(c.img)}">${over ? '' : `<small>${T('q_photo')}</small>`}</div>` : ''}
           ${over ? `<div class="qui-res ${r.result}"><div><b>${r.result === 'ok' ? T('q_ok', r.points) : T('q_lost')}</b><span>${esc(nm(c))}</span></div><button class="btn btn-gold" id="q-next">${Q.i === 4 ? T('q_end') : T('q_next')}</button></div>`
             : `<div class="qui-foot"><span>${T('q_pts', quiPoints(r))}</span>${r.shown < quiMax(r) ? `<button class="btn btn-line" id="q-more">${T('q_more')}</button>` : ''}</div>`}
         </div>
@@ -784,7 +785,7 @@
     area().innerHTML = header('l_name', stats) + `
       <div class="parti">
         <div class="parti-card">
-          <span class="parti-img" style="background-image:url('${imgUrl(c.img, 400)}')"></span>
+          <span class="parti-img" style="background-image:url('${imgUrl(c.img, 400)}')${bgPos(c.img)}"></span>
           <div><b>${esc(nm(c))}</b><small>${esc(window.I18N.subtitle(c))}</small>${c.meta ? `<small>${esc(window.I18N.meta(c))}</small>` : ''}</div>
         </div>
         <p class="parti-q">${T('l_q')}</p>

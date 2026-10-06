@@ -101,7 +101,7 @@
       desc: { fr: 'Cinq cartes qui manquent à ton album, garanti.', nl: 'Vijf kaarten die nog in je album ontbreken, gegarandeerd.' },
       body: ['#0b1c24', '#16424f'], metal: ['#e6fdff', '#7fd8e0', '#2f7c86'], cats: null, missing: true, perDay: 10, special: true },
     // Paquet spécial : 5ᵉ carte légendaire ou mieux (≈ 12 % de mythiques). Pièces uniquement, jamais gratuit ; lot de 10 possible.
-    { id: 'prestige', title: { fr: 'Prestige', nl: 'Prestige' }, kicker: { fr: 'Édition prestige', nl: 'Prestige-editie' }, big: 'L+', price: 600,
+    { id: 'prestige', title: { fr: 'Prestige', nl: 'Prestige' }, kicker: { fr: 'Édition prestige', nl: 'Prestige-editie' }, big: 'L+', price: 600, bulk: 5,
       desc: { fr: 'Toutes les cartes. 5ᵉ carte légendaire ou mieux, garantie.', nl: 'Alle kaarten. 5de kaart gegarandeerd legendarisch of beter.' },
       body: ['#050506', '#2a2210'], metal: ['#fff6cf', '#f0c24a', '#8a6410'], cats: null, last: 'legendaire', special: true },
   ];
@@ -173,7 +173,8 @@
   const FREE_MAX = 5;
   const PITY = 40; // une légendaire ou mieux au plus tard tous les 40 paquets
   const BULK = 10, BULK_DISCOUNT = 0.9; // lot de 10 paquets : 10 % moins cher, payé en pièces
-  const bulkPrice = p => Math.round(p.price * BULK * BULK_DISCOUNT);
+  const bulkOf = p => p.bulk || BULK; // Prestige : lot de 5 (25 cartes rares à l'écran au lieu de 50)
+  const bulkPrice = p => Math.round(p.price * bulkOf(p) * BULK_DISCOUNT);
 
   // Les paquets sans assez de cartes (ex. Sciences avant la régénération des données) sont masqués
   const hasCards = p => p.missing || poolOf(p).length >= PACK_SIZE;
@@ -347,6 +348,8 @@
     const thumb = (tpl || `{w}px-${name}${/\.svg$/i.test(f) ? '.png' : ''}`).replace('{w}', bw);
     return `https://thumb.wikimedia.org/wikipedia/commons/thumb/${path}/${encodeURIComponent(thumb)}`;
   };
+  // Cadrage sur le visage (data/focus.js, généré par tools/build-focus.py) : « x% y% » pour object-position
+  const focusOf = f => { const v = window.FOCUS?.[f]; return v ? v.replace(' ', '% ') + '%' : ''; };
   const fileUrl = f => 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(f.replace(/ /g, '_'));
   const initials = n => n.split(/[\s-]+/).filter(w => /^[A-ZÀ-Ý]/.test(w)).slice(0, 2).map(w => w[0]).join('');
   const fmt = n => n.toLocaleString(L() === 'nl' ? 'nl-BE' : 'fr-BE');
@@ -467,7 +470,7 @@
       media = `<div class="event-big">${esc(String(c.stats[0][1]).replace(/\s/g, ' '))}</div>`;
     } else if (photo) {
       const fallback = `this.outerHTML='<div class=&quot;portrait&quot;>${SILHOUETTE.replace(/"/g, '&quot;')}<span>${esc(initials(c.name))}</span></div>'`;
-      media = `<img src="${imgUrl(photo)}" alt="" loading="lazy" decoding="async" onerror="${fallback}">`;
+      media = `<img src="${imgUrl(photo)}" alt="" loading="lazy" decoding="async"${focusOf(photo) ? ` style="object-position:${focusOf(photo)}"` : ''} onerror="${fallback}">`;
     } else {
       media = `<div class="portrait">${SILHOUETTE}<span>${esc(initials(c.name))}</span></div>`;
     }
@@ -594,7 +597,7 @@
         <table class="pack-odds" hidden><thead><tr><th></th><th>${t('oddsCards')}</th><th>${t('oddsLast')}</th></tr></thead><tbody>${packOdds(p).filter(o => o.p + o.last > 0).map(o =>
           `<tr><td><span class="gem" style="background:var(--r-${o.id})"></span>${rl(o.id)}</td><td>${pctOdds(o.p)}</td><td>${pctOdds(o.last)}</td></tr>`).join('')}${packOddsExtra(p)}</tbody></table>
         ${p.perDay ? `<span class="pack-note">${missingCount() < PACK_SIZE ? t('albumFull') : leftToday(p) ? t('perDayLeft', leftToday(p), p.perDay) : t('perDay')}</span>`
-          : p.event ? `<span class="pack-note">${t('eventNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', BULK)} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
+          : p.event ? `<span class="pack-note">${t('eventNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', bulkOf(p))} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
       </div>`;
     }).join('');
     renderFree();
@@ -673,7 +676,8 @@
     if (ob) { const ul = ob.nextElementSibling; ul.hidden = !ul.hidden; return; }
     const el = e.target.closest('.pack-visual, .buy10');
     if (!el || el.disabled) return;
-    openPack(shopPacks().find(x => x.id === el.closest('[data-pack]').dataset.pack), el.classList.contains('buy10') ? BULK : 1);
+    const pack = shopPacks().find(x => x.id === el.closest('[data-pack]').dataset.pack);
+    openPack(pack, el.classList.contains('buy10') ? bulkOf(pack) : 1);
   });
 
   // ---------- Ouverture ----------
@@ -1711,11 +1715,11 @@
   // Interface partagée avec les mini-jeux (games.js)
   window.RDL = {
     CARDS, BY_ID, get state() { return state; }, save, renderWallet, checkAchievements, totalOf,
-    esc, imgUrl, fmt, toast, bugReport, SFX, catLabel: cl, rarityLabel: rl,
+    esc, imgUrl, focusOf, fmt, toast, bugReport, SFX, catLabel: cl, rarityLabel: rl,
     // pour les échanges (trade.js)
     cardHTML, countOf, keyOf, FINISHES, finishesFor, finishLabel: fl, rarityRank: id => R[id].rank, show, openDetail,
     // pour la simulation de l'économie (tools/simulate.mjs) et les tests
-    PACKS, SERIES, RARITIES, BULK, bulkPrice, buyPacks, sellDuplicates, dupValue, claimSeries,
+    PACKS, SERIES, RARITIES, BULK, bulkOf, bulkPrice, buyPacks, sellDuplicates, dupValue, claimSeries,
     EVENT_PACKS, activeEvents, fuseRarity, fuseHolo, fuseAvailable, claimDaily, dailyReady, drawPack, exclOf, packById,
     mission, missionsToday, claimMission, MISSION, resaleMult, sellValue, weeklyNow, claimWeekly, WEEKLY, statsOf,
     packOdds, exclChance, packFinish, PACK_SIZE, PITY, RARITIES_W: RARITIES,

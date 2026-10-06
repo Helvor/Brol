@@ -49,10 +49,10 @@
     stops.forEach((c, i) => g.addColorStop(i / Math.max(1, stops.length - 1), c));
     return g;
   }
-  function cover(ctx, img, x, y, w, h, posY = 0.2, contain = false) {
+  function cover(ctx, img, x, y, w, h, posY = 0.2, contain = false, posX = 0.5) {
     const s = contain ? Math.min(w / img.width, h / img.height) : Math.max(w / img.width, h / img.height);
     const iw = img.width * s, ih = img.height * s;
-    ctx.drawImage(img, x + (w - iw) / 2, y + (h - ih) * (contain ? 0.5 : posY), iw, ih);
+    ctx.drawImage(img, x + (w - iw) * (contain ? 0.5 : posX), y + (h - ih) * (contain ? 0.5 : posY), iw, ih);
   }
   function fitText(ctx, text, maxW, size, weight, family) {
     let s = size;
@@ -118,7 +118,7 @@
       if (finish === 'noir' || finish === 'pave') ctx.filter = 'grayscale(1) contrast(1.1)';
       const flat = c.emblem || c.artwork || (['commune', 'province', 'region', 'enseignement'].includes(c.cat) && /\.(svg|png)$/i.test(photoFile || ''));
       if (flat) { ctx.fillStyle = '#20232b'; ctx.fillRect(ix, iy, iw, photoH); cover(ctx, photo, ix + 50, iy + 50, iw - 100, photoH - bandH - 70, 0.5, true); }
-      else cover(ctx, photo, ix, iy, iw, photoH);
+      else { const fp = (window.FOCUS?.[photoFile] || '50 20').split(' ').map(n => n / 100); cover(ctx, photo, ix, iy, iw, photoH, fp[1], false, fp[0]); } // cadrage sur le visage
       ctx.restore();
     } else if (c.cat === 'evenement') {
       ctx.fillStyle = '#121318'; ctx.fillRect(ix, iy, iw, photoH);
