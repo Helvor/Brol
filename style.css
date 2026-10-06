@@ -309,6 +309,12 @@ a { color: inherit; }
     repeating-linear-gradient(45deg, rgba(255, 255, 255, .05) 0 2px, transparent 2px 9px),
     linear-gradient(180deg, color-mix(in srgb, var(--band) 55%, #111), #16171b); }
 .card-photo.is-emblem img { object-fit: contain; padding: 12cqw 14cqw 26cqw; filter: drop-shadow(0 2cqw 3cqw rgba(0, 0, 0, .4)); }
+/* Logo : fond papier clair, liseré à la couleur de la carte, sans ombre portée */
+.card-photo.is-logo { background:
+    radial-gradient(ellipse at 50% 38%, #fff 0%, #f1efe8 70%),
+    #f1efe8;
+  box-shadow: inset 0 -1.2cqw 0 color-mix(in srgb, var(--band) 70%, transparent); }
+.card-photo.is-logo img { padding: 16cqw 12cqw 30cqw; filter: none; }
 
 /* Portrait absent : silhouette tramée aux couleurs du parti */
 .portrait {
