@@ -18,9 +18,25 @@
       const d = noiseBuf.getChannelData(0);
       for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     }
-    if (ctx.state === 'suspended') ctx.resume();
+    // « suspended » partout, « interrupted » sur iPhone après un passage en arrière-plan
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
     return ctx;
   }
+
+  // Retour sur la page (mobile) : le système a coupé l'audio, et iOS ne le relance que pendant un geste.
+  // Au premier toucher, on le relance et on joue un son vide (déblocage iOS) ; s'il reste bloqué, on le recrée.
+  let wake = false;
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && ctx) wake = true; });
+  function unlock() {
+    if (!on || !ctx || (!wake && ctx.state === 'running')) return;
+    wake = false;
+    const c = ctx;
+    c.resume().catch(() => {}).finally(() => {
+      if (c.state !== 'running' && ctx === c) { try { c.close(); } catch (_) {} ctx = null; } // recréé au prochain son
+    });
+    try { const b = c.createBufferSource(); b.buffer = c.createBuffer(1, 1, 22050); b.connect(c.destination); b.start(0); } catch (_) {}
+  }
+  for (const ev of ['pointerdown', 'touchend', 'keydown']) window.addEventListener(ev, unlock, { capture: true, passive: true });
 
   // Note simple avec enveloppe
   function tone(freq, { at = 0, dur = 0.2, type = 'sine', vol = 0.3, attack = 0.005, slideTo = null, filter = null } = {}) {

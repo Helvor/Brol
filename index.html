@@ -175,15 +175,29 @@
   <div id="ach-toast" class="ach-toast" role="status"></div>
 
   <footer class="foot">
-    <p data-i18n-html="credits"></p>
-    <button id="install" class="linkish" data-i18n="install" hidden>Installer l’appli</button>
-    <button id="notif" class="linkish" hidden></button>
-    <button id="export" class="linkish" data-i18n="export">Exporter ma partie</button>
-    <button id="import" class="linkish" data-i18n="import">Importer une partie</button>
-    <input id="import-file" type="file" accept="application/json,.json" hidden>
-    <button id="bug" class="linkish" data-i18n="bugBtn">Signaler un bug</button>
-    <span class="version" id="version">dev</span>
-    <button id="reset" class="linkish" data-i18n="reset">Réinitialiser la partie</button>
+    <div class="foot-groups">
+      <section class="foot-group">
+        <h4 data-i18n="footGame">Ta partie</h4>
+        <div class="foot-btns">
+          <button id="export" class="foot-btn" data-i18n="export">Exporter ma partie</button>
+          <button id="import" class="foot-btn" data-i18n="import">Importer une partie</button>
+          <input id="import-file" type="file" accept="application/json,.json" hidden>
+          <button id="reset" class="foot-btn is-danger" data-i18n="reset">Réinitialiser la partie</button>
+        </div>
+      </section>
+      <section class="foot-group">
+        <h4 data-i18n="footApp">L’appli</h4>
+        <div class="foot-btns">
+          <button id="install" class="foot-btn" data-i18n="install" hidden>Installer l’appli</button>
+          <button id="notif" class="foot-btn" hidden></button>
+          <button id="bug" class="foot-btn" data-i18n="bugBtn">Signaler un bug</button>
+        </div>
+      </section>
+    </div>
+    <div class="foot-meta">
+      <p data-i18n-html="credits"></p>
+      <span class="version" id="version">dev</span>
+    </div>
   </footer>
 
   <script src="data/cards.js"></script>

@@ -474,7 +474,8 @@
     const fam = c.family || 'gris';
     const ed = c.cat === 'edition' && packById(c.pack);
     const style = ed ? `--band: ${ed.body[1]}; --band-ink: ${ed.metal[0]}; --ed-frame: linear-gradient(135deg, ${ed.metal[2]}, ${ed.metal[0]} 22%, ${ed.metal[1]} 45%, ${ed.metal[0]} 65%, ${ed.metal[2]})` : `--band: var(--p-${fam})`;
-    const photoClass = isEmblem(c) ? ' is-emblem' : c.artwork ? ' is-artwork' : '';
+    // Logo d'école : souvent foncé sur fond transparent, il va sur un fond clair (les blasons restent sur fond sombre)
+    const photoClass = isEmblem(c) ? ' is-emblem' + (c.cat === 'enseignement' ? ' is-logo' : '') : c.artwork ? ' is-artwork' : '';
     const finTag = finish !== 'normal' ? `<span class="fin-tag">${fl(finish)}</span>` : '';
     const liveText = c.live ? (L() === 'nl' ? 'Op de troon' : c.live) : (L() === 'nl' ? 'In functie' : 'En fonction');
     const live = ed ? `<span class="ed-seal" style="color:${ed.metal[1]}">${esc(ed.big)}</span>`
@@ -832,7 +833,7 @@
         ${tag ? `<span class="tag${got === 'card' ? '' : got === 'version' ? ' ver' : ' dup'}${special && got !== 'version' ? ' special' : ''}${ev ? ' ev' : ''}${ed ? ' ed' : ''}"${ev || ed ? ` style="--tagc:${hit}"` : ''}>${tag}</span>` : ''}
         <div class="inner">
           <div class="face back">${cardBack()}</div>
-          <div class="face front">${cardHTML(card, { finish })}</div>
+          <div class="face front">${bulk ? '' : cardHTML(card, { finish })}</div>
         </div>
       </div>`;
     }).join('');
@@ -854,13 +855,20 @@
 
   function flip(slot, auto = false) {
     if (slot.classList.contains('is-flipped')) return;
-    slot.classList.add('is-flipped');
     const r = current.revealed[slot.dataset.i];
+    // Lot de 10 : la face n'est créée qu'au retournement (50 cartes d'un coup faisaient ramer le téléphone)
+    const front = slot.querySelector('.front');
+    if (!front.firstElementChild) front.innerHTML = cardHTML(r.card, { finish: r.finish });
+    slot.classList.add('is-flipped');
     SFX.flip();
     setTimeout(() => { SFX.reveal(R[r.card.rarity].rank); if (r.finish !== 'normal') SFX.shimmer(); }, 250);
     if (slot.classList.contains('big-hit')) {
-      stage.style.setProperty('--hot', getComputedStyle(slot).getPropertyValue('--hit'));
-      stage.classList.add('is-hot');
+      // Couleur lue sur la carte elle-même (pas de getComputedStyle, qui force un recalcul de toute la page) ;
+      // dans un lot, les rayons ne changent de couleur qu'une fois (les repeindre coûte cher)
+      if (current.n === 1 || !stage.classList.contains('is-hot')) {
+        stage.style.setProperty('--hot', slot.style.getPropertyValue('--hit').trim());
+        stage.classList.add('is-hot');
+      }
       setTimeout(flash, 300);
       if (navigator.vibrate) navigator.vibrate(80);
     }
