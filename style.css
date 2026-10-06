@@ -1416,3 +1416,19 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   .detail-inner { padding-top: calc(16px + var(--sat)); }
   .side-dlg { padding-top: calc(18px + var(--sat)); }
 }
+
+/* Signaler un bug */
+.bug-dlg { width: min(560px, calc(100vw - 32px)); }
+.bug-intro, .bug-note { color: var(--ink-2); font-size: 14px; line-height: 1.45; }
+.bug-note { font-size: 12px; margin: 12px 0 0; }
+.bug-dlg textarea { width: 100%; min-height: 120px; resize: vertical; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); font: inherit; font-size: 15px; }
+.bug-tech { display: flex; gap: 8px; align-items: flex-start; margin: 12px 0 18px; font-size: 13px; color: var(--ink-2); }
+.bug-actions { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.bug-actions .btn { text-decoration: none; }
+.bug-req { flex: 1 1 100%; margin: 0 0 -4px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.bug-or { margin-top: 8px; }
+.bug-msg { margin: 6px 0 0; font-size: 13px; color: var(--danger); font-weight: 600; }
+@media (max-width: 760px) {
+  .bug-dlg { width: 100vw; }
+  .bug-actions .btn { flex: 1 1 100%; justify-content: center; text-align: center; }
+}

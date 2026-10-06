@@ -1,5 +1,10 @@
 (() => {
   'use strict';
+  // Dernières erreurs JavaScript, jointes (si on le veut) à un signalement de bug
+  const RECENT_ERRORS = [];
+  const keepError = msg => { RECENT_ERRORS.push(`${new Date().toISOString().slice(11, 19)} ${String(msg).slice(0, 200)}`); if (RECENT_ERRORS.length > 5) RECENT_ERRORS.shift(); };
+  window.addEventListener('error', e => keepError(`${e.message} (${(e.filename || '').split('/').pop()}:${e.lineno})`));
+  window.addEventListener('unhandledrejection', e => keepError(e.reason?.message || e.reason));
   const { t, tv } = window.I18N;
   const L = () => window.I18N.lang;
 
@@ -1384,6 +1389,60 @@
     location.reload();
   });
 
+  // ---------- Signaler un bug ----------
+  // Une issue GitHub pré-remplie. Sur Android, un lien « intent » ouvre l'app GitHub (le navigateur sinon) ;
+  // sur iPhone, iOS ouvre les liens github.com dans l'app quand elle est installée.
+  const REPO = 'Helvor/Brol', SUPPORT_MAIL = 'brol-support@elveli.net';
+  const bugDlg = $('#bug-dlg');
+  const platform = () => /Android/i.test(navigator.userAgent) ? 'android'
+    : /iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1) ? 'ios' : 'desktop';
+  function bugReport(text, tech) {
+    const lines = ['### ' + (L() === 'nl' ? 'Wat ging er mis?' : 'Ce qui s’est passé'), '', text.trim()];
+    if (tech) {
+      const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+      lines.push('', '### ' + (L() === 'nl' ? 'Technische info' : 'Infos techniques'),
+        `- Version : ${$('#version')?.textContent.trim() || 'dev'}`,
+        `- Appareil : ${navigator.userAgent}`,
+        `- Écran : ${innerWidth}×${innerHeight} (×${devicePixelRatio})${standalone ? ', appli installée' : ''}`,
+        `- Langue : ${L()} · thème : ${document.documentElement.dataset.theme || 'auto'}`,
+        `- Vue : ${$('.view.is-active')?.id?.replace('view-', '') || '?'}`,
+        `- Erreurs récentes : ${RECENT_ERRORS.length ? '\n  - ' + RECENT_ERRORS.join('\n  - ') : 'aucune'}`);
+    }
+    const body = lines.join('\n').slice(0, 6000); // garder l'adresse raisonnable
+    const title = 'Bug : ' + (text.trim().split('\n')[0].slice(0, 70) || 'sans titre');
+    const web = `https://github.com/${REPO}/issues/new?` + new URLSearchParams({ title, body });
+    const app = platform() === 'android'
+      ? `intent://github.com/${REPO}/issues/new?${new URLSearchParams({ title, body })}#Intent;scheme=https;package=com.github.android;S.browser_fallback_url=${encodeURIComponent(web)};end`
+      : web;
+    // E-mail (sans compte GitHub) : texte brut, court — certaines messageries coupent les liens mailto trop longs
+    const mailBody = (tech ? body : text.trim()).replace(/^### /gm, '').slice(0, 1500);
+    const mail = `mailto:${SUPPORT_MAIL}?subject=${encodeURIComponent('[Brol] ' + title)}&body=${encodeURIComponent(mailBody.replace(/\n/g, '\r\n'))}`;
+    return { title, body, web, app, mail };
+  }
+  function renderBugActions() {
+    const p = platform(), base = `https://github.com/${REPO}/issues/new`;
+    // iPhone : même onglet, sinon iOS n'ouvre pas l'app GitHub
+    $('#bug-actions').innerHTML = p !== 'desktop'
+      ? `<a class="btn btn-gold" id="bug-app" href="${base}"${p === 'ios' ? '' : ' target="_blank" rel="noopener"'}>${t('bugApp')}</a><a class="linkish" id="bug-web" href="${base}" target="_blank" rel="noopener">${t('bugWebAlt')}</a>`
+      : `<a class="btn btn-gold" id="bug-web" href="${base}" target="_blank" rel="noopener">${t('bugWeb')}</a>`;
+    $('#bug-actions').insertAdjacentHTML('afterbegin', `<p class="bug-req">${t('bugReq')}</p>`);
+    $('#bug-actions').insertAdjacentHTML('beforeend', `<p class="bug-req bug-or">${t('bugOr')}</p><a class="btn btn-line" id="bug-mail" href="mailto:${SUPPORT_MAIL}">${t('bugMail')}</a>`);
+  }
+  $('#bug').addEventListener('click', () => { SFX.tick(); renderBugActions(); $('#bug-msg').hidden = true; bugDlg.showModal(); $('#bug-text').focus(); });
+  $('#bug-text').addEventListener('input', () => { $('#bug-msg').hidden = true; });
+  $('#bug-close').addEventListener('click', () => bugDlg.close());
+  $('#bug-actions').addEventListener('click', e => {
+    const a = e.target.closest('a');
+    if (!a) return;
+    const text = $('#bug-text').value;
+    if (!text.trim()) { e.preventDefault(); SFX.error(); $('#bug-msg').textContent = t('bugEmpty'); $('#bug-msg').hidden = false; $('#bug-text').focus(); return; }
+    $('#bug-msg').hidden = true;
+    const r = bugReport(text, $('#bug-tech').checked);
+    a.href = a.id === 'bug-app' ? r.app : a.id === 'bug-mail' ? r.mail : r.web; // posé au dernier moment : le clic suit ce lien
+    if (a.id !== 'bug-mail') navigator.clipboard?.writeText(`${r.title}\n\n${r.body}`).then(() => toast(t('bugCopied'))).catch(() => {});
+    setTimeout(() => bugDlg.close(), 300);
+  });
+
   // ---------- Succès ----------
   // Le contexte lit toujours le state courant (il est remplacé lors d'une réinitialisation)
   const achievements = window.buildAchievements({ CARDS, get state() { return state; }, totalOf, countOf, SERIES, PACKS, EVENT_FINISHES: FINISHES.filter(f => f.pack).map(f => f.id) });
@@ -1590,7 +1649,7 @@
   // Interface partagée avec les mini-jeux (games.js)
   window.RDL = {
     CARDS, BY_ID, get state() { return state; }, save, renderWallet, checkAchievements, totalOf,
-    esc, imgUrl, fmt, toast, SFX, catLabel: cl, rarityLabel: rl,
+    esc, imgUrl, fmt, toast, bugReport, SFX, catLabel: cl, rarityLabel: rl,
     // pour les échanges (trade.js)
     cardHTML, countOf, keyOf, FINISHES, finishesFor, finishLabel: fl, rarityRank: id => R[id].rank, show, openDetail,
     // pour la simulation de l'économie (tools/simulate.mjs) et les tests

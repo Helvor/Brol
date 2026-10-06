@@ -156,6 +156,16 @@
     <div id="fuse-body"></div>
   </dialog>
 
+  <dialog id="bug-dlg" class="side-dlg bug-dlg">
+    <button class="close" id="bug-close" aria-label="×">×</button>
+    <h2 data-i18n="bugTitle">Signaler un bug</h2>
+    <p class="bug-intro" data-i18n="bugIntro"></p>
+    <textarea id="bug-text" rows="5" data-i18n-ph="bugPh"></textarea>
+    <p class="bug-msg" id="bug-msg" role="alert" hidden></p>
+    <label class="bug-tech"><input type="checkbox" id="bug-tech" checked> <span data-i18n="bugTech"></span></label>
+    <div class="bug-actions" id="bug-actions"></div>
+    <p class="bug-note" data-i18n="bugNote"></p>
+  </dialog>
   <dialog id="daily" class="daily-dlg">
     <button class="close" id="daily-close" aria-label="×">×</button>
     <div id="daily-body"></div>
@@ -171,6 +181,7 @@
     <button id="export" class="linkish" data-i18n="export">Exporter ma partie</button>
     <button id="import" class="linkish" data-i18n="import">Importer une partie</button>
     <input id="import-file" type="file" accept="application/json,.json" hidden>
+    <button id="bug" class="linkish" data-i18n="bugBtn">Signaler un bug</button>
     <span class="version" id="version">dev</span>
     <button id="reset" class="linkish" data-i18n="reset">Réinitialiser la partie</button>
   </footer>
