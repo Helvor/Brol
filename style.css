@@ -458,12 +458,19 @@ dialog::backdrop { background: rgba(8, 9, 12, .78); }
   transition: opacity .2s ease, translate .2s ease; pointer-events: none;
 }
 .toast.is-on { opacity: 1; translate: -50% 0; }
-.foot { border-top: 1px solid var(--line); padding: 18px 32px; font-size: 13px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
-.foot p { margin: 0; flex: 1 1 320px; }
-.foot .linkish { margin-left: auto; }
-.foot .version { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--ink-2); text-decoration: none; }
+/* Pied de page : deux groupes de boutons (partie, appli), puis crédits et version */
+.foot { border-top: 1px solid var(--line); padding: 22px 32px 18px; font-size: 13px; color: var(--ink-2); display: grid; gap: 18px; }
+.foot-groups { display: flex; flex-wrap: wrap; gap: 18px 48px; }
+.foot-group h4 { margin: 0 0 8px; font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.foot-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.foot-btn { padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg-2); color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
+.foot-btn:hover { border-color: var(--ink-2); }
+.foot-btn.is-danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 35%, var(--line)); background: transparent; }
+.foot-btn.is-danger:hover { background: color-mix(in srgb, var(--danger) 8%, transparent); }
+.foot-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--line); font-size: 12px; line-height: 1.5; }
+.foot-meta p { margin: 0; flex: 1 1 320px; }
+.foot .version { font-family: var(--mono); font-size: 12px; color: var(--ink-2); text-decoration: none; }
 .foot a.version:hover { text-decoration: underline; }
-.foot .version + .linkish { margin-left: 0; }
 
 /* ============ Nouvelles familles ============ */
 :root {
@@ -721,7 +728,13 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   .detail-card { max-width: 260px; margin: 8px auto 0; width: 100%; }
   .detail-info h2 { font-size: 34px; }
   .close { position: fixed; top: 10px; right: 10px; background: var(--bg-3); z-index: 2; }
-  .foot { padding: 16px 14px calc(16px + env(safe-area-inset-bottom)); }
+  .foot { padding: 20px 14px calc(16px + env(safe-area-inset-bottom)); gap: 16px; }
+  .foot-groups { flex-direction: column; gap: 16px; }
+  .foot-btns { display: grid; grid-template-columns: 1fr 1fr; }
+  .foot-btn { padding: 10px 12px; text-align: center; }
+  .foot-btn.is-danger { grid-column: 1 / -1; }
+  .foot-meta { flex-direction: column; align-items: center; text-align: center; }
+  .foot-meta p { flex: none; }
 }
 
 
