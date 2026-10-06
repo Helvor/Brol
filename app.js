@@ -1425,7 +1425,8 @@
     $('#bug-actions').innerHTML = p !== 'desktop'
       ? `<a class="btn btn-gold" id="bug-app" href="${base}"${p === 'ios' ? '' : ' target="_blank" rel="noopener"'}>${t('bugApp')}</a><a class="linkish" id="bug-web" href="${base}" target="_blank" rel="noopener">${t('bugWebAlt')}</a>`
       : `<a class="btn btn-gold" id="bug-web" href="${base}" target="_blank" rel="noopener">${t('bugWeb')}</a>`;
-    $('#bug-actions').insertAdjacentHTML('beforeend', `<a class="btn btn-line" id="bug-mail" href="mailto:${SUPPORT_MAIL}">${t('bugMail')}</a>`);
+    $('#bug-actions').insertAdjacentHTML('afterbegin', `<p class="bug-req">${t('bugReq')}</p>`);
+    $('#bug-actions').insertAdjacentHTML('beforeend', `<p class="bug-req bug-or">${t('bugOr')}</p><a class="btn btn-line" id="bug-mail" href="mailto:${SUPPORT_MAIL}">${t('bugMail')}</a>`);
   }
   $('#bug').addEventListener('click', () => { SFX.tick(); renderBugActions(); $('#bug-msg').hidden = true; bugDlg.showModal(); $('#bug-text').focus(); });
   $('#bug-text').addEventListener('input', () => { $('#bug-msg').hidden = true; });
