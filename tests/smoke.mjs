@@ -415,7 +415,7 @@ async function features() {
       await page.click('#fuse-close'); await page.click('#fuse-btn');
       await page.click(await page.evaluate(() => `[data-holo="${window.__holo}"]:not([data-max])`));
       const holoTag = await page.textContent('.fuse-result .tag-inline');
-      check(/^Nouvelle version/.test(holoTag), 'Holo d’une carte possédée : ' + holoTag);
+      check(holoTag.trim() === 'Nouvelle version', 'Holo d’une carte possédée : ' + holoTag);
       // « Max » : toutes les fusions possibles d'un coup, la fenêtre ne remonte pas en haut
       await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'commune').slice(0, 5); C.forEach(c => window.RDL.state.owned[c.id] = 5); });
       await page.click('#fuse-close'); await page.click('#fuse-btn');

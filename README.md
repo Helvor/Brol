@@ -29,6 +29,7 @@ Puis ouvrir http://localhost:5173. La collection est sauvegardée dans le naviga
 ```
 node tools/build-cards.mjs           # utilise le cache des requêtes (quelques secondes)
 node tools/build-cards.mjs --fresh   # tout re-télécharger (environ 20 minutes)
+node tools/build-images.mjs          # adresses directes des images (data/images.js), lancé aussi par build-cards
 ```
 
 Le script interroge Wikidata (et Wikipédia pour la composition du gouvernement actuel et les photos manquantes), puis réécrit `data/cards.js`. Le gouvernement en fonction est lu sur la page « Gouvernement De Wever » de Wikipédia FR : changer `CURRENT_GOV` dans le script après un remaniement ou un nouveau gouvernement. Les règles de rareté sont dans ce script :

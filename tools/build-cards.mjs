@@ -2,6 +2,7 @@
 // Usage : node tools/build-cards.mjs           (réutilise le cache des requêtes, rapide)
 //         node tools/build-cards.mjs --fresh   (tout re-télécharger, pour avoir les données à jour)
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 
 const UA = { 'User-Agent': 'brol-cards/0.3 (projet perso)' };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -1414,6 +1415,9 @@ writeFileSync('data/cards.js',
   '// Généré par tools/build-cards.mjs. Données : Wikidata (CC0). Images : Wikimedia Commons.\n' +
   'window.CARDS = ' + JSON.stringify(cards) + ';\n' +
   'window.POS_NL = ' + JSON.stringify(POS_NL) + ';\n');
+
+// Adresses directes des images (data/images.js), pour un chargement rapide
+execFileSync(process.execPath, [new URL('./build-images.mjs', import.meta.url).pathname], { stdio: 'inherit' });
 
 const count = {};
 for (const c of cards) count[c.cat + ' / ' + c.rarity] = (count[c.cat + ' / ' + c.rarity] || 0) + 1;

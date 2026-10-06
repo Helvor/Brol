@@ -2,3 +2,4 @@ node_modules/
 test-results/
 tools/.cache.json
 tools/.mayor-photos.txt
+tools/.cache-images.json

@@ -162,10 +162,10 @@
   // Ce qu'apporte une carte tirée, avant de l'ajouter : une nouvelle carte (absente de l'album, toutes versions
   // confondues), une nouvelle version d'une carte qu'on a déjà (Holo, Or…), ou un doublon de la même version.
   const gotKind = (id, finish) => !totalOf(id) ? 'card' : !countOf(id, finish) ? 'version' : 'dup';
-  // Étiquette : « Nouvelle », « Nouvelle version · Holo », « Doublon · Or » (court dans la grille du lot de 10)
+  // Étiquette : « Nouvelle », « Nouvelle version », « Doublon · Or » (court dans la grille du lot de 10)
   const gotLabel = (got, finish, short = false) => {
     const fin = finish !== 'normal' ? ` · ${fl(finish)}` : '';
-    if (got === 'version') return short ? t('newVerShort') : t('newVer') + fin;
+    if (got === 'version') return short ? t('newVerShort') : t('newVer');
     if (short) return got === 'card' ? t('new') : '';
     return (got === 'card' ? t('new') : t('dup')) + fin;
   };
@@ -327,7 +327,26 @@
   const $ = s => document.querySelector(s);
   const $$ = s => [...document.querySelectorAll(s)];
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const imgUrl = (f, w = 500) => 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(f) + '?width=' + w;
+  // Adresse directe de l'image (data/images.js) : miniature sur thumb.wikimedia.org à une largeur standard
+  // (Wikimedia refuse les autres), ou l'original s'il est plus petit. Special:FilePath en dernier recours :
+  // deux redirections jamais mises en cache, c'est ce qui rendait les images lentes.
+  const THUMB_W = [60, 120, 250, 330, 500, 960, 1280, 1920];
+  const imgUrl = (f, w = 500) => {
+    const info = window.IMAGES?.[f];
+    if (!info) return 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(f) + '?width=' + w;
+    const i = info.lastIndexOf(':'), j = info.lastIndexOf(':', i - 1);
+    const orig = +info.slice(i + 1), dir = info.slice(j + 1, i), tpl = info[0] === '~' ? info.slice(1, j) : null;
+    const name = f.replace(/ /g, '_'), path = `${dir[0]}/${dir}/${encodeURIComponent(name)}`;
+    let bw = THUMB_W.find(x => x >= w) || THUMB_W.at(-1);
+    // Original plus petit que demandé : la miniature standard juste en dessous (Wikimedia limite durement
+    // les liens directs vers les originaux) ; l'original seulement pour les toutes petites images
+    if (orig && bw >= orig) {
+      bw = [...THUMB_W].reverse().find(x => x < orig);
+      if (!bw) return `https://upload.wikimedia.org/wikipedia/commons/${path}`;
+    }
+    const thumb = (tpl || `{w}px-${name}${/\.svg$/i.test(f) ? '.png' : ''}`).replace('{w}', bw);
+    return `https://thumb.wikimedia.org/wikipedia/commons/thumb/${path}/${encodeURIComponent(thumb)}`;
+  };
   const fileUrl = f => 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(f.replace(/ /g, '_'));
   const initials = n => n.split(/[\s-]+/).filter(w => /^[A-ZÀ-Ý]/.test(w)).slice(0, 2).map(w => w[0]).join('');
   const fmt = n => n.toLocaleString(L() === 'nl' ? 'nl-BE' : 'fr-BE');

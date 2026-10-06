@@ -76,7 +76,8 @@
     const L = window.I18N.lang, ed = c.cat === 'edition' && API.packById(c.pack);
     const fin = API.FINISHES.find(f => f.id === finish) || API.FINISHES[0];
     const photoFile = (finish === 'plein' && c.alt) || c.img;
-    const photo = c.cat === 'evenement' ? null : await commonsImage(photoFile, 900);
+    const photo = c.cat === 'evenement' || !photoFile ? null
+      : window.IMAGES?.[photoFile] ? await loadImage(API.imgUrl(photoFile, 960)) || await commonsImage(photoFile, 900) : await commonsImage(photoFile, 900);
     const logo = await loadImage('logo.svg');
 
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
