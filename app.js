@@ -1101,6 +1101,7 @@
   const fuseStock = rarity => CARDS.filter(c => c.rarity === rarity && countOf(c.id, 'normal') > 1).map(c => ({ c, extra: countOf(c.id, 'normal') - 1 }));
   const fuseAvailable = rarity => fuseStock(rarity).reduce((a, x) => a + x.extra, 0);
   const holoCandidates = () => CARDS.filter(c => countOf(c.id, 'normal') > HOLO_COST);
+  const holoMax = id => Math.floor((countOf(id, 'normal') - 1) / HOLO_COST); // un exemplaire standard est toujours gardé
   function addCard(card, finish) {
     const key = keyOf(card.id, finish);
     const isNew = !state.owned[key];
@@ -1131,27 +1132,41 @@
   }
 
   const fuseDlg = $('#fuse');
-  function renderFuse(result = null) {
+  // Résultat d'une ou plusieurs fusions : la carte obtenue, ou le lot (les plus rares d'abord)
+  function fuseResultHTML(results) {
+    if (!results?.length) return '';
+    if (results.length === 1) {
+      const r = results[0];
+      return `<div class="fuse-result"><div class="cell">${cardHTML(r.card, { finish: r.finish })}</div>
+        <div><span class="tag-inline${r.isNew ? '' : ' dup'}">${r.isNew ? t('new') : t('dup')}</span><b>${esc(nm(r.card))}</b><small>${rl(r.card.rarity)}${r.finish !== 'normal' ? ' · ' + fl(r.finish) : ''}</small></div></div>`;
+    }
+    const best = results.slice().sort((a, b) => R[b.card.rarity].rank - R[a.card.rarity].rank || b.isNew - a.isNew).slice(0, 8);
+    return `<div class="fuse-result is-many"><b>${t('fuseMany', results.length, results.filter(r => r.isNew).length)}</b>
+      <div class="fuse-lot">${best.map(r => `<div class="cell${r.isNew ? ' is-new' : ''}">${cardHTML(r.card, { finish: r.finish })}</div>`).join('')}</div>
+      ${results.length > best.length ? `<small>${t('fuseMore', results.length - best.length)}</small>` : ''}</div>`;
+  }
+  function renderFuse(results = null) {
     const rows = RARITIES.slice(0, -1).map((r, i) => {
       const n = fuseAvailable(r.id), next = RARITIES[i + 1];
       return `<div class="fuse-row">
         <span class="fuse-recipe"><b>${FUSE_COST}×</b> <span class="gem" style="background:var(--r-${r.id})"></span>${rl(r.id)} <i>→</i> <b>1×</b> <span class="gem" style="background:var(--r-${next.id})"></span>${rl(next.id)}</span>
         <small>${t('fuseHave', n)}</small>
-        <button class="btn${n >= FUSE_COST ? ' btn-gold' : ' btn-line'}" data-fuse="${r.id}"${n >= FUSE_COST ? '' : ' disabled'}>${t('fuseGo')}</button>
+        <span class="fuse-btns"><button class="btn${n >= FUSE_COST ? ' btn-gold' : ' btn-line'}" data-fuse="${r.id}"${n >= FUSE_COST ? '' : ' disabled'}>${t('fuseGo')}</button>${
+          Math.floor(n / FUSE_COST) > 1 ? `<button class="btn btn-line" data-fuse="${r.id}" data-max="1">${t('fuseMax', Math.floor(n / FUSE_COST))}</button>` : ''}</span>
       </div>`;
     }).join('');
     const holos = holoCandidates().sort((a, b) => R[b.rarity].rank - R[a.rarity].rank);
     $('#fuse-body').innerHTML = `
       <h2>${t('fuseTitle')}</h2>
       <p class="muted">${t('fuseIntro', FUSE_COST, HOLO_COST)}</p>
-      ${result ? `<div class="fuse-result"><div class="cell">${cardHTML(result.card, { finish: result.finish })}</div>
-        <div><span class="tag-inline${result.isNew ? '' : ' dup'}">${result.isNew ? t('new') : t('dup')}</span><b>${esc(nm(result.card))}</b><small>${rl(result.card.rarity)}${result.finish !== 'normal' ? ' · ' + fl(result.finish) : ''}</small></div></div>` : ''}
+      ${fuseResultHTML(results)}
       <h3>${t('fuseUp')}</h3>
       <div class="fuse-rows">${rows}</div>
       <h3>${t('fuseHoloH', HOLO_COST)}</h3>
       ${holos.length ? `<div class="fuse-holos">${holos.slice(0, 40).map(c => `<div class="fuse-holo">
           <span class="gem" style="background:var(--r-${c.rarity})"></span><span class="fuse-name">${esc(nm(c))}</span><small>×${countOf(c.id, 'normal')}</small>
-          <button class="btn btn-line" data-holo="${esc(c.id)}">${t('fuseToHolo')}</button></div>`).join('')}</div>`
+          <span class="fuse-btns"><button class="btn btn-line" data-holo="${esc(c.id)}">${t('fuseToHolo')}</button>${
+            holoMax(c.id) > 1 ? `<button class="btn btn-line" data-holo="${esc(c.id)}" data-max="1">${t('fuseMax', holoMax(c.id))}</button>` : ''}</span></div>`).join('')}</div>`
         : `<p class="muted small">${t('fuseNoHolo', HOLO_COST + 1)}</p>`}`;
   }
   $('#fuse-btn').addEventListener('click', () => { SFX.tick(); renderFuse(); fuseDlg.showModal(); fuseDlg.scrollTop = 0; });
@@ -1160,10 +1175,20 @@
     if (e.target === fuseDlg) return fuseDlg.close();
     const b = e.target.closest('[data-fuse], [data-holo]');
     if (!b || b.disabled) return;
-    const res = b.dataset.fuse ? fuseRarity(b.dataset.fuse) : fuseHolo(b.dataset.holo);
-    if (!res) return;
-    SFX.reveal(R[res.card.rarity].rank); if (res.finish !== 'normal') SFX.shimmer();
-    renderFuse(res); fuseDlg.scrollTop = 0;
+    const once = () => b.dataset.fuse ? fuseRarity(b.dataset.fuse) : fuseHolo(b.dataset.holo);
+    const results = [];
+    for (let left = b.dataset.max ? Infinity : 1, r; left > 0 && (r = once()); left--) results.push(r);
+    if (!results.length) return;
+    const top = results.reduce((a, r) => R[r.card.rarity].rank > R[a.card.rarity].rank ? r : a);
+    SFX.reveal(R[top.card.rarity].rank); if (results.some(r => r.finish !== 'normal')) SFX.shimmer();
+    // On reste où on est : la ligne cliquée garde sa place à l'écran, même si le résultat s'affiche plus haut
+    const sel = b.dataset.fuse ? `[data-fuse="${b.dataset.fuse}"]` : `[data-holo="${CSS.escape(b.dataset.holo)}"]`;
+    const row = b.closest('.fuse-row, .fuse-holo'), before = row.getBoundingClientRect().top, scroll = fuseDlg.scrollTop;
+    renderFuse(results);
+    const again = fuseDlg.querySelector(sel)?.closest('.fuse-row, .fuse-holo');
+    fuseDlg.scrollTop = again ? scroll + again.getBoundingClientRect().top - before : scroll;
+    toast(results.length === 1 ? t('fuseGot', nm(top.card), rl(top.card.rarity) + (top.finish !== 'normal' ? ' · ' + fl(top.finish) : ''), top.isNew)
+      : t('fuseMany', results.length, results.filter(r => r.isNew).length));
     renderWallet(); if ($('#view-binder').classList.contains('is-active')) renderBinder();
     checkAchievements();
   });
