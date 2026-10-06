@@ -76,7 +76,7 @@
     const L = window.I18N.lang, ed = c.cat === 'edition' && API.packById(c.pack);
     const fin = API.FINISHES.find(f => f.id === finish) || API.FINISHES[0];
     const photoFile = (finish === 'plein' && c.alt) || c.img;
-    const photo = c.cat === 'evenement' ? null : API.isFlickr(photoFile) ? await loadImage(API.imgUrl(photoFile, 1024)) : await commonsImage(photoFile, 900);
+    const photo = c.cat === 'evenement' ? null : await commonsImage(photoFile, 900);
     const logo = await loadImage('logo.svg');
 
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
@@ -184,9 +184,7 @@
 
     // Pied : crédit de la photo
     ctx.fillStyle = 'rgba(241,238,230,.7)'; ctx.font = `500 22px ${TEXT}`; ctx.textAlign = 'center';
-    const credit = !photoFile || c.cat === 'evenement' ? 'Wikidata · Wikipédia'
-      : API.isFlickr(photoFile) ? `${L === 'nl' ? 'Foto' : 'Photo'} : ${c.photoCredit || 'Flickr'} — Flickr`
-      : `${L === 'nl' ? 'Foto' : 'Photo'} : ${photoFile.replace(/\.[a-z]+$/i, '')} — Wikimedia Commons`;
+    const credit = photoFile && c.cat !== 'evenement' ? `${L === 'nl' ? 'Foto' : 'Photo'} : ${photoFile.replace(/\.[a-z]+$/i, '')} — Wikimedia Commons` : 'Wikidata · Wikipédia';
     ctx.fillText(wrap(ctx, credit, W - 120, 1)[0], W / 2, H - 70);
     ctx.fillStyle = '#e2b33c'; ctx.font = `700 24px ${DISPLAY}`;
     ctx.fillText(location.host ? location.host.toUpperCase() : 'BROL', W / 2, H - 34);

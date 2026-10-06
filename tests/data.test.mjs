@@ -27,11 +27,6 @@ for (const c of cards) {
   if (!RARITIES.includes(c.rarity)) fail(c, `rareté inconnue « ${c.rarity} »`);
   if (!c.name || !c.name.trim()) fail(c, 'nom vide');
   if (c.cat !== 'evenement' && !c.img) fail(c, 'pas d’image (les entrées sans image libre doivent être exclues)');
-  if (/^https:\/\/live\.staticflickr\.com\//.test(c.img || '')) { // photo Flickr : lien, auteur et licence libre obligatoires
-    if (/_[a-z]\.jpg$/.test(c.img)) fail(c, 'photo Flickr avec suffixe de taille');
-    if (!/^https:\/\/www\.flickr\.com\/photos\//.test(c.photoPage || '')) fail(c, 'photo Flickr sans lien vers sa page');
-    if (!/ · (CC BY(-SA)? [\d.]+|CC0|Domaine public)$/.test(c.photoCredit || '')) fail(c, 'photo Flickr sans auteur ou licence acceptée : ' + c.photoCredit);
-  }
   if (!Array.isArray(c.stats) || !c.stats.length) fail(c, 'stats manquantes');
   else if (c.stats.some(s => !Array.isArray(s) || s.length !== 2)) fail(c, 'stat mal formée');
 }

@@ -12,14 +12,14 @@ const FRESH = process.argv.includes('--fresh');
 const cache = !FRESH && existsSync(CACHE_FILE) ? JSON.parse(readFileSync(CACHE_FILE, 'utf8')) : {};
 let cacheDirty = 0;
 function saveCache() { writeFileSync(CACHE_FILE, JSON.stringify(cache)); cacheDirty = 0; }
-async function getJSON(url, { delay = 0, label = 'HTTP', cacheKey = url } = {}) {
-  if (cache[cacheKey]) return cache[cacheKey];
+async function getJSON(url, { delay = 0, label = 'HTTP' } = {}) {
+  if (cache[url]) return cache[url];
   for (let attempt = 0; ; attempt++) {
     if (delay) await sleep(delay);
     const r = await fetch(url, { headers: UA });
     if (r.ok) {
       const j = await r.json();
-      cache[cacheKey] = j;
+      cache[url] = j;
       if (++cacheDirty >= 25) saveCache();
       return j;
     }
@@ -1056,42 +1056,8 @@ for (const c of altTargets) {
 }
 console.log(`Photos alternatives : ${altFound} / ${altTargets.length}`);
 
-// Flickr (facultatif, avec une clé : FLICKR_API_KEY=… node tools/build-cards.mjs). Licences acceptées : CC BY,
-// CC BY-SA, CC0 et domaine public — jamais « NC » (pas d'usage commercial) ni « ND » (les cartes recadrent).
-// Flickr ne dit pas qui est sur la photo : on exige le nom de famille dans le titre ou les mots-clés,
-// et chaque photo trouvée passe par la relecture (tools/.mayor-photos.txt).
-const FLICKR_KEY = process.env.FLICKR_API_KEY;
-let flickrLicenses = null;
-async function flickrApi(params) {
-  const q = new URLSearchParams({ format: 'json', nojsoncallback: '1', ...params });
-  // La clé n'entre pas dans le cache (tools/.cache.json)
-  return getJSON(`https://api.flickr.com/services/rest/?${q}&api_key=${encodeURIComponent(FLICKR_KEY)}`, { delay: 300, label: 'Flickr', cacheKey: 'flickr?' + q });
-}
-async function flickrPhoto(who) {
-  if (!FLICKR_KEY) return null;
-  if (!flickrLicenses) {
-    const all = (await flickrApi({ method: 'flickr.photos.licenses.getInfo' })).licenses?.license || [];
-    flickrLicenses = new Map(all.filter(l => /attribution|cc0|public domain|no known copyright/i.test(l.name) && !/non-?commercial|no ?deriv/i.test(l.name)).map(l => {
-      const m = (l.url || '').match(/licenses\/([a-z-]+)\/([\d.]+)/);
-      return [String(l.id), m ? `CC ${m[1].toUpperCase()} ${m[2]}` : /zero|cc0/i.test(l.url + l.name) ? 'CC0' : 'Domaine public'];
-    }));
-  }
-  if (!flickrLicenses.size) return null;
-  const norm = t => (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-  const surname = norm(who.name.split(' ').filter(w => w.length > 2 && !/^(de|van|der|den|le|la|du)$/i.test(w)).pop());
-  const r = await flickrApi({ method: 'flickr.photos.search', text: `"${who.name}"`, license: [...flickrLicenses.keys()].join(','), content_type: '1', media: 'photos',
-    sort: 'relevance', per_page: '20', extras: 'owner_name,license,tags,url_l,url_c' });
-  for (const ph of r.photos?.photo || []) {
-    const url = ph.url_l || ph.url_c, w = +(ph.width_l || ph.width_c), h = +(ph.height_l || ph.height_c);
-    if (!url || !surname || !norm(`${ph.title} ${ph.tags}`).includes(surname) || BAD_FILE.test(ph.title)) continue;
-    if (w < 500 || h < 500 || w / h > 1.9) continue;
-    return { img: url.replace(/_[a-z]\.jpg$/, ''), photoPage: `https://www.flickr.com/photos/${ph.owner}/${ph.id}`, photoCredit: `${ph.ownername} · ${flickrLicenses.get(String(ph.license))}` };
-  }
-  return null;
-}
-
 // Photo d'un bourgmestre sans photo sur Wikidata, dans l'ordre : fichier Commons qui le représente seul (P180),
-// image libre de son article Wikipédia, fichier de sa catégorie Commons portant son nom de famille, puis Flickr (si clé).
+// image libre de son article Wikipédia, fichier de sa catégorie Commons portant son nom de famille.
 // Les photos trouvées ainsi sont listées dans tools/.mayor-photos.txt pour être relues à l'œil
 // (refus dans MAYOR_PHOTO_NONE, choix manuel dans MAYOR_PHOTO).
 const MAYOR_PHOTO = {};
@@ -1115,7 +1081,7 @@ async function mayorPhoto(id, who, term) {
       if (big.length) return big[0].title.replace(/^File:/, '');
     }
   }
-  return flickrPhoto(who);
+  return null;
 }
 
 // ---------- Bourgmestres ----------
@@ -1256,12 +1222,7 @@ SELECT ?c ?p ?pLabel ?st ?en WHERE {
       continue;
     }
     let img = who.img;
-    let flickr = null;
-    if (!img && isLive && !MAYOR_PHOTO_NONE.has(o.id)) {
-      img = MAYOR_PHOTO[o.id] || await mayorPhoto(o.id, who, main);
-      if (img?.img) { flickr = img; img = img.img; }
-      if (img) { depicted++; foundPhotos.push(`${o.id} ${who.name} (${main.c.name}) : ${flickr ? flickr.photoPage : img}`); }
-    }
+    if (!img && isLive && !MAYOR_PHOTO_NONE.has(o.id)) { img = MAYOR_PHOTO[o.id] || await mayorPhoto(o.id, who, main); if (img) { depicted++; foundPhotos.push(`${who.name} (${main.c.name}) : ${img}`); } }
     if (!img || isQ(who.name)) continue;
     const list = (parties.get(o.id) || []).sort((a, b) => b.en - a.en || b.st - a.st);
     const partyQ = list.map(x => x.q).find(q => SHORT[q]) || list[0]?.q;
@@ -1272,7 +1233,7 @@ SELECT ?c ?p ?pLabel ?st ?en WHERE {
       id: o.id, cat: 'bourgmestre', name: who.name, img, rarity: 'commune', mayorOf: c.id, ...(main.kind ? { mayorKind: main.kind } : {}), pop: c.pop,
       ...(isLive ? { current: true } : {}),
       subtitle: label(main.kind, c, who.female), meta: [prov, isLive ? 'En fonction' : termSpan(main)].filter(Boolean).join(' · '),
-      party, family: partyFamily(partyQ), rolesData, roles, ...(flickr ? { photoPage: flickr.photoPage, photoCredit: flickr.photoCredit } : {}),
+      party, family: partyFamily(partyQ), rolesData, roles,
       stats: [['Naissance', who.birth ?? '—'], ['Parti', party || '—'], ['Habitants', c.pop ? c.pop.toLocaleString('fr-BE') : '—']],
     });
     added++;

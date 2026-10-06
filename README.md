@@ -1,6 +1,6 @@
 # Brol
 
-Jeu local d'ouverture de paquets de cartes sur la Belgique : politique, bourgmestres, monarchie, culture, sport, art, gastronomie, enseignement, communes, provinces, régions et événements. Seules les entrées avec une image libre (Wikimedia Commons, ou Flickr sous licence libre pour quelques bourgmestres) ont une carte.
+Jeu local d'ouverture de paquets de cartes sur la Belgique : politique, bourgmestres, monarchie, culture, sport, art, gastronomie, enseignement, communes, provinces, régions et événements. Seules les entrées avec une image libre (Wikimedia Commons) ont une carte.
 
 ## Lancer
 
@@ -29,14 +29,13 @@ Puis ouvrir http://localhost:5173. La collection est sauvegardée dans le naviga
 ```
 node tools/build-cards.mjs           # utilise le cache des requêtes (quelques secondes)
 node tools/build-cards.mjs --fresh   # tout re-télécharger (environ 20 minutes)
-FLICKR_API_KEY=… node tools/build-cards.mjs   # + photos libres de Flickr pour les bourgmestres sans photo sur Commons
 ```
 
 Le script interroge Wikidata (et Wikipédia pour la composition du gouvernement actuel et les photos manquantes), puis réécrit `data/cards.js`. Le gouvernement en fonction est lu sur la page « Gouvernement De Wever » de Wikipédia FR : changer `CURRENT_GOV` dans le script après un remaniement ou un nouveau gouvernement. Les règles de rareté sont dans ce script :
 
 - Personnalités : mythique = Premier ministre 6 ans ou plus, légendaire = Premier ministre, épique = ministre-président régional, rare = ministre fédéral, peu commune / commune = député fédéral avec photo (3 législatures ou plus / sinon). Membres du gouvernement actuel : au moins rare, épique pour les vice-Premiers.
 - Rois : légendaire, mythique pour un règne de 40 ans ou plus.
-- Bourgmestres : le bourgmestre en fonction vient de l'infobox Wikipédia NL de la commune (FR en secours), à jour après les élections de 2024, avec les titulaires empêchés et les faisant fonction ; Wikidata ne sert que pour les mandats terminés. Rareté selon la population de la commune. Photo libre : Wikidata, sinon Commons (fichier qui représente la personne seule, image de son article Wikipédia, sa catégorie Commons), sinon Flickr si une clé `FLICKR_API_KEY` est fournie (CC BY, CC BY-SA, CC0 ou domaine public uniquement, auteur et licence affichés). Les photos trouvées hors Wikidata sont listées dans `tools/.mayor-photos.txt` pour être relues à l'œil ; les refus vont dans `MAYOR_PHOTO_NONE`. Une personne qui a déjà une carte (député, ministre…) garde la sienne, avec le mandat ajouté à son parcours ; un ancien bourgmestre garde sa carte (« Ancien bourgmestre de… »).
+- Bourgmestres (chef de l'exécutif de la commune sur Wikidata, avec photo libre) : rareté selon la population de la commune. Wikidata n'étant pas à jour depuis les élections de 2024, la carte indique les années du mandat sans dire « en fonction ». Une personne qui a déjà une carte (député, ministre…) garde la sienne, avec le mandat ajouté à son parcours.
 - Culture & sport (liste `FAMOUS` dans le script, titres Wikipédia FR) : rareté selon le nombre de Wikipédias qui ont un article (légendaire ≥ 90, épique ≥ 55, rare ≥ 30, peu commune ≥ 15).
 - Communes, selon la population : légendaire ≥ 150 000, épique ≥ 60 000, rare ≥ 25 000, peu commune ≥ 12 000, sinon commune.
 - Provinces : épique. Régions : légendaire. Événements (écrits à la main) : mythique.

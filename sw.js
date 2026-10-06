@@ -33,8 +33,8 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  // Images de Wikimedia Commons et de Flickr : le cache d'abord (elles ne changent pas), puis le réseau
-  if (['commons.wikimedia.org', 'upload.wikimedia.org', 'live.staticflickr.com'].includes(url.hostname) && req.destination === 'image') {
+  // Images de Wikimedia Commons : le cache d'abord (elles ne changent pas), puis le réseau
+  if ((url.hostname === 'commons.wikimedia.org' || url.hostname === 'upload.wikimedia.org') && req.destination === 'image') {
     e.respondWith(caches.open(IMAGES).then(async c => {
       const hit = await c.match(req);
       // Une image gardée en mode « opaque » (affichage simple) ne peut pas servir à une requête CORS
