@@ -36,7 +36,6 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 
 - [x] **Nouvelle catégorie Sciences** (35 cartes) : scientifiques et inventeurs belges (Lemaître, Sax, Solvay, Vésale, Mercator, Englert, de Duve…), avec photos libres et rareté relative comme les autres catégories. Vendue dans un nouveau paquet « Sciences ».
 - [x] **Bourgmestres à jour** : le bourgmestre en fonction vient de l'infobox Wikipédia NL de chaque commune (FR en secours), avec les titulaires empêchés et les faisant fonction (Namur, Anvers, Brasschaat…). Wikidata ne sert plus que pour les mandats terminés ; les anciens bourgmestres gardent leur carte (« Ancien bourgmestre de… »).
-- [ ] **Plus de bourgmestres grâce à Flickr** : beaucoup de bourgmestres en fonction (Anderlecht, Seraing, Forest, Fernelmont…) n'ont aucune photo libre sur Commons. Le générateur sait déjà chercher sur Flickr (CC BY, CC BY-SA, CC0, domaine public ; auteur et licence affichés). À faire : créer une clé API Flickr gratuite, la passer dans `FLICKR_API_KEY`, relancer `node tools/build-cards.mjs`, puis relire à l'œil les photos listées dans `tools/.mayor-photos.txt` (refus dans `MAYOR_PHOTO_NONE`).
 - [ ] **Mise à jour automatique des données** : GitHub Action mensuelle qui relance `node tools/build-cards.mjs --fresh` et ouvre une pull request avec les changements (nouveaux ministres, populations, photos). Ajouter un garde-fou : signaler les cartes disparues, pour ne pas casser les collections existantes.
 
 ## Phase 5 — En ligne
