@@ -312,8 +312,13 @@
   const $ = s => document.querySelector(s);
   const $$ = s => [...document.querySelectorAll(s)];
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const imgUrl = (f, w = 500) => 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(f) + '?width=' + w;
-  const fileUrl = f => 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(f.replace(/ /g, '_'));
+  // Photo : nom de fichier sur Wikimedia Commons, ou adresse Flickr sans suffixe de taille (photo libre trouvée sur Flickr)
+  const FLICKR_SIZES = [[320, 'n'], [640, 'z'], [1024, 'b']];
+  const isFlickr = f => /^https:\/\/live\.staticflickr\.com\//.test(f || '');
+  const imgUrl = (f, w = 500) => isFlickr(f) ? `${f}_${(FLICKR_SIZES.find(([s]) => s >= w) || FLICKR_SIZES.at(-1))[1]}.jpg`
+    : 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(f) + '?width=' + w;
+  const fileUrl = (f, c) => isFlickr(f) ? (c?.photoPage || 'https://www.flickr.com/')
+    : 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(f.replace(/ /g, '_'));
   const initials = n => n.split(/[\s-]+/).filter(w => /^[A-ZÀ-Ý]/.test(w)).slice(0, 2).map(w => w[0]).join('');
   const fmt = n => n.toLocaleString(L() === 'nl' ? 'nl-BE' : 'fr-BE');
   const isEmblem = c => c.emblem || (['commune', 'province', 'region', 'enseignement'].includes(c.cat) && c.img && (c.img === c.badge || /\.svg$|\.png$/i.test(c.img)));
@@ -1467,7 +1472,7 @@
     const photo = photoOf(c, finish);
     const links = [];
     if (/^Q\d+$/.test(c.id)) links.push(`<a href="https://www.wikidata.org/wiki/${c.id}" target="_blank" rel="noopener">${t('wikidata')}</a>`);
-    if (photo) links.push(`<a href="${fileUrl(photo)}" target="_blank" rel="noopener">${t('imgCredit')}</a>`);
+    if (photo) links.push(`<a href="${fileUrl(photo, c)}" target="_blank" rel="noopener">${t('imgCredit')}${isFlickr(photo) && c.photoCredit ? ` (${esc(c.photoCredit)})` : ''}</a>`);
     if (c.badge && c.badge !== photo) links.push(`<a href="${fileUrl(c.badge)}" target="_blank" rel="noopener">${t('coaCredit')}</a>`);
     const versions = owned.length > 1
       ? `<div class="versions">${owned.map(f => `<button class="ver${f === finish ? ' is-active' : ''}" data-fin="${f}"><span class="fin-dot d-${f}"></span>${fl(f)}<small>×${countOf(id, f)}</small></button>`).join('')}</div>` : '';
@@ -1590,7 +1595,7 @@
   // Interface partagée avec les mini-jeux (games.js)
   window.RDL = {
     CARDS, BY_ID, get state() { return state; }, save, renderWallet, checkAchievements, totalOf,
-    esc, imgUrl, fmt, toast, SFX, catLabel: cl, rarityLabel: rl,
+    esc, imgUrl, isFlickr, fmt, toast, SFX, catLabel: cl, rarityLabel: rl,
     // pour les échanges (trade.js)
     cardHTML, countOf, keyOf, FINISHES, finishesFor, finishLabel: fl, rarityRank: id => R[id].rank, show, openDetail,
     // pour la simulation de l'économie (tools/simulate.mjs) et les tests

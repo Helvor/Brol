@@ -389,6 +389,8 @@ async function features() {
         return { w: cv.width, h: cv.height, photo: cv.dataset.photo, png: cv.toDataURL('image/png').length };
       });
       await page.unroute(API_RE); await page.unroute(IMG);
+      const fl = await page.evaluate(() => [window.RDL.imgUrl('https://live.staticflickr.com/65535/1_ab', 160), window.RDL.imgUrl('https://live.staticflickr.com/65535/1_ab', 900), window.RDL.isFlickr('Foo.jpg')]);
+      check(fl[0].endsWith('_n.jpg') && fl[1].endsWith('_b.jpg') && !fl[2], 'adresses Flickr : ' + fl);
       check(r.w === 1080 && r.h === 1350 && r.png > 20000 && r.photo === '1', 'image de partage : ' + JSON.stringify(r));
     });
     await step('fusion des doublons', async () => {
