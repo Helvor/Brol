@@ -394,11 +394,13 @@ async function resolveTitles(entries) {
   return out;
 }
 // Image libre : P18 sur Wikidata, sinon image principale (libre) de l'article Wikipédia (FR, ou NL pour les titres « nl: »)
+// Image principale libre d'un article Wikipédia — jamais une carte de localisation ou un plan (ex. « Belgium adm location map.svg »)
+const NOT_A_PICTURE = /location[ _]map|locator|adm[ _]location|\bmap\b|carte[ _]de[ _]localisation|ligging|plattegrond/i;
 async function freePageImage(title, lang = 'fr') {
   if (title.startsWith('nl:')) [lang, title] = ['nl', title.slice(3)];
   const res = await wikiApi(lang, { action: 'query', prop: 'pageimages', piprop: 'name', pilicense: 'free', redirects: '1', titles: title });
-  const f = res.query?.pages?.[0]?.pageimage;
-  return f ? f.replace(/_/g, ' ') : null;
+  const f = res.query?.pages?.[0]?.pageimage?.replace(/_/g, ' ');
+  return f && !NOT_A_PICTURE.test(f) ? f : null;
 }
 
 // ---------- Culture & sport : personnalités populaires ----------
