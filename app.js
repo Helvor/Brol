@@ -1392,7 +1392,7 @@
   // ---------- Signaler un bug ----------
   // Une issue GitHub pré-remplie. Sur Android, un lien « intent » ouvre l'app GitHub (le navigateur sinon) ;
   // sur iPhone, iOS ouvre les liens github.com dans l'app quand elle est installée.
-  const REPO = 'Helvor/Brol';
+  const REPO = 'Helvor/Brol', SUPPORT_MAIL = 'brol-support@elveli.net';
   const bugDlg = $('#bug-dlg');
   const platform = () => /Android/i.test(navigator.userAgent) ? 'android'
     : /iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1) ? 'ios' : 'desktop';
@@ -1414,7 +1414,10 @@
     const app = platform() === 'android'
       ? `intent://github.com/${REPO}/issues/new?${new URLSearchParams({ title, body })}#Intent;scheme=https;package=com.github.android;S.browser_fallback_url=${encodeURIComponent(web)};end`
       : web;
-    return { title, body, web, app };
+    // E-mail (sans compte GitHub) : texte brut, court — certaines messageries coupent les liens mailto trop longs
+    const mailBody = (tech ? body : text.trim()).replace(/^### /gm, '').slice(0, 1500);
+    const mail = `mailto:${SUPPORT_MAIL}?subject=${encodeURIComponent('[Brol] ' + title)}&body=${encodeURIComponent(mailBody.replace(/\n/g, '\r\n'))}`;
+    return { title, body, web, app, mail };
   }
   function renderBugActions() {
     const p = platform(), base = `https://github.com/${REPO}/issues/new`;
@@ -1422,6 +1425,7 @@
     $('#bug-actions').innerHTML = p !== 'desktop'
       ? `<a class="btn btn-gold" id="bug-app" href="${base}"${p === 'ios' ? '' : ' target="_blank" rel="noopener"'}>${t('bugApp')}</a><a class="linkish" id="bug-web" href="${base}" target="_blank" rel="noopener">${t('bugWebAlt')}</a>`
       : `<a class="btn btn-gold" id="bug-web" href="${base}" target="_blank" rel="noopener">${t('bugWeb')}</a>`;
+    $('#bug-actions').insertAdjacentHTML('beforeend', `<a class="btn btn-line" id="bug-mail" href="mailto:${SUPPORT_MAIL}">${t('bugMail')}</a>`);
   }
   $('#bug').addEventListener('click', () => { SFX.tick(); renderBugActions(); $('#bug-msg').hidden = true; bugDlg.showModal(); $('#bug-text').focus(); });
   $('#bug-text').addEventListener('input', () => { $('#bug-msg').hidden = true; });
@@ -1433,8 +1437,8 @@
     if (!text.trim()) { e.preventDefault(); SFX.error(); $('#bug-msg').textContent = t('bugEmpty'); $('#bug-msg').hidden = false; $('#bug-text').focus(); return; }
     $('#bug-msg').hidden = true;
     const r = bugReport(text, $('#bug-tech').checked);
-    a.href = a.id === 'bug-app' ? r.app : r.web; // posé au dernier moment : le clic suit ce lien
-    navigator.clipboard?.writeText(`${r.title}\n\n${r.body}`).then(() => toast(t('bugCopied'))).catch(() => {});
+    a.href = a.id === 'bug-app' ? r.app : a.id === 'bug-mail' ? r.mail : r.web; // posé au dernier moment : le clic suit ce lien
+    if (a.id !== 'bug-mail') navigator.clipboard?.writeText(`${r.title}\n\n${r.body}`).then(() => toast(t('bugCopied'))).catch(() => {});
     setTimeout(() => bugDlg.close(), 300);
   });
 

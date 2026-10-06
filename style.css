@@ -1426,3 +1426,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .bug-actions { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
 .bug-actions .btn { text-decoration: none; }
 .bug-msg { margin: 6px 0 0; font-size: 13px; color: var(--danger); font-weight: 600; }
+@media (max-width: 760px) {
+  .bug-dlg { width: 100vw; }
+  .bug-actions .btn { flex: 1 1 100%; justify-content: center; text-align: center; }
+}

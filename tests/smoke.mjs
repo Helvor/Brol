@@ -398,6 +398,8 @@ async function features() {
       check(await page.isVisible('#bug-msg') && await page.$eval('#bug-dlg', d => d.open), 'signalement vide accepté');
       const r = await page.evaluate(() => window.RDL.bugReport('Le paquet ne s’ouvre pas', true));
       check(r.web.startsWith('https://github.com/Helvor/Brol/issues/new?') && r.body.includes('Le paquet ne s’ouvre pas') && r.body.includes('Version') && !r.body.includes('owned'), 'lien de signalement : ' + r.web.slice(0, 120));
+      check(r.mail.startsWith('mailto:brol-support@elveli.net?subject=') && decodeURIComponent(r.mail).includes('Le paquet ne s’ouvre pas') && r.mail.length < 2200, 'e-mail de signalement : ' + r.mail.slice(0, 120));
+      check(await page.isVisible('#bug-mail'), 'bouton e-mail absent');
       await page.click('#bug-close');
     });
     await step('fusion des doublons', async () => {
