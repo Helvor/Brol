@@ -347,6 +347,8 @@
     const thumb = (tpl || `{w}px-${name}${/\.svg$/i.test(f) ? '.png' : ''}`).replace('{w}', bw);
     return `https://thumb.wikimedia.org/wikipedia/commons/thumb/${path}/${encodeURIComponent(thumb)}`;
   };
+  // Cadrage sur le visage (data/focus.js, généré par tools/build-focus.py) : « x% y% » pour object-position
+  const focusOf = f => { const v = window.FOCUS?.[f]; return v ? v.replace(' ', '% ') + '%' : ''; };
   const fileUrl = f => 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(f.replace(/ /g, '_'));
   const initials = n => n.split(/[\s-]+/).filter(w => /^[A-ZÀ-Ý]/.test(w)).slice(0, 2).map(w => w[0]).join('');
   const fmt = n => n.toLocaleString(L() === 'nl' ? 'nl-BE' : 'fr-BE');
@@ -467,7 +469,7 @@
       media = `<div class="event-big">${esc(String(c.stats[0][1]).replace(/\s/g, ' '))}</div>`;
     } else if (photo) {
       const fallback = `this.outerHTML='<div class=&quot;portrait&quot;>${SILHOUETTE.replace(/"/g, '&quot;')}<span>${esc(initials(c.name))}</span></div>'`;
-      media = `<img src="${imgUrl(photo)}" alt="" loading="lazy" decoding="async" onerror="${fallback}">`;
+      media = `<img src="${imgUrl(photo)}" alt="" loading="lazy" decoding="async"${focusOf(photo) ? ` style="object-position:${focusOf(photo)}"` : ''} onerror="${fallback}">`;
     } else {
       media = `<div class="portrait">${SILHOUETTE}<span>${esc(initials(c.name))}</span></div>`;
     }
@@ -1711,7 +1713,7 @@
   // Interface partagée avec les mini-jeux (games.js)
   window.RDL = {
     CARDS, BY_ID, get state() { return state; }, save, renderWallet, checkAchievements, totalOf,
-    esc, imgUrl, fmt, toast, bugReport, SFX, catLabel: cl, rarityLabel: rl,
+    esc, imgUrl, focusOf, fmt, toast, bugReport, SFX, catLabel: cl, rarityLabel: rl,
     // pour les échanges (trade.js)
     cardHTML, countOf, keyOf, FINISHES, finishesFor, finishLabel: fl, rarityRank: id => R[id].rank, show, openDetail,
     // pour la simulation de l'économie (tools/simulate.mjs) et les tests

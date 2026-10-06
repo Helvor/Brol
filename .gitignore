@@ -3,3 +3,4 @@ test-results/
 tools/.cache.json
 tools/.mayor-photos.txt
 tools/.cache-images.json
+tools/.faces/
