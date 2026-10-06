@@ -454,10 +454,13 @@ const SCHOOLS = [
     'nl:Hogeschool Gent', 'nl:Arteveldehogeschool', 'nl:Karel de Grote Hogeschool', 'nl:Thomas More (hogeschool)',
     'nl:Erasmushogeschool Brussel', 'nl:Howest', 'nl:UC Leuven-Limburg', 'nl:Hogeschool PXL', 'nl:Odisee']
     .map(title => ({ title, kind: 'Haute école' })),
-  ...['La Cambre (école)', 'Conservatoire royal de Bruxelles', 'Institut national supérieur des arts du spectacle',
+  // INSAS retiré : aucune image libre de l'école sur Commons (seulement un fusil indien homonyme)
+  ...['La Cambre (école)', 'Conservatoire royal de Bruxelles',
     'Académie royale des beaux-arts de Bruxelles', 'Académie royale des beaux-arts d\'Anvers']
     .map(title => ({ title, kind: 'École d\'art' })),
 ];
+// Image choisie à la main quand Wikidata n'en a pas (HEPL : logo libre de 79 px seulement, on prend une photo du site)
+const SCHOOL_IMG = { Q3128589: 'Haute Ecole de la Province de Liège - Site Gloesener.jpg' };
 const schoolQ = await resolveTitles(SCHOOLS);
 const schools = await sparql(`
 SELECT ?s ?sLabel ?img ?logo ?founded ?students ?cityLabel ?links WHERE {
@@ -479,7 +482,7 @@ for (const r of schools) {
 const seenSchoolNames = new Set();
 for (const o of schoolMap.values()) {
   const st = schoolQ.get(o.id).title;
-  const img = o.img || o.logo || await freePageImage(st.replace(/^nl:/, ''), st.startsWith('nl:') ? 'nl' : 'fr');
+  const img = SCHOOL_IMG[o.id] || o.img || o.logo || await freePageImage(st.replace(/^nl:/, ''), st.startsWith('nl:') ? 'nl' : 'fr');
   if (!img || seenSchoolNames.has(o.name)) { if (!img) console.warn('Pas d\'image libre, ignoré :', o.name); continue; }
   seenSchoolNames.add(o.name);
   const kind = schoolQ.get(o.id).kind;
