@@ -1095,7 +1095,8 @@ async function flickrPhoto(who) {
 // Les photos trouvées ainsi sont listées dans tools/.mayor-photos.txt pour être relues à l'œil
 // (refus dans MAYOR_PHOTO_NONE, choix manuel dans MAYOR_PHOTO).
 const MAYOR_PHOTO = {};
-const MAYOR_PHOTO_NONE = new Set([]);
+// Relu à l'œil et refusé : Fernand Van Trimpont (photo d'événement), Vincent De Wolf (photo de foule)
+const MAYOR_PHOTO_NONE = new Set(['Q134592361', 'Q3559574']);
 async function mayorPhoto(id, who, term) {
   const okFile = f => f && !BAD_FILE.test(f) && !ALT_SKIP.has(f) && /\.(jpe?g|png)$/i.test(f);
   const dep = await strictDepict(id);
