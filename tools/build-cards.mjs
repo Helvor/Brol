@@ -1064,7 +1064,7 @@ console.log(`Photos alternatives : ${altFound} / ${altTargets.length}`);
 // Une personne qui a déjà une carte (député, ministre…) garde sa carte : le mandat s'ajoute à son parcours.
 {
   const de = n => /^[AEIOUYÉÈÊH]/i.test(n) ? `d’${n}` : `de ${n}`;
-  const KIND_FR = { ff: 'Bourgmestre faisant fonction', emp: 'Bourgmestre empêché' };
+  const KIND_FR = { ff: 'Bourgmestre faisant fonction', emp: 'Bourgmestre empêché', old: 'Ancien bourgmestre' };
   const label = (kind, c) => `${KIND_FR[kind] || 'Bourgmestre'} ${de(c.name)}`;
   const ids = [...comm.keys()];
 
@@ -1136,17 +1136,22 @@ console.log(`Photos alternatives : ${altFound} / ${altTargets.length}`);
   // 3. Mandats terminés (Wikidata P6 avec date de fin) et début des mandats en cours
   const rows = [];
   for (let i = 0; i < ids.length; i += 200) rows.push(...await sparql(`
-SELECT ?c ?p ?st ?en WHERE {
+SELECT ?c ?p ?pLabel ?st ?en WHERE {
   VALUES ?c { ${ids.slice(i, i + 200).map(q => 'wd:' + q).join(' ')} }
   ?c p:P6 ?s. ?s ps:P6 ?p. ?p wdt:P31 wd:Q5. OPTIONAL { ?s pq:P580 ?st } OPTIONAL { ?s pq:P582 ?en }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,nl,mul". }
 }`));
+  // Nom sans lien dans l'infobox : on le retrouve parmi les bourgmestres de la commune sur Wikidata
+  const norm = n => (n || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, ' ').trim();
+  for (const [cid, people] of current) for (const p of people) if (!p.q) p.q = rows.find(r => qid(r.c) === cid && norm(r.pLabel) === norm(p.name))?.p.split('/').pop() || null;
   // 4. Les personnes : nom, photo, naissance, partis
   const mayors = new Map();
   const add = (id, c, term) => { const o = mayors.get(id) || { id, terms: [] }; o.terms.push({ c, ...term }); mayors.set(id, o); };
   for (const r of rows) {
-    if (!r.en) continue; // mandat « en cours » sur Wikidata : c'est Wikipédia qui dit qui est en fonction
     const c = comm.get(qid(r.c)), id = qid(r.p);
     if (current.get(c.id)?.some(p => p.q === id)) continue; // toujours en fonction : le mandat actuel suffit
+    // Mandat « en cours » sur Wikidata mais plus d'après Wikipédia : ancien bourgmestre, date de fin inconnue
+    if (!r.en) { add(id, c, current.has(c.id) ? { kind: 'old', st: r.st } : { st: r.st }); continue; } // commune sans infobox : Wikidata seul
     add(id, c, { st: r.st, en: r.en });
   }
   for (const [cid, people] of current) for (const p of people) if (p.q) {
@@ -1168,7 +1173,7 @@ SELECT ?c ?p ?st ?en WHERE {
       (parties.get(qid(r.p)) || parties.set(qid(r.p), []).get(qid(r.p))).push({ q: qid(r.party), st: year(r.st) || 0, en: r.en ? year(r.en) : Infinity });
   }
   // 5. Cartes
-  const termSpan = t => t.live ? (t.st ? `depuis ${year(t.st)}` : '') : span(t.st, t.en);
+  const termSpan = t => t.kind === 'old' ? '' : t.live ? (t.st ? `depuis ${year(t.st)}` : '') : span(t.st, t.en);
   let added = 0, merged = 0, live = 0, depicted = 0;
   for (const o of mayors.values()) {
     const who = info.get(o.id);

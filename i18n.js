@@ -178,7 +178,7 @@
 
   // Bourgmestre : « Burgemeester van » + nom néerlandais de la commune (lu sur sa carte)
   const communeNl = id => { const c = (window.CARDS || []).find(x => x.id === id); return c ? (c.nl?.name || c.name) : ''; };
-  const MAYOR_NL = { ff: 'Waarnemend burgemeester', emp: 'Titelvoerend burgemeester' }; // faisant fonction / empêché
+  const MAYOR_NL = { ff: 'Waarnemend burgemeester', emp: 'Titelvoerend burgemeester', old: 'Voormalig burgemeester' }; // faisant fonction / empêché / ancien
   const mayorNl = (id, kind) => `${MAYOR_NL[kind] || 'Burgemeester'} van ${communeNl(id)}`;
 
   window.I18N = {

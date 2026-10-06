@@ -32,11 +32,13 @@ for (const c of cards) {
 }
 
 // Chaque catégorie doit avoir des cartes, et les grandes catégories toutes les raretés
+const NO_MYTHIQUE = ['bourgmestre'];
 for (const cat of CATS) {
   const list = cards.filter(c => c.cat === cat);
   if (!list.length) { if (!OPTIONAL.includes(cat)) errors.push(`catégorie « ${cat} » vide`); continue; }
   if (list.length >= 100) {
-    const missing = RARITIES.filter(r => !list.some(c => c.rarity === r));
+    // Mythique = icônes choisies à la main (MYTHIQUES dans build-cards) : aucun bourgmestre n'en est une
+    const missing = RARITIES.filter(r => !(r === 'mythique' && NO_MYTHIQUE.includes(cat)) && !list.some(c => c.rarity === r));
     if (missing.length) errors.push(`catégorie « ${cat} » sans ${missing.join(', ')}`);
   }
 }
