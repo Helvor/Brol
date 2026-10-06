@@ -958,6 +958,7 @@
       (!filters.special || finishesOwned(c.id).some(f => f !== 'normal')) &&
       (!q || [c.name, c.nl?.name, c.subtitle, c.party, c.meta].some(s => (s || '').toLowerCase().includes(q))));
 
+    if (filters.series) list.sort((a, b) => !totalOf(a.id) - !totalOf(b.id)); // série : cartes obtenues d'abord
     $('#series-banner').hidden = !filters.series;
     if (filters.series) $('#series-banner').innerHTML = `<span>${t('seriesBanner')} : <b>${esc(sl(filters.series, 'title'))}</b></span><button class="linkish" id="clear-series">${t('clearFilter')}</button>`;
     const grid = $('#grid');
@@ -1038,7 +1039,8 @@
       const have = s.members.filter(id => totalOf(id)).length;
       const complete = have === s.members.length;
       const claimed = !!state.claimed[s.id];
-      const thumbs = s.members.slice(0, 12).map(id => {
+      // Les cartes déjà obtenues d'abord : on voit sa progression même dans une grande série
+      const thumbs = [...s.members].sort((a, b) => !totalOf(a) - !totalOf(b)).slice(0, 12).map(id => {
         const c = BY_ID.get(id);
         return totalOf(id) && c.img ? `<span class="thumb" style="background-image:url('${imgUrl(c.img, 120)}')"></span>` : '<span class="thumb is-empty"></span>';
       }).join('');

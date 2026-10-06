@@ -246,7 +246,7 @@ async function trade() {
 // Carte du jour, fusion, paquets d'événement (date simulée) et export/import de la sauvegarde
 async function features() {
   console.log('fonctions');
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 }, acceptDownloads: true });
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 }, acceptDownloads: true, serviceWorkers: 'block' }); // requêtes simulées visibles
   await ctx.addInitScript(() => { window.BROL_NOW = '2026-12-01T12:00:00'; });
   const page = await ctx.newPage();
   const errors = [];
@@ -376,12 +376,20 @@ async function features() {
       check(r.paid >= 0, 'le ticket Prestige a coûté des pièces : ' + JSON.stringify(r));
     });
     await step('image de partage d’une carte', async () => {
+      // Commons simulé : l'API donne l'adresse de l'image, l'image est autorisée en CORS (comme le vrai site)
+      const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+      const cors = { 'access-control-allow-origin': '*' };
+      const API_RE = /commons\.wikimedia\.org\/w\/api\.php/, IMG = 'https://upload.wikimedia.org/test.png';
+      await page.route(API_RE, r => r.fulfill({ status: 200, contentType: 'application/json', headers: cors,
+        body: JSON.stringify({ query: { pages: { 1: { imageinfo: [{ thumburl: 'https://upload.wikimedia.org/test.png' }] } } } }) }));
+      await page.route(IMG, r => r.fulfill({ status: 200, contentType: 'image/png', headers: cors, body: PNG }));
       const r = await page.evaluate(async () => {
-        const c = window.RDL.CARDS.find(x => x.rarity === 'mythique');
+        const c = window.RDL.CARDS.find(x => x.rarity === 'mythique' && x.img);
         const cv = await window.SHARE.render(c, 'holo');
-        return { w: cv.width, h: cv.height, png: cv.toDataURL('image/png').length };
+        return { w: cv.width, h: cv.height, photo: cv.dataset.photo, png: cv.toDataURL('image/png').length };
       });
-      check(r.w === 1080 && r.h === 1350 && r.png > 20000, 'image de partage : ' + JSON.stringify(r));
+      await page.unroute(API_RE); await page.unroute(IMG);
+      check(r.w === 1080 && r.h === 1350 && r.png > 20000 && r.photo === '1', 'image de partage : ' + JSON.stringify(r));
     });
     await step('fusion des doublons', async () => {
       const ids = await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'rare'); window.RDL.state.owned[C[0].id] = 4; window.RDL.state.owned[C[1].id] = 3; window.RDL.save(); return [C[0].id, C[1].id]; });
