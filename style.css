@@ -1144,6 +1144,14 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .fuse-recipe .gem, .fuse-holo .gem { width: 9px; height: 9px; box-shadow: none; }
 .fuse-row small, .fuse-holo small { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
 .fuse-row .btn, .fuse-holo .btn { padding: 6px 12px; font-size: 14px; }
+.fuse-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.fuse-holo .fuse-btns { margin-left: auto; }
+.fuse-result.is-many { flex-direction: column; align-items: stretch; gap: 12px; }
+.fuse-result.is-many b { margin: 0; font-size: 20px; }
+.fuse-lot { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fuse-result .fuse-lot .cell { width: auto; min-width: 0; }
+.fuse-lot .cell.is-new { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
+.fuse-lot .party { display: none; } /* vignettes : l'étiquette du parti chevaucherait le nom */
 .fuse-holos { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
 .fuse-holo { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
 .fuse-name { flex: 1; min-width: 0; font-family: var(--display); font-weight: 700; font-size: 16px; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1153,6 +1161,11 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .fuse-result small { color: var(--ink-2); }
 .tag-inline { display: inline-block; font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px; background: var(--gold-hi); color: #1a1300; }
 .tag-inline.dup { background: var(--bg-3); color: var(--ink-2); }
+/* Nouvelle version d'une carte déjà possédée : contour doré, pas le fond plein d'une nouvelle carte */
+.tag-inline.ver, .slot .tag.ver { background: #17140b; color: var(--gold-hi, #f6d478); box-shadow: inset 0 0 0 1.5px var(--gold-hi, #f6d478); }
+.slot .tag { white-space: nowrap; }
+.slot .tag.ver { font-size: 12px; letter-spacing: .04em; }
+.fuse-lot .cell.is-ver { outline: 2px dashed var(--gold); outline-offset: 3px; border-radius: 6px; }
 
 .daily-dlg { max-width: 360px; text-align: center; color: #f1eee6; padding-top: 44px; }
 .daily-dlg .close { top: 0; right: 0; color: #c9c7c0; }
@@ -1167,7 +1180,8 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   .side-dlg h2 { font-size: 28px; padding-right: 44px; }
   .fuse-row { grid-template-columns: 1fr auto; }
   .fuse-row small { grid-column: 1; grid-row: 2; }
-  .fuse-row .btn { grid-row: 1 / span 2; grid-column: 2; }
+  .fuse-row .fuse-btns { grid-row: 1 / span 2; grid-column: 2; flex-direction: column; align-items: stretch; }
+  .fuse-lot { gap: 8px; }
   .fuse-recipe { font-size: 15px; }
   .fuse-result .cell { width: 110px; }
   .tab.has-dot::before { top: 8px; right: 18%; }

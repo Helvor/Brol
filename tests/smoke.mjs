@@ -410,6 +410,21 @@ async function features() {
       await page.waitForSelector('.fuse-result');
       const r = await page.evaluate(ids => [window.RDL.countOf(ids[0], 'normal'), window.RDL.countOf(ids[1], 'normal'), window.RDL.state.stats.fused], ids);
       check(r[0] === 1 && r[1] === 1 && r[2] === 1, 'fusion incorrecte : ' + r);
+      // Holo d'une carte déjà possédée : « Nouvelle version », pas « Nouvelle »
+      await page.evaluate(() => { const c = window.RDL.CARDS.find(x => x.rarity === 'epique'); window.RDL.state.owned[c.id] = 4; delete window.RDL.state.owned[c.id + '|holo']; window.__holo = c.id; });
+      await page.click('#fuse-close'); await page.click('#fuse-btn');
+      await page.click(await page.evaluate(() => `[data-holo="${window.__holo}"]:not([data-max])`));
+      const holoTag = await page.textContent('.fuse-result .tag-inline');
+      check(holoTag.trim() === 'Nouvelle version', 'Holo d’une carte possédée : ' + holoTag);
+      // « Max » : toutes les fusions possibles d'un coup, la fenêtre ne remonte pas en haut
+      await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'commune').slice(0, 5); C.forEach(c => window.RDL.state.owned[c.id] = 5); });
+      await page.click('#fuse-close'); await page.click('#fuse-btn');
+      const f0 = await page.evaluate(() => window.RDL.state.stats.fused);
+      await page.evaluate(() => { document.querySelector('[data-fuse="commune"][data-max]').scrollIntoView({ block: 'end' }); });
+      const sc = await page.$eval('#fuse', d => d.scrollTop);
+      await page.click('[data-fuse="commune"][data-max]');
+      const fm = await page.evaluate(() => ({ n: window.RDL.state.stats.fused, lot: document.querySelectorAll('.fuse-lot .cell').length, scroll: document.querySelector('#fuse').scrollTop }));
+      check(fm.n - f0 === 4 && fm.lot === 4 && (sc === 0 || fm.scroll > 0), 'fusion max : ' + JSON.stringify({ ...fm, f0, sc }));
       await page.click('#fuse-close');
     });
     await step('export puis import de la sauvegarde', async () => {
