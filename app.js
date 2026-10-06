@@ -265,11 +265,18 @@
   // owned : clé « id » pour la version standard, « id|holo » etc. pour les versions spéciales
   const freshStats = () => ({ packs: 0, cards: 0, free: 0, rarity: {}, finish: {}, packsBy: {}, sold: 0, earned: 0, perfect: 0, doubleLeg: 0, night: 0, pityHits: 0, goldMyth: 0, trades: 0, tradeGift: 0, tradeMyth: 0, tradeFull: 0, fused: 0, fuseHolo: 0, dailyMax: 0, excl: 0, missions: 0, weekly: 0 });
   const fresh = () => ({ coins: START_COINS, owned: {}, packs: 0, free: 1, freeAt: Date.now(), claimed: {}, pity: 0, stats: freshStats(), ach: {}, trade: { pending: {}, done: {} }, daily: { last: null, streak: 0 } });
+  const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+  // Plusieurs onglets : quand un autre onglet sauvegarde, celui-ci (en retrait) est périmé. Il ne sauvegarde plus
+  // (sinon il effacerait la progression de l'autre) et se recharge dès qu'on revient dessus.
+  let stale = false;
   let state = load();
   function load() {
     try {
       const s = JSON.parse(localStorage.getItem(STORE_KEY));
       if (s && typeof s.coins === 'number') {
+        // Champs abîmés (fichier importé, vieille version) : on repart d'un objet vide plutôt que de planter
+        for (const k of ['owned', 'claimed', 'ach', 'trade', 'daily', 'stats', 'games', 'tickets']) if (k in s && !isObj(s[k])) delete s[k];
+        s.owned ||= {};
         if (s.free === undefined) { s.free = FREE_MAX; s.freeAt = Date.now(); s.coins = Math.max(s.coins, START_COINS); }
         s.claimed ||= {}; s.ach ||= {}; s.pity ||= 0;
         s.trade ||= {}; s.trade.pending ||= {}; s.trade.done ||= {};
@@ -280,9 +287,11 @@
         return s;
       }
     } catch (_) { /* stockage indisponible */ }
+    // Sauvegarde illisible : on la met de côté avant qu'une nouvelle partie ne l'écrase
+    try { const raw = localStorage.getItem(STORE_KEY); if (raw) localStorage.setItem(STORE_KEY + ':illisible', raw); } catch (_) { /* rien */ }
     return fresh();
   }
-  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (_) { /* rien */ } }
+  function save() { if (stale) return; try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (_) { /* rien */ } }
   function tickFree() {
     const now = Date.now();
     while (state.free < FREE_MAX && now - state.freeAt >= FREE_EVERY_MS) { state.free++; state.freeAt += FREE_EVERY_MS; }
@@ -1363,8 +1372,8 @@
     let data;
     try { data = JSON.parse(await f.text()); } catch (_) { data = null; }
     const sv = data?.app === 'brol' ? data.save : null;
-    if (!sv || typeof sv.coins !== 'number' || typeof sv.owned !== 'object') { SFX.error(); return toast(t('importBad')); }
-    const n = Object.keys(sv.owned).filter(k => !k.includes('|') && BY_ID.has(k) && sv.owned[k] > 0).length;
+    if (!sv || typeof sv.coins !== 'number' || !isObj(sv.owned)) { SFX.error(); return toast(t('importBad')); }
+    const n = new Set(Object.keys(sv.owned).filter(k => sv.owned[k] > 0).map(k => k.split('|')[0]).filter(id => BY_ID.has(id))).size;
     if (!confirm(t('importConfirm', n, fmt(sv.coins)))) return;
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify(sv));
@@ -1624,7 +1633,7 @@
     try { const reg = await navigator.serviceWorker?.getRegistration(); if (reg) reg.showNotification(title, opts); else new Notification(title, opts); } catch (_) { /* rien */ }
   }
   setInterval(() => {
-    if (!notifOn() || !document.hidden) return;
+    if (stale || !notifOn() || !document.hidden) return;
     tickFree();
     if (state.free >= FREE_MAX) notify('free', t('notifFreeTitle'), t('notifFreeBody', FREE_MAX));
     if (dailyReady()) notify('daily', t('notifDailyTitle'), t('notifDailyBody'));
@@ -1638,6 +1647,11 @@
     try { const reg = await navigator.serviceWorker?.ready; await reg?.periodicSync?.register('brol-daily', { minInterval: 20 * 3600 * 1000 }); } catch (_) { /* non pris en charge */ }
     renderNotifBtn(); toast(t('notifOnToast'));
   });
+
+  window.addEventListener('storage', e => { if (e.key === STORE_KEY && !document.hasFocus()) stale = true; });
+  const wakeUp = () => { if (stale && !document.hidden) location.reload(); };
+  window.addEventListener('focus', wakeUp);
+  document.addEventListener('visibilitychange', wakeUp);
 
   applyStatic();
   renderWallet();
