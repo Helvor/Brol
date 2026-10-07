@@ -360,6 +360,17 @@ async function features() {
         return { same: JSON.stringify(got) === JSON.stringify(missing.slice().sort()), again: !!R.buyPacks(p, 1) };
       });
       check(last.same && !last.again, 'paquet Nouveautés, 5 cartes manquantes : ' + JSON.stringify(last));
+      // Il ne manque plus qu'une carte : le paquet reste disponible et la contient, le reste est tiré au hasard
+      const one = await page.evaluate(() => {
+        const R = window.RDL, p = R.PACKS.find(x => x.id === 'nouveautes');
+        const id = R.CARDS.find(c => c.cat !== 'edition' && c.rarity === 'legendaire').id;
+        for (const k of Object.keys(R.state.owned)) if (k === id || k.startsWith(id + '|')) delete R.state.owned[k];
+        R.state.perDay = null; R.state.coins = 10000;
+        const res = R.buyPacks(p, 1);
+        const rv = res ? res.packs[0].revealed : [];
+        return { n: rv.length, has: rv.some(d => d.card.id === id && d.isNew), others: rv.filter(d => d.card.id !== id).every(d => !d.isNew), full: !R.buyPacks(p, 1) };
+      });
+      check(one.n === 5 && one.has && one.others && one.full, 'paquet Nouveautés, dernière carte : ' + JSON.stringify(one));
     });
     await step('défi de la semaine et ticket Prestige', async () => {
       const r = await page.evaluate(() => {
