@@ -64,6 +64,7 @@
     { id: 'aviation',     fr: 'Aviation',      nl: 'Luchtvaart' },
     { id: 'rail',         fr: 'Rail',          nl: 'Spoor' },
     { id: 'exploration',  fr: 'Exploration',   nl: 'Ontdekking' },
+    { id: 'finance',      fr: 'Monnaie et banque', nl: 'Geld en bank' },
     { id: 'art',          fr: 'Art',           nl: 'Kunst' },
     { id: 'monument',     fr: 'Monuments',     nl: 'Monumenten' },
     { id: 'chateau',      fr: 'Châteaux',      nl: 'Kastelen' },
@@ -80,6 +81,10 @@
   const CAT_RANK = Object.fromEntries(CATS.map((c, i) => [c.id, i]));
   const cl = id => CATS.find(c => c.id === id)[L()];
 
+  // Cartes de Politique reprises dans le paquet Banque nationale : gouverneurs (de Haussy, Theunis, Théophile de
+  // Lantsheere), vice-gouverneur (Van Zeeland), fondateur (Frère-Orban), Camille Gutt (FMI), Philippe Maystadt (Finances)
+  const BNB_EXTRA = new Set(['Q2640708', 'Q14991', 'Q7799889', 'Q14996', 'Q705791', 'Q1029185', 'Q725611']);
+  const BNB_GOVERNORS = new Set(['Q2640708', 'Q14991', 'Q7799889']);
   const PACKS = [
     { id: 'belgique', title: { fr: 'Belgique', nl: 'België' }, kicker: { fr: 'Édition nationale', nl: 'Nationale editie' }, big: 'BE', price: 60,
       desc: { fr: 'Toutes les cartes du jeu.', nl: 'Alle kaarten van het spel.' },
@@ -105,6 +110,10 @@
     { id: 'en-route', title: { fr: 'En route !', nl: 'Op weg!' }, kicker: { fr: 'Édition voyage', nl: 'Reiseditie' }, big: '✈', price: 80,
       desc: { fr: 'Avions, trains, navires et explorateurs.', nl: 'Vliegtuigen, treinen, schepen en ontdekkingsreizigers.' },
       body: ['#0b1730', '#24426e'], metal: ['#eaf2ff', '#8fb4ef', '#3d5f99'], cats: ['aviation', 'rail', 'exploration'] },
+    // Banque nationale : la catégorie Monnaie et banque, plus les gouverneurs et ministres déjà présents en Politique
+    { id: 'bnb', title: { fr: 'Banque nationale', nl: 'Nationale Bank' }, kicker: { fr: 'Édition monétaire', nl: 'Munteditie' }, big: '€ ƒ', price: 80,
+      desc: { fr: 'Gouverneurs, francs, euros, or et grandes institutions.', nl: 'Gouverneurs, franken, euro’s, goud en grote instellingen.' },
+      body: ['#1a1408', '#4a3a12'], metal: ['#fff6d8', '#e0c068', '#8a6a1c'], filter: c => c.cat === 'finance' || BNB_EXTRA.has(c.id) },
     { id: 'patrimoine', title: { fr: 'Patrimoine', nl: 'Erfgoed' }, kicker: { fr: 'Édition patrimoine', nl: 'Erfgoededitie' }, big: '1830', price: 80,
       desc: { fr: 'Monuments, châteaux et folklore.', nl: 'Monumenten, kastelen en folklore.' },
       body: ['#191c22', '#3e4756'], metal: ['#eef3ff', '#a9b8d6', '#566584'], cats: ['monument', 'chateau', 'folklore'] },
@@ -306,6 +315,8 @@
       match: c => c.cat === 'rail' && c.stats?.[1]?.[1] === 'Gare' },
     { id: 'pionniers', title: { fr: 'Pionniers du ciel', nl: 'Pioniers van de lucht' }, desc: { fr: 'Les aviateurs et l’aviatrice des débuts.', nl: 'De vliegeniers en de vliegenierster van het eerste uur.' }, reward: 500,
       match: c => c.cat === 'aviation' && /^Aviat|^Aéronaute/.test(c.stats?.[1]?.[1] || '') },
+    { id: 'gouverneurs', title: { fr: 'Gouverneurs de la Banque nationale', nl: 'Gouverneurs van de Nationale Bank' }, desc: { fr: 'De François de Haussy à Pierre Wunsch.', nl: 'Van François de Haussy tot Pierre Wunsch.' }, reward: 800,
+      match: c => (c.cat === 'finance' && c.stats?.[1]?.[1] === 'Gouverneur') || BNB_GOVERNORS.has(c.id) },
     { id: 'resistance', title: { fr: 'Résistance', nl: 'Verzet' }, desc: { fr: 'Les résistants des deux guerres.', nl: 'De verzetsstrijders van beide oorlogen.' }, reward: 500,
       match: c => c.cat === 'militaire' && /^Résistant/.test(c.stats?.[2]?.[1] || '') },
     ...ALL_PACKS.filter(p => p.special).map(p => ({ id: 'ed-' + p.id, edition: p.id,
@@ -463,6 +474,10 @@
       <rect x="0" y="18" width="300" height="394" fill="url(#gp${k})"/>
       <g fill="none" stroke="${p.metal[1]}" stroke-width="1.6" opacity=".35">${[0, 60, 120].map(a => `<ellipse cx="150" cy="202" rx="128" ry="44" transform="rotate(${a} 150 202)"/>`).join('')}</g>
       ${[[278, 202], [86, 91], [86, 313]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="${p.metal[0]}" opacity=".8"/>`).join('')}`,
+    // Piles de pièces et lingots
+    bnb: (k, p) => `${[[60, 6], [110, 9], [190, 7], [240, 4]].map(([x, n]) => Array.from({ length: n }, (_, i) =>
+      `<ellipse cx="${x}" cy="${396 - i * 9}" rx="22" ry="6" fill="${p.metal[1]}" opacity=".22" stroke="${p.metal[0]}" stroke-opacity=".25"/>`).join('')).join('')}
+      ${[0, 1, 2].map(i => `<path d="M${118 + i * 22} 120h20l6 14h-32z" fill="${p.metal[1]}" opacity=".2"/>`).join('')}`,
     // Rails en perspective et trajectoire d'avion
     'en-route': (k, p) => `<g stroke="${p.metal[1]}" fill="none" opacity=".28"><path d="M120 412L146 230M180 412L154 230" stroke-width="3"/>
       ${Array.from({ length: 9 }, (_, i) => { const y = 404 - i * i * 2.4 - i * 6, w = 34 - i * 3.2; return `<path d="M${(150 - w).toFixed(1)} ${y.toFixed(1)}h${(2 * w).toFixed(1)}" stroke-width="${(4 - i * .35).toFixed(1)}"/>`; }).join('')}
@@ -580,7 +595,7 @@
   // Chaque catégorie contient toutes les raretés (réparties par notoriété), donc les taux affichés sont justes.
   // Nouvelle catégorie : à rareté égale, ses cartes sortent trois fois plus souvent jusqu'à la date indiquée, pour
   // qu'elles ne se noient pas parmi les 1 500 cartes du paquet Belgique. Les taux par rareté ne changent pas.
-  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31' }, FEATURED_WEIGHT = 3;
+  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30' }, FEATURED_WEIGHT = 3;
   const featuredCats = () => { const d = ymd(now()); return new Set(Object.keys(FEATURED).filter(cat => d <= FEATURED[cat])); };
   function pickCard(list) {
     const feat = featuredCats(), w = c => feat.has(c.cat) ? FEATURED_WEIGHT : 1;

@@ -34,7 +34,7 @@ async function simulate(strategy) {
     const log = [];
     let t = 0, spent = 0, sold = 0;
     const income = { achievements: 0, series: 0 };
-    const sizeOf = p => R.CARDS.filter(c => !p.cats || p.cats.includes(c.cat)).length;
+    const sizeOf = p => R.CARDS.filter(c => p.filter ? p.filter(c) : !p.cats || p.cats.includes(c.cat)).length;
     const smallest = [...R.PACKS].sort((a, b) => sizeOf(a) - sizeOf(b));
     const belgique = R.PACKS.find(p => p.id === 'belgique');
     const advance = sec => { t += sec; s.freeAt -= sec * 1000; };
