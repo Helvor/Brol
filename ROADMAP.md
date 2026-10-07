@@ -92,7 +92,21 @@ Ordre de priorité :
    Stats : naissance, année ou premier vol ; type ; constructeur, lieu, longueur… Séries « Grandes gares » et
    « Pionniers du ciel ». Mise en avant ×3 jusqu'au 31 mars 2027. Écartés : officiers de l'État indépendant du Congo
    (Lemaire, Storms, Coquilhat…), navire-école Mercator (photo inutilisable), malle Ostende-Douvres (pas d'article).
-La phase 6 est terminée : « Mémoire », « Faune belge » et « En route ! ». Écartés : personnages de BD (aucune image libre ; seule piste, les
+La phase 6 est terminée : « Mémoire », « Faune belge » et « En route ! ».
+
+4. [x] **Banque nationale** (demande de l'utilisateur) : catégorie « Monnaie et banque » (30 cartes : la BNB en
+   mythique, 12 gouverneurs, Lamfalussy, Peter Praet, franc, euro, Union monétaire latine, UEBL, réserve d'or,
+   Hôtel des Monnaies, Monnaie royale, bourses de Bruxelles et d'Anvers, Euroclear, Belfius, Bancontact, BCE, BRI,
+   FMI) ; le paquet reprend aussi 7 cartes de Politique (`BNB_EXTRA` dans app.js : de Haussy, Theunis, Théophile de
+   Lantsheere, Van Zeeland, Frère-Orban, Gutt, Maystadt). Série « Gouverneurs de la Banque nationale ».
+   - [ ] **Pièces et billets anciens** (domaine public : graveurs morts depuis plus de 70 ans) : à chercher sur Commons
+     quand il répondra (5 francs Léopold II, francs Albert Iᵉʳ, billets d'avant-guerre). Pas les billets récents
+     (Magritte, Ensor…), encore protégés. Les pièces de Wikidata n'ont pas d'image.
+   - [ ] **Collègues de l'utilisateur** (avec leur accord écrit) : photos fournies par eux, stockées dans le dépôt
+     (exception à la règle « images Commons » ; Commons supprime les photos de personnes non connues), retrait
+     possible à tout moment. Le générateur doit accepter ces images locales. Pas de logo officiel de la BNB.
+   - Sans image libre : 7 gouverneurs (Hautain, Janssen, Goffin, Frère, Ansiaux, Vandeputte, de Strycker, Godeaux),
+     Société Générale, Banque de Belgique, SWIFT, BNP Paribas Fortis, Robert Triffin. Écartés : personnages de BD (aucune image libre ; seule piste, les
 fresques BD de Bruxelles) et logos de chocolatiers (protégés).
 
 Restes de la session précédente : photos douteuses à remplacer (pas seulement à recadrer) — Patrick Lansens (le

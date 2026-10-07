@@ -364,6 +364,40 @@ const EXPLORATION = [
   ['Ferdinand Verbiest', 'Astronome', 'Jésuite de Pittem, astronome de l’empereur de Chine', 'Jezuïet uit Pittem, astronoom van de keizer van China', ['Rôle', 'Chine']],
   ['Guillaume de Rubrouck', 'Voyageur', 'Franciscain flamand chez le Grand Khan mongol (1253–1255)', 'Vlaamse franciscaan bij de Grote Khan van de Mongolen (1253–1255)', ['Rôle', 'Mongolie'], { nlName: 'Willem van Rubroek' }],
 ];
+const FINANCE = [
+  ['Banque nationale de Belgique', 'Banque centrale', 'Fondée en 1850, elle émet les billets et veille sur les prix', 'Opgericht in 1850, geeft de bankbiljetten uit en waakt over de prijzen', ['Siège', 'Bruxelles'], { year: 1850, mythique: true, nlName: 'Nationale Bank van België' }],
+  ['Eugène Prévinaire', 'Gouverneur', '2ᵉ gouverneur de la Banque nationale', '2de gouverneur van de Nationale Bank', ['Nommé', 1870]],
+  ['Q4759801', 'Gouverneur', '3ᵉ gouverneur de la Banque nationale', '3de gouverneur van de Nationale Bank', ['Nommé', 1877], { name: 'André Pirson', nlName: 'André Pirson' }],
+  ['Alexandre Jamar', 'Gouverneur', 'Ancien ministre, 4ᵉ gouverneur de la Banque nationale', 'Oud-minister, 4de gouverneur van de Nationale Bank', ['Nommé', 1882]],
+  ['Eugène Anspach', 'Gouverneur', '5ᵉ gouverneur de la Banque nationale', '5de gouverneur van de Nationale Bank', ['Nommé', 1888]],
+  ['Q7926420', 'Gouverneur', 'Gouverneur pendant quatorze ans, de 1891 à 1905', 'Veertien jaar gouverneur, van 1891 tot 1905', ['Nommé', 1891], { name: 'Victor Van Hoegaerden', nlName: 'Victor Van Hoegaerden' }],
+  ['Q6524933', 'Gouverneur', 'Gouverneur au sortir de la Grande Guerre', 'Gouverneur na de Groote Oorlog', ['Nommé', 1918], { name: 'Léon Van der Rest', nlName: 'Léon Van der Rest' }],
+  ['Louis Franck', 'Gouverneur', 'Avocat anversois, gouverneur de la stabilisation du franc', 'Antwerpse advocaat, gouverneur van de stabilisatie van de frank', ['Nommé', 1926]],
+  ['Fons Verplaetse', 'Gouverneur', 'Gouverneur du passage vers l’euro', 'Gouverneur van de overgang naar de euro', ['Nommé', 1989]],
+  ['Guy Quaden', 'Gouverneur', 'Gouverneur de l’arrivée des billets en euros (2002)', 'Gouverneur van de komst van de eurobiljetten (2002)', ['Nommé', 1999]],
+  ['Luc Coene', 'Gouverneur', 'Gouverneur au cœur de la crise de la dette', 'Gouverneur in het hart van de schuldencrisis', ['Nommé', 2011]],
+  ['Q19334606', 'Gouverneur', 'Gouverneur de 2015 à 2019', 'Gouverneur van 2015 tot 2019', ['Nommé', 2015], { name: 'Jan Smets', nlName: 'Jan Smets' }],
+  ['Pierre Wunsch', 'Gouverneur', 'Gouverneur de la Banque nationale depuis 2019', 'Gouverneur van de Nationale Bank sinds 2019', ['Nommé', 2019]],
+  ['Alexandre Lamfalussy', 'Économiste', 'Le « père de l’euro », président de l’Institut monétaire européen', 'De “vader van de euro”, voorzitter van het Europees Monetair Instituut', ['Rôle', 'Euro']],
+  ['Peter Praet', 'Économiste', 'Directeur à la Banque nationale puis chef économiste de la BCE', 'Directeur bij de Nationale Bank, daarna hoofdeconoom van de ECB', ['Rôle', 'BCE']],
+  ['Franc belge', 'Monnaie', 'La monnaie belge de 1832 à 2002', 'De Belgische munt van 1832 tot 2002', ['Fin', 2002], { year: 1832, nlName: 'Belgische frank' }],
+  ['Euro', 'Monnaie', 'La monnaie de la zone euro depuis 1999 (billets en 2002)', 'De munt van de eurozone sinds 1999 (biljetten in 2002)', ['Billets', 2002], { year: 1999 }],
+  ['Union monétaire latine', 'Union monétaire', 'Belgique, France, Italie et Suisse frappent des pièces communes', 'België, Frankrijk, Italië en Zwitserland slaan gemeenschappelijke munten', ['Pays', 4], { year: 1865, name: 'Union monétaire latine', nlName: 'Latijnse Muntunie' }],
+  ['Union économique belgo-luxembourgeoise', 'Union monétaire', 'Le franc belge circule au Luxembourg à partir de 1921', 'De Belgische frank circuleert in Luxemburg vanaf 1921', ['Pays', 2], { year: 1921, name: 'Union belgo-luxembourgeoise', nlName: 'Belgisch-Luxemburgse Economische Unie' }],
+  ['Réserve d\'or', 'Réserve', 'Environ 227 tonnes d’or gardées par la Banque nationale', 'Ongeveer 227 ton goud bewaard door de Nationale Bank', ['Tonnes', '≈ 227'], { name: 'Réserve d’or', nlName: 'Goudreserve' }],
+  ['Hôtel des Monnaies (Bruxelles)', 'Atelier monétaire', 'L’ancien atelier où l’on frappait les pièces belges', 'De vroegere werkplaats waar de Belgische munten werden geslagen', ['Lieu', 'Bruxelles'], { name: 'Hôtel des Monnaies', nlName: 'Munthof' }],
+  ['Monnaie royale de Belgique', 'Atelier monétaire', 'Elle frappe toujours les pièces en euros belges', 'Slaat nog altijd de Belgische euromunten', ['Lieu', 'Bruxelles'], { name: 'Monnaie royale', nlName: 'Koninklijke Munt van België' }],
+  ['Palais de la Bourse (Bruxelles)', 'Bourse', 'Le temple de la finance bruxelloise, aujourd’hui musée de la bière', 'De tempel van de Brusselse financiën, nu biermuseum', ['Lieu', 'Bruxelles'], { year: 1873, name: 'Bourse de Bruxelles', nlName: 'Beurs van Brussel' }],
+  ['Bourse d\'Anvers', 'Bourse', 'L’une des plus anciennes bourses du monde (1531)', 'Een van de oudste beurzen ter wereld (1531)', ['Lieu', 'Anvers'], { year: 1531, nlName: 'Handelsbeurs van Antwerpen' }],
+  ['Euroclear', 'Institution', 'Garde des milliers de milliards de titres, depuis Bruxelles', 'Bewaart duizenden miljarden aan effecten, vanuit Brussel', ['Siège', 'Bruxelles'], { year: 1968 }],
+  ['Belfius', 'Banque', 'La banque publique née du Crédit communal', 'De openbare bank, ontstaan uit het Gemeentekrediet', ['Siège', 'Bruxelles'], { year: 2012 }],
+  ['Bancontact', 'Paiement', 'La carte de paiement de presque tous les Belges', 'De betaalkaart van bijna alle Belgen', ['Siège', 'Bruxelles'], { year: 1979 }],
+  ['Banque centrale européenne', 'Banque centrale', 'La banque centrale de la zone euro, dont la BNB fait partie', 'De centrale bank van de eurozone, waarvan de NBB deel uitmaakt', ['Siège', 'Francfort'], { year: 1998, name: 'BCE', nlName: 'ECB' }],
+  ['Banque des règlements internationaux', 'Institution', 'La « banque des banques centrales », à Bâle', 'De “bank van de centrale banken”, in Bazel', ['Siège', 'Bâle'], { year: 1930, name: 'BRI', nlName: 'BIB' }],
+  ['Fonds monétaire international', 'Institution', 'Son premier directeur était le Belge Camille Gutt', 'De eerste directeur was de Belg Camille Gutt', ['Siège', 'Washington'], { year: 1944, name: 'FMI', nlName: 'IMF' }],
+];
+// Cartes d'autres catégories reprises dans le paquet « Banque nationale » (app.js, BNB_EXTRA) : gouverneurs et
+// ministres déjà présents en Politique (de Haussy, Theunis, Théophile de Lantsheere, Van Zeeland, Frère-Orban, Gutt, Maystadt).
 async function buildRoute(cat, list) {
   const q = await resolve(list.map(([title, kind, sub, subNl, extra, opt = {}]) => ({ title, kind, sub, subNl, extra, ...opt })));
   const rows = await sparql(`SELECT ?x ?xLabel ?img ?birth ?death ?human ?flight ?inc ?start ?links WHERE { VALUES ?x { ${[...q.keys()].map(x => 'wd:' + x).join(' ')} }
@@ -399,6 +433,7 @@ const AJOUTS = {
   militaire: { build: buildMilitaires, editions: EDITIONS_ARMISTICE }, animal: { build: buildAnimaux, editions: [] },
   aviation: { build: () => buildRoute('aviation', AVIATION), editions: [] }, rail: { build: () => buildRoute('rail', RAIL), editions: [] },
   exploration: { build: () => buildRoute('exploration', EXPLORATION), editions: [] },
+  finance: { build: () => buildRoute('finance', FINANCE), editions: [] },
 };
 const AJOUT = (process.argv.find(a => a.startsWith('--ajout=')) || '').slice(8);
 if (AJOUT) {
@@ -1040,7 +1075,7 @@ for (const f of sciRows) {
 console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
 
 for (const c of [...await buildMilitaires(resolveTitles), ...await buildAnimaux(resolveTitles),
-  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION)]) { delete c.links; cards.push(c); }
+  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE)]) { delete c.links; cards.push(c); }
 
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [
@@ -1652,7 +1687,7 @@ const MYTHIQUES = [
   'Ville de Bruxelles', 'Anvers', 'Bruges', 'Gand', 'Liège',
   'Atomium', 'Manneken-Pis', 'Grand-Place de Bruxelles', 'Retable de l\'Agneau mystique',
   'Frite', 'Westvleteren (bière)', 'Tomorrowland (festival)', 'Carnaval de Binche',
-  'Gabrielle Petit (résistante)', 'Andrée De Jongh', 'Malinois (chien)',
+  'Gabrielle Petit (résistante)', 'Andrée De Jongh', 'Malinois (chien)', 'Banque nationale de Belgique',
 ];
 const FIXED_CATS = new Set(['monarchie', 'region', 'province', 'evenement', 'edition']); // trop petites : rareté fixée à la main
 const linkIds = cards.filter(c => isQ(c.id)).map(c => c.id);
@@ -1674,7 +1709,7 @@ for (let i = 0; i < linkIds.length; i += 300) {
 }
 
 // Visites des 12 derniers mois complets sur Wikipédia FR et NL
-const VIEW_CATS = new Set(['culture', 'sport', 'science', 'militaire', 'animal', 'aviation', 'rail', 'exploration', 'art', 'monument', 'chateau', 'folklore', 'gastronomie', 'biere', 'enseignement', 'groupe', 'festival']);
+const VIEW_CATS = new Set(['culture', 'sport', 'science', 'militaire', 'animal', 'aviation', 'rail', 'exploration', 'finance', 'art', 'monument', 'chateau', 'folklore', 'gastronomie', 'biere', 'enseignement', 'groupe', 'festival']);
 const VIEWS = new Map();
 {
   const d = new Date(), endM = new Date(d.getFullYear(), d.getMonth(), 0), startM = new Date(endM.getFullYear() - 1, endM.getMonth() + 1, 1);

@@ -11,7 +11,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(ROOT, 'tools', '.faces')  # photos téléchargées et résultats, hors dépôt
 MODEL = os.path.join(CACHE, 'yunet.onnx')
 UA = 'BrolCards/1.0 (https://github.com/Helvor/Brol; focus)'
-PEOPLE = {'politique', 'bourgmestre', 'culture', 'sport', 'science', 'monarchie', 'militaire'}
+PEOPLE = {'politique', 'bourgmestre', 'culture', 'sport', 'science', 'monarchie', 'militaire', 'aviation', 'rail', 'exploration', 'finance'}
 BOX = 100 / (100 * 88 / 63 - 18)  # zone photo d'une carte : largeur / hauteur (≈ 0,82)
 TARGET_Y = 0.38                    # centre du visage à 38 % de la hauteur de la zone photo
 DEFAULT = (50, 20)                 # cadrage par défaut de style.css
@@ -104,6 +104,7 @@ SKIP = {
 # Cadrage réglé à la main, prioritaire sur la détection : relu à l'œil sur la carte
 MANUAL = {
     "L'Evénement illustré - 7 juin 1919.jpg": '50 100 1.25 50',  # Gabrielle Petit : couverture de magazine, titre masqué
+    'Luc Coene 2015.jpg': '85 20',  # visage sur le bord droit de la photo
 }
 out = dict(MANUAL)
 for f in files:
