@@ -13,12 +13,15 @@
     // sell : valeur de revente d'un doublon. Les cartes rares valent cher, les communes presque rien, si bien qu'un
     // paquet revendu en entier rapporte toujours environ 60 % de son prix (vérifié avec tools/simulate.mjs) :
     // acheter pour revendre ne paie pas.
-    { id: 'commune',     label: { fr: 'Commune',     nl: 'Gewoon' },        weight: 50,   sell: 1 },
-    { id: 'peu-commune', label: { fr: 'Peu commune', nl: 'Ongewoon' },      weight: 26,   sell: 2 },
-    { id: 'rare',        label: { fr: 'Rare',        nl: 'Zeldzaam' },      weight: 15.5, sell: 5 },
-    { id: 'epique',      label: { fr: 'Épique',      nl: 'Episch' },        weight: 6,    sell: 20 },
-    { id: 'legendaire',  label: { fr: 'Légendaire',  nl: 'Legendarisch' },  weight: 2.2,  sell: 75 },
-    { id: 'mythique',    label: { fr: 'Mythique',    nl: 'Mythisch' },      weight: 0.3,  sell: 340 },
+    // Taux durcis en octobre 2026 (avant : 50 / 26 / 15,5 / 6 / 2,2 / 0,3) : une légendaire ou mieux tous les 7 à 8
+    // paquets au lieu de 5, une mythique tous les 55 paquets au lieu de 40. Les cartes rares se revendent plus cher
+    // en échange, pour que la revente d'un paquet reste au même niveau.
+    { id: 'commune',     label: { fr: 'Commune',     nl: 'Gewoon' },        weight: 52,   sell: 1 },
+    { id: 'peu-commune', label: { fr: 'Peu commune', nl: 'Ongewoon' },      weight: 27,   sell: 2 },
+    { id: 'rare',        label: { fr: 'Rare',        nl: 'Zeldzaam' },      weight: 14.5, sell: 5 },
+    { id: 'epique',      label: { fr: 'Épique',      nl: 'Episch' },        weight: 5,    sell: 25 },
+    { id: 'legendaire',  label: { fr: 'Légendaire',  nl: 'Legendarisch' },  weight: 1.3,  sell: 110 },
+    { id: 'mythique',    label: { fr: 'Mythique',    nl: 'Mythisch' },      weight: 0.2,  sell: 450 },
   ];
   const R = Object.fromEntries(RARITIES.map((r, i) => [r.id, { ...r, rank: i }]));
   const rl = id => R[id].label[L()];
@@ -39,6 +42,7 @@
     { id: 'lion',      label: { fr: 'Lion',       nl: 'Leeuw' },         chance: 0, mult: 5, pack: 'onze-juillet',   packChance: 0.015, color: '#f2c400' },
     { id: 'tricolore', label: { fr: 'Tricolore',  nl: 'Driekleur' },     chance: 0, mult: 5, pack: 'fete-nationale', packChance: 0.015, color: '#e1001e' },
     { id: 'coq',       label: { fr: 'Coq',        nl: 'Haan' },          chance: 0, mult: 5, pack: 'wallonie',       packChance: 0.015, color: '#f2c400' },
+    { id: 'coquelicot', label: { fr: 'Coquelicot', nl: 'Klaproos' },     chance: 0, mult: 5, pack: 'armistice',      packChance: 0.015, color: '#e0302a' },
   ];
   const F = Object.fromEntries(FINISHES.map((f, i) => [f.id, { ...f, rank: i }]));
   const fl = id => F[id].label[L()];
@@ -55,6 +59,7 @@
     { id: 'festival',     fr: 'Festivals',     nl: 'Festivals' },
     { id: 'sport',        fr: 'Sport',         nl: 'Sport' },
     { id: 'science',      fr: 'Sciences',      nl: 'Wetenschap' },
+    { id: 'militaire',    fr: 'Mémoire',       nl: 'Herinnering' },
     { id: 'art',          fr: 'Art',           nl: 'Kunst' },
     { id: 'monument',     fr: 'Monuments',     nl: 'Monumenten' },
     { id: 'chateau',      fr: 'Châteaux',      nl: 'Kastelen' },
@@ -87,6 +92,9 @@
     { id: 'sciences', title: { fr: 'Sciences', nl: 'Wetenschap' }, kicker: { fr: 'Édition savante', nl: 'Wetenschapseditie' }, big: 'LAB', price: 80,
       desc: { fr: 'Savants, inventeurs et explorateurs.', nl: 'Wetenschappers, uitvinders en ontdekkingsreizigers.' },
       body: ['#081c26', '#1b4a5e'], metal: ['#e3fbff', '#74d4e8', '#2a7286'], cats: ['science'] },
+    { id: 'memoire', title: { fr: 'Mémoire', nl: 'Herinnering' }, kicker: { fr: 'Édition 14-18 · 40-45', nl: 'Editie 14-18 · 40-45' }, big: '14·40', price: 80,
+      desc: { fr: 'Généraux, résistants, batailles et lieux de mémoire.', nl: 'Generaals, verzetsstrijders, veldslagen en gedenkplaatsen.' },
+      body: ['#161a10', '#3d4428'], metal: ['#f3f0d8', '#c9b97a', '#6e6235'], cats: ['militaire'] },
     { id: 'patrimoine', title: { fr: 'Patrimoine', nl: 'Erfgoed' }, kicker: { fr: 'Édition patrimoine', nl: 'Erfgoededitie' }, big: '1830', price: 80,
       desc: { fr: 'Monuments, châteaux et folklore.', nl: 'Monumenten, kastelen en folklore.' },
       body: ['#191c22', '#3e4756'], metal: ['#eef3ff', '#a9b8d6', '#566584'], cats: ['monument', 'chateau', 'folklore'] },
@@ -141,6 +149,9 @@
     { id: 'wallonie', when: y => span(nthSunday(y, 8, 3), 7), title: { fr: 'Fêtes de Wallonie', nl: 'Feesten van Wallonië' }, kicker: { fr: 'Édition wallonne', nl: 'Waalse editie' }, big: 'WAL',
       desc: { fr: 'La Wallonie à l’honneur. 5ᵉ carte épique ou mieux.', nl: 'Wallonië in de kijker. 5de kaart episch of beter.' },
       body: ['#3a0710', '#8a1022'], metal: ['#fff6cf', '#f2c400', '#8a6410'], filter: c => c.family === 'wallonie', last: 'epique' },
+    { id: 'armistice', when: y => [`${y}-11-04`, `${y}-11-11`], title: { fr: '11 novembre', nl: '11 november' }, kicker: { fr: 'Édition de l’Armistice', nl: 'Wapenstilstandeditie' }, big: '11/11',
+      desc: { fr: 'Militaires, résistants et lieux de mémoire. 5ᵉ carte épique ou mieux.', nl: 'Militairen, verzetsstrijders en gedenkplaatsen. 5de kaart episch of beter.' },
+      body: ['#14140f', '#3a3a2c'], metal: ['#fff3ec', '#e0302a', '#7a1410'], cats: ['militaire'], last: 'epique' },
     { id: 'saint-nicolas', when: y => [`${y}-11-28`, `${y}-12-06`], title: { fr: 'Saint-Nicolas', nl: 'Sinterklaas' }, kicker: { fr: 'Édition du 6 décembre', nl: 'Editie van 6 december' }, big: '6/12',
       desc: { fr: 'Gastronomie, bières et folklore. Versions spéciales deux fois plus fréquentes.', nl: 'Gastronomie, bieren en folklore. Speciale versies twee keer vaker.' },
       body: ['#4a0710', '#a3162a'], metal: ['#fff4d6', '#f2c14e', '#9a6a12'], cats: ['gastronomie', 'biere', 'folklore'], finishBoost: 2 },
@@ -268,6 +279,10 @@
     { id: 'maieurs', title: { fr: 'Maïeurs des grandes villes', nl: 'Burgemeesters van grote steden' }, desc: { fr: 'Les bourgmestres des plus grandes communes.', nl: 'De burgemeesters van de grootste gemeenten.' }, reward: 600,
       match: c => c.cat === 'bourgmestre' && ['legendaire', 'mythique'].includes((window.CARDS || []).find(x => x.id === c.mayorOf)?.rarity) },
     { id: 'festivals', title: { fr: 'Été des festivals', nl: 'Festivalzomer' }, desc: { fr: 'De Tomorrowland aux Francofolies.', nl: 'Van Tomorrowland tot de Francofolies.' }, reward: 400, match: c => c.cat === 'festival' },
+    { id: 'grande-guerre', title: { fr: 'La Grande Guerre', nl: 'De Groote Oorlog' }, desc: { fr: 'De Liège à l’Yser, 1914–1918.', nl: 'Van Luik tot de IJzer, 1914–1918.' }, reward: 600,
+      match: c => c.cat === 'militaire' && /^Première Guerre/.test(c.meta || '') },
+    { id: 'resistance', title: { fr: 'Résistance', nl: 'Verzet' }, desc: { fr: 'Les résistants des deux guerres.', nl: 'De verzetsstrijders van beide oorlogen.' }, reward: 500,
+      match: c => c.cat === 'militaire' && /^Résistant/.test(c.stats?.[2]?.[1] || '') },
     ...ALL_PACKS.filter(p => p.special).map(p => ({ id: 'ed-' + p.id, edition: p.id,
       title: { fr: `Édition ${p.title.fr}`, nl: `Editie ${p.title.nl}` },
       desc: { fr: `Les cartes exclusives du paquet ${p.title.fr}.`, nl: `De exclusieve kaarten van het pakje ${p.title.nl}.` },
@@ -423,6 +438,17 @@
       <rect x="0" y="18" width="300" height="394" fill="url(#gp${k})"/>
       <g fill="none" stroke="${p.metal[1]}" stroke-width="1.6" opacity=".35">${[0, 60, 120].map(a => `<ellipse cx="150" cy="202" rx="128" ry="44" transform="rotate(${a} 150 202)"/>`).join('')}</g>
       ${[[278, 202], [86, 91], [86, 313]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="${p.metal[0]}" opacity=".8"/>`).join('')}`,
+    // Rangées de croix d'un cimetière militaire, en perspective
+    memoire: (k, p) => [0, 1, 2, 3, 4, 5].map(row => { const s = .55 + row * .17, y = 150 + row * row * 6 + row * 18, n = 9 - row;
+      return Array.from({ length: n }, (_, i) => { const x = 150 + (i - (n - 1) / 2) * 34 * s;
+        return `<path d="M${(x - 1.6 * s).toFixed(1)} ${y}h${(3.2 * s).toFixed(1)}v${(-6 * s).toFixed(1)}h${(5 * s).toFixed(1)}v${(-3.2 * s).toFixed(1)}h${(-5 * s).toFixed(1)}v${(-6 * s).toFixed(1)}h${(-3.2 * s).toFixed(1)}v${(6 * s).toFixed(1)}h${(-5 * s).toFixed(1)}v${(3.2 * s).toFixed(1)}h${(5 * s).toFixed(1)}Z" fill="${p.metal[0]}" opacity="${(.12 + row * .05).toFixed(2)}"/>`; }).join(''); }).join(''),
+    // Coquelicots
+    armistice: (k, p) => {
+      const poppy = (x, y, r, o) => `<g transform="translate(${x} ${y})" opacity="${o}">${[0, 90, 180, 270].map(a => `<ellipse cx="0" cy="${-r * .55}" rx="${r * .62}" ry="${r * .6}" fill="${p.metal[1]}" transform="rotate(${a + 45})"/>`).join('')}<circle r="${r * .26}" fill="#111"/></g>`;
+      // Petits coquelicots dans le haut et sur les bords, jamais sur le sceau ni sur le titre
+      return poppy(150, 205, 70, .22) + scatter(30, 7, (x, y, r, i) => y > 290 || Math.hypot(x - 150, y - 205) < 100 ? ''
+        : poppy(x.toFixed(0), y.toFixed(0), 8 + (i % 3) * 4, .45));
+    },
   };
 
   function packSVG(p) {
@@ -519,6 +545,17 @@
   // ---------- Tirage ----------
   // Rareté d'abord (mêmes taux pour tous les paquets), puis une carte au hasard parmi celles du paquet.
   // Chaque catégorie contient toutes les raretés (réparties par notoriété), donc les taux affichés sont justes.
+  // Nouvelle catégorie : à rareté égale, ses cartes sortent trois fois plus souvent jusqu'à la date indiquée, pour
+  // qu'elles ne se noient pas parmi les 1 500 cartes du paquet Belgique. Les taux par rareté ne changent pas.
+  const FEATURED = { militaire: '2027-01-31' }, FEATURED_WEIGHT = 3;
+  const featuredCats = () => { const d = ymd(now()); return new Set(Object.keys(FEATURED).filter(cat => d <= FEATURED[cat])); };
+  function pickCard(list) {
+    const feat = featuredCats(), w = c => feat.has(c.cat) ? FEATURED_WEIGHT : 1;
+    if (!list.some(c => feat.has(c.cat))) return list[Math.floor(Math.random() * list.length)];
+    let roll = Math.random() * list.reduce((a, c) => a + w(c), 0);
+    for (const c of list) { if ((roll -= w(c)) < 0) return c; }
+    return list[list.length - 1];
+  }
   function pickRarity(minRank = 0) {
     const pool = RARITIES.filter((_, i) => i >= minRank);
     let roll = Math.random() * pool.reduce((a, r) => a + r.weight, 0);
@@ -542,7 +579,7 @@
       while (out.length < PACK_SIZE) {
         const r = pickRarity(0), free = rest.filter(c => !out.some(o => o.card === c));
         const list = free.filter(c => c.rarity === r).length ? free.filter(c => c.rarity === r) : free;
-        out.push({ card: list[Math.floor(Math.random() * list.length)], finish: pickFinish(pack.finishBoost, pack.id) });
+        out.push({ card: pickCard(list), finish: pickFinish(pack.finishBoost, pack.id) });
       }
       return out.sort((a, b) => R[a.card.rarity].rank - R[b.card.rarity].rank || finTier(a.finish) - finTier(b.finish));
     }
@@ -564,7 +601,7 @@
           if (!list.length && !pack.missing) list = same; // jamais de doublon dans le paquet Nouveautés
         }
       }
-      const card = list[Math.floor(Math.random() * list.length)];
+      const card = pickCard(list);
       taken.add(card.id);
       out.push({ card, finish: pickFinish(pack.finishBoost, pack.id) });
     }
@@ -667,7 +704,10 @@
   function packOddsExtra(p) {
     const fin = packFinish(p.id), ch = exclChance(p);
     return BASE_FINISHES.slice(1).map((f, i) => `<tr class="odds-x${i ? '' : ' first'}"><td><span class="fin-dot d-${f.id}"></span>${fl(f.id)}</td><td colspan="2">${pctOdds(f.chance * (p.finishBoost || 1))} ${t('perCard')}</td></tr>`).join('') + (ch ? `<tr class="odds-x"><td>${t('oddsExcl')}</td><td colspan="2">${pctOdds(ch)} ${t('perPack')}</td></tr>` : '') +
-      (fin ? `<tr class="odds-x"><td><span class="fin-dot d-${fin.id}"></span>${fl(fin.id)}</td><td colspan="2">${pctOdds(fin.packChance)} ${t('perCard')}</td></tr>` : '');
+      (fin ? `<tr class="odds-x"><td><span class="fin-dot d-${fin.id}"></span>${fl(fin.id)}</td><td colspan="2">${pctOdds(fin.packChance)} ${t('perCard')}</td></tr>` : '') +
+      // Nouvelle catégorie mise en avant, quand elle partage le paquet avec d'autres
+      [...featuredCats()].filter(cat => { const cats = new Set(poolOf(p).map(c => c.cat)); return cats.has(cat) && cats.size > 1; })
+        .map(cat => `<tr class="odds-x"><td>${cl(cat)}</td><td colspan="2">${t('oddsFeatured', FEATURED_WEIGHT, fmtDay(FEATURED[cat]))}</td></tr>`).join('');
   }
 
   function renderFree() {
@@ -1153,7 +1193,7 @@
   // 5 doublons standard d'une même rareté → 1 carte au hasard de la rareté au-dessus.
   // 3 doublons standard d'une même carte → sa version Holo. Un exemplaire de chaque carte est toujours gardé.
   const FUSE_COST = 5, HOLO_COST = 3;
-  const randomCard = rarity => { const list = CARDS.filter(c => c.rarity === rarity && c.cat !== 'edition'); return list[Math.floor(Math.random() * list.length)]; };
+  const randomCard = rarity => pickCard(CARDS.filter(c => c.rarity === rarity && c.cat !== 'edition'));
   const fuseStock = rarity => CARDS.filter(c => c.rarity === rarity && countOf(c.id, 'normal') > 1).map(c => ({ c, extra: countOf(c.id, 'normal') - 1 }));
   const fuseAvailable = rarity => fuseStock(rarity).reduce((a, x) => a + x.extra, 0);
   const holoCandidates = () => CARDS.filter(c => countOf(c.id, 'normal') > HOLO_COST);

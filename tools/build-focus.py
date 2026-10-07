@@ -11,7 +11,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(ROOT, 'tools', '.faces')  # photos téléchargées et résultats, hors dépôt
 MODEL = os.path.join(CACHE, 'yunet.onnx')
 UA = 'BrolCards/1.0 (https://github.com/Helvor/Brol; focus)'
-PEOPLE = {'politique', 'bourgmestre', 'culture', 'sport', 'science', 'monarchie'}
+PEOPLE = {'politique', 'bourgmestre', 'culture', 'sport', 'science', 'monarchie', 'militaire'}
 BOX = 100 / (100 * 88 / 63 - 18)  # zone photo d'une carte : largeur / hauteur (≈ 0,82)
 TARGET_Y = 0.38                    # centre du visage à 38 % de la hauteur de la zone photo
 DEFAULT = (50, 20)                 # cadrage par défaut de style.css
@@ -101,9 +101,13 @@ SKIP = {
     # Plein cadre (photos d'action) : banderole, panneaux, groupe ou image trop sombre
     "Jean-Claude Van Cauwenberghe.jpg", "Paris-Nice 2012 etape2 Tom Boonen 1.JPG", "Rik Van Looy, Tour de France 1964.jpg", "Sydney International Tennis WTA (33040174528).jpg",
 }
-out = {}
+# Cadrage réglé à la main, prioritaire sur la détection : relu à l'œil sur la carte
+MANUAL = {
+    "L'Evénement illustré - 7 juin 1919.jpg": '50 100 1.25 50',  # Gabrielle Petit : couverture de magazine, titre masqué
+}
+out = dict(MANUAL)
 for f in files:
-    if f in SKIP: continue
+    if f in SKIP or f in MANUAL: continue
     r = results.get(f)
     if not r or not r.get('face'): continue
     v = fix(r)

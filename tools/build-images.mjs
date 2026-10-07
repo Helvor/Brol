@@ -15,8 +15,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 globalThis.window = {};
 (0, eval)(readFileSync(new URL('../data/cards.js', import.meta.url), 'utf8'));
 const files = [...new Set(window.CARDS.flatMap(c => [c.img, c.alt, c.badge]).filter(Boolean))];
+// Adresses déjà publiées : gardées si le cache local manque (nouveau poste) ou si Commons refuse les requêtes
+const OUT_FILE = new URL('../data/images.js', import.meta.url);
+if (existsSync(OUT_FILE)) (0, eval)(readFileSync(OUT_FILE, 'utf8'));
+const known = window.IMAGES || {};
 
-const todo = files.filter(f => !cache[f]);
+const todo = files.filter(f => !cache[f] && !known[f]);
 for (let i = 0; i < todo.length; i += 50) {
   const batch = todo.slice(i, i + 50);
   const q = new URLSearchParams({ action: 'query', format: 'json', formatversion: '2', prop: 'imageinfo', iiprop: 'size|url', iiurlwidth: '500', titles: batch.map(f => 'File:' + f).join('|') });
@@ -24,9 +28,10 @@ for (let i = 0; i < todo.length; i += 50) {
   for (let attempt = 0; ; attempt++) {
     const r = await fetch('https://commons.wikimedia.org/w/api.php?' + q, { headers: UA });
     if (r.ok) { j = await r.json(); break; }
-    if (attempt >= 5) throw new Error('Commons ' + r.status);
+    if (attempt >= 5) { console.warn('Commons ' + r.status + ' : images restantes sans adresse directe (Special:FilePath)'); break; }
     await sleep(3000 * 2 ** attempt);
   }
+  if (!j) break;
   const back = new Map((j.query?.normalized || []).map(x => [x.to, x.from]));
   for (const p of j.query?.pages || []) {
     const ii = p.imageinfo?.[0];
@@ -42,7 +47,7 @@ const out = {};
 let special = 0, missing = 0;
 for (const f of files) {
   const info = cache[f];
-  if (!info) { missing++; continue; }
+  if (!info) { if (known[f]) out[f] = known[f]; else missing++; continue; }
   const name = f.replace(/ /g, '_');
   const md5 = createHash('md5').update(name).digest('hex');
   const dir = md5.slice(0, 2);
@@ -55,7 +60,7 @@ for (const f of files) {
   if (thumbName === expected) out[f] = `${dir}:${svg ? 0 : info.w}`;
   else { out[f] = `~${thumbName}:${dir}:${svg ? 0 : info.w}`; special++; }
 }
-writeFileSync(new URL('../data/images.js', import.meta.url),
+writeFileSync(OUT_FILE,
   '// Généré par tools/build-images.mjs : adresses directes des images de Wikimedia Commons (dossier, largeur d’origine).\n' +
   'window.IMAGES = ' + JSON.stringify(out) + ';\n');
 console.log(`data/images.js : ${Object.keys(out).length} images (${special} au nom de miniature particulier, ${missing} introuvables)`);

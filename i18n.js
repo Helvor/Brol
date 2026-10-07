@@ -42,7 +42,7 @@
       'ticketBadge': n => `${n} ticket${n > 1 ? 's' : ''}`, 'ticketUsed': 'Ticket Prestige utilisé', 'install': 'Installer l’appli', 'installed': 'Brol est installé !', 'installIOS': 'Dans Safari, touche le bouton Partager, puis « Sur l’écran d’accueil ».', 'scTitle': 'Ta vitrine', 'freeTitle': 'Paquets gratuits', 'scCount': (o, t, p) => `${o} / ${t} cartes · ${p} %`, 'scEmpty': 'Ouvre un paquet pour remplir ta vitrine.', 'missionsTitle': 'Missions du jour', 'missionsAll': 'toutes faites, à demain !',
       'lateBonus': m => `bonus album ×${m}`, 'lateOn': m => `doublons revendus ×${m} (album à 80 %)`, 'lateOff': (p, m) => `à ${p} % de l’album, doublons revendus ×${m}`, 'edTag': 'Édition limitée', 'edStatPack': 'Paquet', 'edStatNo': 'N°', 'edStatPrice': 'Prix', 'edFrom': 'Du', 'edTo': 'Au',
       'edWhere': p => `Paquet ${p}`, 'exclLine': (n, got) => `${n} cartes exclusives${got ? ` · ${got}/${n}` : ''}`,
-      'evFinLine': f => `Version ${f}, introuvable ailleurs`, 'oddsExcl': 'Édition limitée', 'perPack': 'par paquet', 'perCard': 'par carte', 'packOdds': 'Taux de ce paquet', 'oddsCards': 'cartes 1–4', 'oddsLast': '5ᵉ carte', 'bulk': n => `×${n}`, 'bulkOff': n => `−${n} %`,
+      'evFinLine': f => `Version ${f}, introuvable ailleurs`, 'oddsExcl': 'Édition limitée', 'oddsFeatured': (n, d) => `×${n} à rareté égale, jusqu’au ${d}`, 'perPack': 'par paquet', 'perCard': 'par carte', 'packOdds': 'Taux de ce paquet', 'oddsCards': 'cartes 1–4', 'oddsLast': '5ᵉ carte', 'bulk': n => `×${n}`, 'bulkOff': n => `−${n} %`,
       'binderSummary': (o, t, s, p, d) => `${o} sur ${t} cartes · ${s} version${s > 1 ? 's' : ''} spéciale${s > 1 ? 's' : ''} · ${p} paquet${p > 1 ? 's' : ''} · ${d} doublon${d > 1 ? 's' : ''}`,
       'emptyOwned': 'Aucune carte ici pour l’instant.', 'emptyAll': 'Aucune carte ne correspond.',
       'more': n => `Afficher plus (${n})`,
@@ -99,7 +99,7 @@
       'ticketBadge': n => `${n} ticket${n > 1 ? 's' : ''}`, 'ticketUsed': 'Prestigeticket gebruikt', 'install': 'App installeren', 'installed': 'Brol is geïnstalleerd!', 'installIOS': 'Tik in Safari op de knop Delen en daarna op “Zet op beginscherm”.', 'scTitle': 'Jouw vitrine', 'freeTitle': 'Gratis pakjes', 'scCount': (o, t, p) => `${o} / ${t} kaarten · ${p} %`, 'scEmpty': 'Open een pakje om je vitrine te vullen.', 'missionsTitle': 'Dagopdrachten', 'missionsAll': 'allemaal gedaan, tot morgen!',
       'lateBonus': m => `albumbonus ×${m}`, 'lateOn': m => `dubbels verkocht ×${m} (album op 80 %)`, 'lateOff': (p, m) => `vanaf ${p} % van het album: dubbels ×${m}`, 'edTag': 'Beperkte editie', 'edStatPack': 'Pakje', 'edStatNo': 'Nr.', 'edStatPrice': 'Prijs', 'edFrom': 'Van', 'edTo': 'Tot',
       'edWhere': p => `Pakje ${p}`, 'exclLine': (n, got) => `${n} exclusieve kaarten${got ? ` · ${got}/${n}` : ''}`,
-      'evFinLine': f => `Versie ${f}, nergens anders te vinden`, 'oddsExcl': 'Beperkte editie', 'perPack': 'per pakje', 'perCard': 'per kaart', 'packOdds': 'Kansen van dit pakje', 'oddsCards': 'kaarten 1–4', 'oddsLast': '5de kaart', 'bulk': n => `×${n}`, 'bulkOff': n => `−${n} %`,
+      'evFinLine': f => `Versie ${f}, nergens anders te vinden`, 'oddsExcl': 'Beperkte editie', 'oddsFeatured': (n, d) => `×${n} bij gelijke zeldzaamheid, tot ${d}`, 'perPack': 'per pakje', 'perCard': 'per kaart', 'packOdds': 'Kansen van dit pakje', 'oddsCards': 'kaarten 1–4', 'oddsLast': '5de kaart', 'bulk': n => `×${n}`, 'bulkOff': n => `−${n} %`,
       'binderSummary': (o, t, s, p, d) => `${o} van ${t} kaarten · ${s} speciale versie${s > 1 ? 's' : ''} · ${p} pakje${p > 1 ? 's' : ''} · ${d} dubbel${d > 1 ? 's' : ''}`,
       'emptyOwned': 'Hier nog geen kaarten.', 'emptyAll': 'Geen kaarten gevonden.',
       'more': n => `Meer tonen (${n})`,
@@ -141,6 +141,11 @@
     'Sports mécaniques': 'Motorsport', 'Basket': 'Basketbal', 'Fléchettes': 'Darts', 'Judo': 'Judo', 'Snooker': 'Snooker', 'Sport': 'Sport',
     'Électro': 'Elektro', 'Humour': 'Humor', 'Alternatif': 'Alternatief', 'Musiques du monde': 'Wereldmuziek', 'Fête populaire': 'Volksfeest',
     'Groupe': 'Groep', 'Festival': 'Festival', 'Folklore': 'Folklore',
+    // Mémoire
+    'Première Guerre mondiale': 'Eerste Wereldoorlog', 'Seconde Guerre mondiale': 'Tweede Wereldoorlog', 'Armée belge': 'Belgisch leger',
+    'XIXᵉ siècle': '19de eeuw', 'Général': 'Generaal', 'Caporal': 'Korporaal', 'Résistant': 'Verzetsstrijder', 'Résistante': 'Verzetsstrijdster',
+    'Bourgmestre': 'Burgemeester', 'Cardinal': 'Kardinaal', 'Pilote': 'Piloot', 'Bataille': 'Veldslag', 'Fort': 'Fort', 'Tranchée': 'Loopgraaf',
+    'Camp': 'Kamp', 'Réseau': 'Netwerk', 'Journal': 'Krant', 'Unité': 'Eenheid', 'Ligne de défense': 'Verdedigingslinie',
     // Provinces et chefs-lieux
     'Anvers': 'Antwerpen', 'Limbourg': 'Limburg', 'Flandre-Orientale': 'Oost-Vlaanderen', 'Flandre-Occidentale': 'West-Vlaanderen',
     'Brabant flamand': 'Vlaams-Brabant', 'Brabant wallon': 'Waals-Brabant', 'Hainaut': 'Henegouwen', 'Liège': 'Luik', 'Luxembourg': 'Luxemburg',
@@ -155,7 +160,7 @@
     'Artiste': 'Kunstenaar', 'Genre': 'Genre', 'Formation': 'Opgericht', 'Création': 'Opgericht', 'UNESCO': 'UNESCO', 'Jours': 'Dagen',
     'Élections': 'Verkiezingen', 'Gouvernement': 'Regering', 'Avant': 'Voor', 'Après': 'Na', 'Communes': 'Gemeenten', 'Régions': 'Gewesten',
     'Communautés': 'Gemeensch.', 'Loi': 'Wet', '1er scrutin': '1e stemming', 'Niveau': 'Niveau', 'Consultation': 'Raadpleging',
-    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status',
+    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status', 'Conflit': 'Conflict', 'Rôle': 'Rol',
   };
   const META = [
     [/^En fonction$/, 'In functie'], [/^Sur le trône$/, 'Op de troon'], [/^Gouv\. /, 'Reg. '],

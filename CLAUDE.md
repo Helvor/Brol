@@ -8,7 +8,9 @@ en français) ; l'interface existe en FR et NL.
 - `index.html`, `style.css`, `app.js` (jeu, paquets, album, missions…), `games.js` (mini-jeux), `trade.js` (échanges
   par code), `achievements.js`, `i18n.js` (textes FR/NL), `share.js` (image de partage), `sfx.js`, `sw.js` (PWA).
 - `data/cards.js` est **généré** par `tools/build-cards.mjs` (Wikidata, Wikipédia, Commons ; cache `tools/.cache.json`).
-  Ne pas l'éditer à la main : modifier le générateur et relancer `node tools/build-cards.mjs`.
+  Ne pas l'éditer à la main : modifier le générateur et relancer `node tools/build-cards.mjs`. Pour ajouter une
+  catégorie sans tout régénérer (Wikipédia et Commons limitent souvent les requêtes, le cache n'est pas versionné) :
+  `node tools/build-cards.mjs --ajout=militaire` (Wikidata seul ; à étendre aux prochaines catégories).
 - `data/images.js` (adresses directes des images, `tools/build-images.mjs`, lancé par build-cards) et `data/focus.js`
   (cadrage sur le visage, `python3 tools/build-focus.py [--hors-ligne]`, demande opencv-python-headless).
 - Sauvegarde du joueur : localStorage `rue-de-la-loi:v1` (`state.owned` : clé `id` ou `id|finish`).
@@ -23,5 +25,6 @@ en français) ; l'interface existe en FR et NL.
 - Wikimedia limite fortement les requêtes : espacer les appels, garder les caches.
 
 ## En cours / suite
-Voir `ROADMAP.md`, phase 6 (nouveaux paquets) : c'est la prochaine étape, listes à faire valider par l'utilisateur
-avant de générer.
+Voir `ROADMAP.md`, phase 6 (nouveaux paquets) : Mémoire est fait ; suivant : Animaux, puis Aviation, Rail,
+Exploration. Listes à faire valider par l'utilisateur avant de générer. Nouvelle catégorie : l'ajouter à `FEATURED`
+(app.js) pour qu'elle ne se noie pas dans le paquet Belgique.
