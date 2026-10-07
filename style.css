@@ -629,6 +629,16 @@ dialog::backdrop { background: rgba(8, 9, 12, .78); }
 .card.fin-coq .card-in::before { mix-blend-mode: overlay; opacity: .35; background: repeating-conic-gradient(from 0deg at 50% 38%, #f2c400 0 10deg, transparent 10deg 20deg); }
 .card.fin-coq .fin-tag { background: #f2c400; }
 
+/* Coquelicot (11 novembre) : photo sépia, bandeau noir, pétales rouges */
+.card.fin-coquelicot { --frame: radial-gradient(circle at 50% 38%, #e0302a 0 30%, #7a1410 55%, #14140f 80%); background-size: 100% 100%; animation: none; }
+.card.fin-coquelicot .card-photo img { filter: sepia(.55) contrast(1.05); }
+.card.fin-coquelicot .card-band { background: linear-gradient(180deg, #1c1c16, #0d0d0a); color: #ff5a4f; }
+.card.fin-coquelicot .card-stats { background: #0d0d0a; border-top: 1px solid rgba(224, 48, 42, .55); }
+.card.fin-coquelicot .card-stats dd { color: #ff7a6f; }
+.card.fin-coquelicot .card-in::before { mix-blend-mode: screen; opacity: .55;
+  background: radial-gradient(circle at 86% 12%, rgba(224, 48, 42, .8) 0 7%, transparent 16%), radial-gradient(circle at var(--mx, 20%) var(--my, 80%), rgba(255, 90, 79, .3), transparent 45%); }
+.card.fin-coquelicot .fin-tag { background: #e0302a; color: #fff; }
+
 /* Noir et or (Prestige) : laque noire, filet d'or, photo noir et blanc */
 .card.fin-noir { --frame: linear-gradient(135deg, #8a6410, #f6d478 14%, #0b0b0b 15% 85%, #f6d478 86%, #8a6410);
   background-size: 100% 100%; animation: none; }
@@ -655,6 +665,7 @@ dialog::backdrop { background: rgba(8, 9, 12, .78); }
 .d-lion { background: repeating-linear-gradient(45deg, #f2c400 0 3px, #111 3px 6px); }
 .d-tricolore { background: linear-gradient(90deg, #111 0 33%, #f2c400 33% 66%, #e1001e 66%); }
 .d-coq { background: repeating-conic-gradient(#c8102e 0 30deg, #f2c400 30deg 60deg); }
+.d-coquelicot { background: radial-gradient(circle at 50% 50%, #111 0 22%, #e0302a 26%); }
 .var-dots { position: absolute; right: 3cqw; bottom: 20cqw; z-index: 5; display: flex; gap: 1.4cqw; padding: 1.2cqw; background: rgba(10, 10, 12, .62); border-radius: 99px; }
 .var-dots i { width: 3.4cqw; height: 3.4cqw; }
 .fin-word[class*="d-"] { background: none; box-shadow: none; }
@@ -664,6 +675,7 @@ dialog::backdrop { background: rgba(8, 9, 12, .78); }
 .fin-word.d-pave, .fin-word.d-lion, .fin-word.d-coq { color: var(--gold); }
 .fin-word.d-iris { color: #3b74d8; }
 .fin-word.d-tricolore { color: #e1001e; }
+.fin-word.d-coquelicot { color: #e0302a; }
 .fin-word.d-holo { color: #4fb6ff; }
 .fin-word.d-or { color: var(--gold); }
 .fin-word.d-plein { color: var(--ink); }
@@ -745,6 +757,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   --p-groupe: #2b2a6b;
   --p-festival: #b8175a;
   --p-science: #17708c;
+  --p-militaire: #4b5530;
 }
 .card-top .live.unesco { background: #0b62a8; color: #fff; }
 .card-top .live.unesco::before { display: none; }

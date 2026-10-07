@@ -13,6 +13,11 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 - [x] **Tests automatiques** : test navigateur (Playwright) lancé par GitHub Actions à chaque push. Il ouvre un paquet, l'album, la fiche détail et les 5 mini-jeux, passe en NL et en mobile, et échoue à la moindre erreur JavaScript.
 
 - [x] **Rareté revue** : mythique réservée à ~25 icônes choisies à la main (`MYTHIQUES` dans le générateur) ; notoriété mesurée par les visites Wikipédia FR + NL sur 12 mois (au lieu du nombre de langues) ; politique classée par carrière (années de Premier ministre, gouvernements, postes) ; événements de épique à mythique, provinces rares ou épiques selon la population. Taux réels affichés paquet par paquet.
+- [x] **Raretés durcies** (octobre 2026) : 52 / 27 / 14,5 / 5 / 1,3 / 0,2 % au lieu de 50 / 26 / 15,5 / 6 / 2,2 / 0,3 ;
+  revente des épiques, légendaires et mythiques relevée (25, 110, 450) pour garder la revente d'un paquet au même
+  niveau (vérifié avec `tools/simulate.mjs` et `tools/check-odds.mjs`). Nouvelle catégorie mise en avant : à rareté
+  égale, ses cartes sortent 3 fois plus souvent jusqu'à une date (`FEATURED` dans app.js, Mémoire jusqu'au 31 janvier
+  2027), affiché dans le tableau des chances.
 - [x] **Gagner des pièces plus facilement** : paquet gratuit toutes les 2 minutes (5 en réserve), missions du jour (3 par jour, 100 à 300 pièces), revente ×1,5 à partir de 80 % de l'album, plafond des mini-jeux relevé à 2 500 pièces par jour.
 
 ## Phase 2 — Gameplay
@@ -48,10 +53,15 @@ générer, relire les photos à l'œil, puis PR.
 Ordre de priorité :
 1. [ ] **Animaux** (≈ 30–35) : races belges (malinois, cheval de trait belge, Blanc-Bleu Belge, pigeon voyageur,
    coq de Bruges…) et faune sauvage (Ardennes, côte). Stats : poids, longévité, habitat.
-2. [ ] **Militaires et Résistance** (≈ 30–40) : généraux et héros des deux guerres (Leman, Jacques de Dixmude…),
-   aviateurs de guerre, résistants (Gabrielle Petit, Andrée de Jongh, Walthère Dewé…). Stats : naissance, conflit,
-   grade ou réseau. À temps pour un paquet d'événement du **11 novembre** (Armistice) : 3 éditions limitées et une
-   version spéciale « Coquelicot ».
+2. [x] **Militaires et Résistance** (catégorie « Mémoire », 32 cartes) : généraux (Leman, Jacques de Dixmude,
+   Brialmont…), résistants des deux guerres (Gabrielle Petit et Andrée De Jongh en mythiques, Dewé, Livchitz,
+   Bervoets…), batailles, forts et lieux de mémoire (Yser, Breendonk, Caserne Dossin, Mardasson…). Stats : naissance
+   ou année, conflit, rôle. Paquet « Mémoire » (80 pièces), séries « La Grande Guerre » et « Résistance ». Événement
+   du **11 novembre** (du 4 au 11) : 3 éditions limitées (Armistice, Coquelicot, Tour de l'Yser) et version
+   « Coquelicot ». Sans image libre : réseau Comète, Dame Blanche, Marthe McKenna, Armée secrète ; Jean-Baptiste
+   Piron (vitrine de musée seulement) et bataille de la Lys (carte) écartés.
+   Générées avec `node tools/build-cards.mjs --ajout=militaire` (Wikidata seul, rareté selon le nombre de
+   Wikipédias) : la prochaine régénération complète recalculera leur rareté avec les visites.
 3. [ ] **Aviation** (≈ 25–35) : avions belges ou marquants (Stampe SV.4, Renard R.31, Fairey Fox, F-16, Sabena…),
    aviateurs (Coppens, Thieffry, Offenberg). Stats : premier vol, constructeur, pays.
 4. [ ] **Rail** (≈ 25–35) : locomotives, trams vicinaux, grandes gares, Bruxelles–Malines 1835. Stats : mise en
@@ -59,8 +69,7 @@ Ordre de priorité :
 5. [ ] **Exploration** (≈ 25) : navires (*Belgica*, *Mercator*, malle Ostende-Douvres) et explorateurs
    (de Gerlache, Lemaire…). Stats : année, type, expédition.
 
-Paquets : « En route ! » (Aviation + Rail + Exploration), « Faune belge » (Animaux), « Mémoire » (Militaires et
-Résistance), plus l'événement du 11 novembre. Écartés : personnages de BD (aucune image libre ; seule piste, les
+Paquets : « En route ! » (Aviation + Rail + Exploration), « Faune belge » (Animaux), « Mémoire » (fait). Écartés : personnages de BD (aucune image libre ; seule piste, les
 fresques BD de Bruxelles) et logos de chocolatiers (protégés).
 
 Restes de la session précédente : photos douteuses à remplacer (pas seulement à recadrer) — Patrick Lansens (le

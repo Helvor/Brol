@@ -73,6 +73,145 @@ const PARTY_BY_SHORT = Object.fromEntries(Object.entries(SHORT).reverse().map(([
 
 const cards = [];
 
+// ---------- Mémoire : militaires et Résistance ----------
+// [titre Wikipédia FR, conflit, rôle (stat, traduit dans i18n.js), sous-titre FR, sous-titre NL, options]
+// Options : year (année affichée pour un lieu ou un fait ; les personnes ont leur naissance), mythique,
+// name et nlName (quand le libellé Wikidata est trop long ou mal traduit), img (photo imposée, à la place de P18).
+// Pas de carte sans image libre : réseau Comète, Dame Blanche, Marthe McKenna, Armée secrète. La bataille de la Lys
+// (1940) n'a qu'une carte d'état-major comme image, Jean-Baptiste Piron qu'une vitrine de musée (la brigade Piron a sa carte).
+// Bataille de l'Yser : P18 est une carte, remplacée par le monument au roi Albert Iᵉʳ de Nieuport (écluses de l'inondation).
+const WARS = { 14: ['Première Guerre mondiale', '1914–1918'], 40: ['Seconde Guerre mondiale', '1940–1945'], 19: ['Armée belge', 'XIXᵉ siècle'] };
+const MILITAIRES = [
+  ['Gérard Leman', 14, 'Général', 'Défenseur des forts de Liège en 1914', 'Verdediger van de forten van Luik in 1914'],
+  ['Alphonse Jacques de Dixmude', 14, 'Général', 'Héros de la défense de Dixmude (1914)', 'Held van de verdediging van Diksmuide (1914)', { name: 'Jacques de Dixmude', nlName: 'Jacques van Diksmuide' }],
+  ['Émile Dossin de Saint-Georges', 14, 'Général', 'Commandant de division sur l’Yser', 'Divisiecommandant aan de IJzer', { name: 'Émile Dossin', nlName: 'Émile Dossin' }],
+  ['Léon Trésignies', 14, 'Caporal', 'Mort en héros au Pont-Brûlé (1914)', 'Als held gesneuveld aan de Verbrande Brug (1914)'],
+  ['Gabrielle Petit (résistante)', 14, 'Résistante', 'Espionne fusillée en 1916, à 23 ans', 'Spionne, in 1916 gefusilleerd op 23-jarige leeftijd', { mythique: true }],
+  ['Philippe Baucq', 14, 'Résistant', 'Architecte du réseau d’évasion d’Edith Cavell', 'Architect van het ontsnappingsnetwerk van Edith Cavell', { name: 'Philippe Baucq', nlName: 'Philippe Baucq' }],
+  ['Walthère Dewé', 14, 'Résistant', 'Chef des réseaux Dame Blanche puis Clarence', 'Leider van de netwerken Witte Dame en Clarence'],
+  ['Adolphe Max', 14, 'Bourgmestre', 'Bourgmestre de Bruxelles, déporté pour avoir tenu tête à l’occupant', 'Burgemeester van Brussel, gedeporteerd omdat hij de bezetter trotseerde'],
+  ['Désiré-Joseph Mercier', 14, 'Cardinal', 'Voix de la résistance morale (« Patriotisme et endurance »)', 'Stem van het morele verzet (“Vaderlandsliefde en volharding”)', { name: 'Cardinal Mercier', nlName: 'Kardinaal Mercier' }],
+  ['Henri-Alexis Brialmont', 19, 'Général', 'Bâtisseur des forts d’Anvers, de Liège et de Namur', 'Bouwer van de forten van Antwerpen, Luik en Namen', { name: 'Henri Alexis Brialmont', nlName: 'Henri Alexis Brialmont' }],
+  ['Bataille de Liège', 14, 'Bataille', 'Août 1914 : les forts retardent l’armée allemande', 'Augustus 1914: de forten houden het Duitse leger op', { year: 1914 }],
+  ['Siège d\'Anvers (1914)', 14, 'Bataille', 'Le réduit national tient jusqu’au 10 octobre 1914', 'Het Nationaal Reduit houdt stand tot 10 oktober 1914', { year: 1914 }],
+  ['Bataille des casques d\'argent', 14, 'Bataille', 'Halen, 12 août 1914 : la cavalerie belge tient bon', 'Halen, 12 augustus 1914: de Belgische cavalerie houdt stand', { year: 1914 }],
+  ['Fort de Loncin', 14, 'Fort', 'Détruit le 15 août 1914, il garde sa garnison', 'Op 15 augustus 1914 vernield, graf van zijn garnizoen', { year: 1914 }],
+  ['Bataille de l\'Yser', 14, 'Bataille', 'L’inondation de la plaine arrête l’armée allemande', 'De onderwaterzetting van de vlakte stopt het Duitse leger', { year: 1914, img: '0 Monument du Roi Albert 1er - Nieuport (1).jpg' }],
+  ['Boyau de la Mort', 14, 'Tranchée', 'La tranchée belge la plus exposée du front', 'De meest blootgestelde Belgische loopgraaf aan het front', { year: 1915 }],
+  ['Tombe du Soldat inconnu (Belgique)', 14, 'Mémorial', 'Au pied de la colonne du Congrès depuis 1922', 'Aan de voet van de Congreskolom sinds 1922', { year: 1922, name: 'Tombe du Soldat inconnu' }],
+  ['Andrée De Jongh', 40, 'Résistante', 'Fondatrice du réseau Comète, qui a sauvé des centaines d’aviateurs alliés', 'Oprichtster van de Comètelijn, die honderden geallieerde piloten redde', { mythique: true }],
+  ['Albert Guérisse', 40, 'Résistant', '« Pat O’Leary », chef d’une filière d’évasion', '“Pat O’Leary”, leider van een ontsnappingslijn'],
+  ['Youra Livchitz', 40, 'Résistant', 'Arrête le 20ᵉ convoi vers Auschwitz (1943)', 'Houdt het 20ste konvooi naar Auschwitz tegen (1943)'],
+  ['Marguerite Bervoets', 40, 'Résistante', 'Poétesse et résistante, exécutée en 1944', 'Dichteres en verzetsstrijdster, in 1944 terechtgesteld'],
+  ['Jean Greindl', 40, 'Résistant', '« Nemo », chef du réseau Comète à Bruxelles', '“Nemo”, leider van de Comètelijn in Brussel'],
+  ['Jean de Selys Longchamps', 40, 'Pilote', 'Mitraille le siège de la Gestapo, avenue Louise (1943)', 'Beschiet het Gestapo-hoofdkwartier aan de Louizalaan (1943)'],
+  ['Fort d\'Eben-Emael', 40, 'Fort', 'Pris par planeurs le 10 mai 1940', 'Op 10 mei 1940 met zweefvliegtuigen ingenomen', { year: 1940 }],
+  ['Ligne KW', 40, 'Ligne de défense', 'La ligne Koningshooikt–Wavre, mai 1940', 'De lijn Koningshooikt–Waver, mei 1940', { year: 1940 }],
+  ['Fort de Breendonk', 40, 'Camp', 'Camp nazi, aujourd’hui mémorial national', 'Nazikamp, nu nationaal gedenkteken', { year: 1940 }],
+  ['Camp de rassemblement de Malines', 40, 'Camp', 'Plus de 25 000 Juifs et Tsiganes déportés de Belgique', 'Meer dan 25.000 Joden en Roma uit België gedeporteerd', { year: 1942, name: 'Caserne Dossin', nlName: 'Kazerne Dossin' }],
+  ['Front de l\'indépendance', 40, 'Réseau', 'Le plus grand mouvement de résistance belge', 'De grootste Belgische verzetsbeweging', { year: 1941, name: 'Front de l’Indépendance', nlName: 'Onafhankelijkheidsfront' }],
+  ['Faux Soir', 40, 'Journal', 'Le faux numéro du Soir qui ridiculise l’occupant', 'Het valse nummer van Le Soir dat de bezetter belachelijk maakt', { year: 1943 }],
+  ['Brigade Piron', 40, 'Unité', 'Les Belges de la libération, de la Normandie à Bruxelles', 'De Belgen van de bevrijding, van Normandië tot Brussel', { year: 1944, name: 'Brigade Piron', nlName: 'Brigade Piron' }],
+  ['Bataille des Ardennes', 40, 'Bataille', 'L’ultime offensive allemande, hiver 1944', 'Het laatste Duitse offensief, winter 1944', { year: 1944 }],
+  ['Mémorial du Mardasson', 40, 'Mémorial', 'Bastogne honore les soldats américains', 'Bastenaken eert de Amerikaanse soldaten', { year: 1950, nlName: 'Mardasson-gedenkteken' }],
+];
+// Rareté par quotas dans une catégorie, du plus connu au moins connu (raretés imposées à la main : hors quotas)
+const QUOTAS = [['legendaire', 0.04], ['epique', 0.09], ['rare', 0.18], ['peu-commune', 0.27]];
+function rarityByQuota(list, score) {
+  const forced = list.filter(c => c.forceRarity);
+  for (const c of forced) { c.rarity = c.forceRarity; delete c.forceRarity; }
+  const rest = list.filter(c => !forced.includes(c)).sort((a, b) => score(b) - score(a));
+  let i = 0;
+  for (const [rarity, q] of QUOTAS) {
+    const k = Math.max(0, Math.round(list.length * q) - forced.filter(c => c.rarity === rarity).length);
+    for (const end = Math.min(rest.length, i + k); i < end; i++) rest[i].rarity = rarity;
+  }
+  for (; i < rest.length; i++) rest[i].rarity = 'commune';
+}
+// Titres → QID par Wikidata seul (mode --ajout : l'API Wikipédia n'est pas nécessaire). Titres exacts, sans redirection.
+async function resolveTitlesSparql(entries) {
+  const rows = await sparql(`SELECT ?t ?x WHERE { VALUES ?t { ${entries.map(e => JSON.stringify(e.title) + '@fr').join(' ')} }
+  ?a schema:name ?t; schema:isPartOf <https://fr.wikipedia.org/>; schema:about ?x. }`);
+  const byTitle = new Map(rows.map(r => [r.t, qid(r.x)]));
+  const out = new Map();
+  for (const e of entries) { const q = byTitle.get(e.title); if (q) out.set(q, e); else console.warn('Introuvable sur Wikipédia :', e.title); }
+  return out;
+}
+async function buildMilitaires(resolve) {
+  const mq = await resolve(MILITAIRES.map(([title, war, role, sub, subNl, opt = {}]) => ({ title, war, role, sub, subNl, ...opt })));
+  const rows = await sparql(`
+  SELECT ?x ?xLabel ?img ?birth ?death ?human ?links WHERE {
+    VALUES ?x { ${[...mq.keys()].map(q => 'wd:' + q).join(' ')} }
+    ?x wikibase:sitelinks ?links. OPTIONAL { ?x wdt:P18 ?img } OPTIONAL { ?x wdt:P569 ?birth } OPTIONAL { ?x wdt:P570 ?death }
+    OPTIONAL { ?x wdt:P31 wd:Q5. BIND(true AS ?human) }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,mul,en". }
+  }`);
+  const out = [];
+  for (const r of rows) {
+    const id = qid(r.x);
+    if (out.some(c => c.id === id) || cards.some(c => c.id === id)) continue;
+    const e = mq.get(id);
+    const img = e.img || file(r.img);
+    if (!img) { console.warn('Pas d\'image libre, ignoré :', r.xLabel); continue; }
+    const [conflict, years] = WARS[e.war];
+    const b = year(r.birth), d = year(r.death), when = r.human ? b : e.year;
+    out.push({
+      id, cat: 'militaire', name: e.name || cap(r.xLabel.replace(/ \(.+\)$/, '')), img, rarity: 'commune', family: 'militaire',
+      emblem: /\.svg$/i.test(img) || undefined, forceRarity: e.mythique ? 'mythique' : undefined,
+      subtitle: e.sub, nl: { subtitle: e.subNl, ...(e.nlName && { name: e.nlName }) }, meta: conflict + (when ? ` · ${when}${r.human && d ? '–' + d : ''}` : ''),
+      stats: [r.human ? ['Naissance', b ?? '—'] : ['Année', e.year ?? '—'], ['Conflit', years], ['Rôle', e.role]],
+      links: +r.links,
+    });
+  }
+  console.log(`Mémoire : ${out.length} / ${MILITAIRES.length}`);
+  return out;
+}
+// Éditions limitées du paquet du 11 novembre (voir EDITIONS, plus bas)
+const EDITIONS_ARMISTICE = [
+  ['Armistice du 11 novembre 1918', 'armistice', 'mythique', 'Armistice de 1918', 'Wapenstilstand van 1918',
+    'Le 11 novembre 1918 à 11 heures, les armes se taisent sur le front de l’Ouest.', 'Op 11 november 1918 om 11 uur zwijgen de wapens aan het westelijk front.'],
+  ['Coquelicot', 'armistice', 'legendaire', 'Coquelicot du souvenir', 'Klaproos van de herinnering',
+    'La fleur des champs de bataille des Flandres, symbole du souvenir des soldats tombés.', 'De bloem van de Vlaamse slagvelden, symbool van de herdenking van de gesneuvelden.'],
+  ['Tour de l\'Yser', 'armistice', 'epique', 'Tour de l’Yser', 'IJzertoren',
+    'Monument de Dixmude portant la devise « Plus jamais de guerre ».', 'Monument in Diksmuide met de wapenspreuk “Nooit meer oorlog”.'],
+];
+
+// ---------- Mode --ajout=<catégorie> : ajoute une catégorie à data/cards.js sans tout régénérer ----------
+// Garde toutes les autres cartes telles quelles et ne fait que des requêtes Wikidata (l'API Wikipédia limite fort).
+// La rareté se fonde alors sur le nombre de Wikipédias ; une régénération complète la recalcule avec les visites.
+const AJOUT = (process.argv.find(a => a.startsWith('--ajout=')) || '').slice(8);
+if (AJOUT) {
+  if (AJOUT !== 'militaire') throw new Error('--ajout : seule la catégorie « militaire » est prise en charge');
+  globalThis.window = {};
+  (0, eval)(readFileSync(new URL('../data/cards.js', import.meta.url), 'utf8'));
+  const keep = window.CARDS.filter(c => c.cat !== 'militaire' && !(c.cat === 'edition' && c.pack === 'armistice'));
+  cards.splice(0, cards.length, ...keep);
+  const added = await buildMilitaires(resolveTitlesSparql);
+  rarityByQuota(added, c => c.links);
+  for (const c of added) delete c.links;
+  const eds = await resolveTitlesSparql(EDITIONS_ARMISTICE.map(([title, pack, rarity, name, nlName, text, nlText]) => ({ title, pack, rarity, name, nlName, text, nlText })));
+  const p18 = new Map((await sparql(`SELECT ?x ?img WHERE { VALUES ?x { ${[...eds.keys()].map(q => 'wd:' + q).join(' ')} } ?x wdt:P18 ?img }`)).map(r => [qid(r.x), file(r.img)]));
+  for (const [id, e] of eds) {
+    if (!p18.get(id)) { console.warn('Édition limitée sans image, ignorée :', e.name); continue; }
+    added.push({ id, cat: 'edition', pack: e.pack, name: e.name, rarity: e.rarity, img: p18.get(id), subtitle: 'Édition limitée', text: e.text,
+      nl: { name: e.nlName, subtitle: 'Beperkte editie', text: e.nlText }, stats: [['Édition', e.pack]] });
+  }
+  // Noms néerlandais
+  const nl = await sparql(`SELECT ?x ?l WHERE { VALUES ?x { ${added.filter(c => c.cat !== 'edition').map(c => 'wd:' + c.id).join(' ')} } ?x rdfs:label ?l. FILTER(LANG(?l) = "nl") }`);
+  for (const r of nl) { const c = added.find(x => x.id === qid(r.x)); if (c && !c.nl?.name && r.l !== c.name) c.nl = { ...c.nl, name: cap(r.l.replace(/ \(.+\)$/, '')) }; }
+  cards.push(...added);
+  saveCache();
+  writeFileSync('data/cards.js',
+    '// Généré par tools/build-cards.mjs. Données : Wikidata (CC0). Images : Wikimedia Commons.\n' +
+    'window.CARDS = ' + JSON.stringify(cards) + ';\n' +
+    'window.POS_NL = ' + JSON.stringify(window.POS_NL) + ';\n');
+  execFileSync(process.execPath, [new URL('./build-images.mjs', import.meta.url).pathname], { stdio: 'inherit' });
+  const table = {};
+  for (const c of added) table[c.rarity] = (table[c.rarity] || 0) + 1;
+  console.log(`Ajout « ${AJOUT} » : ${added.length} cartes`, JSON.stringify(table));
+  process.exit(0);
+}
+
 // ---------- Gouvernements fédéraux et législatures (pour dater les mandats) ----------
 const cabinets = (await sparql(`
 SELECT ?c ?cLabel ?st ?en WHERE {
@@ -403,6 +542,7 @@ async function freePageImage(title, lang = 'fr') {
   return f && !NOT_A_PICTURE.test(f) ? f : null;
 }
 
+
 // ---------- Culture & sport : personnalités populaires ----------
 // Titres Wikipédia FR. La rareté dépend du nombre de Wikipédias qui ont un article sur la personne.
 const FAMOUS = {
@@ -673,6 +813,8 @@ for (const f of sciRows) {
 }
 console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
 
+for (const c of await buildMilitaires(resolveTitles)) { delete c.links; cards.push(c); }
+
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [
   'Retable de l\'Agneau mystique', 'Les Époux Arnolfini', 'La Vierge du chancelier Rolin', 'Chasseurs dans la neige (Brueghel)',
@@ -924,6 +1066,7 @@ for (const [id, name, subtitle, text, stats] of EVENTS)
 // [titre Wikipédia FR, paquet, rareté, nom FR, nom NL, texte FR, texte NL, options]
 // Options : img (image imposée, à la place de P18), artwork (tableau ou affiche, affiché en entier).
 const EDITIONS = [
+  ...EDITIONS_ARMISTICE,
   ['Ordre de Léopold', 'prestige', 'mythique', 'Ordre de Léopold', 'Leopoldsorde',
     'La plus haute distinction honorifique belge, créée en 1832 par Léopold Ier.', 'De hoogste Belgische onderscheiding, in 1832 ingesteld door Leopold I.'],
   ['Armoiries de la Belgique', 'prestige', 'legendaire', 'Grandes armoiries', 'Groot wapen van België',
@@ -1282,8 +1425,8 @@ const MYTHIQUES = [
   'Ville de Bruxelles', 'Anvers', 'Bruges', 'Gand', 'Liège',
   'Atomium', 'Manneken-Pis', 'Grand-Place de Bruxelles', 'Retable de l\'Agneau mystique',
   'Frite', 'Westvleteren (bière)', 'Tomorrowland (festival)', 'Carnaval de Binche',
+  'Gabrielle Petit (résistante)', 'Andrée De Jongh',
 ];
-const QUOTAS = [['legendaire', 0.04], ['epique', 0.09], ['rare', 0.18], ['peu-commune', 0.27]];
 const FIXED_CATS = new Set(['monarchie', 'region', 'province', 'evenement', 'edition']); // trop petites : rareté fixée à la main
 const linkIds = cards.filter(c => isQ(c.id)).map(c => c.id);
 const LINKS = new Map();
@@ -1304,7 +1447,7 @@ for (let i = 0; i < linkIds.length; i += 300) {
 }
 
 // Visites des 12 derniers mois complets sur Wikipédia FR et NL
-const VIEW_CATS = new Set(['culture', 'sport', 'science', 'art', 'monument', 'chateau', 'folklore', 'gastronomie', 'biere', 'enseignement', 'groupe', 'festival']);
+const VIEW_CATS = new Set(['culture', 'sport', 'science', 'militaire', 'art', 'monument', 'chateau', 'folklore', 'gastronomie', 'biere', 'enseignement', 'groupe', 'festival']);
 const VIEWS = new Map();
 {
   const d = new Date(), endM = new Date(d.getFullYear(), d.getMonth(), 0), startM = new Date(endM.getFullYear() - 1, endM.getMonth() + 1, 1);
@@ -1355,18 +1498,7 @@ const byCat = {};
 for (const c of cards) (byCat[c.cat] ||= []).push(c);
 for (const [cat, list] of Object.entries(byCat)) {
   if (FIXED_CATS.has(cat)) continue;
-  // Raretés imposées à la main (icônes mythiques) : hors quotas
-  const forced = list.filter(c => c.forceRarity);
-  for (const c of forced) { c.rarity = c.forceRarity; delete c.forceRarity; }
-  list.splice(0, list.length, ...list.filter(c => !forced.includes(c)));
-  list.sort((a, b) => score(b) - score(a));
-  const n = list.length + forced.length;
-  let i = 0;
-  for (const [rarity, q] of QUOTAS) {
-    const k = Math.max(0, Math.round(n * q) - forced.filter(c => c.rarity === rarity).length);
-    for (const end = Math.min(list.length, i + k); i < end; i++) list[i].rarity = rarity;
-  }
-  for (; i < list.length; i++) list[i].rarity = 'commune';
+  rarityByQuota(list, score);
 }
 for (const c of cards) delete c.pop;
 {
@@ -1408,7 +1540,7 @@ for (const c of cards) {
   const n = NL.get(c.id);
   if (!n || c.cat === 'edition') continue; // noms et textes néerlandais écrits à la main
   const nl = {};
-  if (n.l && n.l !== c.name) nl.name = cap(n.l.replace(/ van België$/, '').replace(/ \((bier|band|festival|gemeente)\)$/, ''));
+  if (n.l && n.l !== c.name && !c.nl?.name) nl.name = cap(n.l.replace(/ van België$/, '').replace(/ \((bier|band|festival|gemeente)\)$/, ''));
   if (n.d && ['culture', 'sport', 'science'].includes(c.cat) && !c.nl?.subtitle) nl.subtitle = cap(n.d);
   if (Object.keys(nl).length) c.nl = { ...c.nl, ...nl };
 }

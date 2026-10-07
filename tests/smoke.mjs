@@ -330,7 +330,7 @@ async function features() {
       check(r.n === 3 && r.kinds === 3, 'trois missions différentes attendues : ' + JSON.stringify(r));
       check(r.early === 0, 'mission réclamée avant d’être faite');
       check(r.gain === r.reward && r.coins === r.reward && r.twice === 0, 'récompense de mission : ' + JSON.stringify(r));
-      check(r.multBefore === 1 && r.multAfter === 1.5 && r.myth === 510, 'bonus d’album : ' + JSON.stringify(r));
+      check(r.multBefore === 1 && r.multAfter === 1.5 && r.myth === 675, 'bonus d’album : ' + JSON.stringify(r));
     });
     await step('paquet Nouveautés : cartes absentes, 10 par jour', async () => {
       const r = await page.evaluate(() => {
@@ -428,7 +428,9 @@ async function features() {
       const holoTag = await page.textContent('.fuse-result .tag-inline');
       check(holoTag.trim() === 'Nouvelle version', 'Holo d’une carte possédée : ' + holoTag);
       // « Max » : toutes les fusions possibles d'un coup, la fenêtre ne remonte pas en haut
-      await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'commune').slice(0, 5); C.forEach(c => window.RDL.state.owned[c.id] = 5); });
+      // Doublons de communes tirés plus tôt dans le test : retirés, pour qu'il y ait exactement 4 fusions possibles
+      await page.evaluate(() => { const all = window.RDL.CARDS.filter(c => c.rarity === 'commune'), o = window.RDL.state.owned;
+        all.forEach(c => { if (o[c.id] > 1) o[c.id] = 1; }); all.slice(0, 5).forEach(c => o[c.id] = 5); });
       await page.click('#fuse-close'); await page.click('#fuse-btn');
       const f0 = await page.evaluate(() => window.RDL.state.stats.fused);
       await page.evaluate(() => { document.querySelector('[data-fuse="commune"][data-max]').scrollIntoView({ block: 'end' }); });
