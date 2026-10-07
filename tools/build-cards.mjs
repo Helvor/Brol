@@ -76,11 +76,12 @@ const cards = [];
 // ---------- Mémoire : militaires et Résistance ----------
 // [titre Wikipédia FR, conflit, rôle (stat, traduit dans i18n.js), sous-titre FR, sous-titre NL, options]
 // Options : year (année affichée pour un lieu ou un fait ; les personnes ont leur naissance), mythique,
-// name et nlName (quand le libellé Wikidata est trop long ou mal traduit), img (photo imposée, à la place de P18).
+// name et nlName (quand le libellé Wikidata est trop long ou mal traduit), img (photo imposée, à la place de P18),
+// artwork (affiche ou dessin, affiché en entier).
 // Pas de carte sans image libre : réseau Comète, Dame Blanche, Marthe McKenna, Armée secrète. La bataille de la Lys
 // (1940) n'a qu'une carte d'état-major comme image, Jean-Baptiste Piron qu'une vitrine de musée (la brigade Piron a sa carte).
 // Bataille de l'Yser : P18 est une carte, remplacée par le monument au roi Albert Iᵉʳ de Nieuport (écluses de l'inondation).
-const WARS = { 14: ['Première Guerre mondiale', '1914–1918'], 40: ['Seconde Guerre mondiale', '1940–1945'], 19: ['Armée belge', 'XIXᵉ siècle'] };
+const WARS = { 14: ['Première Guerre mondiale', '1914–1918'], 40: ['Seconde Guerre mondiale', '1940–1945'], 19: ['Armée belge', 'XIXᵉ siècle'], 0: ['Armée belge', 'Depuis 1830'] };
 const MILITAIRES = [
   ['Gérard Leman', 14, 'Général', 'Défenseur des forts de Liège en 1914', 'Verdediger van de forten van Luik in 1914'],
   ['Alphonse Jacques de Dixmude', 14, 'Général', 'Héros de la défense de Dixmude (1914)', 'Held van de verdediging van Diksmuide (1914)', { name: 'Jacques de Dixmude', nlName: 'Jacques van Diksmuide' }],
@@ -99,6 +100,17 @@ const MILITAIRES = [
   ['Bataille de l\'Yser', 14, 'Bataille', 'L’inondation de la plaine arrête l’armée allemande', 'De onderwaterzetting van de vlakte stopt het Duitse leger', { year: 1914, img: '0 Monument du Roi Albert 1er - Nieuport (1).jpg' }],
   ['Boyau de la Mort', 14, 'Tranchée', 'La tranchée belge la plus exposée du front', 'De meest blootgestelde Belgische loopgraaf aan het front', { year: 1915 }],
   ['Tombe du Soldat inconnu (Belgique)', 14, 'Mémorial', 'Au pied de la colonne du Congrès depuis 1922', 'Aan de voet van de Congreskolom sinds 1922', { year: 1922, name: 'Tombe du Soldat inconnu' }],
+  ['Edith Cavell', 14, 'Infirmière', 'Infirmière britannique fusillée à Bruxelles pour avoir aidé des soldats à fuir', 'Britse verpleegster, in Brussel gefusilleerd omdat ze soldaten hielp vluchten'],
+  ['Fort de Flémalle', 14, 'Fort', 'Fort de la ceinture de Liège, rive gauche de la Meuse', 'Fort van de Luikse gordel, op de linkeroever van de Maas', { year: 1914 }],
+  ['Fort de Barchon', 14, 'Fort', 'Premier fort attaqué en août 1914', 'Eerste fort dat in augustus 1914 werd aangevallen', { year: 1914 }],
+  ['Fort de Fléron', 14, 'Fort', 'Fort de la ceinture de Liège, à l’est de la ville', 'Fort van de Luikse gordel, ten oosten van de stad', { year: 1914 }],
+  ['Fort de Boncelles', 14, 'Fort', 'Fort du sud de Liège, tombé le 15 août 1914', 'Fort ten zuiden van Luik, gevallen op 15 augustus 1914', { year: 1914 }],
+  ['Fort de Lantin', 14, 'Fort', 'Le fort le mieux conservé de la ceinture de Liège', 'Het best bewaarde fort van de Luikse gordel', { year: 1914 }],
+  ['Viol de la Belgique', 14, 'Crimes de guerre', 'Louvain, Dinant, Tamines : villes incendiées et civils fusillés en 1914', 'Leuven, Dinant, Tamines: steden in brand en burgers gefusilleerd in 1914', { year: 1914, nlName: 'Verkrachting van België', artwork: true }],
+  ['Bataille de la Lys (1918)', 14, 'Bataille', 'L’offensive allemande du printemps 1918 en Flandre', 'Het Duitse lenteoffensief van 1918 in Vlaanderen', { year: 1918, name: 'Bataille de la Lys', nlName: 'Slag aan de Leie' }],
+  ['Cimetière militaire britannique de Tyne Cot', 14, 'Cimetière', 'Le plus grand cimetière militaire du Commonwealth au monde', 'De grootste militaire begraafplaats van het Gemenebest ter wereld', { year: 1917, name: 'Tyne Cot', nlName: 'Tyne Cot' }],
+  ['Ploegsteert Memorial to the Missing', 14, 'Mémorial', 'Plus de 11 000 disparus britanniques, gardés par deux lions', 'Meer dan 11.000 Britse vermisten, bewaakt door twee leeuwen', { year: 1931, name: 'Mémorial de Ploegsteert', nlName: 'Ploegsteert Memorial' }],
+  ['In Flanders Fields Museum', 14, 'Musée', 'Le musée de la Grande Guerre, dans la halle aux draps d’Ypres', 'Het museum van de Groote Oorlog, in de Lakenhalle van Ieper', { year: 1998 }],
   ['Andrée De Jongh', 40, 'Résistante', 'Fondatrice du réseau Comète, qui a sauvé des centaines d’aviateurs alliés', 'Oprichtster van de Comètelijn, die honderden geallieerde piloten redde', { mythique: true }],
   ['Albert Guérisse', 40, 'Résistant', '« Pat O’Leary », chef d’une filière d’évasion', '“Pat O’Leary”, leider van een ontsnappingslijn'],
   ['Youra Livchitz', 40, 'Résistant', 'Arrête le 20ᵉ convoi vers Auschwitz (1943)', 'Houdt het 20ste konvooi naar Auschwitz tegen (1943)'],
@@ -112,6 +124,19 @@ const MILITAIRES = [
   ['Front de l\'indépendance', 40, 'Réseau', 'Le plus grand mouvement de résistance belge', 'De grootste Belgische verzetsbeweging', { year: 1941, name: 'Front de l’Indépendance', nlName: 'Onafhankelijkheidsfront' }],
   ['Faux Soir', 40, 'Journal', 'Le faux numéro du Soir qui ridiculise l’occupant', 'Het valse nummer van Le Soir dat de bezetter belachelijk maakt', { year: 1943 }],
   ['Brigade Piron', 40, 'Unité', 'Les Belges de la libération, de la Normandie à Bruxelles', 'De Belgen van de bevrijding, van Normandië tot Brussel', { year: 1944, name: 'Brigade Piron', nlName: 'Brigade Piron' }],
+  ['Robert Maistriau', 40, 'Résistant', 'L’un des trois jeunes qui arrêtent le 20ᵉ convoi (1943)', 'Een van de drie jongeren die het 20ste konvooi tegenhouden (1943)'],
+  ['Jean Franklemon', 40, 'Résistant', 'Musicien, compagnon de Livchitz contre le 20ᵉ convoi', 'Muzikant, makker van Livchitz tegen het 20ste konvooi'],
+  ['Jean Burgers', 40, 'Résistant', 'Fondateur du Groupe G, spécialiste des sabotages', 'Oprichter van Groep G, specialist in sabotage'],
+  ['Groupe G', 40, 'Réseau', 'Le réseau de sabotage des ingénieurs de l’ULB', 'Het sabotagenetwerk van de ingenieurs van de ULB', { year: 1942, nlName: 'Groep G' }],
+  ['Arnaud Fraiteur', 40, 'Résistant', 'Abat un collaborateur à 18 ans, pendu en 1943', 'Schakelt op 18-jarige leeftijd een collaborateur uit, opgehangen in 1943'],
+  ['Bataille de Hannut', 40, 'Bataille', 'Mai 1940 : l’une des premières grandes batailles de chars', 'Mei 1940: een van de eerste grote tankslagen', { year: 1940, nlName: 'Slag bij Hannuit' }],
+  ['Fort de Battice', 40, 'Fort', 'Fort du plateau de Herve, il résiste jusqu’au 22 mai 1940', 'Fort op het plateau van Herve, houdt stand tot 22 mei 1940', { year: 1940 }],
+  ['Fort d\'Aubin-Neufchâteau', 40, 'Fort', 'Fort qui tient onze jours en mai 1940', 'Fort dat in mei 1940 elf dagen standhoudt', { year: 1940 }],
+  ['Ligne Devèze', 40, 'Ligne de défense', 'Abris de mitrailleuses le long de la frontière est', 'Mitrailleursbunkers langs de oostgrens', { year: 1940 }],
+  ['Fort de Huy', 40, 'Prison', 'Citadelle devenue prison de l’occupant allemand', 'Citadel die gevangenis van de Duitse bezetter werd', { year: 1940, nlName: 'Fort van Hoei' }],
+  ['Bataille de l\'Escaut', 40, 'Bataille', 'Automne 1944 : la bataille pour libérer le port d’Anvers', 'Herfst 1944: de slag om de haven van Antwerpen te bevrijden', { year: 1944, nlName: 'Slag om de Schelde' }],
+  ['Bastogne War Museum', 40, 'Musée', 'Le musée de la bataille des Ardennes, au pied du Mardasson', 'Het museum van de Slag om de Ardennen, aan de voet van de Mardasson', { year: 2014 }],
+  ['Musée royal de l\'Armée et d\'Histoire militaire', 0, 'Musée', 'Au Cinquantenaire, de l’armée belge de 1830 à nos jours', 'In het Jubelpark, het Belgische leger van 1830 tot vandaag', { year: 1910, name: 'Musée royal de l’Armée', nlName: 'Legermuseum' }],
   ['Bataille des Ardennes', 40, 'Bataille', 'L’ultime offensive allemande, hiver 1944', 'Het laatste Duitse offensief, winter 1944', { year: 1944 }],
   ['Mémorial du Mardasson', 40, 'Mémorial', 'Bastogne honore les soldats américains', 'Bastenaken eert de Amerikaanse soldaten', { year: 1950, nlName: 'Mardasson-gedenkteken' }],
 ];
@@ -157,7 +182,7 @@ async function buildMilitaires(resolve) {
     const b = year(r.birth), d = year(r.death), when = r.human ? b : e.year;
     out.push({
       id, cat: 'militaire', name: e.name || cap(r.xLabel.replace(/ \(.+\)$/, '')), img, rarity: 'commune', family: 'militaire',
-      emblem: /\.svg$/i.test(img) || undefined, forceRarity: e.mythique ? 'mythique' : undefined,
+      emblem: /\.svg$/i.test(img) || undefined, artwork: e.artwork || undefined, forceRarity: e.mythique ? 'mythique' : undefined,
       subtitle: e.sub, nl: { subtitle: e.subNl, ...(e.nlName && { name: e.nlName }) }, meta: conflict + (when ? ` · ${when}${r.human && d ? '–' + d : ''}` : ''),
       stats: [r.human ? ['Naissance', b ?? '—'] : ['Année', e.year ?? '—'], ['Conflit', years], ['Rôle', e.role]],
       links: +r.links,
@@ -176,21 +201,122 @@ const EDITIONS_ARMISTICE = [
     'Monument de Dixmude portant la devise « Plus jamais de guerre ».', 'Monument in Diksmuide met de wapenspreuk “Nooit meer oorlog”.'],
 ];
 
+// ---------- Faune : races belges et animaux sauvages ----------
+// [titre Wikipédia FR, type (stat), sous-titre FR, sous-titre NL, poids ou taille [clé, valeur], origine ou habitat
+//  [clé, valeur], options] — options : name et nlName (le libellé Wikidata d'une espèce est souvent son nom latin), mythique,
+//  artwork (dessin affiché en entier), img (photo imposée).
+// À remplacer quand Commons répondra (relu à l'œil) : Malinois (exposition canine, logos de sponsor discrets), cerf
+// élaphe (une biche).
+// Poids et tailles : ordres de grandeur d'un adulte, d'après les articles Wikipédia.
+const ANIMAUX = [
+  ['Malinois (chien)', 'Chien', 'Berger belge de Malines, chien de police et d’élite', 'Belgische herder uit Mechelen, politie- en elitehond', ['Poids', '25–30 kg'], ['Origine', 'Malines'], { name: 'Malinois', nlName: 'Mechelse herder', mythique: true }],
+  ['Berger belge Groenendael', 'Chien', 'Le berger belge à poil long et noir', 'De langharige zwarte Belgische herder', ['Poids', '25–30 kg'], ['Origine', 'Groenendael'], { name: 'Groenendael', nlName: 'Groenendaeler' }],
+  ['Berger belge Tervueren', 'Chien', 'Le berger belge à poil long et fauve', 'De langharige bruine Belgische herder', ['Poids', '25–30 kg'], ['Origine', 'Tervuren'], { name: 'Tervueren', nlName: 'Tervuerense herder' }],
+  ['Berger belge Laekenois', 'Chien', 'Le plus rare des bergers belges, à poil rêche', 'De zeldzaamste Belgische herder, met ruwe vacht', ['Poids', '25–30 kg'], ['Origine', 'Laeken'], { name: 'Laekenois', nlName: 'Laekense herder' }],
+  ['Bouvier des Flandres', 'Chien', 'Chien de ferme et de bouvier, barbu et costaud', 'Boerderij- en veedrijvershond, bebaard en stevig', ['Poids', '35–40 kg'], ['Origine', 'Flandre'], { nlName: 'Vlaamse koehond' }],
+  ['Schipperke', 'Chien', 'Le petit chien noir des bateliers', 'Het zwarte hondje van de binnenschippers', ['Poids', '3–9 kg'], ['Origine', 'Flandre']],
+  ['Griffon bruxellois', 'Chien', 'Petit chien à moustaches des cochers bruxellois', 'Klein snorrenhondje van de Brusselse koetsiers', ['Poids', '3,5–6 kg'], ['Origine', 'Bruxelles'], { nlName: 'Brussels griffon' }],
+  ['Chien de Saint-Hubert', 'Chien', 'Le limier des moines de Saint-Hubert, au flair légendaire', 'De speurhond van de monniken van Saint-Hubert', ['Poids', '40–50 kg'], ['Origine', 'Ardennes'], { nlName: 'Sint-Hubertushond' }],
+  ['Trait belge', 'Cheval', 'Le cheval de trait brabançon, colosse des champs', 'Het Brabantse trekpaard, kolos van de velden', ['Poids', '0,8–1 t'], ['Origine', 'Brabant'], { nlName: 'Belgisch trekpaard' }],
+  ['Ardennais (cheval)', 'Cheval', 'Cheval de trait trapu et rustique des Ardennes', 'Gedrongen, gehard trekpaard uit de Ardennen', ['Poids', '0,7–1 t'], ['Origine', 'Ardennes'], { name: 'Cheval ardennais', nlName: 'Ardenner' }],
+  ['BWP (cheval)', 'Cheval', 'Le sang-chaud belge, champion de saut d’obstacles', 'Het Belgisch warmbloedpaard, kampioen springen', ['Poids', '550–650 kg'], ['Origine', 'Belgique'], { name: 'Sang-chaud belge', nlName: 'Belgisch Warmbloedpaard' }],
+  ['Blanc bleu belge', 'Bovin', 'Race bovine à la musculature hors norme', 'Runderras met uitzonderlijke bespiering', ['Poids', '0,7–1,2 t'], ['Origine', 'Wallonie'], { name: 'Blanc-Bleu Belge', nlName: 'Belgisch witblauw' }],
+  ['Ardennais Roux', 'Mouton', 'Mouton rustique à tête rousse des Ardennes', 'Gehard schaap met rosse kop uit de Ardennen', ['Poids', '60–80 kg'], ['Origine', 'Ardennes'], { name: 'Ardennais roux', nlName: 'Ardense voskop' }],
+  ['Pigeon voyageur', 'Pigeon', 'La colombophilie, sport populaire né en Belgique', 'De duivensport, volkssport ontstaan in België', ['Poids', '≈ 500 g'], ['Origine', 'Belgique'], { nlName: 'Postduif', artwork: true }],
+  ['Poule de Malines', 'Volaille', 'Le « coucou de Malines », grosse poule à chair', 'De Mechelse koekoek, grote vleeskip', ['Poids', '3–5 kg'], ['Origine', 'Malines'], { name: 'Coucou de Malines', nlName: 'Mechelse koekoek' }],
+  ['Braekel', 'Volaille', 'Poule pondeuse de Nederbrakel', 'Legkip uit Nederbrakel', ['Poids', '2–2,8 kg'], ['Origine', 'Flandre-Orientale'], { nlName: 'Brakel' }],
+  ['Barbu d\'Uccle', 'Volaille', 'Poule naine barbue et bottée', 'Bebaarde dwergkip met bevederde poten', ['Poids', '600–800 g'], ['Origine', 'Uccle'], { nlName: 'Ukkelse baardkriel' }],
+  ['Barbu d\'Anvers', 'Volaille', 'Poule naine barbue, sans plumes aux pattes', 'Bebaarde dwergkip zonder bevederde poten', ['Poids', '600–800 g'], ['Origine', 'Anvers'], { nlName: 'Antwerpse baardkriel' }],
+  ['Combattant de Bruges', 'Volaille', 'Coq de combat massif des Flandres', 'Massieve vechthaan uit Vlaanderen', ['Poids', '3–5 kg'], ['Origine', 'Bruges'], { nlName: 'Brugse vechter' }],
+  ['Géant des Flandres', 'Lapin', 'Le plus grand lapin domestique du monde', 'Het grootste tamme konijn ter wereld', ['Poids', '6–10 kg'], ['Origine', 'Flandre'], { nlName: 'Vlaamse reus' }],
+  ['Sanglier', 'Mammifère', 'Le seigneur des forêts ardennaises', 'De heer van de Ardense bossen', ['Poids', '50–150 kg'], ['Habitat', 'Forêts'], { nlName: 'Everzwijn' }],
+  ['Cerf élaphe', 'Mammifère', 'Le roi des Ardennes, star du brame en automne', 'De koning van de Ardennen, ster van de bronst in de herfst', ['Poids', '100–250 kg'], ['Habitat', 'Ardennes'], { nlName: 'Edelhert' }],
+  ['Chevreuil d\'Europe', 'Mammifère', 'Le plus petit cervidé de nos forêts', 'Het kleinste hert van onze bossen', ['Poids', '20–30 kg'], ['Habitat', 'Forêts et champs'], { name: 'Chevreuil', nlName: 'Ree' }],
+  ['Castor fiber', 'Mammifère', 'Revenu dans nos rivières après un siècle d’absence', 'Teruggekeerd in onze rivieren na een eeuw afwezigheid', ['Poids', '20–30 kg'], ['Habitat', 'Rivières'], { name: 'Castor d’Europe', nlName: 'Bever' }],
+  ['Canis lupus', 'Mammifère', 'De retour en Flandre et en Wallonie depuis 2018', 'Sinds 2018 terug in Vlaanderen en Wallonië', ['Poids', '30–50 kg'], ['Habitat', 'Limbourg, Ardenne'], { name: 'Loup gris', nlName: 'Wolf' }],
+  ['Felis silvestris', 'Mammifère', 'Félin sauvage discret des forêts du sud', 'Schuwe wilde kat van de zuidelijke bossen', ['Poids', '3–7 kg'], ['Habitat', 'Ardennes'], { name: 'Chat forestier', nlName: 'Wilde kat' }],
+  ['Cigogne noire', 'Oiseau', 'Cigogne farouche des vallées forestières', 'Schuwe ooievaar van de beboste valleien', ['Poids', '2,5–3 kg'], ['Habitat', 'Forêts humides'], { nlName: 'Zwarte ooievaar' }],
+  ['Hibou grand-duc', 'Oiseau', 'Le plus grand rapace nocturne d’Europe', 'De grootste nachtroofvogel van Europa', ['Poids', '2–3,5 kg'], ['Habitat', 'Carrières, falaises'], { name: 'Grand-duc d’Europe', nlName: 'Oehoe' }],
+  ['Martin-pêcheur d\'Europe', 'Oiseau', 'Flèche bleue des rivières', 'Blauwe pijl van de rivieren', ['Poids', '≈ 40 g'], ['Habitat', 'Rivières'], { name: 'Martin-pêcheur', nlName: 'IJsvogel' }],
+  ['Faucon pèlerin', 'Oiseau', 'Il niche sur la cathédrale de Bruxelles', 'Hij broedt op de kathedraal van Brussel', ['Poids', '≈ 1 kg'], ['Habitat', 'Villes, falaises'], { nlName: 'Slechtvalk' }],
+  ['Phoca vitulina', 'Mammifère', 'Le phoque de nos plages, de plus en plus visible', 'De zeehond van onze stranden, steeds vaker te zien', ['Poids', '50–150 kg'], ['Habitat', 'Côte'], { name: 'Phoque veau-marin', nlName: 'Gewone zeehond' }],
+  ['Marsouin commun', 'Mammifère', 'Le petit cétacé de la mer du Nord', 'De kleine walvisachtige van de Noordzee', ['Poids', '50–70 kg'], ['Habitat', 'Mer du Nord'], { nlName: 'Bruinvis' }],
+  ['Crevette grise', 'Crustacé', 'La crevette des croquettes et des pêcheurs à cheval', 'De garnaal van de kroketten en de paardenvissers', ['Taille', '5–9 cm'], ['Habitat', 'Mer du Nord'], { nlName: 'Grijze garnaal' }],
+  ['Moule commune', 'Mollusque', 'La moule des moules-frites', 'De mossel van mosselen-friet', ['Taille', '5–10 cm'], ['Habitat', 'Côte'], { name: 'Moule', nlName: 'Mossel' }],
+  ['Renard roux', 'Mammifère', 'Rusé et partout, jusque dans les villes', 'Sluw en overal, tot in de steden', ['Poids', '5–8 kg'], ['Habitat', 'Partout'], { name: 'Renard', nlName: 'Vos' }],
+  ['Blaireau européen', 'Mammifère', 'Il creuse des terriers sur plusieurs générations', 'Graaft burchten die generaties meegaan', ['Poids', '10–15 kg'], ['Habitat', 'Bois'], { name: 'Blaireau', nlName: 'Das' }],
+  ['Erinaceus europaeus', 'Mammifère', 'L’ami épineux des jardins, il hiberne tout l’hiver', 'De stekelige vriend van de tuin, houdt een winterslaap', ['Poids', '≈ 1 kg'], ['Habitat', 'Jardins'], { name: 'Hérisson', nlName: 'Egel' }],
+  ['Écureuil roux', 'Mammifère', 'Acrobate des forêts et des parcs, roi des noisettes', 'Acrobaat van bossen en parken, koning van de hazelnoten', ['Poids', '250–350 g'], ['Habitat', 'Forêts, parcs'], { name: 'Écureuil', nlName: 'Eekhoorn' }],
+  ['Lièvre d\'Europe', 'Mammifère', 'Coureur des champs, jusqu’à 70 km/h', 'Renner van de velden, tot 70 km/u', ['Poids', '3–5 kg'], ['Habitat', 'Champs'], { name: 'Lièvre', nlName: 'Haas' }],
+  ['Oryctolagus cuniculus', 'Mammifère', 'Le lapin sauvage des dunes et des talus', 'Het wilde konijn van duinen en bermen', ['Poids', '1,2–2 kg'], ['Habitat', 'Dunes, champs'], { name: 'Lapin de garenne', nlName: 'Wild konijn' }],
+  ['Lutra lutra', 'Mammifère', 'Disparue puis revenue dans quelques rivières', 'Verdwenen en teruggekeerd in enkele rivieren', ['Poids', '6–10 kg'], ['Habitat', 'Rivières'], { name: 'Loutre', nlName: 'Otter' }],
+  ['Pipistrellus pipistrellus', 'Mammifère', 'La plus commune de nos chauves-souris', 'De meest voorkomende vleermuis bij ons', ['Poids', '≈ 5 g'], ['Habitat', 'Greniers'], { name: 'Pipistrelle', nlName: 'Gewone dwergvleermuis' }],
+  ['Effraie des clochers', 'Oiseau', 'La dame blanche des églises et des granges', 'De witte dame van kerken en schuren', ['Poids', '≈ 300 g'], ['Habitat', 'Clochers'], { name: 'Effraie', nlName: 'Kerkuil' }],
+  ['Chouette hulotte', 'Oiseau', 'Son « hou-hou » résonne dans les bois la nuit', 'Haar “hoe-hoe” weerklinkt ’s nachts in de bossen', ['Poids', '≈ 500 g'], ['Habitat', 'Forêts, parcs'], { nlName: 'Bosuil' }],
+  ['Cygne tuberculé', 'Oiseau', 'Le grand cygne blanc des étangs et des canaux', 'De grote witte zwaan van vijvers en kanalen', ['Poids', '9–13 kg'], ['Habitat', 'Étangs'], { name: 'Cygne', nlName: 'Knobbelzwaan' }],
+  ['Héron cendré', 'Oiseau', 'Pêcheur immobile au bord de l’eau', 'Roerloze visser aan de waterkant', ['Poids', '1–2 kg'], ['Habitat', 'Zones humides'], { nlName: 'Blauwe reiger' }],
+  ['Cigogne blanche', 'Oiseau', 'De retour dans nos prairies, sur ses grands nids', 'Terug in onze weiden, op haar grote nesten', ['Poids', '3–4 kg'], ['Habitat', 'Prairies humides'], { nlName: 'Ooievaar' }],
+  ['Buse variable', 'Oiseau', 'Le rapace qu’on voit sur les piquets le long des routes', 'De roofvogel op de palen langs de wegen', ['Poids', '0,5–1 kg'], ['Habitat', 'Campagne'], { name: 'Buse', nlName: 'Buizerd' }],
+  ['Pic épeiche', 'Oiseau', 'Il tambourine sur les troncs au printemps', 'Roffelt in de lente op boomstammen', ['Poids', '70–100 g'], ['Habitat', 'Forêts'], { nlName: 'Grote bonte specht' }],
+  ['Mésange charbonnière', 'Oiseau', 'La plus commune des mésanges des jardins', 'De meest voorkomende mees in de tuin', ['Poids', '15–20 g'], ['Habitat', 'Jardins'], { nlName: 'Koolmees' }],
+  ['Rouge-gorge familier', 'Oiseau', 'Le compagnon du jardinier, qui chante même l’hiver', 'De makker van de tuinier, zingt zelfs in de winter', ['Poids', '≈ 18 g'], ['Habitat', 'Jardins'], { name: 'Rouge-gorge', nlName: 'Roodborst' }],
+  ['Perruche à collier', 'Oiseau', 'Venue d’Asie, elle a colonisé les parcs bruxellois', 'Uit Azië, veroverde ze de Brusselse parken', ['Poids', '≈ 120 g'], ['Habitat', 'Parcs bruxellois'], { nlName: 'Halsbandparkiet' }],
+  ['Goéland argenté', 'Oiseau', 'Le grand goéland des plages et des ports', 'De grote meeuw van stranden en havens', ['Poids', '≈ 1 kg'], ['Habitat', 'Côte'], { nlName: 'Zilvermeeuw' }],
+  ['Huîtrier pie', 'Oiseau', 'Noir et blanc, bec orange, il fouille la plage', 'Zwart-wit met oranje bek, zoekt voedsel op het strand', ['Poids', '≈ 500 g'], ['Habitat', 'Plages'], { nlName: 'Scholekster' }],
+  ['Salamandra salamandra', 'Amphibien', 'Noire et jaune, elle sort les nuits de pluie', 'Zwart en geel, komt naar buiten in regennachten', ['Taille', '15–20 cm'], ['Habitat', 'Forêts humides'], { name: 'Salamandre tachetée', nlName: 'Vuursalamander' }],
+  ['Grenouille rousse', 'Amphibien', 'La première grenouille à pondre, dès février', 'De eerste kikker die eitjes legt, al in februari', ['Taille', '6–9 cm'], ['Habitat', 'Mares'], { nlName: 'Bruine kikker' }],
+  ['Natrix helvetica', 'Reptile', 'Serpent inoffensif qui nage très bien', 'Onschadelijke slang die uitstekend zwemt', ['Taille', '0,7–1,2 m'], ['Habitat', 'Zones humides'], { name: 'Couleuvre helvétique', nlName: 'Ringslang' }],
+  ['Vipère péliade', 'Reptile', 'Le seul serpent venimeux de Belgique', 'De enige giftige slang van België', ['Taille', '50–70 cm'], ['Habitat', 'Landes, Fagnes'], { nlName: 'Adder' }],
+  ['Paon-du-jour', 'Insecte', 'Papillon aux quatre « yeux » sur les ailes', 'Vlinder met vier “ogen” op de vleugels', ['Envergure', '5–6 cm'], ['Habitat', 'Jardins'], { nlName: 'Dagpauwoog' }],
+  ['Lucanus cervus', 'Insecte', 'Le plus grand coléoptère d’Europe, aux mandibules de cerf', 'De grootste kever van Europa, met geweivormige kaken', ['Taille', '3–8 cm'], ['Habitat', 'Vieux chênes'], { name: 'Lucane cerf-volant', nlName: 'Vliegend hert' }],
+  ['Apis mellifera', 'Insecte', 'L’abeille des ruches, du miel et des fleurs', 'De bij van de korven, de honing en de bloemen', ['Taille', '≈ 1,5 cm'], ['Habitat', 'Ruches'], { name: 'Abeille domestique', nlName: 'Honingbij' }],
+  ['Anguilla anguilla', 'Poisson', 'Née dans la mer des Sargasses, elle remonte nos rivières', 'Geboren in de Sargassozee, zwemt ze onze rivieren op', ['Taille', '0,5–1 m'], ['Habitat', 'Rivières'], { name: 'Anguille', nlName: 'Paling' }],
+  ['Clupea harengus', 'Poisson', 'Le poisson des maatjes et des harengs saurs', 'De vis van de maatjes en de bokking', ['Taille', '25–35 cm'], ['Habitat', 'Mer du Nord'], { name: 'Hareng', nlName: 'Haring' }],
+  ['Sole commune', 'Poisson', 'La sole ostendaise, reine des criées', 'De Oostendse tong, koningin van de vismijn', ['Taille', '30–40 cm'], ['Habitat', 'Mer du Nord'], { name: 'Sole', nlName: 'Tong' }],
+  ['Salmo trutta', 'Poisson', 'La truite des ruisseaux ardennais', 'De forel van de Ardense beken', ['Taille', '25–50 cm'], ['Habitat', 'Ruisseaux'], { name: 'Truite fario', nlName: 'Beekforel', artwork: true }],
+];
+async function buildAnimaux(resolve) {
+  const aq = await resolve(ANIMAUX.map(([title, kind, sub, subNl, size, place, opt = {}]) => ({ title, kind, sub, subNl, size, place, ...opt })));
+  const rows = await sparql(`SELECT ?x ?xLabel ?img ?links WHERE { VALUES ?x { ${[...aq.keys()].map(q => 'wd:' + q).join(' ')} }
+    ?x wikibase:sitelinks ?links. OPTIONAL { ?x wdt:P18 ?img } SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,mul,en". } }`);
+  const out = [];
+  for (const r of rows) {
+    const id = qid(r.x);
+    if (out.some(c => c.id === id) || cards.some(c => c.id === id)) continue;
+    const e = aq.get(id), img = e.img || file(r.img);
+    if (!img) { console.warn('Pas d\'image libre, ignoré :', r.xLabel); continue; }
+    const wild = e.place[0] === 'Habitat';
+    out.push({
+      id, cat: 'animal', name: e.name || cap(r.xLabel.replace(/ \(.+\)$/, '')), img, rarity: 'commune', family: 'animal',
+      forceRarity: e.mythique ? 'mythique' : undefined, artwork: e.artwork || undefined,
+      subtitle: e.sub, nl: { subtitle: e.subNl, ...(e.nlName && { name: e.nlName }) },
+      meta: `${wild ? 'Faune sauvage' : 'Race belge'} · ${e.kind}`,
+      stats: [['Type', e.kind], e.size, e.place], links: +r.links,
+    });
+  }
+  console.log(`Faune : ${out.length} / ${ANIMAUX.length}`);
+  return out;
+}
+
 // ---------- Mode --ajout=<catégorie> : ajoute une catégorie à data/cards.js sans tout régénérer ----------
 // Garde toutes les autres cartes telles quelles et ne fait que des requêtes Wikidata (l'API Wikipédia limite fort).
 // La rareté se fonde alors sur le nombre de Wikipédias ; une régénération complète la recalcule avec les visites.
+// Catégories prises en charge : leur constructeur et, s'il y en a, les éditions limitées de leur paquet d'événement.
+const AJOUTS = { militaire: { build: buildMilitaires, editions: EDITIONS_ARMISTICE }, animal: { build: buildAnimaux, editions: [] } };
 const AJOUT = (process.argv.find(a => a.startsWith('--ajout=')) || '').slice(8);
 if (AJOUT) {
-  if (AJOUT !== 'militaire') throw new Error('--ajout : seule la catégorie « militaire » est prise en charge');
+  const job = AJOUTS[AJOUT];
+  if (!job) throw new Error(`--ajout : catégorie inconnue « ${AJOUT} » (possibles : ${Object.keys(AJOUTS).join(', ')})`);
   globalThis.window = {};
   (0, eval)(readFileSync(new URL('../data/cards.js', import.meta.url), 'utf8'));
-  const keep = window.CARDS.filter(c => c.cat !== 'militaire' && !(c.cat === 'edition' && c.pack === 'armistice'));
+  const edPacks = new Set(job.editions.map(e => e[1]));
+  const keep = window.CARDS.filter(c => c.cat !== AJOUT && !(c.cat === 'edition' && edPacks.has(c.pack)));
   cards.splice(0, cards.length, ...keep);
-  const added = await buildMilitaires(resolveTitlesSparql);
+  const added = await job.build(resolveTitlesSparql);
   rarityByQuota(added, c => c.links);
   for (const c of added) delete c.links;
-  const eds = await resolveTitlesSparql(EDITIONS_ARMISTICE.map(([title, pack, rarity, name, nlName, text, nlText]) => ({ title, pack, rarity, name, nlName, text, nlText })));
-  const p18 = new Map((await sparql(`SELECT ?x ?img WHERE { VALUES ?x { ${[...eds.keys()].map(q => 'wd:' + q).join(' ')} } ?x wdt:P18 ?img }`)).map(r => [qid(r.x), file(r.img)]));
+  const eds = job.editions.length ? await resolveTitlesSparql(job.editions.map(([title, pack, rarity, name, nlName, text, nlText]) => ({ title, pack, rarity, name, nlName, text, nlText }))) : new Map();
+  const p18 = !eds.size ? new Map() : new Map((await sparql(`SELECT ?x ?img WHERE { VALUES ?x { ${[...eds.keys()].map(q => 'wd:' + q).join(' ')} } ?x wdt:P18 ?img }`)).map(r => [qid(r.x), file(r.img)]));
   for (const [id, e] of eds) {
     if (!p18.get(id)) { console.warn('Édition limitée sans image, ignorée :', e.name); continue; }
     added.push({ id, cat: 'edition', pack: e.pack, name: e.name, rarity: e.rarity, img: p18.get(id), subtitle: 'Édition limitée', text: e.text,
@@ -813,7 +939,7 @@ for (const f of sciRows) {
 }
 console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
 
-for (const c of await buildMilitaires(resolveTitles)) { delete c.links; cards.push(c); }
+for (const c of [...await buildMilitaires(resolveTitles), ...await buildAnimaux(resolveTitles)]) { delete c.links; cards.push(c); }
 
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [
@@ -1425,7 +1551,7 @@ const MYTHIQUES = [
   'Ville de Bruxelles', 'Anvers', 'Bruges', 'Gand', 'Liège',
   'Atomium', 'Manneken-Pis', 'Grand-Place de Bruxelles', 'Retable de l\'Agneau mystique',
   'Frite', 'Westvleteren (bière)', 'Tomorrowland (festival)', 'Carnaval de Binche',
-  'Gabrielle Petit (résistante)', 'Andrée De Jongh',
+  'Gabrielle Petit (résistante)', 'Andrée De Jongh', 'Malinois (chien)',
 ];
 const FIXED_CATS = new Set(['monarchie', 'region', 'province', 'evenement', 'edition']); // trop petites : rareté fixée à la main
 const linkIds = cards.filter(c => isQ(c.id)).map(c => c.id);
@@ -1447,7 +1573,7 @@ for (let i = 0; i < linkIds.length; i += 300) {
 }
 
 // Visites des 12 derniers mois complets sur Wikipédia FR et NL
-const VIEW_CATS = new Set(['culture', 'sport', 'science', 'militaire', 'art', 'monument', 'chateau', 'folklore', 'gastronomie', 'biere', 'enseignement', 'groupe', 'festival']);
+const VIEW_CATS = new Set(['culture', 'sport', 'science', 'militaire', 'animal', 'art', 'monument', 'chateau', 'folklore', 'gastronomie', 'biere', 'enseignement', 'groupe', 'festival']);
 const VIEWS = new Map();
 {
   const d = new Date(), endM = new Date(d.getFullYear(), d.getMonth(), 0), startM = new Date(endM.getFullYear() - 1, endM.getMonth() + 1, 1);
