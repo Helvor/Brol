@@ -42,7 +42,7 @@ def fetch(f):
 
 det = None
 for n, f in enumerate(files):
-    if f in results: continue
+    if results.get(f) is not None: continue  # déjà analysée (un téléchargement raté est retenté)
     data = fetch(f); time.sleep(0.6)
     img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR) if data else None
     if img is None: results[f] = None; continue
