@@ -152,6 +152,13 @@
     'Mollusque': 'Weekdier', 'Malines': 'Mechelen', 'Laeken': 'Laken', 'Ardennes': 'Ardennen', 'Uccle': 'Ukkel', 'Forêts': 'Bossen',
     'Forêts et champs': 'Bossen en velden', 'Rivières': 'Rivieren', 'Limbourg, Ardenne': 'Limburg, Ardennen', 'Forêts humides': 'Vochtige bossen',
     'Carrières, falaises': 'Groeven, rotsen', 'Villes, falaises': 'Steden, rotsen', 'Côte': 'Kust', 'Mer du Nord': 'Noordzee',
+    'Amphibien': 'Amfibie', 'Reptile': 'Reptiel', 'Insecte': 'Insect', 'Poisson': 'Vis', 'Partout': 'Overal', 'Bois': 'Bossen',
+    'Jardins': 'Tuinen', 'Forêts, parcs': 'Bossen, parken', 'Champs': 'Velden', 'Dunes, champs': 'Duinen, velden', 'Greniers': 'Zolders',
+    'Clochers': 'Kerktorens', 'Étangs': 'Vijvers', 'Zones humides': 'Wetlands', 'Prairies humides': 'Natte weiden', 'Campagne': 'Platteland',
+    'Parcs bruxellois': 'Brusselse parken', 'Plages': 'Stranden', 'Mares': 'Poelen', 'Landes, Fagnes': 'Heide, Venen',
+    'Vieux chênes': 'Oude eiken', 'Ruches': 'Bijenkorven', 'Ruisseaux': 'Beken',
+    'Infirmière': 'Verpleegster', 'Crimes de guerre': 'Oorlogsmisdaden', 'Cimetière': 'Begraafplaats', 'Musée': 'Museum', 'Prison': 'Gevangenis',
+    'Depuis 1830': 'Sinds 1830',
     // Provinces et chefs-lieux
     'Anvers': 'Antwerpen', 'Limbourg': 'Limburg', 'Flandre-Orientale': 'Oost-Vlaanderen', 'Flandre-Occidentale': 'West-Vlaanderen',
     'Brabant flamand': 'Vlaams-Brabant', 'Brabant wallon': 'Waals-Brabant', 'Hainaut': 'Henegouwen', 'Liège': 'Luik', 'Luxembourg': 'Luxemburg',
@@ -166,7 +173,7 @@
     'Artiste': 'Kunstenaar', 'Genre': 'Genre', 'Formation': 'Opgericht', 'Création': 'Opgericht', 'UNESCO': 'UNESCO', 'Jours': 'Dagen',
     'Élections': 'Verkiezingen', 'Gouvernement': 'Regering', 'Avant': 'Voor', 'Après': 'Na', 'Communes': 'Gemeenten', 'Régions': 'Gewesten',
     'Communautés': 'Gemeensch.', 'Loi': 'Wet', '1er scrutin': '1e stemming', 'Niveau': 'Niveau', 'Consultation': 'Raadpleging',
-    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status', 'Conflit': 'Conflict', 'Rôle': 'Rol', 'Poids': 'Gewicht', 'Taille': 'Lengte', 'Origine': 'Herkomst', 'Habitat': 'Leefgebied',
+    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status', 'Conflit': 'Conflict', 'Rôle': 'Rol', 'Poids': 'Gewicht', 'Taille': 'Lengte', 'Envergure': 'Spanwijdte', 'Origine': 'Herkomst', 'Habitat': 'Leefgebied',
   };
   const META = [
     [/^En fonction$/, 'In functie'], [/^Sur le trône$/, 'Op de troon'], [/^Gouv\. /, 'Reg. '],
