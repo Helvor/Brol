@@ -60,6 +60,7 @@
     { id: 'sport',        fr: 'Sport',         nl: 'Sport' },
     { id: 'science',      fr: 'Sciences',      nl: 'Wetenschap' },
     { id: 'militaire',    fr: 'Mémoire',       nl: 'Herinnering' },
+    { id: 'animal',       fr: 'Faune',         nl: 'Fauna' },
     { id: 'art',          fr: 'Art',           nl: 'Kunst' },
     { id: 'monument',     fr: 'Monuments',     nl: 'Monumenten' },
     { id: 'chateau',      fr: 'Châteaux',      nl: 'Kastelen' },
@@ -95,6 +96,9 @@
     { id: 'memoire', title: { fr: 'Mémoire', nl: 'Herinnering' }, kicker: { fr: 'Édition 14-18 · 40-45', nl: 'Editie 14-18 · 40-45' }, big: '14·40', price: 80,
       desc: { fr: 'Généraux, résistants, batailles et lieux de mémoire.', nl: 'Generaals, verzetsstrijders, veldslagen en gedenkplaatsen.' },
       body: ['#161a10', '#3d4428'], metal: ['#f3f0d8', '#c9b97a', '#6e6235'], cats: ['militaire'] },
+    { id: 'faune', title: { fr: 'Faune belge', nl: 'Belgische fauna' }, kicker: { fr: 'Édition nature', nl: 'Natuureditie' }, big: 'ZOO', price: 80,
+      desc: { fr: 'Races belges et animaux sauvages, des Ardennes à la côte.', nl: 'Belgische rassen en wilde dieren, van de Ardennen tot de kust.' },
+      body: ['#0d1f12', '#2f5a2c'], metal: ['#effbe3', '#9fd36f', '#4b7a2a'], cats: ['animal'] },
     { id: 'patrimoine', title: { fr: 'Patrimoine', nl: 'Erfgoed' }, kicker: { fr: 'Édition patrimoine', nl: 'Erfgoededitie' }, big: '1830', price: 80,
       desc: { fr: 'Monuments, châteaux et folklore.', nl: 'Monumenten, kastelen en folklore.' },
       body: ['#191c22', '#3e4756'], metal: ['#eef3ff', '#a9b8d6', '#566584'], cats: ['monument', 'chateau', 'folklore'] },
@@ -281,6 +285,10 @@
     { id: 'festivals', title: { fr: 'Été des festivals', nl: 'Festivalzomer' }, desc: { fr: 'De Tomorrowland aux Francofolies.', nl: 'Van Tomorrowland tot de Francofolies.' }, reward: 400, match: c => c.cat === 'festival' },
     { id: 'grande-guerre', title: { fr: 'La Grande Guerre', nl: 'De Groote Oorlog' }, desc: { fr: 'De Liège à l’Yser, 1914–1918.', nl: 'Van Luik tot de IJzer, 1914–1918.' }, reward: 600,
       match: c => c.cat === 'militaire' && /^Première Guerre/.test(c.meta || '') },
+    { id: 'chiens', title: { fr: 'Chiens belges', nl: 'Belgische honden' }, desc: { fr: 'Les quatre bergers belges et leurs cousins.', nl: 'De vier Belgische herders en hun neven.' }, reward: 500,
+      match: c => c.cat === 'animal' && c.stats?.[0]?.[1] === 'Chien' },
+    { id: 'ardennes', title: { fr: 'Faune sauvage', nl: 'Wilde dieren' }, desc: { fr: 'Des forêts ardennaises à la mer du Nord.', nl: 'Van de Ardense bossen tot de Noordzee.' }, reward: 500,
+      match: c => c.cat === 'animal' && /^Faune sauvage/.test(c.meta || '') },
     { id: 'resistance', title: { fr: 'Résistance', nl: 'Verzet' }, desc: { fr: 'Les résistants des deux guerres.', nl: 'De verzetsstrijders van beide oorlogen.' }, reward: 500,
       match: c => c.cat === 'militaire' && /^Résistant/.test(c.stats?.[2]?.[1] || '') },
     ...ALL_PACKS.filter(p => p.special).map(p => ({ id: 'ed-' + p.id, edition: p.id,
@@ -438,6 +446,9 @@
       <rect x="0" y="18" width="300" height="394" fill="url(#gp${k})"/>
       <g fill="none" stroke="${p.metal[1]}" stroke-width="1.6" opacity=".35">${[0, 60, 120].map(a => `<ellipse cx="150" cy="202" rx="128" ry="44" transform="rotate(${a} 150 202)"/>`).join('')}</g>
       ${[[278, 202], [86, 91], [86, 313]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="${p.metal[0]}" opacity=".8"/>`).join('')}`,
+    // Empreintes de pattes qui traversent le paquet
+    faune: (k, p) => Array.from({ length: 9 }, (_, i) => { const x = 40 + i * 28 + (i % 2) * 18, y = 360 - i * 36, a = -35;
+      return `<g transform="translate(${x} ${y}) rotate(${a})" fill="${p.metal[1]}" opacity=".22"><ellipse cx="0" cy="6" rx="9" ry="8"/>${[[-10, -6], [-4, -11], [4, -11], [10, -6]].map(([dx, dy]) => `<ellipse cx="${dx}" cy="${dy}" rx="3.4" ry="4.4"/>`).join('')}</g>`; }).join(''),
     // Rangées de croix d'un cimetière militaire, en perspective
     memoire: (k, p) => [0, 1, 2, 3, 4, 5].map(row => { const s = .55 + row * .17, y = 150 + row * row * 6 + row * 18, n = 9 - row;
       return Array.from({ length: n }, (_, i) => { const x = 150 + (i - (n - 1) / 2) * 34 * s;
@@ -547,7 +558,7 @@
   // Chaque catégorie contient toutes les raretés (réparties par notoriété), donc les taux affichés sont justes.
   // Nouvelle catégorie : à rareté égale, ses cartes sortent trois fois plus souvent jusqu'à la date indiquée, pour
   // qu'elles ne se noient pas parmi les 1 500 cartes du paquet Belgique. Les taux par rareté ne changent pas.
-  const FEATURED = { militaire: '2027-01-31' }, FEATURED_WEIGHT = 3;
+  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28' }, FEATURED_WEIGHT = 3;
   const featuredCats = () => { const d = ymd(now()); return new Set(Object.keys(FEATURED).filter(cat => d <= FEATURED[cat])); };
   function pickCard(list) {
     const feat = featuredCats(), w = c => feat.has(c.cat) ? FEATURED_WEIGHT : 1;

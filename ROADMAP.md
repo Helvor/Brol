@@ -51,8 +51,15 @@ rareté selon la notoriété). Pour chaque thème : proposer la liste des cartes
 générer, relire les photos à l'œil, puis PR.
 
 Ordre de priorité :
-1. [ ] **Animaux** (≈ 30–35) : races belges (malinois, cheval de trait belge, Blanc-Bleu Belge, pigeon voyageur,
-   coq de Bruges…) et faune sauvage (Ardennes, côte). Stats : poids, longévité, habitat.
+1. [x] **Animaux** (catégorie « Faune », 33 cartes) : les quatre bergers belges (malinois mythique), bouvier des
+   Flandres, schipperke, griffon bruxellois, saint-hubert, chevaux (trait belge, ardennais, sang-chaud belge),
+   Blanc-Bleu Belge, pigeon voyageur, poules et lapin des races belges, faune sauvage des Ardennes à la côte (loup,
+   castor, cerf, chat forestier, cigogne noire, grand-duc, faucon pèlerin, phoque, marsouin, crevette grise, moule).
+   Stats : type, poids (ou taille), origine ou habitat. Paquet « Faune belge » (80 pièces), séries « Chiens belges » et
+   « Faune sauvage ». Mise en avant ×3 jusqu'au 28 février 2027. Ardennais roux (mouton) écarté : pas d'image libre.
+   Photos à remplacer quand Commons répondra (candidates repérées, pas encore relues) : malinois (exposition canine,
+   logos de sponsor discrets ; « Malinois portrait.jpg », « Belgian Malinois 01.jpg »), cerf élaphe (une biche ;
+   « Cervus elaphus Luc Viatour 3.jpg »). Option `img` du générateur prévue pour ça.
 2. [x] **Militaires et Résistance** (catégorie « Mémoire », 32 cartes) : généraux (Leman, Jacques de Dixmude,
    Brialmont…), résistants des deux guerres (Gabrielle Petit et Andrée De Jongh en mythiques, Dewé, Livchitz,
    Bervoets…), batailles, forts et lieux de mémoire (Yser, Breendonk, Caserne Dossin, Mardasson…). Stats : naissance
@@ -69,7 +76,7 @@ Ordre de priorité :
 5. [ ] **Exploration** (≈ 25) : navires (*Belgica*, *Mercator*, malle Ostende-Douvres) et explorateurs
    (de Gerlache, Lemaire…). Stats : année, type, expédition.
 
-Paquets : « En route ! » (Aviation + Rail + Exploration), « Faune belge » (Animaux), « Mémoire » (fait). Écartés : personnages de BD (aucune image libre ; seule piste, les
+Paquets : « En route ! » (Aviation + Rail + Exploration) ; « Faune belge » et « Mémoire » sont faits. Écartés : personnages de BD (aucune image libre ; seule piste, les
 fresques BD de Bruxelles) et logos de chocolatiers (protégés).
 
 Restes de la session précédente : photos douteuses à remplacer (pas seulement à recadrer) — Patrick Lansens (le

@@ -758,6 +758,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   --p-festival: #b8175a;
   --p-science: #17708c;
   --p-militaire: #4b5530;
+  --p-animal: #2f6b2a;
 }
 .card-top .live.unesco { background: #0b62a8; color: #fff; }
 .card-top .live.unesco::before { display: none; }
