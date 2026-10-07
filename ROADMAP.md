@@ -38,6 +38,36 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 - [x] **Bourgmestres à jour** : le bourgmestre en fonction vient de l'infobox Wikipédia NL de chaque commune (FR en secours), avec les titulaires empêchés et les faisant fonction (Namur, Anvers, Brasschaat…). Wikidata ne sert plus que pour les mandats terminés ; les anciens bourgmestres gardent leur carte (« Ancien bourgmestre de… »).
 - [ ] **Mise à jour automatique des données** : GitHub Action mensuelle qui relance `node tools/build-cards.mjs --fresh` et ouvre une pull request avec les changements (nouveaux ministres, populations, photos). Ajouter un garde-fou : signaler les cartes disparues, pour ne pas casser les collections existantes.
 
+## Phase 6 — Nouveaux paquets (prochaine étape)
+
+Décidé avec l'utilisateur : cinq nouvelles catégories, chacune avec son filtre dans l'album, construites comme les
+monuments ou les bières (`curated()` dans `tools/build-cards.mjs` : liste de titres Wikipédia, image libre,
+rareté selon la notoriété). Pour chaque thème : proposer la liste des cartes, **la faire valider par l'utilisateur**,
+générer, relire les photos à l'œil, puis PR.
+
+Ordre de priorité :
+1. [ ] **Animaux** (≈ 30–35) : races belges (malinois, cheval de trait belge, Blanc-Bleu Belge, pigeon voyageur,
+   coq de Bruges…) et faune sauvage (Ardennes, côte). Stats : poids, longévité, habitat.
+2. [ ] **Militaires et Résistance** (≈ 30–40) : généraux et héros des deux guerres (Leman, Jacques de Dixmude…),
+   aviateurs de guerre, résistants (Gabrielle Petit, Andrée de Jongh, Walthère Dewé…). Stats : naissance, conflit,
+   grade ou réseau. À temps pour un paquet d'événement du **11 novembre** (Armistice) : 3 éditions limitées et une
+   version spéciale « Coquelicot ».
+3. [ ] **Aviation** (≈ 25–35) : avions belges ou marquants (Stampe SV.4, Renard R.31, Fairey Fox, F-16, Sabena…),
+   aviateurs (Coppens, Thieffry, Offenberg). Stats : premier vol, constructeur, pays.
+4. [ ] **Rail** (≈ 25–35) : locomotives, trams vicinaux, grandes gares, Bruxelles–Malines 1835. Stats : mise en
+   service, type, vitesse.
+5. [ ] **Exploration** (≈ 25) : navires (*Belgica*, *Mercator*, malle Ostende-Douvres) et explorateurs
+   (de Gerlache, Lemaire…). Stats : année, type, expédition.
+
+Paquets : « En route ! » (Aviation + Rail + Exploration), « Faune belge » (Animaux), « Mémoire » (Militaires et
+Résistance), plus l'événement du 11 novembre. Écartés : personnages de BD (aucune image libre ; seule piste, les
+fresques BD de Bruxelles) et logos de chocolatiers (protégés).
+
+Restes de la session précédente : photos douteuses à remplacer (pas seulement à recadrer) — Patrick Lansens (le
+fichier montre peut-être Sven Gatz), Jean-Pol Poncelet (minuscule sur une photo de défilé), Frantz Van Dorpe
+(photo de conseil communal). Promo en cours : Nouveautés 150 au lieu de 300, Prestige 400 au lieu de 600 (`was`
+dans `PACKS`).
+
 ## Phase 5 — En ligne
 
 - [ ] **Comptes et sauvegarde sur serveur** (Supabase envisagé) : connexion, sauvegarde dans le cloud, reprise d'une partie locale par import.
