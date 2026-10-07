@@ -61,6 +61,9 @@
     { id: 'science',      fr: 'Sciences',      nl: 'Wetenschap' },
     { id: 'militaire',    fr: 'Mémoire',       nl: 'Herinnering' },
     { id: 'animal',       fr: 'Faune',         nl: 'Fauna' },
+    { id: 'aviation',     fr: 'Aviation',      nl: 'Luchtvaart' },
+    { id: 'rail',         fr: 'Rail',          nl: 'Spoor' },
+    { id: 'exploration',  fr: 'Exploration',   nl: 'Ontdekking' },
     { id: 'art',          fr: 'Art',           nl: 'Kunst' },
     { id: 'monument',     fr: 'Monuments',     nl: 'Monumenten' },
     { id: 'chateau',      fr: 'Châteaux',      nl: 'Kastelen' },
@@ -99,6 +102,9 @@
     { id: 'faune', title: { fr: 'Faune belge', nl: 'Belgische fauna' }, kicker: { fr: 'Édition nature', nl: 'Natuureditie' }, big: 'ZOO', price: 80,
       desc: { fr: 'Races belges et animaux sauvages, des Ardennes à la côte.', nl: 'Belgische rassen en wilde dieren, van de Ardennen tot de kust.' },
       body: ['#0d1f12', '#2f5a2c'], metal: ['#effbe3', '#9fd36f', '#4b7a2a'], cats: ['animal'] },
+    { id: 'en-route', title: { fr: 'En route !', nl: 'Op weg!' }, kicker: { fr: 'Édition voyage', nl: 'Reiseditie' }, big: '✈', price: 80,
+      desc: { fr: 'Avions, trains, navires et explorateurs.', nl: 'Vliegtuigen, treinen, schepen en ontdekkingsreizigers.' },
+      body: ['#0b1730', '#24426e'], metal: ['#eaf2ff', '#8fb4ef', '#3d5f99'], cats: ['aviation', 'rail', 'exploration'] },
     { id: 'patrimoine', title: { fr: 'Patrimoine', nl: 'Erfgoed' }, kicker: { fr: 'Édition patrimoine', nl: 'Erfgoededitie' }, big: '1830', price: 80,
       desc: { fr: 'Monuments, châteaux et folklore.', nl: 'Monumenten, kastelen en folklore.' },
       body: ['#191c22', '#3e4756'], metal: ['#eef3ff', '#a9b8d6', '#566584'], cats: ['monument', 'chateau', 'folklore'] },
@@ -293,6 +299,10 @@
       match: c => c.cat === 'militaire' && c.stats?.[2]?.[1] === 'Fort' },
     { id: 'oiseaux', title: { fr: 'Oiseaux de Belgique', nl: 'Vogels van België' }, desc: { fr: 'Du rouge-gorge au grand-duc.', nl: 'Van roodborst tot oehoe.' }, reward: 500,
       match: c => c.cat === 'animal' && c.stats?.[0]?.[1] === 'Oiseau' },
+    { id: 'gares', title: { fr: 'Grandes gares', nl: 'Grote stations' }, desc: { fr: 'Du Midi à Ostende.', nl: 'Van Brussel-Zuid tot Oostende.' }, reward: 500,
+      match: c => c.cat === 'rail' && c.stats?.[1]?.[1] === 'Gare' },
+    { id: 'pionniers', title: { fr: 'Pionniers du ciel', nl: 'Pioniers van de lucht' }, desc: { fr: 'Les aviateurs et l’aviatrice des débuts.', nl: 'De vliegeniers en de vliegenierster van het eerste uur.' }, reward: 500,
+      match: c => c.cat === 'aviation' && /^Aviat|^Aéronaute/.test(c.stats?.[1]?.[1] || '') },
     { id: 'resistance', title: { fr: 'Résistance', nl: 'Verzet' }, desc: { fr: 'Les résistants des deux guerres.', nl: 'De verzetsstrijders van beide oorlogen.' }, reward: 500,
       match: c => c.cat === 'militaire' && /^Résistant/.test(c.stats?.[2]?.[1] || '') },
     ...ALL_PACKS.filter(p => p.special).map(p => ({ id: 'ed-' + p.id, edition: p.id,
@@ -450,6 +460,11 @@
       <rect x="0" y="18" width="300" height="394" fill="url(#gp${k})"/>
       <g fill="none" stroke="${p.metal[1]}" stroke-width="1.6" opacity=".35">${[0, 60, 120].map(a => `<ellipse cx="150" cy="202" rx="128" ry="44" transform="rotate(${a} 150 202)"/>`).join('')}</g>
       ${[[278, 202], [86, 91], [86, 313]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="${p.metal[0]}" opacity=".8"/>`).join('')}`,
+    // Rails en perspective et trajectoire d'avion
+    'en-route': (k, p) => `<g stroke="${p.metal[1]}" fill="none" opacity=".28"><path d="M120 412L146 230M180 412L154 230" stroke-width="3"/>
+      ${Array.from({ length: 9 }, (_, i) => { const y = 404 - i * i * 2.4 - i * 6, w = 34 - i * 3.2; return `<path d="M${(150 - w).toFixed(1)} ${y.toFixed(1)}h${(2 * w).toFixed(1)}" stroke-width="${(4 - i * .35).toFixed(1)}"/>`; }).join('')}
+      <path d="M20 130C90 60 210 60 280 110" stroke-width="1.6" stroke-dasharray="6 7"/></g>
+      <path d="M272 104l14 4-10 10z" fill="${p.metal[0]}" opacity=".55"/>`,
     // Empreintes de pattes qui traversent le paquet
     faune: (k, p) => Array.from({ length: 9 }, (_, i) => { const x = 40 + i * 28 + (i % 2) * 18, y = 360 - i * 36, a = -35;
       return `<g transform="translate(${x} ${y}) rotate(${a})" fill="${p.metal[1]}" opacity=".22"><ellipse cx="0" cy="6" rx="9" ry="8"/>${[[-10, -6], [-4, -11], [4, -11], [10, -6]].map(([dx, dy]) => `<ellipse cx="${dx}" cy="${dy}" rx="3.4" ry="4.4"/>`).join('')}</g>`; }).join(''),
@@ -562,7 +577,7 @@
   // Chaque catégorie contient toutes les raretés (réparties par notoriété), donc les taux affichés sont justes.
   // Nouvelle catégorie : à rareté égale, ses cartes sortent trois fois plus souvent jusqu'à la date indiquée, pour
   // qu'elles ne se noient pas parmi les 1 500 cartes du paquet Belgique. Les taux par rareté ne changent pas.
-  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28' }, FEATURED_WEIGHT = 3;
+  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31' }, FEATURED_WEIGHT = 3;
   const featuredCats = () => { const d = ymd(now()); return new Set(Object.keys(FEATURED).filter(cat => d <= FEATURED[cat])); };
   function pickCard(list) {
     const feat = featuredCats(), w = c => feat.has(c.cat) ? FEATURED_WEIGHT : 1;
@@ -720,9 +735,16 @@
     const fin = packFinish(p.id), ch = exclChance(p);
     return BASE_FINISHES.slice(1).map((f, i) => `<tr class="odds-x${i ? '' : ' first'}"><td><span class="fin-dot d-${f.id}"></span>${fl(f.id)}</td><td colspan="2">${pctOdds(f.chance * (p.finishBoost || 1))} ${t('perCard')}</td></tr>`).join('') + (ch ? `<tr class="odds-x"><td>${t('oddsExcl')}</td><td colspan="2">${pctOdds(ch)} ${t('perPack')}</td></tr>` : '') +
       (fin ? `<tr class="odds-x"><td><span class="fin-dot d-${fin.id}"></span>${fl(fin.id)}</td><td colspan="2">${pctOdds(fin.packChance)} ${t('perCard')}</td></tr>` : '') +
-      // Nouvelle catégorie mise en avant, quand elle partage le paquet avec d'autres
-      [...featuredCats()].filter(cat => { const cats = new Set(poolOf(p).map(c => c.cat)); return cats.has(cat) && cats.size > 1; })
-        .map(cat => `<tr class="odds-x"><td>${cl(cat)}</td><td colspan="2">${t('oddsFeatured', FEATURED_WEIGHT, fmtDay(FEATURED[cat]))}</td></tr>`).join('');
+      featuredRows(p);
+  }
+  // Nouvelles catégories mises en avant, quand le paquet contient aussi d'autres cartes (sinon le bonus ne change
+  // rien) ; une ligne par date de fin
+  function featuredRows(p) {
+    const cats = new Set(poolOf(p).map(c => c.cat)), feat = [...featuredCats()].filter(cat => cats.has(cat));
+    if (!feat.length || [...cats].every(cat => feat.includes(cat))) return '';
+    const byDate = new Map();
+    for (const cat of feat) byDate.set(FEATURED[cat], [...(byDate.get(FEATURED[cat]) || []), cl(cat)]);
+    return [...byDate].map(([d, names]) => `<tr class="odds-x"><td>${names.join(', ')}</td><td colspan="2">${t('oddsFeatured', FEATURED_WEIGHT, fmtDay(d))}</td></tr>`).join('');
   }
 
   function renderFree() {

@@ -159,6 +159,14 @@
     'Vieux chênes': 'Oude eiken', 'Ruches': 'Bijenkorven', 'Ruisseaux': 'Beken',
     'Infirmière': 'Verpleegster', 'Crimes de guerre': 'Oorlogsmisdaden', 'Cimetière': 'Begraafplaats', 'Musée': 'Museum', 'Prison': 'Gevangenis',
     'Depuis 1830': 'Sinds 1830',
+    // En route !
+    'Avion': 'Vliegtuig', 'Compagnie': 'Maatschappij', 'Aéroport': 'Luchthaven', 'Aviateur': 'Vliegenier', 'Aviatrice': 'Vliegenierster',
+    'Aéronaute': 'Ballonvaarder', 'Pionnier': 'Pionier', 'Pionnière': 'Pionierster', 'Pilote de chasse': 'Jachtpiloot', 'Ballon FNRS': 'FNRS-ballon',
+    'Locomotive': 'Locomotief', 'Ligne': 'Spoorlijn', 'Tram': 'Tram', 'Métro': 'Metro', 'Gare': 'Station', 'TGV': 'HST', 'Train': 'Trein',
+    'Viaduc': 'Viaduct', 'Train touristique': 'Toeristentrein', 'Entrepreneur': 'Ondernemer', 'Expédition': 'Expeditie', 'Base polaire': 'Poolbasis',
+    'Navire': 'Schip', 'Explorateur': 'Ontdekkingsreiziger', 'Volcanologue': 'Vulkanoloog', 'Missionnaire': 'Missionaris', 'Astronome': 'Astronoom',
+    'Voyageur': 'Reiziger', 'Polaire': 'Poolgebied', 'Volcans': 'Vulkanen', 'Amérique': 'Amerika', 'Chine': 'China', 'Mongolie': 'Mongolië',
+    'Antarctique': 'Antarctica', 'Ostende': 'Oostende', 'Schaerbeek': 'Schaarbeek', 'Haren': 'Haren',
     // Provinces et chefs-lieux
     'Anvers': 'Antwerpen', 'Limbourg': 'Limburg', 'Flandre-Orientale': 'Oost-Vlaanderen', 'Flandre-Occidentale': 'West-Vlaanderen',
     'Brabant flamand': 'Vlaams-Brabant', 'Brabant wallon': 'Waals-Brabant', 'Hainaut': 'Henegouwen', 'Liège': 'Luik', 'Luxembourg': 'Luxemburg',
@@ -173,7 +181,7 @@
     'Artiste': 'Kunstenaar', 'Genre': 'Genre', 'Formation': 'Opgericht', 'Création': 'Opgericht', 'UNESCO': 'UNESCO', 'Jours': 'Dagen',
     'Élections': 'Verkiezingen', 'Gouvernement': 'Regering', 'Avant': 'Voor', 'Après': 'Na', 'Communes': 'Gemeenten', 'Régions': 'Gewesten',
     'Communautés': 'Gemeensch.', 'Loi': 'Wet', '1er scrutin': '1e stemming', 'Niveau': 'Niveau', 'Consultation': 'Raadpleging',
-    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status', 'Conflit': 'Conflict', 'Rôle': 'Rol', 'Poids': 'Gewicht', 'Taille': 'Lengte', 'Envergure': 'Spanwijdte', 'Origine': 'Herkomst', 'Habitat': 'Leefgebied',
+    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status', 'Conflit': 'Conflict', 'Rôle': 'Rol', 'Poids': 'Gewicht', 'Taille': 'Lengte', 'Envergure': 'Spanwijdte', 'Premier vol': 'Eerste vlucht', 'Constructeur': 'Bouwer', 'Siège': 'Zetel', 'Lieu': 'Plaats', 'Victoires': 'Overwinningen', 'Longueur': 'Lengte', 'Exploitant': 'Uitbater', 'Vitesse': 'Snelheid', 'Navire': 'Schip', 'Port': 'Haven', 'Origine': 'Herkomst', 'Habitat': 'Leefgebied',
   };
   const META = [
     [/^En fonction$/, 'In functie'], [/^Sur le trône$/, 'Op de troon'], [/^Gouv\. /, 'Reg. '],

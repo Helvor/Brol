@@ -759,6 +759,9 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   --p-science: #17708c;
   --p-militaire: #4b5530;
   --p-animal: #2f6b2a;
+  --p-aviation: #2a5a9e;
+  --p-rail: #8a2a2a;
+  --p-exploration: #1f6f7a;
 }
 .card-top .live.unesco { background: #0b62a8; color: #fff; }
 .card-top .live.unesco::before { display: none; }

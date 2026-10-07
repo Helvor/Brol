@@ -10,8 +10,8 @@ en français) ; l'interface existe en FR et NL.
 - `data/cards.js` est **généré** par `tools/build-cards.mjs` (Wikidata, Wikipédia, Commons ; cache `tools/.cache.json`).
   Ne pas l'éditer à la main : modifier le générateur et relancer `node tools/build-cards.mjs`. Pour ajouter une
   catégorie sans tout régénérer (Wikipédia et Commons limitent souvent les requêtes, le cache n'est pas versionné) :
-  `node tools/build-cards.mjs --ajout=animal` (ou `militaire` ; Wikidata seul ; nouvelle catégorie : l'ajouter à
-  `AJOUTS` dans le générateur).
+  `node tools/build-cards.mjs --ajout=animal` (ou `militaire`, `aviation`, `rail`, `exploration` ; Wikidata seul ;
+  nouvelle catégorie : l'ajouter à `AJOUTS` dans le générateur).
 - `data/images.js` (adresses directes des images, `tools/build-images.mjs`, lancé par build-cards) et `data/focus.js`
   (cadrage sur le visage, `python3 tools/build-focus.py [--hors-ligne]`, demande opencv-python-headless).
 - Sauvegarde du joueur : localStorage `rue-de-la-loi:v1` (`state.owned` : clé `id` ou `id|finish`).
@@ -26,6 +26,7 @@ en français) ; l'interface existe en FR et NL.
 - Wikimedia limite fortement les requêtes : espacer les appels, garder les caches.
 
 ## En cours / suite
-Voir `ROADMAP.md`, phase 6 (nouveaux paquets) : Mémoire et Faune sont faits ; suivant : Aviation, Rail,
-Exploration (paquet « En route ! »). Listes à faire valider par l'utilisateur avant de générer. Nouvelle catégorie : l'ajouter à `FEATURED`
+Phase 6 (nouveaux paquets) terminée. Restent dans `ROADMAP.md` : photos à remplacer (malinois, cerf, anguille,
+bourgmestres douteux), équilibrage de Formation de gouvernement, mise à jour automatique des données, phase 5
+(comptes en ligne). Viser 50 cartes au moins par paquet thématique ; listes à faire valider avant de générer. Nouvelle catégorie : l'ajouter à `FEATURED`
 (app.js) pour qu'elle ne se noie pas dans le paquet Belgique.
