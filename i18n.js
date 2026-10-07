@@ -170,7 +170,8 @@
     // Banque nationale
     'Banque centrale': 'Centrale bank', 'Gouverneur': 'Gouverneur', 'Économiste': 'Econoom', 'Monnaie': 'Munt', 'Union monétaire': 'Muntunie',
     'Réserve': 'Reserve', 'Atelier monétaire': 'Munthuis', 'Bourse': 'Beurs', 'Institution': 'Instelling', 'Banque': 'Bank', 'Paiement': 'Betaling',
-    'Francfort': 'Frankfurt', 'Bâle': 'Bazel', 'Euro': 'Euro', 'BCE': 'ECB',
+    'Francfort': 'Frankfurt', 'Bâle': 'Bazel', 'Euro': 'Euro', 'BCE': 'ECB', 'Pièce': 'Munt', 'Billet': 'Biljet', 'Années 1960': 'Jaren 1960',
+    'Argent': 'Zilver', 'Or': 'Goud', 'Cuivre': 'Koper', 'Cupronickel': 'Cupronikkel', 'Zinc': 'Zink', 'Nickel': 'Nikkel',
     // Provinces et chefs-lieux
     'Anvers': 'Antwerpen', 'Limbourg': 'Limburg', 'Flandre-Orientale': 'Oost-Vlaanderen', 'Flandre-Occidentale': 'West-Vlaanderen',
     'Brabant flamand': 'Vlaams-Brabant', 'Brabant wallon': 'Waals-Brabant', 'Hainaut': 'Henegouwen', 'Liège': 'Luik', 'Luxembourg': 'Luxemburg',
@@ -185,7 +186,7 @@
     'Artiste': 'Kunstenaar', 'Genre': 'Genre', 'Formation': 'Opgericht', 'Création': 'Opgericht', 'UNESCO': 'UNESCO', 'Jours': 'Dagen',
     'Élections': 'Verkiezingen', 'Gouvernement': 'Regering', 'Avant': 'Voor', 'Après': 'Na', 'Communes': 'Gemeenten', 'Régions': 'Gewesten',
     'Communautés': 'Gemeensch.', 'Loi': 'Wet', '1er scrutin': '1e stemming', 'Niveau': 'Niveau', 'Consultation': 'Raadpleging',
-    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status', 'Conflit': 'Conflict', 'Rôle': 'Rol', 'Poids': 'Gewicht', 'Taille': 'Lengte', 'Envergure': 'Spanwijdte', 'Premier vol': 'Eerste vlucht', 'Constructeur': 'Bouwer', 'Siège': 'Zetel', 'Lieu': 'Plaats', 'Victoires': 'Overwinningen', 'Longueur': 'Lengte', 'Exploitant': 'Uitbater', 'Vitesse': 'Snelheid', 'Navire': 'Schip', 'Port': 'Haven', 'Nommé': 'Benoemd', 'Fin': 'Einde', 'Billets': 'Biljetten', 'Pays': 'Landen', 'Tonnes': 'Ton', 'Origine': 'Herkomst', 'Habitat': 'Leefgebied',
+    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status', 'Conflit': 'Conflict', 'Rôle': 'Rol', 'Poids': 'Gewicht', 'Taille': 'Lengte', 'Envergure': 'Spanwijdte', 'Premier vol': 'Eerste vlucht', 'Constructeur': 'Bouwer', 'Siège': 'Zetel', 'Lieu': 'Plaats', 'Victoires': 'Overwinningen', 'Longueur': 'Lengte', 'Exploitant': 'Uitbater', 'Vitesse': 'Snelheid', 'Navire': 'Schip', 'Port': 'Haven', 'Nommé': 'Benoemd', 'Fin': 'Einde', 'Billets': 'Biljetten', 'Pays': 'Landen', 'Tonnes': 'Ton', 'Métal': 'Metaal', 'Valeur': 'Waarde', 'Effigie': 'Beeltenis', 'Origine': 'Herkomst', 'Habitat': 'Leefgebied',
   };
   const META = [
     [/^En fonction$/, 'In functie'], [/^Sur le trône$/, 'Op de troon'], [/^Gouv\. /, 'Reg. '],

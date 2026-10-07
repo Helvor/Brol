@@ -140,9 +140,11 @@ const MILITAIRES = [
   ['Bataille des Ardennes', 40, 'Bataille', 'L’ultime offensive allemande, hiver 1944', 'Het laatste Duitse offensief, winter 1944', { year: 1944 }],
   ['Mémorial du Mardasson', 40, 'Mémorial', 'Bastogne honore les soldats américains', 'Bastenaken eert de Amerikaanse soldaten', { year: 1950, nlName: 'Mardasson-gedenkteken' }],
 ];
-// Rareté par quotas dans une catégorie, du plus connu au moins connu (raretés imposées à la main : hors quotas)
+// Rareté par quotas dans une catégorie, du plus connu au moins connu (raretés imposées à la main : hors quotas ;
+// cartes « manual » (pièces, billets) : rareté choisie à la main, en dehors du calcul)
 const QUOTAS = [['legendaire', 0.04], ['epique', 0.09], ['rare', 0.18], ['peu-commune', 0.27]];
 function rarityByQuota(list, score) {
+  list = list.filter(c => !c.manual);
   const forced = list.filter(c => c.forceRarity);
   for (const c of forced) { c.rarity = c.forceRarity; delete c.forceRarity; }
   const rest = list.filter(c => !forced.includes(c)).sort((a, b) => score(b) - score(a));
@@ -205,11 +207,11 @@ const EDITIONS_ARMISTICE = [
 // [titre Wikipédia FR, type (stat), sous-titre FR, sous-titre NL, poids ou taille [clé, valeur], origine ou habitat
 //  [clé, valeur], options] — options : name et nlName (le libellé Wikidata d'une espèce est souvent son nom latin), mythique,
 //  artwork (dessin affiché en entier), img (photo imposée).
-// À remplacer quand Commons répondra (relu à l'œil) : Malinois (exposition canine, logos de sponsor discrets), cerf
-// élaphe (une biche).
+// Photos imposées (relues à l'œil) : malinois (au lieu d'une exposition canine avec logos de sponsor), cerf élaphe
+// (au lieu d'une biche), anguille (au lieu d'une photo trop sombre).
 // Poids et tailles : ordres de grandeur d'un adulte, d'après les articles Wikipédia.
 const ANIMAUX = [
-  ['Malinois (chien)', 'Chien', 'Berger belge de Malines, chien de police et d’élite', 'Belgische herder uit Mechelen, politie- en elitehond', ['Poids', '25–30 kg'], ['Origine', 'Malines'], { name: 'Malinois', nlName: 'Mechelse herder', mythique: true }],
+  ['Malinois (chien)', 'Chien', 'Berger belge de Malines, chien de police et d’élite', 'Belgische herder uit Mechelen, politie- en elitehond', ['Poids', '25–30 kg'], ['Origine', 'Malines'], { name: 'Malinois', nlName: 'Mechelse herder', mythique: true, img: 'Belgian Shepherd Malinois grass portrait.jpg' }],
   ['Berger belge Groenendael', 'Chien', 'Le berger belge à poil long et noir', 'De langharige zwarte Belgische herder', ['Poids', '25–30 kg'], ['Origine', 'Groenendael'], { name: 'Groenendael', nlName: 'Groenendaeler' }],
   ['Berger belge Tervueren', 'Chien', 'Le berger belge à poil long et fauve', 'De langharige bruine Belgische herder', ['Poids', '25–30 kg'], ['Origine', 'Tervuren'], { name: 'Tervueren', nlName: 'Tervuerense herder' }],
   ['Berger belge Laekenois', 'Chien', 'Le plus rare des bergers belges, à poil rêche', 'De zeldzaamste Belgische herder, met ruwe vacht', ['Poids', '25–30 kg'], ['Origine', 'Laeken'], { name: 'Laekenois', nlName: 'Laekense herder' }],
@@ -230,7 +232,7 @@ const ANIMAUX = [
   ['Combattant de Bruges', 'Volaille', 'Coq de combat massif des Flandres', 'Massieve vechthaan uit Vlaanderen', ['Poids', '3–5 kg'], ['Origine', 'Bruges'], { nlName: 'Brugse vechter' }],
   ['Géant des Flandres', 'Lapin', 'Le plus grand lapin domestique du monde', 'Het grootste tamme konijn ter wereld', ['Poids', '6–10 kg'], ['Origine', 'Flandre'], { nlName: 'Vlaamse reus' }],
   ['Sanglier', 'Mammifère', 'Le seigneur des forêts ardennaises', 'De heer van de Ardense bossen', ['Poids', '50–150 kg'], ['Habitat', 'Forêts'], { nlName: 'Everzwijn' }],
-  ['Cerf élaphe', 'Mammifère', 'Le roi des Ardennes, star du brame en automne', 'De koning van de Ardennen, ster van de bronst in de herfst', ['Poids', '100–250 kg'], ['Habitat', 'Ardennes'], { nlName: 'Edelhert' }],
+  ['Cerf élaphe', 'Mammifère', 'Le roi des Ardennes, star du brame en automne', 'De koning van de Ardennen, ster van de bronst in de herfst', ['Poids', '100–250 kg'], ['Habitat', 'Ardennes'], { nlName: 'Edelhert', img: 'Cervus elaphus Luc Viatour 3.jpg' }],
   ['Chevreuil d\'Europe', 'Mammifère', 'Le plus petit cervidé de nos forêts', 'Het kleinste hert van onze bossen', ['Poids', '20–30 kg'], ['Habitat', 'Forêts et champs'], { name: 'Chevreuil', nlName: 'Ree' }],
   ['Castor fiber', 'Mammifère', 'Revenu dans nos rivières après un siècle d’absence', 'Teruggekeerd in onze rivieren na een eeuw afwezigheid', ['Poids', '20–30 kg'], ['Habitat', 'Rivières'], { name: 'Castor d’Europe', nlName: 'Bever' }],
   ['Canis lupus', 'Mammifère', 'De retour en Flandre et en Wallonie depuis 2018', 'Sinds 2018 terug in Vlaanderen en Wallonië', ['Poids', '30–50 kg'], ['Habitat', 'Limbourg, Ardenne'], { name: 'Loup gris', nlName: 'Wolf' }],
@@ -270,7 +272,7 @@ const ANIMAUX = [
   ['Paon-du-jour', 'Insecte', 'Papillon aux quatre « yeux » sur les ailes', 'Vlinder met vier “ogen” op de vleugels', ['Envergure', '5–6 cm'], ['Habitat', 'Jardins'], { nlName: 'Dagpauwoog' }],
   ['Lucanus cervus', 'Insecte', 'Le plus grand coléoptère d’Europe, aux mandibules de cerf', 'De grootste kever van Europa, met geweivormige kaken', ['Taille', '3–8 cm'], ['Habitat', 'Vieux chênes'], { name: 'Lucane cerf-volant', nlName: 'Vliegend hert' }],
   ['Apis mellifera', 'Insecte', 'L’abeille des ruches, du miel et des fleurs', 'De bij van de korven, de honing en de bloemen', ['Taille', '≈ 1,5 cm'], ['Habitat', 'Ruches'], { name: 'Abeille domestique', nlName: 'Honingbij' }],
-  ['Anguilla anguilla', 'Poisson', 'Née dans la mer des Sargasses, elle remonte nos rivières', 'Geboren in de Sargassozee, zwemt ze onze rivieren op', ['Taille', '0,5–1 m'], ['Habitat', 'Rivières'], { name: 'Anguille', nlName: 'Paling' }],
+  ['Anguilla anguilla', 'Poisson', 'Née dans la mer des Sargasses, elle remonte nos rivières', 'Geboren in de Sargassozee, zwemt ze onze rivieren op', ['Taille', '0,5–1 m'], ['Habitat', 'Rivières'], { name: 'Anguille', nlName: 'Paling', img: 'Anguillidae Anguilla anguilla 1.jpg' }],
   ['Clupea harengus', 'Poisson', 'Le poisson des maatjes et des harengs saurs', 'De vis van de maatjes en de bokking', ['Taille', '25–35 cm'], ['Habitat', 'Mer du Nord'], { name: 'Hareng', nlName: 'Haring' }],
   ['Sole commune', 'Poisson', 'La sole ostendaise, reine des criées', 'De Oostendse tong, koningin van de vismijn', ['Taille', '30–40 cm'], ['Habitat', 'Mer du Nord'], { name: 'Sole', nlName: 'Tong' }],
   ['Salmo trutta', 'Poisson', 'La truite des ruisseaux ardennais', 'De forel van de Ardense beken', ['Taille', '25–50 cm'], ['Habitat', 'Ruisseaux'], { name: 'Truite fario', nlName: 'Beekforel', artwork: true }],
@@ -398,6 +400,43 @@ const FINANCE = [
 ];
 // Cartes d'autres catégories reprises dans le paquet « Banque nationale » (app.js, BNB_EXTRA) : gouverneurs et
 // ministres déjà présents en Politique (de Haussy, Theunis, Théophile de Lantsheere, Van Zeeland, Frère-Orban, Gutt, Maystadt).
+// Pièces et billets : pas d'élément Wikidata avec image, donc des cartes « à la main » (identifiant, image Commons,
+// rareté fixée). [id, nom FR, nom NL, fichier Commons, type, année, sous-titre FR, sous-titre NL, 3ᵉ stat, rareté]
+// Pièces : domaine public ou photos libres (graveurs Braemt, Wiener, Michaux, Devreese, morts depuis plus de 70 ans).
+// Billets : modèle Commons « Belgian franc banknote » — la BNB autorise les reproductions en illustration tant qu'on ne
+// peut pas les confondre avec de vrais billets (petites cartes de jeu).
+const MONNAIES = [
+  ['piece-5f-1833', '5 francs Léopold Iᵉʳ', '5 frank Leopold I', '5fr Leopold I - 1833.png', 'Pièce', 1833, 'L’une des premières pièces du jeune royaume', 'Een van de eerste munten van het jonge koninkrijk', ['Métal', 'Argent'], 'rare'],
+  ['piece-40f-1835', '40 francs or', '40 frank goud', 'Belgium 1835 40 Francs.jpg', 'Pièce', 1835, 'Pièce d’or à l’effigie de Léopold Iᵉʳ', 'Gouden munt met de beeltenis van Leopold I', ['Métal', 'Or'], 'legendaire'],
+  ['piece-5c-1856', '5 centimes au lion', '5 centiem met leeuw', '5-Cent-Belgium-1856-Front.jpg', 'Pièce', 1856, 'La petite monnaie de cuivre de tous les jours', 'Het koperen kleingeld van elke dag', ['Métal', 'Cuivre'], 'commune'],
+  ['piece-5f-1869', 'Écu de 5 francs Léopold II', '5 frank Leopold II', 'Belgium, 5 francs 1869, Leopold II.jpg', 'Pièce', 1869, 'La grosse pièce d’argent de l’Union latine', 'De grote zilveren munt van de Latijnse Muntunie', ['Métal', 'Argent'], 'rare'],
+  ['piece-20f-1878', '20 francs or Léopold II', '20 frank goud Leopold II', '20 francs or Belgique 1878.jpg', 'Pièce', 1878, 'Le « napoléon » belge, gravé par Léopold Wiener', 'De Belgische “napoleon”, gegraveerd door Léopold Wiener', ['Métal', 'Or'], 'epique'],
+  ['piece-2f-1880', '2 francs du cinquantenaire', '2 frank vijftigjarig bestaan', 'Coin BE 2F 50years independance obv 29.png', 'Pièce', 1880, 'Frappée pour les 50 ans de l’indépendance', 'Geslagen voor 50 jaar onafhankelijkheid', ['Métal', 'Argent'], 'rare'],
+  ['piece-1f-1887', '1 franc Léopold II', '1 frank Leopold II', 'Belgium, 1 franc 1887, Leopold II.jpg', 'Pièce', 1887, 'Le franc d’argent de la fin du siècle', 'De zilveren frank van het fin de siècle', ['Métal', 'Argent'], 'peu-commune'],
+  ['piece-10c-1902', '10 centimes à trou', '10 centiem met gat', 'Obverse of 10 cent coin from Belgium, 1902.jpg', 'Pièce', 1902, 'Les pièces trouées d’Alphonse Michaux', 'De munten met een gat van Alphonse Michaux', ['Métal', 'Cupronickel'], 'commune'],
+  ['piece-2f-albert', '2 francs Albert Iᵉʳ', '2 frank Albert I', 'Coin BE 2F Albert I obv FR 40.png', 'Pièce', 1911, 'L’effigie du Roi-Chevalier par Godefroid Devreese', 'De beeltenis van de Koning-Ridder door Godefroid Devreese', ['Métal', 'Argent'], 'peu-commune'],
+  ['piece-20f-1914', '20 francs or Albert Iᵉʳ', '20 frank goud Albert I', 'Coin BE 20F Albert I obv FR 48.png', 'Pièce', 1914, 'Dernière pièce d’or courante, frappée en 1914', 'Laatste gangbare gouden munt, geslagen in 1914', ['Métal', 'Or'], 'epique'],
+  ['piece-25c-1918', '25 centimes de l’occupation', '25 centiem van de bezetting', 'Reverse of 25 cent coin from German occupied Belgium, 1918.jpg', 'Pièce', 1918, 'Pièce de zinc frappée sous l’occupation allemande', 'Zinken munt geslagen onder de Duitse bezetting', ['Métal', 'Zinc'], 'commune'],
+  ['piece-1f-1922', '1 franc « Bon pour »', '1 frank “Goed voor”', 'Belgie 1 frank 1922.JPG', 'Pièce', 1922, 'Après la guerre, une pièce « bon pour » un franc', 'Na de oorlog een munt “goed voor” één frank', ['Métal', 'Nickel'], 'commune'],
+  ['piece-5f-1930', '5 francs Albert Iᵉʳ (1 belga)', '5 frank Albert I (1 belga)', 'Coin BE 5F Albert I obv FR 58.png', 'Pièce', 1930, 'L’époque du belga, monnaie de compte des échanges extérieurs', 'De tijd van de belga, rekenmunt voor de buitenlandse handel', ['Valeur', '1 belga'], 'peu-commune'],
+  ['billet-10000f-1929', '10 000 francs de 1929', '10.000 frank van 1929', '10,000 Belgian francs of 1929 edited.jpg', 'Billet', 1929, 'Le plus gros billet de l’entre-deux-guerres', 'Het grootste bankbiljet van het interbellum', ['Valeur', '2 000 belgas'], 'epique'],
+  ['billet-500f-1943', '500 francs de 1943', '500 frank van 1943', '500 Belgian francs, 100 belgas, obverse-1943.jpg', 'Billet', 1943, 'Billet de l’occupation, dessiné par H. Hendrickx', 'Biljet uit de bezetting, ontworpen door H. Hendrickx', ['Valeur', '100 belgas'], 'rare'],
+  ['billet-100f-lombard', '100 francs Lambert Lombard', '100 frank Lambert Lombard', '100 francs belges - Lambert Lombard.jpg', 'Billet', null, 'Le peintre liégeois de la Renaissance sur un billet des années 1960', 'De Luikse renaissanceschilder op een biljet uit de jaren 1960', ['Effigie', 'Lombard'], 'peu-commune'],
+  ['billet-100f-ensor', '100 francs James Ensor', '100 frank James Ensor', '100 Francs (1995-2001) - Vorderseite.jpg', 'Billet', 1995, 'Le peintre des masques d’Ostende', 'De schilder van de Oostendse maskers', ['Effigie', 'Ensor'], 'peu-commune'],
+  ['billet-200f-sax', '200 francs Adolphe Sax', '200 frank Adolphe Sax', '200 belgische Francs (1995) - Vorderseite.jpg', 'Billet', 1995, 'L’inventeur du saxophone, natif de Dinant', 'De uitvinder van de saxofoon, geboren in Dinant', ['Effigie', 'Sax'], 'rare'],
+  ['billet-500f-magritte', '500 francs René Magritte', '500 frank René Magritte', '500 Francs (1998) - Vorderseite.jpg', 'Billet', 1998, 'Le billet surréaliste, avec chapeau melon', 'Het surrealistische biljet, met bolhoed', ['Effigie', 'Magritte'], 'legendaire'],
+  ['billet-1000f-permeke', '1 000 francs Constant Permeke', '1.000 frank Constant Permeke', '1.000 Francs (1997) - Vorderseite.jpg', 'Billet', 1997, 'Le maître de l’expressionnisme flamand', 'De meester van het Vlaamse expressionisme', ['Effigie', 'Permeke'], 'rare'],
+  ['billet-2000f-horta', '2 000 francs Victor Horta', '2.000 frank Victor Horta', '2.000 Francs (1994-2001) - Vorderseite.jpg', 'Billet', 1994, 'L’architecte de l’Art nouveau bruxellois', 'De architect van de Brusselse art nouveau', ['Effigie', 'Horta'], 'epique'],
+  ['billet-10000f-1997', '10 000 francs Albert II et Paola', '10.000 frank Albert II en Paola', '10.000 Francs (1997) - Vorderseite.jpg', 'Billet', 1997, 'Le dernier et le plus gros billet en francs', 'Het laatste en grootste biljet in frank', ['Effigie', 'Albert II'], 'epique'],
+];
+function buildManual(cat, list) {
+  return list.map(([id, name, nlName, img, kind, y, sub, subNl, extra, rarity]) => ({
+    id, cat, name, img, rarity, manual: true, family: cat, artwork: true, // rareté hors quotas (voir rarityByQuota)
+    subtitle: sub, nl: { name: nlName, subtitle: subNl },
+    meta: [kind, y].filter(Boolean).join(' · '),
+    stats: [['Année', y ?? 'Années 1960'], ['Type', kind], extra],
+  }));
+}
 async function buildRoute(cat, list) {
   const q = await resolve(list.map(([title, kind, sub, subNl, extra, opt = {}]) => ({ title, kind, sub, subNl, extra, ...opt })));
   const rows = await sparql(`SELECT ?x ?xLabel ?img ?birth ?death ?human ?flight ?inc ?start ?links WHERE { VALUES ?x { ${[...q.keys()].map(x => 'wd:' + x).join(' ')} }
@@ -425,6 +464,26 @@ async function buildRoute(cat, list) {
   async function resolve(entries) { return (AJOUT ? resolveTitlesSparql : resolveTitles)(entries); }
 }
 
+// ---------- Corrections de photos, relues à l'œil ----------
+// Photo trouvée automatiquement (Wikipédia, Commons) mais fausse ou mauvaise : remplacée par un autre fichier libre.
+// Appliqué à la fin d'une génération complète, ou seul avec : node tools/build-cards.mjs --photos
+const PHOTO_FIX = {
+  Q1685276: 'Jean-Pol Poncelet (1997).jpg', // Jean-Pol Poncelet : minuscule sur une photo de défilé
+};
+if (process.argv.includes('--photos')) {
+  globalThis.window = {};
+  (0, eval)(readFileSync(new URL('../data/cards.js', import.meta.url), 'utf8'));
+  let n = 0;
+  for (const c of window.CARDS) if (PHOTO_FIX[c.id] && c.img !== PHOTO_FIX[c.id]) { c.img = PHOTO_FIX[c.id]; n++; }
+  writeFileSync('data/cards.js',
+    '// Généré par tools/build-cards.mjs. Données : Wikidata (CC0). Images : Wikimedia Commons.\n' +
+    'window.CARDS = ' + JSON.stringify(window.CARDS) + ';\n' +
+    'window.POS_NL = ' + JSON.stringify(window.POS_NL) + ';\n');
+  execFileSync(process.execPath, [new URL('./build-images.mjs', import.meta.url).pathname], { stdio: 'inherit' });
+  console.log(`Photos corrigées : ${n}`);
+  process.exit(0);
+}
+
 // ---------- Mode --ajout=<catégorie> : ajoute une catégorie à data/cards.js sans tout régénérer ----------
 // Garde toutes les autres cartes telles quelles et ne fait que des requêtes Wikidata (l'API Wikipédia limite fort).
 // La rareté se fonde alors sur le nombre de Wikipédias ; une régénération complète la recalcule avec les visites.
@@ -433,7 +492,7 @@ const AJOUTS = {
   militaire: { build: buildMilitaires, editions: EDITIONS_ARMISTICE }, animal: { build: buildAnimaux, editions: [] },
   aviation: { build: () => buildRoute('aviation', AVIATION), editions: [] }, rail: { build: () => buildRoute('rail', RAIL), editions: [] },
   exploration: { build: () => buildRoute('exploration', EXPLORATION), editions: [] },
-  finance: { build: () => buildRoute('finance', FINANCE), editions: [] },
+  finance: { build: async () => [...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES)], editions: [] },
 };
 const AJOUT = (process.argv.find(a => a.startsWith('--ajout=')) || '').slice(8);
 if (AJOUT) {
@@ -446,7 +505,7 @@ if (AJOUT) {
   cards.splice(0, cards.length, ...keep);
   const added = await job.build(resolveTitlesSparql);
   rarityByQuota(added, c => c.links);
-  for (const c of added) delete c.links;
+  for (const c of added) { delete c.links; delete c.manual; }
   const eds = job.editions.length ? await resolveTitlesSparql(job.editions.map(([title, pack, rarity, name, nlName, text, nlText]) => ({ title, pack, rarity, name, nlName, text, nlText }))) : new Map();
   const p18 = !eds.size ? new Map() : new Map((await sparql(`SELECT ?x ?img WHERE { VALUES ?x { ${[...eds.keys()].map(q => 'wd:' + q).join(' ')} } ?x wdt:P18 ?img }`)).map(r => [qid(r.x), file(r.img)]));
   for (const [id, e] of eds) {
@@ -455,7 +514,7 @@ if (AJOUT) {
       nl: { name: e.nlName, subtitle: 'Beperkte editie', text: e.nlText }, stats: [['Édition', e.pack]] });
   }
   // Noms néerlandais
-  const nl = await sparql(`SELECT ?x ?l WHERE { VALUES ?x { ${added.filter(c => c.cat !== 'edition').map(c => 'wd:' + c.id).join(' ')} } ?x rdfs:label ?l. FILTER(LANG(?l) = "nl") }`);
+  const nl = await sparql(`SELECT ?x ?l WHERE { VALUES ?x { ${added.filter(c => c.cat !== 'edition' && isQ(c.id)).map(c => 'wd:' + c.id).join(' ')} } ?x rdfs:label ?l. FILTER(LANG(?l) = "nl") }`);
   for (const r of nl) { const c = added.find(x => x.id === qid(r.x)); if (c && !c.nl?.name && r.l !== c.name) c.nl = { ...c.nl, name: cap(r.l.replace(/ \(.+\)$/, '')) }; }
   cards.push(...added);
   saveCache();
@@ -1075,7 +1134,7 @@ for (const f of sciRows) {
 console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
 
 for (const c of [...await buildMilitaires(resolveTitles), ...await buildAnimaux(resolveTitles),
-  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE)]) { delete c.links; cards.push(c); }
+  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES)]) { delete c.links; cards.push(c); }
 
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [
@@ -1762,7 +1821,7 @@ for (const [cat, list] of Object.entries(byCat)) {
   if (FIXED_CATS.has(cat)) continue;
   rarityByQuota(list, score);
 }
-for (const c of cards) delete c.pop;
+for (const c of cards) { delete c.pop; delete c.manual; }
 {
   const table = {};
   for (const c of cards) { table[c.cat] ||= {}; table[c.cat][c.rarity] = (table[c.cat][c.rarity] || 0) + 1; }
@@ -1808,6 +1867,7 @@ for (const c of cards) {
 }
 console.log(`Néerlandais : ${cards.filter(c => c.nl?.name).length} noms traduits, ${Object.keys(POS_NL).length} fonctions`);
 
+for (const c of cards) if (PHOTO_FIX[c.id]) c.img = PHOTO_FIX[c.id];
 saveCache();
 mkdirSync('data', { recursive: true });
 writeFileSync('data/cards.js',
