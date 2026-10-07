@@ -75,14 +75,19 @@ Ordre de priorité :
    Séries « Forts de Liège » et « Oiseaux de Belgique ». Paquets médians pour tout finir avec le paquet dédié :
    ≈ 145 (Mémoire), ≈ 70 (Faune). Viser au moins 50–60 cartes pour les prochains paquets thématiques. Sans page FR
    ou sans image : bataillon de Corée, paras de Kigali, siège de Bastogne (carte), Marcel Louette.
-3. [ ] **Aviation** (≈ 25–35) : avions belges ou marquants (Stampe SV.4, Renard R.31, Fairey Fox, F-16, Sabena…),
-   aviateurs (Coppens, Thieffry, Offenberg). Stats : premier vol, constructeur, pays.
-4. [ ] **Rail** (≈ 25–35) : locomotives, trams vicinaux, grandes gares, Bruxelles–Malines 1835. Stats : mise en
-   service, type, vitesse.
-5. [ ] **Exploration** (≈ 25) : navires (*Belgica*, *Mercator*, malle Ostende-Douvres) et explorateurs
-   (de Gerlache, Lemaire…). Stats : année, type, expédition.
-
-Paquets : « En route ! » (Aviation + Rail + Exploration) ; « Faune belge » et « Mémoire » sont faits. Écartés : personnages de BD (aucune image libre ; seule piste, les
+3. [x] **En route !** (paquet commun, 55 cartes en trois catégories, chacune avec son filtre) :
+   - **Aviation** (20) : Stampe SV-4, Renard R.31, Fairey Fox, F-16, Mirage 5, C-130, A400M, Sabena, Brussels
+     Airlines, aéroports (Zaventem, Liège, Charleroi, Haren), aviateurs (Coppens, Thieffry, Offenberg, Olieslagers,
+     de Caters, Hélène Dutrieu, Auguste Piccard).
+   - **Rail** (25) : Le Belge, Bruxelles–Malines, SNCB, vicinaux, tram de la Côte, tram et métro de Bruxelles,
+     jonction Nord-Midi, grandes gares, Thalys, Eurostar, Nagelmackers et l'Orient-Express, Vennbahn, viaduc de
+     Moresnet, chemin de fer du Bocq, Train World.
+   - **Exploration** (10) : expédition de la Belgica, base Princesse Élisabeth, Belgica (A962), Gaston de Gerlache,
+     Alain Hubert, Tazieff, Hennepin, De Smet, Verbiest, Rubrouck.
+   Stats : naissance, année ou premier vol ; type ; constructeur, lieu, longueur… Séries « Grandes gares » et
+   « Pionniers du ciel ». Mise en avant ×3 jusqu'au 31 mars 2027. Écartés : officiers de l'État indépendant du Congo
+   (Lemaire, Storms, Coquilhat…), navire-école Mercator (photo inutilisable), malle Ostende-Douvres (pas d'article).
+La phase 6 est terminée : « Mémoire », « Faune belge » et « En route ! ». Écartés : personnages de BD (aucune image libre ; seule piste, les
 fresques BD de Bruxelles) et logos de chocolatiers (protégés).
 
 Restes de la session précédente : photos douteuses à remplacer (pas seulement à recadrer) — Patrick Lansens (le

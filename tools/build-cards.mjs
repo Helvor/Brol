@@ -159,7 +159,7 @@ async function resolveTitlesSparql(entries) {
   ?a schema:name ?t; schema:isPartOf <https://fr.wikipedia.org/>; schema:about ?x. }`);
   const byTitle = new Map(rows.map(r => [r.t, qid(r.x)]));
   const out = new Map();
-  for (const e of entries) { const q = byTitle.get(e.title); if (q) out.set(q, e); else console.warn('Introuvable sur Wikipédia :', e.title); }
+  for (const e of entries) { const q = isQ(e.title) ? e.title : byTitle.get(e.title); if (q) out.set(q, e); else console.warn('Introuvable sur Wikipédia :', e.title); }
   return out;
 }
 async function buildMilitaires(resolve) {
@@ -298,11 +298,108 @@ async function buildAnimaux(resolve) {
   return out;
 }
 
+// ---------- En route ! : aviation, rail, exploration ----------
+// [titre Wikipédia FR (ou QID), type (stat), sous-titre FR, sous-titre NL, 3ᵉ stat [clé, valeur], options]
+// Options : name, nlName, year (sinon : premier vol P606, création P571 ou début P580 sur Wikidata), mythique, img, artwork.
+// Écartés : les officiers de l'État indépendant du Congo (Lemaire, Storms, Coquilhat…), pas des « héros » de cartes ;
+// le navire-école Mercator (Q47524354) : sa seule image libre le montre minuscule au loin.
+const AVIATION = [
+  ['Stampe et Vertongen SV-4', 'Avion', 'Biplan d’école anversois, star des meetings aériens', 'Antwerps lesvliegtuig, ster van de vliegshows', ['Constructeur', 'Stampe'], { name: 'Stampe SV-4' }],
+  ['Renard R.31', 'Avion', 'Avion de reconnaissance conçu à Evere', 'Verkenningsvliegtuig ontworpen in Evere', ['Constructeur', 'Renard']],
+  ['Fairey Fox', 'Avion', 'Biplan construit à Gosselies, en première ligne en mai 1940', 'Tweedekker gebouwd in Gosselies, in de frontlinie in mei 1940', ['Constructeur', 'Fairey']],
+  ['General Dynamics F-16 Fighting Falcon', 'Avion', 'Le chasseur de la Force aérienne depuis 1979', 'De jachtbommenwerper van de Luchtmacht sinds 1979', ['Constructeur', 'General Dynamics'], { name: 'F-16', nlName: 'F-16' }],
+  ['Dassault Mirage 5', 'Avion', 'Chasseur assemblé à Gosselies par la SABCA', 'Jachtvliegtuig geassembleerd in Gosselies door SABCA', ['Constructeur', 'Dassault'], { name: 'Mirage 5', nlName: 'Mirage 5' }],
+  ['Lockheed C-130 Hercules', 'Avion', 'Le cargo de Melsbroek pendant plus de cinquante ans', 'Het transportvliegtuig van Melsbroek, meer dan vijftig jaar lang', ['Constructeur', 'Lockheed'], { name: 'C-130 Hercules', nlName: 'C-130 Hercules' }],
+  ['Airbus A400M Atlas', 'Avion', 'Le successeur du C-130, avec des pièces belges', 'De opvolger van de C-130, met Belgische onderdelen', ['Constructeur', 'Airbus'], { name: 'Airbus A400M', nlName: 'Airbus A400M' }],
+  ['Sabena', 'Compagnie', 'Compagnie aérienne nationale de 1923 à 2001', 'Nationale luchtvaartmaatschappij van 1923 tot 2001', ['Siège', 'Bruxelles']],
+  ['Brussels Airlines', 'Compagnie', 'L’héritière de la Sabena', 'De erfgenaam van Sabena', ['Siège', 'Bruxelles']],
+  ['Aéroport de Bruxelles-National', 'Aéroport', 'Le premier aéroport du pays', 'De grootste luchthaven van het land', ['Lieu', 'Zaventem'], { name: 'Brussels Airport', nlName: 'Brussels Airport' }],
+  ['Aéroport de Liège', 'Aéroport', 'Plaque tournante du fret aérien', 'Draaischijf van de luchtvracht', ['Lieu', 'Bierset'], { nlName: 'Luchthaven Luik' }],
+  ['Aéroport de Charleroi-Bruxelles-Sud', 'Aéroport', 'L’aéroport des compagnies à bas prix', 'De luchthaven van de lagekostenmaatschappijen', ['Lieu', 'Gosselies'], { name: 'Aéroport de Charleroi', nlName: 'Luchthaven Charleroi' }],
+  ['Aérodrome de Haren', 'Aéroport', 'Le premier aéroport de Bruxelles, d’où partait la Sabena', 'De eerste luchthaven van Brussel, thuisbasis van Sabena', ['Lieu', 'Haren'], { nlName: 'Vliegveld van Haren' }],
+  ['Willy Coppens', 'Aviateur', 'As des as belge de 14-18, chasseur de ballons', 'Belgische topaas van 14-18, ballonjager', ['Victoires', 37]],
+  ['Edmond Thieffry', 'Aviateur', 'Premier vol Bruxelles–Léopoldville (1925)', 'Eerste vlucht Brussel–Leopoldstad (1925)', ['Rôle', 'Pionnier']],
+  ['Jean Offenberg', 'Aviateur', 'Pilote belge de la bataille d’Angleterre', 'Belgische piloot in de Slag om Engeland', ['Rôle', 'Pilote de chasse']],
+  ['Jan Olieslagers', 'Aviateur', 'Le « démon anversois », recordman du monde', 'De “Antwerpse duivel”, wereldrecordhouder', ['Rôle', 'Pionnier']],
+  ['Pierre de Caters', 'Aviateur', 'Premier Belge breveté pilote (1909)', 'Eerste Belg met een vliegbrevet (1909)', ['Rôle', 'Pionnier']],
+  ['Hélène Dutrieu', 'Aviatrice', 'Première femme pilote de Belgique (1910)', 'Eerste vrouwelijke piloot van België (1910)', ['Rôle', 'Pionnière']],
+  ['Auguste Piccard', 'Aéronaute', 'Premier homme dans la stratosphère (1931), professeur à l’ULB', 'Eerste mens in de stratosfeer (1931), professor aan de ULB', ['Rôle', 'Ballon FNRS']],
+];
+const RAIL = [
+  ['Le Belge (locomotive)', 'Locomotive', 'Première locomotive construite en Belgique (1835)', 'Eerste locomotief gebouwd in België (1835)', ['Constructeur', 'Cockerill'], { year: 1835, name: 'Le Belge', nlName: 'Le Belge' }],
+  ['Ligne 25 (Infrabel)', 'Ligne', 'Bruxelles–Malines, première ligne de voyageurs du continent', 'Brussel–Mechelen, eerste reizigerslijn van het continent', ['Longueur', '20 km'], { year: 1835, name: 'Bruxelles–Malines', nlName: 'Brussel–Mechelen' }],
+  ['Société nationale des chemins de fer belges', 'Compagnie', 'La compagnie des chemins de fer belges', 'De Belgische spoorwegmaatschappij', ['Siège', 'Bruxelles'], { year: 1926, name: 'SNCB', nlName: 'NMBS' }],
+  ['Société nationale des chemins de fer vicinaux', 'Compagnie', 'Les « vicinaux », le plus grand réseau de trams ruraux au monde', 'De “buurtspoorwegen”, het grootste landelijke tramnet ter wereld', ['Siège', 'Bruxelles'], { year: 1885, name: 'Vicinal (SNCV)', nlName: 'Buurtspoorwegen (NMVB)' }],
+  ['Tramway de la côte belge', 'Tram', 'De La Panne à Knokke, la plus longue ligne de tram du monde', 'Van De Panne tot Knokke, de langste tramlijn ter wereld', ['Longueur', '67 km'], { name: 'Tram de la Côte', nlName: 'Kusttram' }],
+  ['Tramway de Bruxelles', 'Tram', 'Le réseau de trams de la capitale', 'Het tramnet van de hoofdstad', ['Exploitant', 'STIB'], { nlName: 'Brusselse tram' }],
+  ['Métro de Bruxelles', 'Métro', 'Le métro de Bruxelles, ouvert en 1976', 'De Brusselse metro, geopend in 1976', ['Exploitant', 'STIB'], { year: 1976, nlName: 'Brusselse metro' }],
+  ['Ligne 0 Bruxelles-Midi - Bruxelles-Nord', 'Ligne', 'La jonction Nord-Midi, tunnel sous le centre de Bruxelles', 'De Noord-Zuidverbinding, tunnel onder het centrum van Brussel', ['Longueur', '3,8 km'], { year: 1952, name: 'Jonction Nord-Midi', nlName: 'Noord-Zuidverbinding' }],
+  ['Gare de Bruxelles-Midi', 'Gare', 'La gare des TGV, porte de Paris, Londres et Amsterdam', 'Het station van de hogesnelheidstreinen', ['Ville', 'Bruxelles'], { name: 'Gare du Midi', nlName: 'Station Brussel-Zuid' }],
+  ['Gare de Bruxelles-Central', 'Gare', 'La gare de Horta, au cœur de la ville', 'Het station van Horta, in het hart van de stad', ['Ville', 'Bruxelles'], { name: 'Gare Centrale', nlName: 'Station Brussel-Centraal' }],
+  ['Gare de Bruxelles-Nord', 'Gare', 'La gare du quartier des tours', 'Het station van de Noordwijk', ['Ville', 'Bruxelles'], { name: 'Gare du Nord', nlName: 'Station Brussel-Noord' }],
+  ['Gare de Gand-Saint-Pierre', 'Gare', 'La grande gare de Gand, de 1913', 'Het grote station van Gent, uit 1913', ['Ville', 'Gand'], { name: 'Gand-Saint-Pierre', nlName: 'Station Gent-Sint-Pieters' }],
+  ['Gare de Bruges', 'Gare', 'La porte d’entrée des touristes à Bruges', 'De toegangspoort voor toeristen in Brugge', ['Ville', 'Bruges'], { name: 'Gare de Bruges', nlName: 'Station Brugge' }],
+  ['Gare de Namur', 'Gare', 'La gare de la capitale wallonne', 'Het station van de Waalse hoofdstad', ['Ville', 'Namur'], { name: 'Gare de Namur', nlName: 'Station Namen' }],
+  ['Gare de Mons', 'Gare', 'La passerelle-gare de Calatrava', 'Het brugstation van Calatrava', ['Ville', 'Mons'], { name: 'Gare de Mons', nlName: 'Station Bergen' }],
+  ['Gare de Louvain', 'Gare', 'La gare des étudiants', 'Het station van de studenten', ['Ville', 'Louvain'], { name: 'Gare de Louvain', nlName: 'Station Leuven' }],
+  ['Gare d\'Ostende', 'Gare', 'La gare au bord de l’eau, d’où partait la malle vers Douvres', 'Het station aan het water, vertrekpunt van de mailboot naar Dover', ['Ville', 'Ostende'], { name: 'Gare d’Ostende', nlName: 'Station Oostende' }],
+  ['Thalys', 'TGV', 'Le TGV rouge Paris–Bruxelles–Amsterdam–Cologne', 'De rode hogesnelheidstrein Parijs–Brussel–Amsterdam–Keulen', ['Vitesse', '300 km/h'], { year: 1996 }],
+  ['Eurostar', 'TGV', 'Bruxelles–Londres sous la Manche', 'Brussel–Londen onder het Kanaal', ['Vitesse', '300 km/h'], { year: 1994 }],
+  ['Georges Nagelmackers', 'Pionnier', 'Liégeois, fondateur des wagons-lits et de l’Orient-Express', 'Luikenaar, oprichter van de slaaprijtuigen en de Orient-Express', ['Rôle', 'Entrepreneur']],
+  ['Orient-Express', 'Train', 'Le train de luxe Paris–Constantinople, né d’une idée belge', 'De luxetrein Parijs–Constantinopel, een Belgisch idee', ['Exploitant', 'Wagons-Lits'], { year: 1883, artwork: true }],
+  ['Vennbahn', 'Ligne', 'Ligne des Hautes Fagnes devenue piste cyclable', 'Spoorlijn door de Hoge Venen, nu een fietspad', ['Longueur', '125 km'], { year: 1889 }],
+  ['Ligne 24 (Infrabel)', 'Viaduc', 'Le viaduc de Moresnet, construit pendant la Grande Guerre', 'Het viaduct van Moresnet, gebouwd tijdens de Groote Oorlog', ['Longueur', '1 107 m'], { year: 1916, name: 'Viaduc de Moresnet', nlName: 'Viaduct van Moresnet' }],
+  ['Chemin de fer du Bocq', 'Train touristique', 'Locomotives à vapeur dans la vallée du Bocq', 'Stoomlocomotieven in de vallei van de Bocq', ['Lieu', 'Ciney–Yvoir']],
+  ['Train World', 'Musée', 'Le musée du train, dans la gare de Schaerbeek', 'Het treinmuseum, in het station van Schaarbeek', ['Lieu', 'Schaerbeek'], { year: 2015 }],
+];
+const EXPLORATION = [
+  ['Expédition antarctique belge', 'Expédition', 'La Belgica, premier hivernage en Antarctique (1897–1899)', 'De Belgica, eerste overwintering op Antarctica (1897–1899)', ['Navire', 'Belgica'], { year: 1897, name: 'Expédition de la Belgica', nlName: 'Belgica-expeditie' }],
+  ['Station Princesse Élisabeth', 'Base polaire', 'La première base polaire « zéro émission »', 'De eerste “zero emissie”-poolbasis', ['Lieu', 'Antarctique'], { year: 2009, nlName: 'Prinses Elisabethbasis' }],
+  ['Belgica (A962)', 'Navire', 'Navire océanographique belge de 1984 à 2021', 'Belgisch oceanografisch schip van 1984 tot 2021', ['Port', 'Zeebrugge'], { year: 1984, name: 'Belgica (A962)', nlName: 'Belgica (A962)' }],
+  ['Gaston de Gerlache de Gomery', 'Explorateur', 'Chef de l’expédition antarctique de 1957–1958, fils d’Adrien', 'Leider van de Antarctica-expeditie van 1957–1958, zoon van Adrien', ['Rôle', 'Polaire'], { name: 'Gaston de Gerlache', nlName: 'Gaston de Gerlache' }],
+  ['Alain Hubert', 'Explorateur', 'Traversée de l’Antarctique à ski (1997–1998)', 'Oversteek van Antarctica op ski (1997–1998)', ['Rôle', 'Polaire']],
+  ['Haroun Tazieff', 'Volcanologue', 'Ingénieur formé en Belgique, il filmait les volcans en éruption', 'In België opgeleide ingenieur, filmde uitbarstende vulkanen', ['Rôle', 'Volcans']],
+  ['Louis Hennepin', 'Explorateur', 'Récollet d’Ath, il fait connaître les chutes du Niagara', 'Recollect uit Aat, maakt de Niagarawatervallen bekend', ['Rôle', 'Amérique']],
+  ['Pierre-Jean De Smet', 'Missionnaire', 'Jésuite de Termonde, ami des peuples de l’Ouest américain', 'Jezuïet uit Dendermonde, vriend van de volkeren van het Amerikaanse Westen', ['Rôle', 'Amérique']],
+  ['Ferdinand Verbiest', 'Astronome', 'Jésuite de Pittem, astronome de l’empereur de Chine', 'Jezuïet uit Pittem, astronoom van de keizer van China', ['Rôle', 'Chine']],
+  ['Guillaume de Rubrouck', 'Voyageur', 'Franciscain flamand chez le Grand Khan mongol (1253–1255)', 'Vlaamse franciscaan bij de Grote Khan van de Mongolen (1253–1255)', ['Rôle', 'Mongolie'], { nlName: 'Willem van Rubroek' }],
+];
+async function buildRoute(cat, list) {
+  const q = await resolve(list.map(([title, kind, sub, subNl, extra, opt = {}]) => ({ title, kind, sub, subNl, extra, ...opt })));
+  const rows = await sparql(`SELECT ?x ?xLabel ?img ?birth ?death ?human ?flight ?inc ?start ?links WHERE { VALUES ?x { ${[...q.keys()].map(x => 'wd:' + x).join(' ')} }
+    ?x wikibase:sitelinks ?links. OPTIONAL { ?x wdt:P18 ?img } OPTIONAL { ?x wdt:P569 ?birth } OPTIONAL { ?x wdt:P570 ?death }
+    OPTIONAL { ?x wdt:P31 wd:Q5. BIND(true AS ?human) } OPTIONAL { ?x wdt:P606 ?flight } OPTIONAL { ?x wdt:P571 ?inc } OPTIONAL { ?x wdt:P580 ?start }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,mul,en". } }`);
+  const out = [];
+  for (const r of rows) {
+    const id = qid(r.x);
+    if (out.some(c => c.id === id) || cards.some(c => c.id === id)) continue;
+    const e = q.get(id), img = e.img || file(r.img);
+    if (!img) { console.warn('Pas d\'image libre, ignoré :', r.xLabel); continue; }
+    const b = year(r.birth), d = year(r.death), when = e.year ?? year(r.flight) ?? year(r.inc) ?? year(r.start);
+    out.push({
+      id, cat, name: e.name || cap(r.xLabel.replace(/ \(.+\)$/, '')), img, rarity: 'commune', family: cat,
+      emblem: /\.svg$/i.test(img) || undefined, artwork: e.artwork || undefined, forceRarity: e.mythique ? 'mythique' : undefined,
+      subtitle: e.sub, nl: { subtitle: e.subNl, ...(e.nlName && { name: e.nlName }) },
+      meta: r.human ? [e.kind, b && `${b}${d ? '–' + d : ''}`].filter(Boolean).join(' · ') : [e.kind, when].filter(Boolean).join(' · '),
+      stats: [r.human ? ['Naissance', b ?? '—'] : [e.kind === 'Avion' ? 'Premier vol' : 'Année', when ?? '—'], ['Type', e.kind], e.extra],
+      links: +r.links,
+    });
+  }
+  console.log(`${cat} : ${out.length} / ${list.length}`);
+  return out;
+  async function resolve(entries) { return (AJOUT ? resolveTitlesSparql : resolveTitles)(entries); }
+}
+
 // ---------- Mode --ajout=<catégorie> : ajoute une catégorie à data/cards.js sans tout régénérer ----------
 // Garde toutes les autres cartes telles quelles et ne fait que des requêtes Wikidata (l'API Wikipédia limite fort).
 // La rareté se fonde alors sur le nombre de Wikipédias ; une régénération complète la recalcule avec les visites.
 // Catégories prises en charge : leur constructeur et, s'il y en a, les éditions limitées de leur paquet d'événement.
-const AJOUTS = { militaire: { build: buildMilitaires, editions: EDITIONS_ARMISTICE }, animal: { build: buildAnimaux, editions: [] } };
+const AJOUTS = {
+  militaire: { build: buildMilitaires, editions: EDITIONS_ARMISTICE }, animal: { build: buildAnimaux, editions: [] },
+  aviation: { build: () => buildRoute('aviation', AVIATION), editions: [] }, rail: { build: () => buildRoute('rail', RAIL), editions: [] },
+  exploration: { build: () => buildRoute('exploration', EXPLORATION), editions: [] },
+};
 const AJOUT = (process.argv.find(a => a.startsWith('--ajout=')) || '').slice(8);
 if (AJOUT) {
   const job = AJOUTS[AJOUT];
@@ -633,9 +730,12 @@ async function searchTitle(lang, title) {
   if (q) console.warn(`Titre corrigé par recherche : « ${title} » → « ${hit} » (à vérifier)`);
   return q ? { q, title: hit } : null;
 }
+// Un « titre » de la forme Q123 désigne directement l'élément Wikidata (sujet sans article Wikipédia FR ni NL).
 async function resolveTitles(entries) {
   const out = new Map(); // qid → entrée
   const missing = [];
+  for (const e of entries) if (isQ(e.title)) out.set(e.title, e);
+  entries = entries.filter(e => !isQ(e.title));
   for (const lang of ['fr', 'nl']) {
     const todo = entries.filter(e => (e.title.startsWith('nl:') ? 'nl' : 'fr') === lang);
     for (let i = 0; i < todo.length; i += 50) {
@@ -939,7 +1039,8 @@ for (const f of sciRows) {
 }
 console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
 
-for (const c of [...await buildMilitaires(resolveTitles), ...await buildAnimaux(resolveTitles)]) { delete c.links; cards.push(c); }
+for (const c of [...await buildMilitaires(resolveTitles), ...await buildAnimaux(resolveTitles),
+  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION)]) { delete c.links; cards.push(c); }
 
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [
@@ -1573,7 +1674,7 @@ for (let i = 0; i < linkIds.length; i += 300) {
 }
 
 // Visites des 12 derniers mois complets sur Wikipédia FR et NL
-const VIEW_CATS = new Set(['culture', 'sport', 'science', 'militaire', 'animal', 'art', 'monument', 'chateau', 'folklore', 'gastronomie', 'biere', 'enseignement', 'groupe', 'festival']);
+const VIEW_CATS = new Set(['culture', 'sport', 'science', 'militaire', 'animal', 'aviation', 'rail', 'exploration', 'art', 'monument', 'chateau', 'folklore', 'gastronomie', 'biere', 'enseignement', 'groupe', 'festival']);
 const VIEWS = new Map();
 {
   const d = new Date(), endM = new Date(d.getFullYear(), d.getMonth(), 0), startM = new Date(endM.getFullYear() - 1, endM.getMonth() + 1, 1);
