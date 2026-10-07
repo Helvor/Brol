@@ -62,9 +62,7 @@ Ordre de priorité :
    castor, cerf, chat forestier, cigogne noire, grand-duc, faucon pèlerin, phoque, marsouin, crevette grise, moule).
    Stats : type, poids (ou taille), origine ou habitat. Paquet « Faune belge » (80 pièces), séries « Chiens belges » et
    « Faune sauvage ». Mise en avant ×3 jusqu'au 28 février 2027. Ardennais roux (mouton) écarté : pas d'image libre.
-   Photos à remplacer quand Commons répondra (candidates repérées, pas encore relues) : malinois (exposition canine,
-   logos de sponsor discrets ; « Malinois portrait.jpg », « Belgian Malinois 01.jpg »), cerf élaphe (une biche ;
-   « Cervus elaphus Luc Viatour 3.jpg »). Option `img` du générateur prévue pour ça.
+   Photos du malinois, du cerf et de l'anguille remplacées (relues à l'œil).
 2. [x] **Militaires et Résistance** (catégorie « Mémoire », 56 cartes après agrandissement) : généraux (Leman, Jacques de Dixmude,
    Brialmont…), résistants des deux guerres (Gabrielle Petit et Andrée De Jongh en mythiques, Dewé, Livchitz,
    Bervoets…), batailles, forts et lieux de mémoire (Yser, Breendonk, Caserne Dossin, Mardasson…). Stats : naissance
@@ -99,9 +97,11 @@ La phase 6 est terminée : « Mémoire », « Faune belge » et « En route ! »
    Hôtel des Monnaies, Monnaie royale, bourses de Bruxelles et d'Anvers, Euroclear, Belfius, Bancontact, BCE, BRI,
    FMI) ; le paquet reprend aussi 7 cartes de Politique (`BNB_EXTRA` dans app.js : de Haussy, Theunis, Théophile de
    Lantsheere, Van Zeeland, Frère-Orban, Gutt, Maystadt). Série « Gouverneurs de la Banque nationale ».
-   - [ ] **Pièces et billets anciens** (domaine public : graveurs morts depuis plus de 70 ans) : à chercher sur Commons
-     quand il répondra (5 francs Léopold II, francs Albert Iᵉʳ, billets d'avant-guerre). Pas les billets récents
-     (Magritte, Ensor…), encore protégés. Les pièces de Wikidata n'ont pas d'image.
+   - [x] **Pièces et billets** (22 cartes « manuelles », `MONNAIES` dans le générateur, rareté fixée à la main) :
+     13 pièces du domaine public de 1833 à 1930 (graveurs Braemt, Wiener, Michaux, Devreese) et 9 billets en francs
+     (1929, 1943, Lambert Lombard, puis la série Ensor, Sax, Magritte, Permeke, Horta, Albert II et Paola). Billets :
+     modèle Commons « Belgian franc banknote », la BNB autorise leur reproduction en illustration tant qu'on ne peut
+     pas les confondre avec de vrais billets. Le paquet compte maintenant 59 cartes.
    - [ ] **Collègues de l'utilisateur** (avec leur accord écrit) : photos fournies par eux, stockées dans le dépôt
      (exception à la règle « images Commons » ; Commons supprime les photos de personnes non connues), retrait
      possible à tout moment. Le générateur doit accepter ces images locales. Pas de logo officiel de la BNB.
@@ -109,9 +109,9 @@ La phase 6 est terminée : « Mémoire », « Faune belge » et « En route ! »
      Société Générale, Banque de Belgique, SWIFT, BNP Paribas Fortis, Robert Triffin. Écartés : personnages de BD (aucune image libre ; seule piste, les
 fresques BD de Bruxelles) et logos de chocolatiers (protégés).
 
-Restes de la session précédente : photos douteuses à remplacer (pas seulement à recadrer) — Patrick Lansens (le
-fichier montre peut-être Sven Gatz), Jean-Pol Poncelet (minuscule sur une photo de défilé), Frantz Van Dorpe
-(photo de conseil communal). Promo en cours : Nouveautés 150 au lieu de 300, Prestige 400 au lieu de 600 (`was`
+Photos remplacées (octobre 2026, `PHOTO_FIX` et options `img` du générateur, `--photos` pour appliquer sans tout
+régénérer) : Jean-Pol Poncelet, malinois, cerf élaphe, anguille. Sans autre photo sur Commons : Patrick Lansens (le
+fichier montre peut-être Sven Gatz) et Frantz Van Dorpe (photo de conseil communal) — décision de l'utilisateur. Promo en cours : Nouveautés 150 au lieu de 300, Prestige 400 au lieu de 600 (`was`
 dans `PACKS`).
 
 ## Phase 5 — En ligne

@@ -11,7 +11,8 @@ en français) ; l'interface existe en FR et NL.
   Ne pas l'éditer à la main : modifier le générateur et relancer `node tools/build-cards.mjs`. Pour ajouter une
   catégorie sans tout régénérer (Wikipédia et Commons limitent souvent les requêtes, le cache n'est pas versionné) :
   `node tools/build-cards.mjs --ajout=animal` (ou `militaire`, `aviation`, `rail`, `exploration` ; Wikidata seul ;
-  nouvelle catégorie : l'ajouter à `AJOUTS` dans le générateur).
+  nouvelle catégorie : l'ajouter à `AJOUTS` dans le générateur). Photo fausse : `PHOTO_FIX` puis
+  `node tools/build-cards.mjs --photos`.
 - `data/images.js` (adresses directes des images, `tools/build-images.mjs`, lancé par build-cards) et `data/focus.js`
   (cadrage sur le visage, `python3 tools/build-focus.py [--hors-ligne]`, demande opencv-python-headless).
 - Sauvegarde du joueur : localStorage `rue-de-la-loi:v1` (`state.owned` : clé `id` ou `id|finish`).
@@ -26,7 +27,7 @@ en français) ; l'interface existe en FR et NL.
 - Wikimedia limite fortement les requêtes : espacer les appels, garder les caches.
 
 ## En cours / suite
-Phase 6 (nouveaux paquets) terminée. Restent dans `ROADMAP.md` : photos à remplacer (malinois, cerf, anguille,
-bourgmestres douteux), équilibrage de Formation de gouvernement, mise à jour automatique des données, phase 5
+Phase 6 (nouveaux paquets) et paquet Banque nationale terminés. Restent dans `ROADMAP.md` : photos de Lansens et
+Van Dorpe (pas d'autre photo libre), collègues de l'utilisateur pour le paquet BNB (photos locales, avec accord), équilibrage de Formation de gouvernement, mise à jour automatique des données, phase 5
 (comptes en ligne). Viser 50 cartes au moins par paquet thématique ; listes à faire valider avant de générer. Nouvelle catégorie : l'ajouter à `FEATURED`
 (app.js) pour qu'elle ne se noie pas dans le paquet Belgique.
