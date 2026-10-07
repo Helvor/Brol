@@ -178,8 +178,11 @@
 
 
   const PACK_SIZE = 5;
-  const START_COINS = 1000;
-  const NEW_CARD_BONUS = 5;
+  // Revenus relevés en octobre 2026 (« pas assez de pièces ») : départ 1 000 → 2 000, nouvelle carte 5 → 10,
+  // carte du jour 20 → 50, missions ×1,5, réserve de paquets gratuits 5 → 8. Prix des paquets inchangés : la revente
+  // d'un paquet reste sous son prix, et une nouvelle carte (10) + un doublon revendu ne remboursent pas un paquet.
+  const START_COINS = 2000;
+  const NEW_CARD_BONUS = 10;
   // Ce qu'apporte une carte tirée, avant de l'ajouter : une nouvelle carte (absente de l'album, toutes versions
   // confondues), une nouvelle version d'une carte qu'on a déjà (Holo, Or…), ou un doublon de la même version.
   const gotKind = (id, finish) => !totalOf(id) ? 'card' : !countOf(id, finish) ? 'version' : 'dup';
@@ -191,7 +194,7 @@
     return (got === 'card' ? t('new') : t('dup')) + fin;
   };
   const FREE_EVERY_MS = 2 * 60 * 1000;
-  const FREE_MAX = 5;
+  const FREE_MAX = 8;
   const PITY = 40; // une légendaire ou mieux au plus tard tous les 40 paquets
   const BULK = 10, BULK_DISCOUNT = 0.9; // lot de 10 paquets : 10 % moins cher, payé en pièces
   const bulkOf = p => p.bulk || BULK; // Prestige : lot de 5 (25 cartes rares à l'écran au lieu de 50)
@@ -1331,7 +1334,7 @@
   // ---------- Carte du jour ----------
   // Une carte offerte par jour. Jours consécutifs : rare ou mieux dès le 3ᵉ jour, épique ou mieux dès le 5ᵉ,
   // légendaire ou mieux tous les 7 jours. Plus quelques pièces.
-  const DAILY_COINS = 20;
+  const DAILY_COINS = 50;
   const dailyReady = () => state.daily.last !== ymd(now());
   const dailyMin = streak => streak > 0 && streak % 7 === 0 ? 'legendaire' : streak >= 5 ? 'epique' : streak >= 3 ? 'rare' : 'commune';
   function claimDaily() {
@@ -1382,18 +1385,18 @@
   });
 
   // ---------- Missions du jour ----------
-  // Trois missions par jour, tirées au sort à partir de la date (même jour, mêmes missions), de 100 à 300 pièces.
+  // Trois missions par jour, tirées au sort à partir de la date (même jour, mêmes missions), de 150 à 450 pièces.
   // Les autres parties du jeu signalent leurs actions avec mission(type, nombre).
   const MISSIONS = [
-    { id: 'packs5',  kind: 'packs',   target: 5,  reward: 150, fr: n => `Ouvrir ${n} paquets`, nl: n => `${n} pakjes openen` },
-    { id: 'packs15', kind: 'packs',   target: 15, reward: 300, fr: n => `Ouvrir ${n} paquets`, nl: n => `${n} pakjes openen` },
-    { id: 'new10',   kind: 'new',     target: 10, reward: 200, fr: n => `Obtenir ${n} nouvelles cartes`, nl: n => `${n} nieuwe kaarten krijgen` },
-    { id: 'epic',    kind: 'epic',    target: 1,  reward: 150, fr: () => 'Obtenir une carte épique ou mieux', nl: () => 'Een epische kaart of beter krijgen' },
-    { id: 'special', kind: 'special', target: 1,  reward: 200, fr: () => 'Obtenir une version spéciale', nl: () => 'Een speciale versie krijgen' },
-    { id: 'sell10',  kind: 'sell',    target: 10, reward: 100, fr: n => `Revendre ${n} doublons`, nl: n => `${n} dubbels verkopen` },
-    { id: 'fuse',    kind: 'fuse',    target: 1,  reward: 150, fr: () => 'Faire une fusion', nl: () => 'Een fusie maken' },
-    { id: 'games2',  kind: 'games',   target: 2,  reward: 150, fr: n => `Jouer à ${n} mini-jeux différents`, nl: n => `${n} verschillende minispellen spelen` },
-    { id: 'belgle',  kind: 'belgle',  target: 1,  reward: 200, fr: () => 'Trouver la carte du Belgle', nl: () => 'De Belgle-kaart raden' },
+    { id: 'packs5',  kind: 'packs',   target: 5,  reward: 225, fr: n => `Ouvrir ${n} paquets`, nl: n => `${n} pakjes openen` },
+    { id: 'packs15', kind: 'packs',   target: 15, reward: 450, fr: n => `Ouvrir ${n} paquets`, nl: n => `${n} pakjes openen` },
+    { id: 'new10',   kind: 'new',     target: 10, reward: 300, fr: n => `Obtenir ${n} nouvelles cartes`, nl: n => `${n} nieuwe kaarten krijgen` },
+    { id: 'epic',    kind: 'epic',    target: 1,  reward: 225, fr: () => 'Obtenir une carte épique ou mieux', nl: () => 'Een epische kaart of beter krijgen' },
+    { id: 'special', kind: 'special', target: 1,  reward: 300, fr: () => 'Obtenir une version spéciale', nl: () => 'Een speciale versie krijgen' },
+    { id: 'sell10',  kind: 'sell',    target: 10, reward: 150, fr: n => `Revendre ${n} doublons`, nl: n => `${n} dubbels verkopen` },
+    { id: 'fuse',    kind: 'fuse',    target: 1,  reward: 225, fr: () => 'Faire une fusion', nl: () => 'Een fusie maken' },
+    { id: 'games2',  kind: 'games',   target: 2,  reward: 225, fr: n => `Jouer à ${n} mini-jeux différents`, nl: n => `${n} verschillende minispellen spelen` },
+    { id: 'belgle',  kind: 'belgle',  target: 1,  reward: 300, fr: () => 'Trouver la carte du Belgle', nl: () => 'De Belgle-kaart raden' },
   ];
   const MISSION = Object.fromEntries(MISSIONS.map(m => [m.id, m]));
   const MISSIONS_PER_DAY = 3;

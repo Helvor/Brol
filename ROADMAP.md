@@ -18,6 +18,11 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   niveau (vérifié avec `tools/simulate.mjs` et `tools/check-odds.mjs`). Nouvelle catégorie mise en avant : à rareté
   égale, ses cartes sortent 3 fois plus souvent jusqu'à une date (`FEATURED` dans app.js, Mémoire jusqu'au 31 janvier
   2027), affiché dans le tableau des chances.
+- [x] **Plus de pièces** (octobre 2026, retour de l'utilisateur : « pas assez de pièces » après le durcissement des
+  raretés) : départ 2 000 pièces (au lieu de 1 000), 10 pièces par nouvelle carte (au lieu de 5), carte du jour
+  50 pièces (au lieu de 20), missions ×1,5 (150 à 450), réserve de 8 paquets gratuits (au lieu de 5). Prix des
+  paquets inchangés. `tools/simulate.mjs` (2 h) : le joueur normal garde ≈ 7 400 pièces après 1 h (contre ≈ 900) et
+  ouvre ≈ 600 paquets en 2 h (contre ≈ 500) ; le farmeur finit toujours à zéro.
 - [x] **Gagner des pièces plus facilement** : paquet gratuit toutes les 2 minutes (5 en réserve), missions du jour (3 par jour, 100 à 300 pièces), revente ×1,5 à partir de 80 % de l'album, plafond des mini-jeux relevé à 2 500 pièces par jour.
 
 ## Phase 2 — Gameplay
