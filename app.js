@@ -531,6 +531,18 @@
   }
   function drawPack(pack, forceLegend) {
     const pool = poolOf(pack).filter(c => BY_ID.has(c.id) && (!pack.missing || !totalOf(c.id)));
+    // Nouveautés, moins de 5 cartes manquantes : elles sont toutes dans le paquet, le reste est tiré au hasard
+    // (sans ça, la dernière carte d'un album ne s'obtenait plus qu'au hasard des autres paquets)
+    if (pack.missing && pool.length < PACK_SIZE) {
+      const out = pool.map(card => ({ card, finish: pickFinish(pack.finishBoost, pack.id) }));
+      const rest = poolOf(pack).filter(c => BY_ID.has(c.id) && !pool.includes(c));
+      while (out.length < PACK_SIZE) {
+        const r = pickRarity(0), free = rest.filter(c => !out.some(o => o.card === c));
+        const list = free.filter(c => c.rarity === r).length ? free.filter(c => c.rarity === r) : free;
+        out.push({ card: list[Math.floor(Math.random() * list.length)], finish: pickFinish(pack.finishBoost, pack.id) });
+      }
+      return out.sort((a, b) => R[a.card.rarity].rank - R[b.card.rarity].rank || finTier(a.finish) - finTier(b.finish));
+    }
     const out = [];
     const taken = new Set();
     for (let i = 0; i < PACK_SIZE; i++) {
@@ -582,7 +594,7 @@
     $('#event-line').innerHTML = activeEvents().length ? '' : ev ? t('nextEvent', esc(pl(ev.p, 'title')), fmtDay(ev.start)) : '';
     $('#packs').innerHTML = shopPacks().map(p => {
       const tickets = state.tickets?.[p.id] || 0;
-      const locked = (state.coins < p.price && !tickets && (!state.free || p.special)) || !leftToday(p) || (p.missing && missingCount() < PACK_SIZE);
+      const locked = (state.coins < p.price && !tickets && (!state.free || p.special)) || !leftToday(p) || (p.missing && !missingCount());
       return `
       <div class="pack-card${locked ? ' is-locked' : ''}${p.special ? ' is-special' : ''}${p.event ? ' is-event' : ''}" data-pack="${p.id}">
         ${tickets ? `<span class="ticket-ribbon">${t('ticketBadge', tickets)}</span>` : ''}
@@ -597,7 +609,7 @@
         <button class="linkish odds-btn">${t('packOdds')}</button>
         <table class="pack-odds" hidden><thead><tr><th></th><th>${t('oddsCards')}</th><th>${t('oddsLast')}</th></tr></thead><tbody>${packOdds(p).filter(o => o.p + o.last > 0).map(o =>
           `<tr><td><span class="gem" style="background:var(--r-${o.id})"></span>${rl(o.id)}</td><td>${pctOdds(o.p)}</td><td>${pctOdds(o.last)}</td></tr>`).join('')}${packOddsExtra(p)}</tbody></table>
-        ${p.perDay ? `<span class="pack-note">${missingCount() < PACK_SIZE ? t('albumFull') : leftToday(p) ? t('perDayLeft', leftToday(p), p.perDay) : t('perDay')}</span>`
+        ${p.perDay ? `<span class="pack-note">${!missingCount() ? t('albumFull') : !leftToday(p) ? t('perDay') : (missingCount() < PACK_SIZE ? t('lastMissing', missingCount()) + ' · ' : '') + t('perDayLeft', leftToday(p), p.perDay)}</span>`
           : p.event ? `<span class="pack-note">${t('eventNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', bulkOf(p))} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
       </div>`;
     }).join('');
@@ -696,7 +708,7 @@
     tickFree();
     buyError = null;
     if (pack.perDay && leftToday(pack) < n) { buyError = 'perDay'; return null; }
-    if (pack.missing && missingCount() < PACK_SIZE) { buyError = 'albumFull'; return null; }
+    if (pack.missing && !missingCount()) { buyError = 'albumFull'; return null; }
     let usedFree = false, usedTicket = false;
     const cost = n === 1 ? pack.price : bulkPrice(pack);
     if (n === 1 && state.tickets?.[pack.id] > 0) { state.tickets[pack.id]--; usedTicket = true; }
@@ -932,7 +944,7 @@
     const again = $('#again');
     again.hidden = false;
     if (n > 1) { again.textContent = t('again10', n, fmt(bulkPrice(pack))); again.disabled = state.coins < bulkPrice(pack); }
-    else { const free = (state.free && !pack.special) || state.tickets?.[pack.id] > 0; again.textContent = t('again', free ? null : pack.price); again.disabled = (!free && state.coins < pack.price) || !leftToday(pack) || (pack.missing && missingCount() < PACK_SIZE); }
+    else { const free = (state.free && !pack.special) || state.tickets?.[pack.id] > 0; again.textContent = t('again', free ? null : pack.price); again.disabled = (!free && state.coins < pack.price) || !leftToday(pack) || (pack.missing && !missingCount()); }
     $('#to-album').hidden = false;
     $('#stage-close').hidden = false;
     checkAchievements();
