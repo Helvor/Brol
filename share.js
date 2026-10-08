@@ -12,8 +12,8 @@
   const FRAMES = {
     commune: ['#e2e2de', '#a8a8a2', '#d6d6d1'], 'peu-commune': ['#bfe6cb', '#3f8a5a', '#a9dbb9'], rare: ['#c3d8ff', '#2e5fc0', '#9dbcff'],
     epique: ['#e2cbff', '#6b3db8', '#c9a6ff'], legendaire: ['#7a5a12', '#f7dc84', '#a87b1e', '#fff1b8', '#8a6516'],
-    mythique: ['#ff4e5f', '#ffcf5e', '#59e0ff', '#b07cff', '#ff4e5f'],
-    holo: ['#d9d9e6', '#ffffff', '#a9b4c9', '#f2f2ff', '#9aa6bd'], plein: ['#2b2b30', '#0c0c0e', '#3a3a42'],
+    mythique: ['#5a0012', '#ff2d55', '#9a0020', '#ff8fa0', '#5a0012'], // Rubis
+    holo: ['#5d6470', '#e9edf3', '#8a92a0', '#ffffff', '#6f7783', '#dfe4ec'], // Chrome plein: ['#2b2b30', '#0c0c0e', '#3a3a42'],
     or: ['#6e4f0c', '#f9e08a', '#b8891f', '#fff3c2', '#a87b1e'], noir: ['#8a6410', '#f6d478', '#0b0b0b', '#0b0b0b', '#f6d478'],
     rouge: ['#4a0510', '#c8162c', '#ffd98a', '#9c0f22', '#ffe8b0'], confetti: ['#ff5fa8', '#ffd23f', '#2fc7e8', '#8a3fd6'],
     pave: ['#4a4a48', '#121212', '#f6d43a', '#121212'], iris: ['#0c2350', '#3b74d8', '#f2c400', '#1d4f9e'],
@@ -139,13 +139,15 @@
     // Reflet des versions spéciales
     if (finish === 'holo' || fin.pack) {
       ctx.save(); ctx.globalCompositeOperation = 'overlay';
-      ctx.fillStyle = gradient(ctx, ix, iy, iw, ih, ['#ff008040', '#ffdc0040', '#00ffb440', '#008cff40', '#be00ff40'], 115);
+      ctx.fillStyle = finish === 'holo' // Chrome : une barre de lumière en diagonale
+        ? gradient(ctx, ix, iy, iw, ih, ['#ffffff00', '#ffffff00', '#ffffffcc', '#aae6ffaa', '#ffbef099', '#ffffff00', '#ffffff00'], 115)
+        : gradient(ctx, ix, iy, iw, ih, ['#ff008040', '#ffdc0040', '#00ffb440', '#008cff40', '#be00ff40'], 115);
       ctx.fillRect(ix, iy, iw, ih); ctx.restore();
     }
     // Bandeau : nom, sous-titre, méta
     const fam = c.family || 'gris';
-    const band = ed ? ed.body[1] : finish === 'or' || finish === 'noir' ? '#0d0b06' : css(`--p-${fam}`) || '#6f7077';
-    const ink = ed ? ed.metal[0] : finish === 'or' || finish === 'noir' ? '#f6d478' : BAND_INK_DARK.has(fam) && !full ? '#141414' : '#ffffff';
+    const band = ed ? ed.body[1] : finish === 'or' || finish === 'noir' ? '#0d0b06' : c.rarity === 'mythique' && finish === 'normal' ? '#7a001c' : css(`--p-${fam}`) || '#6f7077'; // Rubis
+    const ink = ed ? ed.metal[0] : finish === 'or' || finish === 'noir' ? '#f6d478' : BAND_INK_DARK.has(fam) && !full && !(c.rarity === 'mythique' && finish === 'normal') ? '#141414' : '#ffffff';
     const by = iy + ih - statsH - bandH;
     ctx.save();
     if (full) { const g = ctx.createLinearGradient(0, by - 60, 0, by + bandH); g.addColorStop(0, '#0000'); g.addColorStop(1, '#000d'); ctx.fillStyle = g; ctx.fillRect(ix, by - 60, iw, bandH + 60); }
