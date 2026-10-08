@@ -172,7 +172,7 @@ const communeStats = o => [
 // à l'échelle). Habitants et notoriété : échelle logarithmique (une grande ville se détache, sans écraser les autres) ;
 // revenu, superficie et patrimoine : rang (0 = dernière, 1 = première). Le patrimoine est classé dans sa Région :
 // la Flandre protège bien plus de bâtiments que la Wallonie et Bruxelles, ce qui fausserait la comparaison.
-const COMMUNE_POIDS = { pop: 0.35, rev: 0.15, area: 0.10, links: 0.25, pat: 0.15 };
+const COMMUNE_POIDS = { pop: 0.40, links: 0.30, pat: 0.25, rev: 0.05 }; // superficie : pas comptée
 const LOG_CRITERES = new Set(['pop', 'links']);
 const regionOf = ins => /^21/.test(ins) ? 'bxl' : /^(25|5|6|8|9)/.test(ins) ? 'wal' : 'vl';
 function rankOf(list, val) {
