@@ -2,7 +2,8 @@
 // __VERSION__ est remplacé au déploiement par le commit : chaque version a son propre cache.
 const VERSION = '__VERSION__';
 const SHELL = `brol-${VERSION}`;
-const IMAGES = 'brol-images';
+// Nouveau nom à chaque changement de règle de cache : l'ancien cache (avec d'éventuelles erreurs gardées) est vidé
+const IMAGES = 'brol-images-2';
 const MAX_IMAGES = 600;
 
 self.addEventListener('install', e => {
@@ -40,8 +41,11 @@ self.addEventListener('fetch', e => {
       // Une image gardée en mode « opaque » (affichage simple) ne peut pas servir à une requête CORS
       // (image de partage dessinée dans un canvas) : on retourne alors au réseau
       if (hit && !(req.mode === 'cors' && hit.type === 'opaque')) return hit;
-      const res = await fetch(req);
-      if (res.ok || (res.type === 'opaque' && !hit)) { c.put(req, res.clone()); trimImages(); }
+      // Requête CORS (Wikimedia l'autorise) : la réponse est lisible, on ne garde que les vraies images. Une
+      // réponse « opaque » cachait les erreurs (429 quand Wikimedia limite) : gardées, les images restaient cassées.
+      let res;
+      try { res = await fetch(req.url, { mode: 'cors', credentials: 'omit' }); } catch (_) { return fetch(req); }
+      if (res.ok) { c.put(req, res.clone()); trimImages(); }
       return res;
     }));
     return;
