@@ -292,9 +292,15 @@ a { color: inherit; }
 .card.r-rare        { --rc: var(--r-rare);        --frame: linear-gradient(160deg, #c3d8ff, #2e5fc0 45%, #9dbcff 70%, #23479a); }
 .card.r-epique      { --rc: var(--r-epique);      --frame: linear-gradient(160deg, #e2cbff, #6b3db8 45%, #c9a6ff 70%, #4a2a8a); }
 .card.r-legendaire  { --rc: var(--r-legendaire);  --frame: linear-gradient(135deg, #7a5a12, #f7dc84 22%, #a87b1e 45%, #fff1b8 65%, #8a6516); }
-.card.r-mythique    { --rc: var(--r-mythique);    --frame: linear-gradient(120deg, #ff4e5f, #ffcf5e 20%, #59e0ff 40%, #b07cff 60%, #ff4e5f 80%, #ffcf5e);
-  background-size: 300% 100%; animation: myth 6s linear infinite; }
-@keyframes myth { to { background-position: 300% 0; } }
+/* Mythique « Rubis » : cadre taillé en facettes rouges, lueur rouge, éclats qui scintillent et reflet rosé (::after plus bas) */
+.card.r-mythique    { --rc: var(--r-mythique); }
+/* Lueur rouge sur toutes les mythiques ; cadre et bandeau rubis sur la version standard (les autres versions gardent les leurs) */
+.card.r-mythique:not(.cat-edition) { box-shadow: 0 0 0 1px #7a0018, 0 0 22px -4px rgba(255, 40, 80, .7), 0 14px 30px -12px rgba(0, 0, 0, .6); }
+.card.r-mythique.fin-normal:not(.cat-edition) {
+  --frame: conic-gradient(from 20deg at 50% 50%, #5a0012, #ff2d55, #9a0020, #ff6b81, #6a0016, #ff2d55, #4a000e, #ff8fa0, #5a0012); }
+.card.r-mythique.fin-normal:not(.cat-edition) .card-band { background: linear-gradient(180deg, #8a0020, #4a000e); color: #fff; }
+.card.r-mythique.fin-normal:not(.cat-edition) .card-stats { background: #22000a; }
+.card.r-mythique.fin-normal:not(.cat-edition) .card-stats dd { color: #ffb3c0; }
 
 /* Édition limitée : cadre aux métaux de son paquet (--ed-frame, --band et --band-ink posés par app.js), double filet, sceau du paquet */
 .card.cat-edition { --frame: var(--ed-frame); background-size: 200% 200%; animation: gold 6s ease-in-out infinite alternate; }
@@ -383,6 +389,19 @@ a { color: inherit; }
   opacity: .5;
 }
 .card.r-epique .card-in::after { opacity: .28; }
+/* Rubis : trois éclats qui scintillent et un reflet rosé qui balaie la carte */
+.card.r-mythique:not(.cat-edition) .card-in::after {
+  mix-blend-mode: screen; opacity: 1;
+  background:
+    radial-gradient(circle, #fff 0 .6cqw, rgba(255, 190, 210, .8) 1.2cqw, transparent 4.5cqw) 12% 10% / 11cqw 11cqw no-repeat,
+    radial-gradient(circle, #fff 0 .5cqw, rgba(255, 190, 210, .8) 1cqw, transparent 3.6cqw) 84% 30% / 9cqw 9cqw no-repeat,
+    radial-gradient(circle, #fff 0 .4cqw, rgba(255, 190, 210, .8) .8cqw, transparent 3cqw) 30% 58% / 7cqw 7cqw no-repeat,
+    linear-gradient(115deg, transparent 35%, rgba(255, 180, 200, .55) 48%, transparent 60%) 0 0 / 300% 100%;
+  animation: ruby-glint 2.4s ease-in-out infinite, ruby-sweep 3.6s ease-in-out infinite;
+}
+@keyframes ruby-glint { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+@keyframes ruby-sweep { 0% { background-position: 12% 10%, 84% 30%, 30% 58%, 120% 0; } 100% { background-position: 12% 10%, 84% 30%, 30% 58%, -60% 0; } }
+@media (prefers-reduced-motion: reduce) { .card.r-mythique .card-in::after { animation: none; opacity: .8; } }
 
 .count-badge { position: absolute; top: -8px; right: -8px; z-index: 5;
   font-family: var(--mono); font-weight: 600; font-size: 12px; padding: 3px 7px; border-radius: 3px;
@@ -444,6 +463,11 @@ dialog::backdrop { background: rgba(8, 9, 12, .78); }
 .detail-info h4 { margin: 0 0 10px; font-family: var(--display); font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-2); }
 .detail-info .card-odds { margin: -8px 0 24px; }
 .detail-info .card-odds summary { cursor: pointer; font-family: var(--display); font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-2); padding: 4px 0; }
+.detail-info .card-odds .best { margin: 8px 0 4px; font-size: 14px; line-height: 1.4; }
+.detail-info .card-odds .best b { font-family: var(--mono); color: var(--ink); }
+.detail-info .card-odds .is-cur { background: color-mix(in srgb, var(--gold) 18%, transparent); color: var(--ink); }
+.empty-slot[data-id] { cursor: pointer; }
+.empty-slot[data-id]:hover, .empty-slot[data-id]:focus-visible { border-color: var(--ink-2); color: var(--ink); }
 .detail-info .card-odds .hint { margin: 6px 0 8px; font-size: 12px; color: var(--ink-2); line-height: 1.4; }
 .detail-info .card-odds table { width: 100%; border-collapse: collapse; font-size: 12px; background: var(--bg-2); border: 1px solid var(--line); }
 .detail-info .card-odds th { font-family: var(--display); font-weight: 600; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); text-align: right; padding: 5px 6px 3px; vertical-align: bottom; line-height: 1.15; }
@@ -512,18 +536,15 @@ dialog::backdrop { background: rgba(8, 9, 12, .78); }
 .fin-or .fin-tag { background: linear-gradient(180deg, #fff1b8, #d6a12a); }
 .fin-plein .fin-tag { background: #f1eee6; }
 
-/* Holo : feuille irisée sur toute la carte */
-.card.fin-holo { --frame: linear-gradient(120deg, #d9d9e6, #ffffff 20%, #a9b4c9 40%, #f2f2ff 60%, #9aa6bd 80%, #e9e9f5); }
+/* Holo « Chrome » : cadre miroir et barre de lumière qui balaie la carte, comme sous une lampe */
+.card.fin-holo { --frame: linear-gradient(160deg, #5d6470, #e9edf3 18%, #8a92a0 36%, #ffffff 52%, #6f7783 70%, #dfe4ec 88%, #4f5560); }
 .card.fin-holo .card-in::before {
-  content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; mix-blend-mode: color-dodge; opacity: .55;
-  background:
-    repeating-linear-gradient(115deg, rgba(255, 0, 128, .25) 0 6%, rgba(255, 220, 0, .25) 6% 12%, rgba(0, 255, 180, .25) 12% 18%, rgba(0, 140, 255, .25) 18% 24%, rgba(190, 0, 255, .25) 24% 30%),
-    radial-gradient(circle at var(--mx, 40%) var(--my, 30%), rgba(255, 255, 255, .5), transparent 45%);
-  background-size: 300% 300%, 100% 100%;
-  background-position: var(--gx, 30%) var(--my, 30%), 0 0;
-  animation: holo-drift 7s ease-in-out infinite alternate;
+  content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; mix-blend-mode: overlay;
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, .95) 46%, rgba(170, 230, 255, .7) 50%, rgba(255, 190, 240, .6) 53%, transparent 62%) 0 0 / 260% 100%;
+  animation: chrome-bar 2.8s ease-in-out infinite;
 }
-@keyframes holo-drift { to { background-position: 90% 60%, 0 0; } }
+@keyframes chrome-bar { 0% { background-position: 130% 0; } 70%, 100% { background-position: -130% 0; } }
+@media (prefers-reduced-motion: reduce) { .card.fin-holo .card-in::before { animation: none; background-position: 40% 0; } }
 
 /* Plein cadre : la photo occupe toute la carte, texte sur dégradé */
 .card.fin-plein { --frame: linear-gradient(160deg, #2b2b30, #0c0c0e 50%, #3a3a42); }
@@ -670,7 +691,7 @@ dialog::backdrop { background: rgba(8, 9, 12, .78); }
 /* Pastilles des versions */
 .fin-dot, .var-dots i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
 .d-normal { background: #8d8d95; }
-.d-holo { background: conic-gradient(#ff5fa8, #ffe25f, #5fffc3, #5fb6ff, #c25fff, #ff5fa8); }
+.d-holo { background: linear-gradient(135deg, #5d6470, #ffffff 45%, #8a92a0 60%, #e9edf3); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .25); }
 .d-plein { background: #111; box-shadow: inset 0 0 0 2px #f1eee6; }
 .d-or { background: linear-gradient(135deg, #fff1b8, #d6a12a); }
 .d-noir { background: #0b0b0b; box-shadow: inset 0 0 0 2px #e2b33c; }
@@ -692,7 +713,7 @@ dialog::backdrop { background: rgba(8, 9, 12, .78); }
 .fin-word.d-iris { color: #3b74d8; }
 .fin-word.d-tricolore { color: #e1001e; }
 .fin-word.d-coquelicot { color: #e0302a; }
-.fin-word.d-holo { color: #4fb6ff; }
+.fin-word.d-holo { color: #8a92a0; }
 .fin-word.d-or { color: var(--gold); }
 .fin-word.d-plein { color: var(--ink); }
 
