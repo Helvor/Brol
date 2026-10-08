@@ -18,6 +18,13 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   niveau (vérifié avec `tools/simulate.mjs` et `tools/check-odds.mjs`). Nouvelle catégorie mise en avant : à rareté
   égale, ses cartes sortent 3 fois plus souvent jusqu'à une date (`FEATURED` dans app.js, Mémoire jusqu'au 31 janvier
   2027), affiché dans le tableau des chances.
+- [x] **Communes : rareté par score pondéré** (octobre 2026) : habitants 40 %, notoriété (nombre de Wikipédias) 30 %,
+  patrimoine protégé 25 % (classé dans sa Région), revenu par habitant 5 % ; superficie non comptée. Chiffres officiels,
+  sans Wikimedia : Statbel (population, revenus ; fichiers téléchargés à la main, le site bloque les robots, réduits par
+  `tools/statbel.py`) et registres du patrimoine des trois Régions (`tools/patrimoine.mjs`), dans `tools/sources/`.
+  `node tools/build-cards.mjs --communes` recalcule seulement les communes. Stat « Densité » remplacée par
+  « Revenu/hab. ». Suite prévue : même principe pour les autres catégories (monuments, châteaux, écoles : ancienneté,
+  patrimoine, notoriété…), une catégorie à la fois, avec un tableau avant/après à valider.
 - [x] **Chances d'obtention sur chaque carte** (fiche détail, section repliable) : pour chaque paquet qui peut la
   donner, « 1/N » toutes versions confondues puis par version (standard, Holo, Plein cadre, Dorée, version
   d'événement). Calcul `cardOdds` (app.js) fondé sur la même logique que le tirage ; vérifié contre 200 000 tirages.

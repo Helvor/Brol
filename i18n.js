@@ -180,7 +180,7 @@
   };
   const STAT = {
     'Naissance': 'Geboren', 'Décès': 'Overleden', 'Parti': 'Partij', 'Années au 16': 'Jaren in de Wetstraat', 'Gouvernements': 'Regeringen',
-    'Mandats': 'Mandaten', 'Législatures': 'Zittingsper.', 'Habitants': 'Inwoners', 'Superficie': 'Oppervlakte', 'Densité': 'Dichtheid',
+    'Mandats': 'Mandaten', 'Législatures': 'Zittingsper.', 'Habitants': 'Inwoners', 'Superficie': 'Oppervlakte', 'Densité': 'Dichtheid', 'Revenu/hab.': 'Inkomen/inw.',
     'Chef-lieu': 'Hoofdplaats', 'Années de règne': 'Regeringsjaren', 'Domaine': 'Domein', 'Wikipédias': 'Wikipedia’s', 'Discipline': 'Discipline',
     'Fondation': 'Opgericht', 'Étudiants': 'Studenten', 'Ville': 'Stad', 'Type': 'Type', 'Région': 'Gewest', 'Année': 'Jaar',
     'Artiste': 'Kunstenaar', 'Genre': 'Genre', 'Formation': 'Opgericht', 'Création': 'Opgericht', 'UNESCO': 'UNESCO', 'Jours': 'Dagen',
