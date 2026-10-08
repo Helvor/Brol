@@ -31,3 +31,7 @@ Phase 6 (nouveaux paquets) et paquet Banque nationale terminés. Restent dans `R
 Van Dorpe (pas d'autre photo libre), collègues de l'utilisateur pour le paquet BNB (photos locales, avec accord), équilibrage de Formation de gouvernement, mise à jour automatique des données, phase 5
 (comptes en ligne). Viser 50 cartes au moins par paquet thématique ; listes à faire valider avant de générer. Nouvelle catégorie : l'ajouter à `FEATURED`
 (app.js) pour qu'elle ne se noie pas dans le paquet Belgique.
+Rareté des communes : score pondéré à partir de `tools/sources/` (Statbel et registres du patrimoine, voir
+`tools/statbel.py`, `tools/patrimoine.mjs`), recalcul seul avec `--communes`. Prochaine étape : même principe pour les
+autres catégories, une à la fois, tableau avant/après validé par l'utilisateur. Hénallux n'a pas de photo (logo absent de
+Commons) : chercher une photo libre d'un campus.
