@@ -311,10 +311,16 @@ async function features() {
         const html = document.querySelector('#detail-body .card-odds')?.textContent || '';
         document.querySelector('#detail-close').click();
         return { n: rows.length, sorted: rows.every((x, i) => !i || rows[i - 1].p >= x.p), ok: rows.every(x => x.p > 0 && x.p < 1),
-          sum: rows.every(x => Math.abs(x.fins.reduce((a, f) => a + f.p, 0) - x.p) < 1e-9), packs: rows.map(x => x.pack.id), ed: ed.length, html: html.includes('1/') };
+          sum: rows.every(x => Math.abs(x.fins.reduce((a, f) => a + f.p, 0) - x.p) < 1e-9), packs: rows.map(x => x.pack.id), ed: ed.length, html: html.includes('%') };
       });
       check(r.n >= 2 && r.sorted && r.ok && r.sum && r.packs.includes('belgique') && r.packs.includes('memoire'), 'chances d’une carte : ' + JSON.stringify(r));
       check(r.ed === 1 && r.html, 'chances d’une édition limitée ou tableau absent : ' + JSON.stringify(r));
+      // Carte manquante : un clic sur l'emplacement vide de l'album ouvre ses chances, sans l'image
+      await page.click('.tab[data-view="binder"]');
+      await page.click('#grid .empty-slot[data-id]');
+      const miss = await page.evaluate(() => ({ odds: !!document.querySelector('#detail-body .card-odds'), img: !!document.querySelector('#detail-card img') }));
+      await page.click('#detail-close');
+      check(miss.odds && !miss.img, 'fiche d’une carte manquante : ' + JSON.stringify(miss));
     });
     await step('fiche d’un savant : connu pour', async () => {
       const id = await page.evaluate(() => { const c = window.RDL.CARDS.find(c => c.name === 'Adolphe Sax'); window.RDL.state.owned[c.id] = 1; window.RDL.save(); return c.id; });

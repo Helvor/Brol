@@ -706,8 +706,9 @@
     }
     return out.sort((a, b) => b.p - a.p);
   }
-  // « 1 sur 1 234 » : un paquet sur N en moyenne
+  // « 1/1 234 » : un paquet sur N en moyenne ; « 0,88 % » : chance par paquet (deux chiffres significatifs)
   const oneIn = x => x > 0 ? t('oneIn', fmt(Math.max(1, Math.round(1 / x)))) : '—';
+  const pct2 = x => x > 0 ? (x * 100).toLocaleString(L() === 'nl' ? 'nl-BE' : 'fr-BE', { maximumSignificantDigits: 2 }) + ' %' : '—';
 
   // ---------- Boutique ----------
   function renderShop() {
@@ -1157,7 +1158,7 @@
       const n = totalOf(c.id);
       if (n) return `<div class="cell">${cardHTML(c, { count: n, finish: bestFinish(c.id), variants: finishesOwned(c.id) }).replace('<article ', `<article tabindex="0" role="button" aria-label="${esc(nm(c))}, ${esc(rl(c.rarity))}" `)}</div>`;
       const where = c.cat === 'edition' && packById(c.pack) ? `<span class="ed-where">${t('edWhere', esc(pl(packById(c.pack), 'title')))}</span>` : '';
-      return `<div class="cell"><div class="empty-slot"><span class="gem" style="background:var(--r-${c.rarity})"></span><span class="no">${String(c.no).padStart(4, '0')}</span><span class="name">${esc(nm(c))}</span>${where}</div></div>`;
+      return `<div class="cell"><div class="empty-slot" data-id="${esc(c.id)}" tabindex="0" role="button" aria-label="${esc(nm(c))}, ${esc(rl(c.rarity))}"><span class="gem" style="background:var(--r-${c.rarity})"></span><span class="no">${String(c.no).padStart(4, '0')}</span><span class="name">${esc(nm(c))}</span>${where}</div></div>`;
     }).join('') + (list.length > shown ? `<button class="btn btn-line grid-more" id="more">${t('more', fmt(list.length - shown))}</button>` : '');
   }
   function renderWallet() {
@@ -1186,13 +1187,13 @@
   // Clavier : Entrée ou Espace sur une carte de l'album, de la vitrine ou sur un paquet
   const pressKey = e => (e.key === 'Enter' || e.key === ' ') && !e.repeat;
   $('#grid').addEventListener('keydown', e => {
-    const card = e.target.closest('.card');
+    const card = e.target.closest('.card, .empty-slot[data-id]');
     if (card && pressKey(e)) { e.preventDefault(); openDetail(card.dataset.id, card.dataset.fin); }
   });
   $('#grid').addEventListener('click', e => {
     if (e.target.id === 'more') { shown += PAGE; renderBinder(); return; }
-    const card = e.target.closest('.card');
-    if (card) openDetail(card.dataset.id, card.dataset.fin);
+    const card = e.target.closest('.card, .empty-slot[data-id]');
+    if (card) { SFX.tick(); openDetail(card.dataset.id, card.dataset.fin); }
   });
   // Doublons revendables : un exemplaire de chaque version est toujours gardé
   function dupValue() {
@@ -1728,22 +1729,37 @@
 
   // ---------- Détail ----------
   const dlg = $('#detail');
-  // Tableau des chances d'obtention (fiche détail), replié par défaut
+  // Chances d'obtention (fiche détail) : la meilleure chance en clair, puis le tableau par paquet et par version
   function oddsTable(c) {
     const rows = cardOdds(c);
     if (!rows.length) return '';
-    const cols = BASE_FINISHES.map(f => f.id);
-    return `<details class="card-odds"><summary>${t('cardOddsH')}</summary>
+    const cols = BASE_FINISHES.map(f => f.id), best = rows[0];
+    return `<details class="card-odds" open><summary>${t('cardOddsH')}</summary>
+      <p class="best">${t('cardOddsBest', pct2(best.p), esc(pl(best.pack, 'title')), oneIn(best.p))}</p>
       <p class="hint">${t('cardOddsNote')}</p>
       <table><thead><tr><th>${t('cardOddsPack')}</th><th>${t('cardOddsAny')}</th>${cols.map(f => `<th><span class="fin-dot d-${f}"></span>${fl(f)}</th>`).join('')}</tr></thead>
       <tbody>${rows.map(r => {
         const ev = r.fins.find(f => F[f.id].pack);
-        return `<tr><td>${esc(pl(r.pack, 'title'))}${r.pack.event ? ` <small>${t('cardOddsEvent')}</small>` : ''}${ev ? `<br><small><span class="fin-dot d-${ev.id}"></span>${fl(ev.id)} ${oneIn(ev.p)}</small>` : ''}</td>
-          <td><b>${oneIn(r.p)}</b></td>${cols.map(f => `<td>${oneIn(r.fins.find(x => x.id === f).p)}</td>`).join('')}</tr>`; }).join('')}</tbody></table></details>`;
+        const cell = x => `<td title="${oneIn(x)}">${pct2(x)}</td>`;
+        return `<tr><td>${esc(pl(r.pack, 'title'))}${r.pack.event ? ` <small>${t('cardOddsEvent')}</small>` : ''}${ev ? `<br><small><span class="fin-dot d-${ev.id}"></span>${fl(ev.id)} ${pct2(ev.p)}</small>` : ''}</td>
+          <td title="${oneIn(r.p)}"><b>${pct2(r.p)}</b></td>${cols.map(f => cell(r.fins.find(x => x.id === f).p)).join('')}</tr>`; }).join('')}</tbody></table></details>`;
   }
   function openDetail(id, finish = 'normal') {
     const c = BY_ID.get(id);
     const owned = finishesOwned(id);
+    // Carte pas encore obtenue (album) : l'emplacement vide, son nom, sa rareté et ses chances d'obtention
+    if (!owned.length) {
+      const where = c.cat === 'edition' && packById(c.pack) ? `<span class="ed-where">${t('edWhere', esc(pl(packById(c.pack), 'title')))}</span>` : '';
+      $('#detail-card').innerHTML = `<div class="cell"><div class="empty-slot"><span class="gem" style="background:var(--r-${c.rarity})"></span><span class="no">${String(c.no).padStart(4, '0')}</span><span class="name">${esc(nm(c))}</span>${where}</div></div>`;
+      $('#detail-body').innerHTML = `
+        <div class="kicker" style="color:var(--rt-${c.rarity})"><span class="gem" style="background:var(--r-${c.rarity})"></span>${rl(c.rarity)} · <span style="color:var(--ink-2)">${cl(c.cat)}</span></div>
+        <h2>${esc(nm(c))}</h2>
+        <p class="sub">${t('notOwned')}</p>
+        ${oddsTable(c)}`;
+      if (!dlg.open) dlg.showModal();
+      dlg.scrollTop = 0;
+      return;
+    }
     if (!owned.includes(finish) && owned.length) finish = owned.at(-1);
     const cnt = countOf(id, finish);
     $('#detail-card').innerHTML = cardHTML(c, { finish });
