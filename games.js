@@ -44,7 +44,7 @@
       l_round: (i, n) => `Question ${i}/${n}`, l_q: 'De quel parti ?', l_total: n => `${n} bonnes réponses sur 10`,
       // Belgle
       b_name: 'Belgle', b_desc: 'Une carte mystère par jour, la même pour tout le monde. 6 essais, un indice à chaque erreur.',
-      b_ph: 'Tape un nom…', b_guess: 'Proposer', b_hints: 'Indices', b_cat: 'Catégorie', b_rar: 'Rareté', b_sub: 'Description', b_era: 'Époque',
+      b_ph: 'Tape un nom…', b_guess: 'Proposer', b_hints: 'Indices', b_cat: 'Catégorie', b_rar: 'Rareté', b_sub: 'Description', b_era: 'Époque', b_born: 'Naissance', b_created: 'Création', b_decade: d => `années ${d}`,
       b_place: 'Lieu', b_init: 'Initiales', b_win: n => `Trouvé en ${n} essai${n > 1 ? 's' : ''} !`, b_lose: 'Perdu ! C’était…', b_share: 'Copier mon score',
       b_copied: 'Score copié', b_next: 'Nouvelle carte demain', b_streak: n => `Série : ${n} jour${n > 1 ? 's' : ''}`, b_unknown: 'Carte inconnue',
       // Chrono
@@ -90,7 +90,7 @@
       l_name: 'De Partij', l_desc: 'Een politicus, vier partijen: welke is de juiste? 10 vragen.',
       l_round: (i, n) => `Vraag ${i}/${n}`, l_q: 'Van welke partij?', l_total: n => `${n} juiste antwoorden op 10`,
       b_name: 'Belgle', b_desc: 'Elke dag een mysteriekaart, voor iedereen dezelfde. 6 pogingen, een hint bij elke fout.',
-      b_ph: 'Typ een naam…', b_guess: 'Raden', b_hints: 'Hints', b_cat: 'Categorie', b_rar: 'Zeldzaamheid', b_sub: 'Omschrijving', b_era: 'Periode',
+      b_ph: 'Typ een naam…', b_guess: 'Raden', b_hints: 'Hints', b_cat: 'Categorie', b_rar: 'Zeldzaamheid', b_sub: 'Omschrijving', b_era: 'Periode', b_born: 'Geboren', b_created: 'Opgericht', b_decade: d => `jaren ${d}`,
       b_place: 'Plaats', b_init: 'Initialen', b_win: n => `Gevonden in ${n} poging${n > 1 ? 'en' : ''}!`, b_lose: 'Verloren! Het was…', b_share: 'Score kopiëren',
       b_copied: 'Score gekopieerd', b_next: 'Morgen een nieuwe kaart', b_streak: n => `Reeks: ${n} dag${n > 1 ? 'en' : ''}`, b_unknown: 'Onbekende kaart',
       c_name: 'Tijdlijn', c_desc: 'Plaats elke kaart op de juiste plek op de tijdlijn. Eén fout en het is voorbij.',
@@ -397,13 +397,19 @@
     const c = dailyCard(g.day);
     const wrong = g.guesses.filter(id => id !== c.id).length;
     const blur = g.done ? 0 : [26, 20, 14, 9, 5, 2][Math.min(wrong, 5)];
-    const y = yearOf(c);
-    const decade = y ? `${Math.floor(y.year / 10) * 10}s` : null;
+    // Indice de date : année de naissance pour une personne (« Naissance »), sinon fondation, création… (« Époque »)
+    const y = yearOf(c), yr = typeof y === 'number' ? y : y?.year;
+    const decade = yr ? T('b_decade', Math.floor(yr / 10) * 10) : null;
+    const dateKey = y?.kind === 'Naissance' ? 'b_born' : ['Fondation', 'Création', 'Formation'].includes(y?.kind) ? 'b_created' : 'b_era';
+    const pop = c.cat === 'commune' && c.stats.find(([k]) => k === 'Habitants');
+    const dateHint = decade ? [T(dateKey), decade] // une date d'abord
+      : pop ? [window.I18N.statKey('Habitants'), pop[1]] // commune : le lieu est déjà dans la description
+      : [c.coord || /Province|Bruxelles/.test(c.subtitle || '') ? T('b_place') : T('b_era'), window.I18N.meta(c) || '—'];
     const hints = [
       [T('b_cat'), window.RDL.catLabel(c.cat)],
       [T('b_rar'), window.RDL.rarityLabel(c.rarity)],
       [T('b_sub'), window.I18N.subtitle(c)],
-      [c.coord || /Province|Bruxelles/.test(c.subtitle || '') ? T('b_place') : T('b_era'), decade || window.I18N.meta(c) || '—'],
+      dateHint,
       [T('b_init'), nm(c).split(/[\s-]+/).map(w => w[0]).join('. ') + '.'],
     ];
     const shown = g.done ? hints.length : Math.min(wrong + 1, hints.length);
