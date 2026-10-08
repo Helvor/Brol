@@ -105,7 +105,8 @@
   // ---------- Sauvegarde ----------
   const TS = () => { const s = API.state; s.trade ||= {}; s.trade.pending ||= {}; s.trade.done ||= {}; return s.trade; };
   const count = it => API.countOf(it.id, it.fin);
-  const addCard = (it, n) => { const k = API.keyOf(it.id, it.fin); API.state.owned[k] = (API.state.owned[k] || 0) + n; if (API.state.owned[k] <= 0) delete API.state.owned[k]; };
+  const addCard = (it, n) => { const k = API.keyOf(it.id, it.fin), s = API.state; s.owned[k] = (s.owned[k] || 0) + n; if (s.owned[k] <= 0) delete s.owned[k];
+    if (n > 0) { s.origin ||= {}; s.origin[k] ||= 'trade'; } }; // provenance (fiche détail)
 
   // ---------- Format des liens ----------
   // Offre :   1o.<id>.<donne>.<demande>        éléments « Q123 » ou « Q123~h » séparés par des virgules

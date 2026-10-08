@@ -342,7 +342,7 @@
       const s = JSON.parse(localStorage.getItem(STORE_KEY));
       if (s && typeof s.coins === 'number') {
         // Champs abîmés (fichier importé, vieille version) : on repart d'un objet vide plutôt que de planter
-        for (const k of ['owned', 'claimed', 'ach', 'trade', 'daily', 'stats', 'games', 'tickets']) if (k in s && !isObj(s[k])) delete s[k];
+        for (const k of ['owned', 'claimed', 'ach', 'trade', 'daily', 'stats', 'games', 'tickets', 'origin']) if (k in s && !isObj(s[k])) delete s[k];
         s.owned ||= {};
         if (s.free === undefined) { s.free = FREE_MAX; s.freeAt = Date.now(); s.coins = Math.max(s.coins, START_COINS); }
         s.claimed ||= {}; s.ach ||= {}; s.pity ||= 0;
@@ -863,6 +863,7 @@
     const revealed = drawn.map(d => {
       const got = gotKind(d.card.id, d.finish), key = keyOf(d.card.id, d.finish);
       state.owned[key] = (state.owned[key] || 0) + 1;
+      noteOrigin(key, pack.id);
       if (got === 'card') newCount++; else if (got === 'version') newVer++;
       return { ...d, got, isNew: got === 'card' };
     });
@@ -1288,9 +1289,13 @@
   const fuseAvailable = rarity => fuseStock(rarity).reduce((a, x) => a + x.extra, 0);
   const holoCandidates = () => CARDS.filter(c => countOf(c.id, 'normal') > HOLO_COST);
   const holoMax = id => Math.floor((countOf(id, 'normal') - 1) / HOLO_COST); // un exemplaire standard est toujours gardé
-  function addCard(card, finish) {
+  // Provenance de la première copie de chaque version (state.origin) : identifiant du paquet, ou 'daily', 'fuse',
+  // 'trade'. Sert à la fiche détail (« tu avais x % de chance de l'avoir »). Parties d'avant : pas de provenance.
+  const noteOrigin = (key, src) => { state.origin ||= {}; if (!state.origin[key]) state.origin[key] = src; };
+  function addCard(card, finish, src) {
     const got = gotKind(card.id, finish), key = keyOf(card.id, finish);
     state.owned[key] = (state.owned[key] || 0) + 1;
+    if (src) noteOrigin(key, src);
     return { card, finish, got, isNew: got === 'card' };
   }
   function fuseRarity(rarity) {
@@ -1300,7 +1305,7 @@
       const top = fuseStock(rarity).sort((a, b) => b.extra - a.extra)[0];
       state.owned[top.c.id]--;
     }
-    const res = addCard(randomCard(next.id), 'normal');
+    const res = addCard(randomCard(next.id), 'normal', 'fuse');
     state.stats.fused++;
     save(); mission('fuse');
     return res;
@@ -1309,7 +1314,7 @@
     const c = BY_ID.get(id);
     if (!c || countOf(id, 'normal') <= HOLO_COST) return null;
     state.owned[id] -= HOLO_COST;
-    const res = addCard(c, 'holo');
+    const res = addCard(c, 'holo', 'fuse');
     state.stats.fused++; state.stats.fuseHolo++;
     state.stats.finish.holo = (state.stats.finish.holo || 0) + 1;
     save(); mission('fuse');
@@ -1392,7 +1397,7 @@
     const d = state.daily;
     d.streak = d.last === ymd(addDays(now(), -1)) ? d.streak + 1 : 1;
     d.last = ymd(now());
-    const res = addCard(randomCard(pickRarity(R[dailyMin(d.streak)].rank)), pickFinish());
+    const res = addCard(randomCard(pickRarity(R[dailyMin(d.streak)].rank)), pickFinish(), 'daily');
     state.coins += DAILY_COINS;
     state.stats.dailyMax = Math.max(state.stats.dailyMax || 0, d.streak);
     save();
@@ -1730,19 +1735,32 @@
   // ---------- Détail ----------
   const dlg = $('#detail');
   // Chances d'obtention (fiche détail) : la meilleure chance en clair, puis le tableau par paquet et par version
-  function oddsTable(c) {
+  // Carte possédée : la chance qu'on avait d'obtenir cette version, dans le paquet d'où elle vient (state.origin),
+  // sinon dans le paquet où elle est la plus probable ; et combien elle est plus rare que la version standard
+  function ownedOddsLine(c, finish, rows) {
+    const src = state.origin?.[keyOf(c.id, finish)];
+    if (src && !packById(src)) return `<p class="best">${t('gotFromOther', t('origin_' + src))}</p>`;
+    const withFin = rows.filter(r => r.fins.some(f => f.id === finish));
+    const row = (src && withFin.find(r => r.pack.id === src)) || withFin.sort((a, b) => b.fins.find(f => f.id === finish).p - a.fins.find(f => f.id === finish).p)[0];
+    if (!row) return '';
+    const p = row.fins.find(f => f.id === finish).p, std = row.fins.find(f => f.id === 'normal').p;
+    const rarer = finish !== 'normal' && std > p ? ' ' + t('rarerThan', fmt(Math.round(std / p))) : '';
+    return `<p class="best">${t(src ? 'gotFrom' : 'gotGuess', esc(pl(row.pack, 'title')), fl(finish), pct2(p), oneIn(p))}${rarer}</p>`;
+  }
+  function oddsTable(c, finish = null) {
     const rows = cardOdds(c);
     if (!rows.length) return '';
     const cols = BASE_FINISHES.map(f => f.id), best = rows[0];
+    const cur = f => f === finish ? ' class="is-cur"' : '';
     return `<details class="card-odds" open><summary>${t('cardOddsH')}</summary>
-      <p class="best">${t('cardOddsBest', pct2(best.p), esc(pl(best.pack, 'title')), oneIn(best.p))}</p>
+      ${finish ? ownedOddsLine(c, finish, rows) : `<p class="best">${t('cardOddsBest', pct2(best.p), esc(pl(best.pack, 'title')), oneIn(best.p))}</p>`}
       <p class="hint">${t('cardOddsNote')}</p>
-      <table><thead><tr><th>${t('cardOddsPack')}</th><th>${t('cardOddsAny')}</th>${cols.map(f => `<th><span class="fin-dot d-${f}"></span>${fl(f)}</th>`).join('')}</tr></thead>
+      <table><thead><tr><th>${t('cardOddsPack')}</th><th>${t('cardOddsAny')}</th>${cols.map(f => `<th${cur(f)}><span class="fin-dot d-${f}"></span>${fl(f)}</th>`).join('')}</tr></thead>
       <tbody>${rows.map(r => {
         const ev = r.fins.find(f => F[f.id].pack);
-        const cell = x => `<td title="${oneIn(x)}">${pct2(x)}</td>`;
+        const cell = (x, f) => `<td title="${oneIn(x)}"${cur(f)}>${pct2(x)}</td>`;
         return `<tr><td>${esc(pl(r.pack, 'title'))}${r.pack.event ? ` <small>${t('cardOddsEvent')}</small>` : ''}${ev ? `<br><small><span class="fin-dot d-${ev.id}"></span>${fl(ev.id)} ${pct2(ev.p)}</small>` : ''}</td>
-          <td title="${oneIn(r.p)}"><b>${pct2(r.p)}</b></td>${cols.map(f => cell(r.fins.find(x => x.id === f).p)).join('')}</tr>`; }).join('')}</tbody></table></details>`;
+          <td title="${oneIn(r.p)}"><b>${pct2(r.p)}</b></td>${cols.map(f => cell(r.fins.find(x => x.id === f).p, f)).join('')}</tr>`; }).join('')}</tbody></table></details>`;
   }
   function openDetail(id, finish = 'normal') {
     const c = BY_ID.get(id);
@@ -1785,7 +1803,7 @@
         <dt>${t('copies')}</dt><dd>${cnt}${finish !== 'normal' ? ` (${fl(finish)})` : ''}</dd>
         <dt>${t('value')}</dt><dd>${t('coins', sellValue(c, finish))}${resaleMult() > 1 ? ` <small class="late">${t('lateBonus', String(LATE_MULT).replace('.', ','))}</small>` : ''}</dd>
       </dl>
-      ${oddsTable(c)}
+      ${oddsTable(c, finish)}
       ${SERIES_OF.has(id) ? `<h4>${t('seriesH')}</h4><p class="series-list">${SERIES_OF.get(id).map(s => `<button class="chip-s" data-series="${s.id}">${esc(sl(s, 'title'))}</button>`).join('')}</p>` : ''}
       ${known.length ? `<h4>${t('knownFor')}</h4><ul class="known">${known.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       ${roles.length ? `<h4>${t('career')}</h4><ul>${roles.slice(0, 10).map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}

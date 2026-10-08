@@ -321,6 +321,16 @@ async function features() {
       const miss = await page.evaluate(() => ({ odds: !!document.querySelector('#detail-body .card-odds'), img: !!document.querySelector('#detail-card img') }));
       await page.click('#detail-close');
       check(miss.odds && !miss.img, 'fiche d’une carte manquante : ' + JSON.stringify(miss));
+      // Provenance : une carte tirée dans un paquet garde l'identifiant du paquet, affiché dans sa fiche
+      const org = await page.evaluate(() => {
+        const R = window.RDL, p = R.PACKS.find(x => x.id === 'sciences'); R.state.coins = 1000;
+        const d = R.buyPacks(p, 1).packs[0].revealed[0], key = R.keyOf(d.card.id, d.finish);
+        R.openDetail(d.card.id, d.finish);
+        const line = document.querySelector('#detail-body .card-odds .best')?.textContent || '';
+        document.querySelector('#detail-close').click();
+        return { origin: R.state.origin?.[key], line };
+      });
+      check(org.origin === 'sciences' && /Sciences/.test(org.line), 'provenance d’une carte : ' + JSON.stringify(org));
     });
     await step('fiche d’un savant : connu pour', async () => {
       const id = await page.evaluate(() => { const c = window.RDL.CARDS.find(c => c.name === 'Adolphe Sax'); window.RDL.state.owned[c.id] = 1; window.RDL.save(); return c.id; });
