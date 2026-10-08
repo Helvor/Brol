@@ -50,10 +50,16 @@
     stops.forEach((c, i) => g.addColorStop(i / Math.max(1, stops.length - 1), c));
     return g;
   }
-  function cover(ctx, img, x, y, w, h, posY = 0.2, contain = false, posX = 0.5) {
+  // zoom : [facteur, origine x, origine y] (0–1 dans le cadre), comme le transform:scale des cartes (data/focus.js)
+  function cover(ctx, img, x, y, w, h, posY = 0.2, contain = false, posX = 0.5, zoom = null) {
     const s = contain ? Math.min(w / img.width, h / img.height) : Math.max(w / img.width, h / img.height);
-    const iw = img.width * s, ih = img.height * s;
-    ctx.drawImage(img, x + (w - iw) * (contain ? 0.5 : posX), y + (h - ih) * (contain ? 0.5 : posY), iw, ih);
+    let iw = img.width * s, ih = img.height * s, dx = x + (w - iw) * (contain ? 0.5 : posX), dy = y + (h - ih) * (contain ? 0.5 : posY);
+    if (zoom) {
+      const [k, ox, oy] = zoom, cx = x + ox * w, cy = y + oy * h;
+      dx = cx + k * (dx - cx); dy = cy + k * (dy - cy); iw *= k; ih *= k;
+      ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+    }
+    ctx.drawImage(img, dx, dy, iw, ih);
   }
   function fitText(ctx, text, maxW, size, weight, family) {
     let s = size;
@@ -119,7 +125,10 @@
       if (finish === 'noir' || finish === 'pave') ctx.filter = 'grayscale(1) contrast(1.1)';
       const flat = c.emblem || c.artwork || (['commune', 'province', 'region', 'enseignement'].includes(c.cat) && /\.(svg|png)$/i.test(photoFile || ''));
       if (flat) { ctx.fillStyle = '#20232b'; ctx.fillRect(ix, iy, iw, photoH); cover(ctx, photo, ix + 50, iy + 50, iw - 100, photoH - bandH - 70, 0.5, true); }
-      else { const fp = (window.FOCUS?.[photoFile] || '50 20').split(' ').map(n => n / 100); cover(ctx, photo, ix, iy, iw, photoH, fp[1], false, fp[0]); } // cadrage sur le visage
+      else { // cadrage sur le visage, avec le zoom éventuel
+        const v = (window.FOCUS?.[photoFile] || '50 20').split(' ').map(Number);
+        cover(ctx, photo, ix, iy, iw, photoH, v[1] / 100, false, v[0] / 100, v[2] ? [v[2], v[3] / 100, (v[4] ?? 100) / 100] : null);
+      }
       ctx.restore();
     } else if (c.cat === 'evenement') {
       ctx.fillStyle = '#121318'; ctx.fillRect(ix, iy, iw, photoH);

@@ -18,6 +18,9 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   niveau (vérifié avec `tools/simulate.mjs` et `tools/check-odds.mjs`). Nouvelle catégorie mise en avant : à rareté
   égale, ses cartes sortent 3 fois plus souvent jusqu'à une date (`FEATURED` dans app.js, Mémoire jusqu'au 31 janvier
   2027), affiché dans le tableau des chances.
+- [x] **Chances d'obtention sur chaque carte** (fiche détail, section repliable) : pour chaque paquet qui peut la
+  donner, « 1/N » toutes versions confondues puis par version (standard, Holo, Plein cadre, Dorée, version
+  d'événement). Calcul `cardOdds` (app.js) fondé sur la même logique que le tirage ; vérifié contre 200 000 tirages.
 - [x] **Plus de pièces** (octobre 2026, retour de l'utilisateur : « pas assez de pièces » après le durcissement des
   raretés) : départ 2 000 pièces (au lieu de 1 000), 10 pièces par nouvelle carte (au lieu de 5), carte du jour
   50 pièces (au lieu de 20), missions ×1,5 (150 à 450), réserve de 8 paquets gratuits (au lieu de 5). Prix des

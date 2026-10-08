@@ -401,9 +401,10 @@
   };
   // Cadrage sur le visage (data/focus.js, généré par tools/build-focus.py) : « x% y% » pour object-position
   const focusOf = f => { const v = window.FOCUS?.[f]?.split(' '); return v ? `${v[0]}% ${v[1]}%` : ''; };
-  // Sur la carte : position, plus un léger zoom ancré en bas quand la photo n'est pas assez haute pour remonter le visage
+  // Sur la carte : position, plus un zoom quand la photo n'est pas assez haute pour remonter le visage, ancré en bas
+  // (« x y zoom ox ») ou à une hauteur choisie (« x y zoom ox oy », cadrage manuel sur une personne d'une photo de groupe)
   const focusStyle = f => { const v = window.FOCUS?.[f]?.split(' '); if (!v) return '';
-    return ` style="object-position:${v[0]}% ${v[1]}%${v[2] ? `;transform:scale(${v[2]});transform-origin:${v[3]}% 100%` : ''}"`; };
+    return ` style="object-position:${v[0]}% ${v[1]}%${v[2] ? `;transform:scale(${v[2]});transform-origin:${v[3]}% ${v[4] ?? 100}%` : ''}"`; };
   const fileUrl = f => 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(f.replace(/ /g, '_'));
   const initials = n => n.split(/[\s-]+/).filter(w => /^[A-ZÀ-Ý]/.test(w)).slice(0, 2).map(w => w[0]).join('');
   const fmt = n => n.toLocaleString(L() === 'nl' ? 'nl-BE' : 'fr-BE');
@@ -674,6 +675,39 @@
     const a = slot(0), b = slot(R[pack.last || 'rare'].rank);
     return RARITIES.map((r, i) => ({ id: r.id, p: a[i], last: b[i] }));
   }
+
+  // Chances d'obtenir une carte précise dans chaque paquet qui peut la donner, et dans chaque version.
+  // Même logique que drawPack : rareté par emplacement (packOdds), puis une carte parmi celles de cette rareté (avec la
+  // mise en avant ×3), 1ʳᵉ carte remplacée par une édition limitée, versions indépendantes de la carte.
+  // Approximation : on ignore la règle « pas deux fois la même carte dans un paquet », qui change très peu les chiffres.
+  // Le paquet Nouveautés (selon l'album du joueur) n'est pas compté.
+  function cardOdds(c) {
+    const out = [];
+    for (const p of ALL_PACKS) {
+      if (p.missing) continue;
+      let pack;
+      if (c.cat === 'edition') {
+        if (c.pack !== p.id) continue;
+        const list = exclOf(p.id), tot = list.reduce((a, x) => a + (EXCL_WEIGHT[x.rarity] || 1), 0);
+        pack = exclChance(p) * (EXCL_WEIGHT[c.rarity] || 1) / tot;
+      } else {
+        const pool = poolOf(p);
+        if (!pool.some(x => x.id === c.id)) continue;
+        const feat = featuredCats(), w = x => feat.has(x.cat) ? FEATURED_WEIGHT : 1;
+        const share = w(c) / pool.filter(x => x.rarity === c.rarity).reduce((a, x) => a + w(x), 0);
+        const o = packOdds(p).find(x => x.id === c.rarity), ch = exclChance(p);
+        const p1 = o.p * share, p5 = o.last * share;
+        pack = 1 - (1 - p1 * (1 - ch)) * (1 - p1) ** 3 * (1 - p5);
+      }
+      const ev = packFinish(p.id), evC = ev?.packChance || 0;
+      const fins = BASE_FINISHES.slice(1).map(f => ({ id: f.id, p: f.chance * (p.finishBoost || 1) * (1 - evC) }));
+      const normal = 1 - evC - fins.reduce((a, f) => a + f.p, 0);
+      out.push({ pack: p, p: pack, fins: [{ id: 'normal', p: normal }, ...fins, ...(ev ? [{ id: ev.id, p: evC }] : [])].map(f => ({ ...f, p: f.p * pack })) });
+    }
+    return out.sort((a, b) => b.p - a.p);
+  }
+  // « 1 sur 1 234 » : un paquet sur N en moyenne
+  const oneIn = x => x > 0 ? t('oneIn', fmt(Math.max(1, Math.round(1 / x)))) : '—';
 
   // ---------- Boutique ----------
   function renderShop() {
@@ -1694,6 +1728,19 @@
 
   // ---------- Détail ----------
   const dlg = $('#detail');
+  // Tableau des chances d'obtention (fiche détail), replié par défaut
+  function oddsTable(c) {
+    const rows = cardOdds(c);
+    if (!rows.length) return '';
+    const cols = BASE_FINISHES.map(f => f.id);
+    return `<details class="card-odds"><summary>${t('cardOddsH')}</summary>
+      <p class="hint">${t('cardOddsNote')}</p>
+      <table><thead><tr><th>${t('cardOddsPack')}</th><th>${t('cardOddsAny')}</th>${cols.map(f => `<th><span class="fin-dot d-${f}"></span>${fl(f)}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(r => {
+        const ev = r.fins.find(f => F[f.id].pack);
+        return `<tr><td>${esc(pl(r.pack, 'title'))}${r.pack.event ? ` <small>${t('cardOddsEvent')}</small>` : ''}${ev ? `<br><small><span class="fin-dot d-${ev.id}"></span>${fl(ev.id)} ${oneIn(ev.p)}</small>` : ''}</td>
+          <td><b>${oneIn(r.p)}</b></td>${cols.map(f => `<td>${oneIn(r.fins.find(x => x.id === f).p)}</td>`).join('')}</tr>`; }).join('')}</tbody></table></details>`;
+  }
   function openDetail(id, finish = 'normal') {
     const c = BY_ID.get(id);
     const owned = finishesOwned(id);
@@ -1722,6 +1769,7 @@
         <dt>${t('copies')}</dt><dd>${cnt}${finish !== 'normal' ? ` (${fl(finish)})` : ''}</dd>
         <dt>${t('value')}</dt><dd>${t('coins', sellValue(c, finish))}${resaleMult() > 1 ? ` <small class="late">${t('lateBonus', String(LATE_MULT).replace('.', ','))}</small>` : ''}</dd>
       </dl>
+      ${oddsTable(c)}
       ${SERIES_OF.has(id) ? `<h4>${t('seriesH')}</h4><p class="series-list">${SERIES_OF.get(id).map(s => `<button class="chip-s" data-series="${s.id}">${esc(sl(s, 'title'))}</button>`).join('')}</p>` : ''}
       ${known.length ? `<h4>${t('knownFor')}</h4><ul class="known">${known.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       ${roles.length ? `<h4>${t('career')}</h4><ul>${roles.slice(0, 10).map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
@@ -1828,7 +1876,7 @@
     CARDS, BY_ID, get state() { return state; }, save, renderWallet, checkAchievements, totalOf,
     esc, imgUrl, focusOf, fmt, toast, bugReport, SFX, catLabel: cl, rarityLabel: rl,
     // pour les échanges (trade.js)
-    cardHTML, countOf, keyOf, FINISHES, finishesFor, finishLabel: fl, rarityRank: id => R[id].rank, show, openDetail,
+    cardHTML, countOf, keyOf, FINISHES, finishesFor, cardOdds, finishLabel: fl, rarityRank: id => R[id].rank, show, openDetail,
     // pour la simulation de l'économie (tools/simulate.mjs) et les tests
     PACKS, SERIES, RARITIES, BULK, bulkOf, bulkPrice, buyPacks, sellDuplicates, dupValue, claimSeries,
     EVENT_PACKS, activeEvents, fuseRarity, fuseHolo, fuseAvailable, claimDaily, dailyReady, drawPack, exclOf, packById,

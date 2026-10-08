@@ -303,6 +303,19 @@ async function features() {
       await page.click('.tab[data-view="shop"]');
       check(await page.locator('.pack-card[data-pack="saint-nicolas"] .ex-thumb').count() === 3, 'cartes exclusives absentes de la boutique');
     });
+    await step('chances d’obtention d’une carte', async () => {
+      const r = await page.evaluate(() => {
+        const R = window.RDL, c = R.CARDS.find(x => x.rarity === 'mythique' && x.cat === 'militaire');
+        const rows = R.cardOdds(c), ed = R.cardOdds(R.CARDS.find(x => x.cat === 'edition'));
+        R.openDetail(c.id);
+        const html = document.querySelector('#detail-body .card-odds')?.textContent || '';
+        document.querySelector('#detail-close').click();
+        return { n: rows.length, sorted: rows.every((x, i) => !i || rows[i - 1].p >= x.p), ok: rows.every(x => x.p > 0 && x.p < 1),
+          sum: rows.every(x => Math.abs(x.fins.reduce((a, f) => a + f.p, 0) - x.p) < 1e-9), packs: rows.map(x => x.pack.id), ed: ed.length, html: html.includes('1/') };
+      });
+      check(r.n >= 2 && r.sorted && r.ok && r.sum && r.packs.includes('belgique') && r.packs.includes('memoire'), 'chances d’une carte : ' + JSON.stringify(r));
+      check(r.ed === 1 && r.html, 'chances d’une édition limitée ou tableau absent : ' + JSON.stringify(r));
+    });
     await step('fiche d’un savant : connu pour', async () => {
       const id = await page.evaluate(() => { const c = window.RDL.CARDS.find(c => c.name === 'Adolphe Sax'); window.RDL.state.owned[c.id] = 1; window.RDL.save(); return c.id; });
       await page.evaluate(id => window.RDL.openDetail(id), id);

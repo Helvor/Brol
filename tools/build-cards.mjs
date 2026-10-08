@@ -302,7 +302,8 @@ async function buildAnimaux(resolve) {
 
 // ---------- En route ! : aviation, rail, exploration ----------
 // [titre Wikipédia FR (ou QID), type (stat), sous-titre FR, sous-titre NL, 3ᵉ stat [clé, valeur], options]
-// Options : name, nlName, year (sinon : premier vol P606, création P571 ou début P580 sur Wikidata), mythique, img, artwork.
+// Options : name, nlName, year (sinon : premier vol P606, création P571 ou début P580 sur Wikidata), mythique, img, artwork,
+// alt (photo de la version Plein cadre, relue à l'œil).
 // Écartés : les officiers de l'État indépendant du Congo (Lemaire, Storms, Coquilhat…), pas des « héros » de cartes ;
 // le navire-école Mercator (Q47524354) : sa seule image libre le montre minuscule au loin.
 const AVIATION = [
@@ -379,7 +380,8 @@ const FINANCE = [
   ['Guy Quaden', 'Gouverneur', 'Gouverneur de l’arrivée des billets en euros (2002)', 'Gouverneur van de komst van de eurobiljetten (2002)', ['Nommé', 1999]],
   ['Luc Coene', 'Gouverneur', 'Gouverneur au cœur de la crise de la dette', 'Gouverneur in het hart van de schuldencrisis', ['Nommé', 2011]],
   ['Q19334606', 'Gouverneur', 'Gouverneur de 2015 à 2019', 'Gouverneur van 2015 tot 2019', ['Nommé', 2015], { name: 'Jan Smets', nlName: 'Jan Smets' }],
-  ['Pierre Wunsch', 'Gouverneur', 'Gouverneur de la Banque nationale depuis 2019', 'Gouverneur van de Nationale Bank sinds 2019', ['Nommé', 2019]],
+  ['Pierre Wunsch', 'Gouverneur', 'Gouverneur de la Banque nationale depuis 2019', 'Gouverneur van de Nationale Bank sinds 2019', ['Nommé', 2019],
+    { mythique: true, alt: 'Klaas Knot, Octavian Armașu & Pierre Wunsch.jpg' }], // demande de l'utilisateur ; Plein cadre cadré sur lui
   ['Alexandre Lamfalussy', 'Économiste', 'Le « père de l’euro », président de l’Institut monétaire européen', 'De “vader van de euro”, voorzitter van het Europees Monetair Instituut', ['Rôle', 'Euro']],
   ['Peter Praet', 'Économiste', 'Directeur à la Banque nationale puis chef économiste de la BCE', 'Directeur bij de Nationale Bank, daarna hoofdeconoom van de ECB', ['Rôle', 'BCE']],
   ['Franc belge', 'Monnaie', 'La monnaie belge de 1832 à 2002', 'De Belgische munt van 1832 tot 2002', ['Fin', 2002], { year: 1832, nlName: 'Belgische frank' }],
@@ -453,7 +455,7 @@ async function buildRoute(cat, list) {
     out.push({
       id, cat, name: e.name || cap(r.xLabel.replace(/ \(.+\)$/, '')), img, rarity: 'commune', family: cat,
       emblem: /\.svg$/i.test(img) || undefined, artwork: e.artwork || undefined, forceRarity: e.mythique ? 'mythique' : undefined,
-      subtitle: e.sub, nl: { subtitle: e.subNl, ...(e.nlName && { name: e.nlName }) },
+      alt: e.alt, subtitle: e.sub, nl: { subtitle: e.subNl, ...(e.nlName && { name: e.nlName }) },
       meta: r.human ? [e.kind, b && `${b}${d ? '–' + d : ''}`].filter(Boolean).join(' · ') : [e.kind, when].filter(Boolean).join(' · '),
       stats: [r.human ? ['Naissance', b ?? '—'] : [e.kind === 'Avion' ? 'Premier vol' : 'Année', when ?? '—'], ['Type', e.kind], e.extra],
       links: +r.links,
@@ -1746,7 +1748,7 @@ const MYTHIQUES = [
   'Ville de Bruxelles', 'Anvers', 'Bruges', 'Gand', 'Liège',
   'Atomium', 'Manneken-Pis', 'Grand-Place de Bruxelles', 'Retable de l\'Agneau mystique',
   'Frite', 'Westvleteren (bière)', 'Tomorrowland (festival)', 'Carnaval de Binche',
-  'Gabrielle Petit (résistante)', 'Andrée De Jongh', 'Malinois (chien)', 'Banque nationale de Belgique',
+  'Gabrielle Petit (résistante)', 'Andrée De Jongh', 'Malinois (chien)', 'Banque nationale de Belgique', 'Pierre Wunsch',
 ];
 const FIXED_CATS = new Set(['monarchie', 'region', 'province', 'evenement', 'edition']); // trop petites : rareté fixée à la main
 const linkIds = cards.filter(c => isQ(c.id)).map(c => c.id);
