@@ -401,9 +401,10 @@
   };
   // Cadrage sur le visage (data/focus.js, généré par tools/build-focus.py) : « x% y% » pour object-position
   const focusOf = f => { const v = window.FOCUS?.[f]?.split(' '); return v ? `${v[0]}% ${v[1]}%` : ''; };
-  // Sur la carte : position, plus un léger zoom ancré en bas quand la photo n'est pas assez haute pour remonter le visage
+  // Sur la carte : position, plus un zoom quand la photo n'est pas assez haute pour remonter le visage, ancré en bas
+  // (« x y zoom ox ») ou à une hauteur choisie (« x y zoom ox oy », cadrage manuel sur une personne d'une photo de groupe)
   const focusStyle = f => { const v = window.FOCUS?.[f]?.split(' '); if (!v) return '';
-    return ` style="object-position:${v[0]}% ${v[1]}%${v[2] ? `;transform:scale(${v[2]});transform-origin:${v[3]}% 100%` : ''}"`; };
+    return ` style="object-position:${v[0]}% ${v[1]}%${v[2] ? `;transform:scale(${v[2]});transform-origin:${v[3]}% ${v[4] ?? 100}%` : ''}"`; };
   const fileUrl = f => 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(f.replace(/ /g, '_'));
   const initials = n => n.split(/[\s-]+/).filter(w => /^[A-ZÀ-Ý]/.test(w)).slice(0, 2).map(w => w[0]).join('');
   const fmt = n => n.toLocaleString(L() === 'nl' ? 'nl-BE' : 'fr-BE');

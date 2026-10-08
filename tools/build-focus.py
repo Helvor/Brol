@@ -4,6 +4,8 @@
 # Usage : pip install opencv-python-headless && python3 tools/build-focus.py [--hors-ligne]
 # Écrit data/focus.js : { "Fichier.jpg": "50 74" } (object-position en %), ou "50 100 1.4 47" avec un zoom
 # (ancré en bas, à 47 % de la largeur) ; seulement pour les photos dont le visage tombe mal avec le cadrage par défaut.
+# Cadrage manuel (MANUAL) : un 5ᵉ nombre donne la hauteur du point de zoom (« 100 0 1.6 90 20 »), pour isoler une
+# personne sur une photo de groupe sans lui couper la tête.
 import json, os, re, time, urllib.request
 import cv2, numpy as np
 
@@ -105,7 +107,7 @@ SKIP = {
 MANUAL = {
     "L'Evénement illustré - 7 juin 1919.jpg": '50 100 1.25 50',  # Gabrielle Petit : couverture de magazine, titre masqué
     'Luc Coene 2015.jpg': '85 20',  # visage sur le bord droit de la photo
-    'Klaas Knot, Octavian Armașu & Pierre Wunsch.jpg': '90 0 1.3 90',  # Plein cadre de Pierre Wunsch : lui seul, à droite
+    'Klaas Knot, Octavian Armașu & Pierre Wunsch.jpg': '100 0 1.6 90 20',  # Plein cadre de Pierre Wunsch : zoom sur lui seul
 }
 out = dict(MANUAL)
 for f in files:
