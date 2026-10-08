@@ -105,6 +105,7 @@ SKIP = {
 MANUAL = {
     "L'Evénement illustré - 7 juin 1919.jpg": '50 100 1.25 50',  # Gabrielle Petit : couverture de magazine, titre masqué
     'Luc Coene 2015.jpg': '85 20',  # visage sur le bord droit de la photo
+    'Klaas Knot, Octavian Armașu & Pierre Wunsch.jpg': '90 0 1.3 90',  # Plein cadre de Pierre Wunsch : lui seul, à droite
 }
 out = dict(MANUAL)
 for f in files:
