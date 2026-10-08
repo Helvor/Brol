@@ -15,9 +15,11 @@ let cacheDirty = 0;
 function saveCache() { writeFileSync(CACHE_FILE, JSON.stringify(cache)); cacheDirty = 0; }
 async function getJSON(url, { delay = 0, label = 'HTTP' } = {}) {
   if (cache[url]) return cache[url];
+  // Adresse trop longue pour un GET (grosses requêtes SPARQL) : même requête en POST ; le cache garde l'adresse
+  const [base, body] = url.length > 7000 ? url.split('?') : [url, null];
   for (let attempt = 0; ; attempt++) {
     if (delay) await sleep(delay);
-    const r = await fetch(url, { headers: UA });
+    const r = await fetch(base, body ? { method: 'POST', headers: { ...UA, 'Content-Type': 'application/x-www-form-urlencoded' }, body } : { headers: UA });
     if (r.ok) {
       const j = await r.json();
       cache[url] = j;
@@ -155,6 +157,50 @@ function rarityByQuota(list, score) {
   }
   for (; i < rest.length; i++) rest[i].rarity = 'commune';
 }
+// ---------- Communes : chiffres officiels et score de rareté ----------
+// Chiffres officiels (Statbel, registres du patrimoine), réduits dans tools/sources/ par tools/statbel.py et
+// tools/patrimoine.mjs ; une commune se retrouve par son code INS (Wikidata P1567, parfois plusieurs : fusions)
+const csvRows = f => readFileSync(new URL('sources/' + f, import.meta.url), 'utf8').trim().split('\n').map(l => l.split(','));
+const STATBEL = new Map(csvRows('communes.csv').slice(1).map(r => [r[0], { pop: +r[3], rev: +r[5] || null }]));
+const PATRIMOINE = new Map(csvRows('patrimoine.csv').slice(1).map(r => [r[0], +r[1]]));
+const communeStats = o => [
+  ['Habitants', o.pop ? o.pop.toLocaleString('fr-BE') : '—'],
+  ['Superficie', o.area ? o.area.toLocaleString('fr-BE') + ' km²' : '—'],
+  ['Revenu/hab.', o.rev ? o.rev.toLocaleString('fr-BE') + ' €' : '—'],
+];
+// Chaque critère est ramené entre 0 et 1 puis pondéré ; un critère inconnu ne compte pas (les autres poids sont remis
+// à l'échelle). Habitants et notoriété : échelle logarithmique (une grande ville se détache, sans écraser les autres) ;
+// revenu, superficie et patrimoine : rang (0 = dernière, 1 = première). Le patrimoine est classé dans sa Région :
+// la Flandre protège bien plus de bâtiments que la Wallonie et Bruxelles, ce qui fausserait la comparaison.
+const COMMUNE_POIDS = { pop: 0.35, rev: 0.15, area: 0.10, links: 0.25, pat: 0.15 };
+const LOG_CRITERES = new Set(['pop', 'links']);
+const regionOf = ins => /^21/.test(ins) ? 'bxl' : /^(25|5|6|8|9)/.test(ins) ? 'wal' : 'vl';
+function rankOf(list, val) {
+  const known = list.filter(c => val(c) != null).sort((a, b) => val(a) - val(b));
+  return new Map(known.map((c, i) => [c, known.length > 1 ? i / (known.length - 1) : 1]));
+}
+function logOf(list, val) {
+  const known = list.filter(c => val(c) > 0), lv = new Map(known.map(c => [c, Math.log(val(c))]));
+  const mn = Math.min(...lv.values()), mx = Math.max(...lv.values());
+  return new Map(known.map(c => [c, mx > mn ? (lv.get(c) - mn) / (mx - mn) : 1]));
+}
+// list : cartes communes avec ins, pop, rev, area, pat ; notoriety : carte → nombre (ou null)
+function communeScores(list, notoriety) {
+  const val = { pop: c => c.pop || null, rev: c => c.rev ?? null, area: c => c.area ?? null, links: notoriety };
+  const ranks = Object.fromEntries(Object.entries(val).map(([k, f]) => [k, (LOG_CRITERES.has(k) ? logOf : rankOf)(list, f)]));
+  ranks.pat = new Map();
+  for (const reg of ['vl', 'wal', 'bxl']) for (const [c, r] of rankOf(list.filter(c => c.ins && regionOf(c.ins) === reg), c => c.pat)) ranks.pat.set(c, r);
+  const out = new Map();
+  for (const c of list) {
+    let sum = 0, w = 0;
+    for (const [k, p] of Object.entries(COMMUNE_POIDS)) if (ranks[k].has(c)) { sum += ranks[k].get(c) * p; w += p; }
+    out.set(c.id, w ? sum / w : 0);
+  }
+  return out;
+}
+const insOf = nis => [...(nis || [])].find(k => STATBEL.has(k));
+const communeFigures = (ins, area) => ins ? { ins, pop: STATBEL.get(ins).pop, rev: STATBEL.get(ins).rev, area, pat: PATRIMOINE.get(ins) || 0 } : { area };
+
 // Titres → QID par Wikidata seul (mode --ajout : l'API Wikipédia n'est pas nécessaire). Titres exacts, sans redirection.
 async function resolveTitlesSparql(entries) {
   const rows = await sparql(`SELECT ?t ?x WHERE { VALUES ?t { ${entries.map(e => JSON.stringify(e.title) + '@fr').join(' ')} }
@@ -528,6 +574,46 @@ if (AJOUT) {
   const table = {};
   for (const c of added) table[c.rarity] = (table[c.rarity] || 0) + 1;
   console.log(`Ajout « ${AJOUT} » : ${added.length} cartes`, JSON.stringify(table));
+  process.exit(0);
+}
+
+// Mode --communes : recalcule seulement les chiffres et la rareté des communes (et les habitants sur les cartes
+// bourgmestres) à partir de data/cards.js, de tools/sources/ et d'une requête Wikidata, sans Wikipédia ni Commons.
+if (process.argv.includes('--communes')) {
+  globalThis.window = {};
+  (0, eval)(readFileSync(new URL('../data/cards.js', import.meta.url), 'utf8'));
+  cards.splice(0, cards.length, ...window.CARDS);
+  const list = cards.filter(c => c.cat === 'commune');
+  const rows = await sparql(`SELECT ?c ?nis ?area ?links WHERE { VALUES ?c { ${list.map(c => 'wd:' + c.id).join(' ')} }
+  ?c wikibase:sitelinks ?links. OPTIONAL { ?c wdt:P1567 ?nis } OPTIONAL { ?c wdt:P2046 ?area } }`);
+  const wd = new Map();
+  for (const r of rows) {
+    const o = wd.get(qid(r.c)) || { nis: new Set(), area: null, links: +r.links };
+    if (r.nis) o.nis.add(r.nis);
+    if (r.area) o.area = Math.round(+r.area * 10) / 10;
+    wd.set(qid(r.c), o);
+  }
+  const before = new Map(list.map(c => [c.id, c.rarity]));
+  for (const c of list) {
+    const w = wd.get(c.id) || {};
+    if (!insOf(w.nis)) console.warn('Commune sans code INS Statbel :', c.name);
+    Object.assign(c, communeFigures(insOf(w.nis), w.area));
+    c.stats = communeStats(c);
+    if (c.rarity === 'mythique') c.forceRarity = 'mythique'; // MYTHIQUES (choisies à la main) : inchangées
+  }
+  const sc = communeScores(list, c => wd.get(c.id)?.links ?? null);
+  rarityByQuota(list, c => sc.get(c.id));
+  const byId = new Map(list.map(c => [c.id, c]));
+  for (const c of cards) if (c.cat === 'bourgmestre' && byId.get(c.mayorOf)?.pop) c.stats = c.stats.map(s => s[0] === 'Habitants' ? ['Habitants', byId.get(c.mayorOf).pop.toLocaleString('fr-BE')] : s);
+  for (const c of list) { delete c.ins; delete c.pop; delete c.rev; delete c.area; delete c.pat; }
+  saveCache();
+  writeFileSync('data/cards.js',
+    '// Généré par tools/build-cards.mjs. Données : Wikidata (CC0). Images : Wikimedia Commons.\n' +
+    'window.CARDS = ' + JSON.stringify(cards) + ';\n' +
+    'window.POS_NL = ' + JSON.stringify(window.POS_NL) + ';\n');
+  const table = {};
+  for (const c of list) table[c.rarity] = (table[c.rarity] || 0) + 1;
+  console.log(`Communes : ${list.length} cartes, ${list.filter(c => c.rarity !== before.get(c.id)).length} changent de rareté`, JSON.stringify(table));
   process.exit(0);
 }
 
@@ -1309,28 +1395,18 @@ for (const r of communes) {
   else if (!o.prov && PROVINCE_FIX[id]) o.prov = PROVINCE_FIX[id]; // province absente sur Wikidata
   comm.set(id, o);
 }
-// Chiffres officiels (Statbel, registres du patrimoine), réduits dans tools/sources/ par tools/statbel.py et
-// tools/patrimoine.mjs ; une commune se retrouve par son code INS (Wikidata P1567, parfois plusieurs : fusions)
-const csvRows = f => readFileSync(new URL('sources/' + f, import.meta.url), 'utf8').trim().split('\n').map(l => l.split(','));
-const STATBEL = new Map(csvRows('communes.csv').slice(1).map(r => [r[0], { pop: +r[3], rev: +r[5] || null }]));
-const PATRIMOINE = new Map(csvRows('patrimoine.csv').slice(1).map(r => [r[0], +r[1]]));
 for (const o of comm.values()) {
-  const ins = [...(o.nis || [])].find(k => STATBEL.has(k));
-  if (!ins) { console.warn('Commune sans code INS Statbel :', o.name); continue; }
-  Object.assign(o, { ins, pop: STATBEL.get(ins).pop, rev: STATBEL.get(ins).rev, pat: PATRIMOINE.get(ins) || 0 });
+  if (!insOf(o.nis)) console.warn('Commune sans code INS Statbel :', o.name);
+  Object.assign(o, communeFigures(insOf(o.nis), o.area));
 }
 for (const o of comm.values()) {
   const p = o.pop;
   const rarity = p >= 150000 ? 'legendaire' : p >= 60000 ? 'epique' : p >= 25000 ? 'rare' : p >= 12000 ? 'peu-commune' : 'commune';
   cards.push({
     id: o.id, cat: 'commune', name: o.name, rarity, img: o.img || o.coa || null, badge: o.coa || null,
-    ins: o.ins, rev: o.rev, area: o.area, pat: o.pat, // pour la rareté (retirés ensuite)
+    pop: o.pop, ins: o.ins, rev: o.rev, area: o.area, pat: o.pat, // pour la rareté (retirés ensuite)
     subtitle: o.prov ? (/^[AEIOUÉ]/.test(o.prov) ? `Province d’${o.prov}` : `Province de ${o.prov}`) : 'Bruxelles-Capitale',
-    stats: [
-      ['Habitants', p ? p.toLocaleString('fr-BE') : '—'],
-      ['Superficie', o.area ? o.area.toLocaleString('fr-BE') + ' km²' : '—'],
-      ['Revenu/hab.', o.rev ? o.rev.toLocaleString('fr-BE') + ' €' : '—'],
-    ],
+    stats: communeStats(o),
   });
 }
 
@@ -1750,7 +1826,8 @@ SELECT ?c ?p ?pLabel ?st ?en WHERE {
 // Mythique : uniquement les icônes de la Belgique, choisies à la main (MYTHIQUES), plus les règles fixes
 // (rois de 40 ans de règne, événements majeurs). Le reste de chaque catégorie est classé par notoriété
 // et réparti selon les quotas, jusqu'à légendaire. Notoriété :
-//   - communes : score pondéré (COMMUNE_POIDS) : habitants, revenu, superficie, notoriété, patrimoine protégé ;
+//   - communes : score pondéré (COMMUNE_POIDS) : habitants, revenu, superficie, notoriété (nombre de Wikipédias),
+//     patrimoine protégé ;
 //   - politique : carrière (années comme Premier ministre, gouvernements, postes), Wikipédia pour départager ;
 //   - autres : visites des articles sur Wikipédia FR + NL sur les 12 derniers mois (notoriété en Belgique),
 //     à défaut le nombre de Wikipédias.
@@ -1782,7 +1859,7 @@ for (let i = 0; i < linkIds.length; i += 300) {
 }
 
 // Visites des 12 derniers mois complets sur Wikipédia FR et NL
-const VIEW_CATS = new Set(['commune', 'culture', 'sport', 'science', 'militaire', 'animal', 'aviation', 'rail', 'exploration', 'finance', 'art', 'monument', 'chateau', 'folklore', 'gastronomie', 'biere', 'enseignement', 'groupe', 'festival']);
+const VIEW_CATS = new Set(['culture', 'sport', 'science', 'militaire', 'animal', 'aviation', 'rail', 'exploration', 'finance', 'art', 'monument', 'chateau', 'folklore', 'gastronomie', 'biere', 'enseignement', 'groupe', 'festival']);
 const VIEWS = new Map();
 {
   const d = new Date(), endM = new Date(d.getFullYear(), d.getMonth(), 0), startM = new Date(endM.getFullYear() - 1, endM.getMonth() + 1, 1);
@@ -1816,30 +1893,7 @@ const spanYears = sp => {
   const a = +m[1], b = m[2] ? +m[2] : /depuis/.test(sp) ? new Date().getFullYear() : a;
   return Math.max(0.5, b - a);
 };
-// Communes : chaque critère est converti en rang (0 = dernière, 1 = première) puis pondéré ; un critère inconnu
-// ne compte pas (les autres poids sont remis à l'échelle). Le patrimoine est classé dans sa Région : la Flandre
-// protège bien plus de bâtiments que la Wallonie et Bruxelles, ce qui fausserait la comparaison.
-const COMMUNE_POIDS = { pop: 0.30, rev: 0.25, area: 0.10, views: 0.20, pat: 0.15 };
-const regionOf = ins => /^21/.test(ins) ? 'bxl' : /^(25|5|6|8|9)/.test(ins) ? 'wal' : 'vl';
-function rankOf(list, val) {
-  const known = list.filter(c => val(c) != null).sort((a, b) => val(a) - val(b));
-  const out = new Map();
-  known.forEach((c, i) => out.set(c, known.length > 1 ? i / (known.length - 1) : 1));
-  return out;
-}
-const COMMUNE_SCORE = new Map();
-{
-  const list = cards.filter(c => c.cat === 'commune');
-  const val = { pop: c => c.stats && num(c.stats[0][1]) || null, rev: c => c.rev ?? null, area: c => c.area ?? null, views: c => VIEWS.get(c.id) ?? null };
-  const ranks = Object.fromEntries(Object.entries(val).map(([k, f]) => [k, rankOf(list, f)]));
-  ranks.pat = new Map();
-  for (const reg of ['vl', 'wal', 'bxl']) for (const [c, r] of rankOf(list.filter(c => c.ins && regionOf(c.ins) === reg), c => c.pat)) ranks.pat.set(c, r);
-  for (const c of list) {
-    let sum = 0, w = 0;
-    for (const [k, p] of Object.entries(COMMUNE_POIDS)) if (ranks[k].has(c)) { sum += ranks[k].get(c) * p; w += p; }
-    COMMUNE_SCORE.set(c.id, w ? sum / w : 0);
-  }
-}
+const COMMUNE_SCORE = communeScores(cards.filter(c => c.cat === 'commune'), c => LINKS.get(c.id) ?? null);
 function score(c) {
   const links = LINKS.get(c.id) || 0;
   if (c.cat === 'commune') return COMMUNE_SCORE.get(c.id);
