@@ -18,12 +18,12 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   niveau (vérifié avec `tools/simulate.mjs` et `tools/check-odds.mjs`). Nouvelle catégorie mise en avant : à rareté
   égale, ses cartes sortent 3 fois plus souvent jusqu'à une date (`FEATURED` dans app.js, Mémoire jusqu'au 31 janvier
   2027), affiché dans le tableau des chances.
-- [x] **Paquet « Histoire »** (octobre 2026) : 37 cartes « manuelles » (`HISTOIRE` dans le générateur, catégorie
-  `histoire`) plus les 6 événements existants : grèves et manifestations (1893, 1913, 1960, Louvain 68, Fourons, Marche
+- [x] **Paquet « Histoire »** (octobre 2026) : 39 cartes « manuelles » (`HISTOIRE` dans le générateur, catégorie
+  `histoire`) plus les 6 événements existants : grèves et manifestations (1893, 1913, 1960, marche flamande de 1962, FN 1966, Louvain 68, Fourons, Marche
   blanche, climat), grandes dates (expositions universelles, Jeux d'Anvers, indépendance du Congo, Expo 58, euro…),
   tournants de société et drames (Bois du Cazier, Heysel, attentats du 22 mars…). Pour les drames, photos de mémoriaux
   ou de lieux uniquement. Séries « Expositions universelles » et « Dans la rue ». Mis en avant jusqu'au 31 mai 2027.
-  Écartés faute d'image libre : grève de 1936, grève des femmes de la FN, marches flamandes, manifestation anti-missiles,
+  Écartés faute d'image libre : grève de 1936 (photo sans source sûre), manifestation anti-missiles,
   marche multicolore, pacte scolaire, peine de mort, euthanasie, abdication d'Albert II, Ghislenghien.
 - [x] **Communes : rareté par score pondéré** (octobre 2026) : habitants 40 %, notoriété (nombre de Wikipédias) 30 %,
   patrimoine protégé 25 % (classé dans sa Région), revenu par habitant 5 % ; superficie non comptée. Chiffres officiels,
