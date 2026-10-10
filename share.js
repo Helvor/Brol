@@ -13,7 +13,8 @@
     commune: ['#e2e2de', '#a8a8a2', '#d6d6d1'], 'peu-commune': ['#bfe6cb', '#3f8a5a', '#a9dbb9'], rare: ['#c3d8ff', '#2e5fc0', '#9dbcff'],
     epique: ['#e2cbff', '#6b3db8', '#c9a6ff'], legendaire: ['#7a5a12', '#f7dc84', '#a87b1e', '#fff1b8', '#8a6516'],
     mythique: ['#5a0012', '#ff2d55', '#9a0020', '#ff8fa0', '#5a0012'], // Rubis
-    holo: ['#5d6470', '#e9edf3', '#8a92a0', '#ffffff', '#6f7783', '#dfe4ec'], // Chrome plein: ['#2b2b30', '#0c0c0e', '#3a3a42'],
+    holo: ['#5d6470', '#e9edf3', '#8a92a0', '#ffffff', '#6f7783', '#dfe4ec'], // Chrome
+    plein: ['#2b2b30', '#0c0c0e', '#3a3a42'],
     or: ['#6e4f0c', '#f9e08a', '#b8891f', '#fff3c2', '#a87b1e'], noir: ['#8a6410', '#f6d478', '#0b0b0b', '#0b0b0b', '#f6d478'],
     rouge: ['#4a0510', '#c8162c', '#ffd98a', '#9c0f22', '#ffe8b0'], confetti: ['#ff5fa8', '#ffd23f', '#2fc7e8', '#8a3fd6'],
     pave: ['#4a4a48', '#121212', '#f6d43a', '#121212'], iris: ['#0c2350', '#3b74d8', '#f2c400', '#1d4f9e'],
@@ -22,6 +23,10 @@
     coquelicot: ['#14140f', '#7a1410', '#e0302a', '#7a1410', '#14140f'],
   };
   const BAND_INK_DARK = new Set(['jaune', 'flandre']);
+  // Cartes Histoire « Archives » : carton kraft (cadre doré en légendaire, rouge en mythique), encre du tampon par rareté
+  const TYPE = '"Special Elite", "Courier New", monospace';
+  const ARCH_FRAMES = { commune: ['#c79b62', '#8d6633', '#b98a52'], legendaire: FRAMES.legendaire, mythique: ['#5a0012', '#c8102e', '#8a0020'] };
+  const ARCH_INK = { commune: '#6b6b6b', 'peu-commune': '#2f7d4a', rare: '#2e5fc0', epique: '#6b3db8', legendaire: '#b8860b', mythique: '#c8102e' };
 
   function loadImage(src) {
     return new Promise(res => {
@@ -66,6 +71,12 @@
     do { ctx.font = `${weight} ${s}px ${family}`; s -= 2; } while (ctx.measureText(text).width > maxW && s > 18);
     return s + 2;
   }
+  // Une ligne qui tient dans maxW, coupée avec « … » si besoin (un seul mot trop long déborderait sinon)
+  function clip(ctx, text, maxW) {
+    if (ctx.measureText(text).width <= maxW) return text;
+    while (text.length > 1 && ctx.measureText(text + '…').width > maxW) text = text.slice(0, -1);
+    return text + '…';
+  }
   function wrap(ctx, text, maxW, maxLines) {
     const words = text.split(' '), lines = [];
     let line = '';
@@ -78,7 +89,73 @@
     return lines;
   }
 
+  // Intérieur d'une carte Histoire : tirage photo scotché, texte tapé à la machine, tampon ou cachet de cire, statistiques
+  function archives(ctx, c, photo, ix, iy, iw, ih, finish) {
+    const k = gradient(ctx, ix, iy, iw, ih, ['#dcc597', '#cdb07a'], 100);
+    ctx.fillStyle = k; ctx.fillRect(ix, iy, iw, ih);
+    ctx.fillStyle = 'rgba(90,60,20,.05)'; for (let y = iy; y < iy + ih; y += 9) ctx.fillRect(ix, y, iw, 2);
+    const statsH = 116, px = ix + 42, py = iy + 30, pw = iw - 84, ph = Math.round(ih * 0.56);
+    // Tirage photo, légèrement de travers
+    ctx.save(); ctx.translate(px + pw / 2, py + ph / 2); ctx.rotate(-2 * Math.PI / 180);
+    ctx.shadowColor = 'rgba(60,40,10,.4)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 8;
+    ctx.fillStyle = '#f4efe3'; ctx.fillRect(-pw / 2, -ph / 2, pw, ph); ctx.shadowColor = 'transparent';
+    if (photo) {
+      ctx.save(); ctx.beginPath(); ctx.rect(-pw / 2 + 14, -ph / 2 + 14, pw - 28, ph - 28); ctx.clip();
+      ctx.filter = finish === 'or' ? 'sepia(.65) saturate(1.3)' : c.artwork ? 'sepia(.15)' : 'sepia(.55) contrast(1.05)';
+      if (c.artwork) { ctx.fillStyle = '#f4efe3'; ctx.fillRect(-pw / 2, -ph / 2, pw, ph); cover(ctx, photo, -pw / 2 + 14, -ph / 2 + 14, pw - 28, ph - 28, 0.5, true); }
+      else { const v = (window.FOCUS?.[c.img] || '50 20').split(' ').map(Number); cover(ctx, photo, -pw / 2 + 14, -ph / 2 + 14, pw - 28, ph - 28, v[1] / 100, false, v[0] / 100); }
+      ctx.restore();
+    }
+    ctx.rotate(5 * Math.PI / 180); ctx.fillStyle = 'rgba(240,232,205,.85)'; ctx.fillRect(-50, -ph / 2 - 18, 100, 34); // scotch
+    ctx.restore();
+    // Reflet des versions spéciales (Holo : barre de lumière)
+    if (finish === 'holo') {
+      ctx.save(); ctx.globalCompositeOperation = 'overlay';
+      ctx.fillStyle = gradient(ctx, ix, iy, iw, ih, ['#ffffff00', '#ffffff00', '#ffffffcc', '#aae6ffaa', '#ffbef099', '#ffffff00', '#ffffff00'], 115);
+      ctx.fillRect(ix, iy, iw, ih); ctx.restore();
+    }
+    // Tampon ARCHIVES / CONFIDENTIEL, ou cachet de cire (légendaire, mythique)
+    const ink = ARCH_INK[c.rarity] || ARCH_INK.commune, sy = py + ph + 4;
+    ctx.save(); ctx.translate(ix + iw - 120, sy); ctx.rotate(-12 * Math.PI / 180);
+    if (c.rarity === 'legendaire' || c.rarity === 'mythique') {
+      const g = ctx.createRadialGradient(-12, -14, 4, 0, 0, 48);
+      (c.rarity === 'mythique' ? ['#ff8fa0', '#c8102e', '#5a0012'] : ['#fff3c2', '#d9a52c', '#8a6516']).forEach((col, n) => g.addColorStop(n / 2, col));
+      ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 6;
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, -10, 46, 0, Math.PI * 2); ctx.fill();
+    } else {
+      const word = c.rarity === 'epique' ? 'CONFIDENTIEL' : 'ARCHIVES';
+      ctx.font = `700 30px ${DISPLAY}`; ctx.letterSpacing = '4px';
+      const w = ctx.measureText(word).width + 30;
+      ctx.globalAlpha = 0.8; ctx.strokeStyle = ink; ctx.lineWidth = 4; rr(ctx, -w / 2, -24, w, 46, 8); ctx.stroke();
+      ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(word, 2, 0);
+    }
+    ctx.restore();
+    // Nom, description et méta, tapés à la machine
+    const by = iy + ih - statsH - 20;
+    ctx.fillStyle = '#2b2116'; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    let fs = 50, lines;
+    for (; ; fs -= 2) { ctx.font = `400 ${fs}px ${TYPE}`; lines = wrap(ctx, window.I18N.name(c).toUpperCase(), iw - 70, 2); if (fs <= 32 || lines.every(l => ctx.measureText(l).width <= iw - 70)) break; }
+    let ty = by - 70 - (lines.length - 1) * fs;
+    for (const l of lines) { ctx.fillText(l, ix + 34, ty); ty += fs; }
+    ctx.font = `400 23px ${TYPE}`; ctx.fillStyle = '#4a3a26';
+    ctx.fillText(wrap(ctx, window.I18N.subtitle(c), iw - 70, 1)[0] || '', ix + 34, by - 32);
+    ctx.font = `400 20px ${TYPE}`; ctx.fillStyle = '#6a4f2c';
+    ctx.fillText(wrap(ctx, window.I18N.meta(c) || '', iw - 70, 1)[0], ix + 34, by - 4);
+    // Statistiques
+    const st = iy + ih - statsH;
+    ctx.fillStyle = 'rgba(255,250,235,.55)'; ctx.fillRect(ix, st, iw, statsH);
+    ctx.strokeStyle = '#6a4f2c'; ctx.lineWidth = 2; ctx.setLineDash([8, 6]); ctx.beginPath(); ctx.moveTo(ix, st); ctx.lineTo(ix + iw, st); ctx.stroke(); ctx.setLineDash([]);
+    const stats = (API.statsOf ? API.statsOf(c) : c.stats).slice(0, 3), colW = (iw - 40) / 3;
+    stats.forEach(([key, v], n) => {
+      const sx = ix + 22 + n * colW;
+      if (n) { ctx.fillStyle = 'rgba(90,60,20,.25)'; ctx.fillRect(sx - 12, st + 24, 2, statsH - 48); }
+      ctx.fillStyle = '#7a5f3a'; ctx.font = `600 20px ${DISPLAY}`; ctx.fillText(wrap(ctx, window.I18N.statKey(key).toUpperCase(), colW - 20, 1)[0], sx, st + 46);
+      ctx.fillStyle = '#2b2116'; ctx.font = `400 30px ${TYPE}`; ctx.fillText(clip(ctx, String(window.I18N.tv(v)), colW - 20), sx, st + 88);
+    });
+  }
+
   async function render(c, finish) {
+    if (c.cat === 'histoire') try { await document.fonts?.load(`40px ${TYPE}`); } catch (_) { /* police de secours */ }
     await document.fonts?.ready;
     const L = window.I18N.lang, ed = c.cat === 'edition' && API.packById(c.pack);
     const fin = API.FINISHES.find(f => f.id === finish) || API.FINISHES[0];
@@ -111,81 +188,85 @@
     const x = (W - CW) / 2, y = 170, pad = 16, r = 30;
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 24;
     rr(ctx, x, y, CW, CH, r);
-    const frame = FRAMES[fin.pack || finish !== 'normal' ? finish : c.rarity] || (ed ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : FRAMES[c.rarity]);
+    const arch = c.cat === 'histoire' && finish !== 'plein'; // cartes Histoire : dossier « Archives » (voir style.css)
+    const frame = arch && finish === 'normal' ? ARCH_FRAMES[c.rarity] || ARCH_FRAMES.commune : FRAMES[fin.pack || finish !== 'normal' ? finish : c.rarity] || (ed ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : FRAMES[c.rarity]);
     ctx.fillStyle = gradient(ctx, x, y, CW, CH, ed && finish === 'normal' ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : frame, fin.id === 'tricolore' ? 0 : 135);
     ctx.fill(); ctx.restore();
     const ix = x + pad, iy = y + pad, iw = CW - pad * 2, ih = CH - pad * 2;
     ctx.save(); rr(ctx, ix, iy, iw, ih, 18); ctx.clip();
-    ctx.fillStyle = finish === 'noir' ? '#050505' : '#15161a'; ctx.fillRect(ix, iy, iw, ih);
-    const statsH = 116, bandH = 190, full = finish === 'plein';
-    const photoH = full ? ih : ih - statsH;
-    if (photo) {
-      ctx.save();
-      if (finish === 'or') ctx.filter = 'sepia(.65) saturate(1.3)';
-      if (finish === 'noir' || finish === 'pave') ctx.filter = 'grayscale(1) contrast(1.1)';
-      const flat = c.emblem || c.artwork || (['commune', 'province', 'region', 'enseignement'].includes(c.cat) && /\.(svg|png)$/i.test(photoFile || ''));
-      if (flat) { ctx.fillStyle = '#20232b'; ctx.fillRect(ix, iy, iw, photoH); cover(ctx, photo, ix + 50, iy + 50, iw - 100, photoH - bandH - 70, 0.5, true); }
-      else { // cadrage sur le visage, avec le zoom éventuel
-        const v = (window.FOCUS?.[photoFile] || '50 20').split(' ').map(Number);
-        cover(ctx, photo, ix, iy, iw, photoH, v[1] / 100, false, v[0] / 100, v[2] ? [v[2], v[3] / 100, (v[4] ?? 100) / 100] : null);
+    if (arch) archives(ctx, c, photo, ix, iy, iw, ih, finish);
+    else {
+      ctx.fillStyle = finish === 'noir' ? '#050505' : '#15161a'; ctx.fillRect(ix, iy, iw, ih);
+      const statsH = 116, bandH = 190, full = finish === 'plein';
+      const photoH = full ? ih : ih - statsH;
+      if (photo) {
+        ctx.save();
+        if (finish === 'or') ctx.filter = 'sepia(.65) saturate(1.3)';
+        if (finish === 'noir' || finish === 'pave') ctx.filter = 'grayscale(1) contrast(1.1)';
+        const flat = c.emblem || c.artwork || (['commune', 'province', 'region', 'enseignement'].includes(c.cat) && /\.(svg|png)$/i.test(photoFile || ''));
+        if (flat) { ctx.fillStyle = '#20232b'; ctx.fillRect(ix, iy, iw, photoH); cover(ctx, photo, ix + 50, iy + 50, iw - 100, photoH - bandH - 70, 0.5, true); }
+        else { // cadrage sur le visage, avec le zoom éventuel
+          const v = (window.FOCUS?.[photoFile] || '50 20').split(' ').map(Number);
+          cover(ctx, photo, ix, iy, iw, photoH, v[1] / 100, false, v[0] / 100, v[2] ? [v[2], v[3] / 100, (v[4] ?? 100) / 100] : null);
+        }
+        ctx.restore();
+      } else if (c.cat === 'evenement') {
+        ctx.fillStyle = '#121318'; ctx.fillRect(ix, iy, iw, photoH);
+        ctx.fillStyle = gradient(ctx, ix, iy, iw, photoH, ['#fff1b8', '#d6a12a'], 90); ctx.textAlign = 'center';
+        ctx.font = `800 ${fitText(ctx, String(c.stats[0][1]), iw - 60, 230, 800, DISPLAY)}px ${DISPLAY}`;
+        ctx.fillText(String(c.stats[0][1]), ix + iw / 2, iy + (photoH - bandH) / 2); ctx.textAlign = 'left';
       }
+      // Reflet des versions spéciales
+      if (finish === 'holo' || fin.pack) {
+        ctx.save(); ctx.globalCompositeOperation = 'overlay';
+        ctx.fillStyle = finish === 'holo' // Chrome : une barre de lumière en diagonale
+          ? gradient(ctx, ix, iy, iw, ih, ['#ffffff00', '#ffffff00', '#ffffffcc', '#aae6ffaa', '#ffbef099', '#ffffff00', '#ffffff00'], 115)
+          : gradient(ctx, ix, iy, iw, ih, ['#ff008040', '#ffdc0040', '#00ffb440', '#008cff40', '#be00ff40'], 115);
+        ctx.fillRect(ix, iy, iw, ih); ctx.restore();
+      }
+      // Bandeau : nom, sous-titre, méta
+      const fam = c.family || 'gris';
+      const band = ed ? ed.body[1] : finish === 'or' || finish === 'noir' ? '#0d0b06' : c.rarity === 'mythique' && finish === 'normal' ? '#7a001c' : css(`--p-${fam}`) || '#6f7077'; // Rubis
+      const ink = ed ? ed.metal[0] : finish === 'or' || finish === 'noir' ? '#f6d478' : BAND_INK_DARK.has(fam) && !full && !(c.rarity === 'mythique' && finish === 'normal') ? '#141414' : '#ffffff';
+      const by = iy + ih - statsH - bandH;
+      ctx.save();
+      if (full) { const g = ctx.createLinearGradient(0, by - 60, 0, by + bandH); g.addColorStop(0, '#0000'); g.addColorStop(1, '#000d'); ctx.fillStyle = g; ctx.fillRect(ix, by - 60, iw, bandH + 60); }
+      else { ctx.beginPath(); ctx.moveTo(ix, by + 26); ctx.lineTo(ix + iw, by); ctx.lineTo(ix + iw, by + bandH); ctx.lineTo(ix, by + bandH); ctx.closePath(); ctx.fillStyle = band; ctx.fill(); }
       ctx.restore();
-    } else if (c.cat === 'evenement') {
-      ctx.fillStyle = '#121318'; ctx.fillRect(ix, iy, iw, photoH);
-      ctx.fillStyle = gradient(ctx, ix, iy, iw, photoH, ['#fff1b8', '#d6a12a'], 90); ctx.textAlign = 'center';
-      ctx.font = `800 ${fitText(ctx, String(c.stats[0][1]), iw - 60, 230, 800, DISPLAY)}px ${DISPLAY}`;
-      ctx.fillText(String(c.stats[0][1]), ix + iw / 2, iy + (photoH - bandH) / 2); ctx.textAlign = 'left';
+      const name = window.I18N.name(c).toUpperCase();
+      ctx.fillStyle = ink; ctx.textBaseline = 'alphabetic';
+      // Nom en entier sur deux lignes au plus : on réduit la taille jusqu'à ce qu'il tienne (les longs noms nobles…)
+      let fs = 64, lines;
+      for (; ; fs -= 2) {
+        ctx.font = `800 ${fs}px ${DISPLAY}`;
+        lines = wrap(ctx, name, iw - 60, 99);
+        if (fs <= 34 || (lines.length <= (fs > 54 ? 1 : 2) && lines.every(l => ctx.measureText(l).width <= iw - 60))) break;
+      }
+      if (lines.length > 2) { lines = wrap(ctx, name, iw - 60, 2); }
+      let ty = by + bandH - 60 - (lines.length - 1) * fs * 0.95;
+      for (const l of lines) { ctx.fillText(l, ix + 30, ty); ty += fs * 0.95; }
+      // Ligne du bas : sous-titre à gauche, parti à droite (sans jamais se chevaucher)
+      let partyW = 0;
+      if (c.party) {
+        ctx.font = `700 22px ${DISPLAY}`; ctx.textAlign = 'right';
+        const party = wrap(ctx, c.party.toUpperCase(), iw / 2 - 40, 1)[0];
+        partyW = ctx.measureText(party).width + 20;
+        ctx.fillText(party, ix + iw - 30, by + bandH - 26); ctx.textAlign = 'left';
+      }
+      ctx.font = `500 24px ${TEXT}`; ctx.globalAlpha = 0.92;
+      ctx.fillText(wrap(ctx, window.I18N.subtitle(c), iw - 60 - partyW, 1)[0] || '', ix + 30, by + bandH - 26); ctx.globalAlpha = 1;
+      // Statistiques
+      const sy = iy + ih - statsH;
+      ctx.fillStyle = full ? 'rgba(8,8,10,.82)' : finish === 'or' || finish === 'noir' ? '#0d0b06' : '#111216'; ctx.fillRect(ix, sy, iw, statsH);
+      const stats = (API.statsOf ? API.statsOf(c) : c.stats).slice(0, 3), colW = (iw - 40) / 3;
+      stats.forEach(([k, v], i) => {
+        const sx = ix + 22 + i * colW;
+        if (i) { ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(sx - 12, sy + 24, 2, statsH - 48); }
+        ctx.fillStyle = '#8d8d95'; ctx.font = `600 20px ${DISPLAY}`; ctx.fillText(wrap(ctx, window.I18N.statKey(k).toUpperCase(), colW - 20, 1)[0], sx, sy + 46);
+        ctx.fillStyle = finish === 'or' || finish === 'noir' ? '#f6d478' : '#f1eee6'; ctx.font = `600 30px ${MONO}`;
+        ctx.fillText(clip(ctx, String(window.I18N.tv(v)), colW - 20), sx, sy + 88);
+      });
     }
-    // Reflet des versions spéciales
-    if (finish === 'holo' || fin.pack) {
-      ctx.save(); ctx.globalCompositeOperation = 'overlay';
-      ctx.fillStyle = finish === 'holo' // Chrome : une barre de lumière en diagonale
-        ? gradient(ctx, ix, iy, iw, ih, ['#ffffff00', '#ffffff00', '#ffffffcc', '#aae6ffaa', '#ffbef099', '#ffffff00', '#ffffff00'], 115)
-        : gradient(ctx, ix, iy, iw, ih, ['#ff008040', '#ffdc0040', '#00ffb440', '#008cff40', '#be00ff40'], 115);
-      ctx.fillRect(ix, iy, iw, ih); ctx.restore();
-    }
-    // Bandeau : nom, sous-titre, méta
-    const fam = c.family || 'gris';
-    const band = ed ? ed.body[1] : finish === 'or' || finish === 'noir' ? '#0d0b06' : c.rarity === 'mythique' && finish === 'normal' ? '#7a001c' : css(`--p-${fam}`) || '#6f7077'; // Rubis
-    const ink = ed ? ed.metal[0] : finish === 'or' || finish === 'noir' ? '#f6d478' : BAND_INK_DARK.has(fam) && !full && !(c.rarity === 'mythique' && finish === 'normal') ? '#141414' : '#ffffff';
-    const by = iy + ih - statsH - bandH;
-    ctx.save();
-    if (full) { const g = ctx.createLinearGradient(0, by - 60, 0, by + bandH); g.addColorStop(0, '#0000'); g.addColorStop(1, '#000d'); ctx.fillStyle = g; ctx.fillRect(ix, by - 60, iw, bandH + 60); }
-    else { ctx.beginPath(); ctx.moveTo(ix, by + 26); ctx.lineTo(ix + iw, by); ctx.lineTo(ix + iw, by + bandH); ctx.lineTo(ix, by + bandH); ctx.closePath(); ctx.fillStyle = band; ctx.fill(); }
-    ctx.restore();
-    const name = window.I18N.name(c).toUpperCase();
-    ctx.fillStyle = ink; ctx.textBaseline = 'alphabetic';
-    // Nom en entier sur deux lignes au plus : on réduit la taille jusqu'à ce qu'il tienne (les longs noms nobles…)
-    let fs = 64, lines;
-    for (; ; fs -= 2) {
-      ctx.font = `800 ${fs}px ${DISPLAY}`;
-      lines = wrap(ctx, name, iw - 60, 99);
-      if (fs <= 34 || (lines.length <= (fs > 54 ? 1 : 2) && lines.every(l => ctx.measureText(l).width <= iw - 60))) break;
-    }
-    if (lines.length > 2) { lines = wrap(ctx, name, iw - 60, 2); }
-    let ty = by + bandH - 60 - (lines.length - 1) * fs * 0.95;
-    for (const l of lines) { ctx.fillText(l, ix + 30, ty); ty += fs * 0.95; }
-    // Ligne du bas : sous-titre à gauche, parti à droite (sans jamais se chevaucher)
-    let partyW = 0;
-    if (c.party) {
-      ctx.font = `700 22px ${DISPLAY}`; ctx.textAlign = 'right';
-      const party = wrap(ctx, c.party.toUpperCase(), iw / 2 - 40, 1)[0];
-      partyW = ctx.measureText(party).width + 20;
-      ctx.fillText(party, ix + iw - 30, by + bandH - 26); ctx.textAlign = 'left';
-    }
-    ctx.font = `500 24px ${TEXT}`; ctx.globalAlpha = 0.92;
-    ctx.fillText(wrap(ctx, window.I18N.subtitle(c), iw - 60 - partyW, 1)[0] || '', ix + 30, by + bandH - 26); ctx.globalAlpha = 1;
-    // Statistiques
-    const sy = iy + ih - statsH;
-    ctx.fillStyle = full ? 'rgba(8,8,10,.82)' : finish === 'or' || finish === 'noir' ? '#0d0b06' : '#111216'; ctx.fillRect(ix, sy, iw, statsH);
-    const stats = (API.statsOf ? API.statsOf(c) : c.stats).slice(0, 3), colW = (iw - 40) / 3;
-    stats.forEach(([k, v], i) => {
-      const sx = ix + 22 + i * colW;
-      if (i) { ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(sx - 12, sy + 24, 2, statsH - 48); }
-      ctx.fillStyle = '#8d8d95'; ctx.font = `600 20px ${DISPLAY}`; ctx.fillText(wrap(ctx, window.I18N.statKey(k).toUpperCase(), colW - 20, 1)[0], sx, sy + 46);
-      ctx.fillStyle = finish === 'or' || finish === 'noir' ? '#f6d478' : '#f1eee6'; ctx.font = `600 30px ${MONO}`;
-      ctx.fillText(wrap(ctx, String(window.I18N.tv(v)), colW - 20, 1)[0], sx, sy + 88);
-    });
     // En haut de la carte : numéro, version, rareté
     ctx.fillStyle = 'rgba(10,10,12,.7)'; rr(ctx, ix + 20, iy + 20, 104, 40, 8); ctx.fill();
     ctx.fillStyle = '#f1eee6'; ctx.font = `600 24px ${MONO}`; ctx.fillText(String(c.no).padStart(4, '0'), ix + 34, iy + 49);
