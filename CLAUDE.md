@@ -10,7 +10,7 @@ en français) ; l'interface existe en FR et NL.
 - `data/cards.js` est **généré** par `tools/build-cards.mjs` (Wikidata, Wikipédia, Commons ; cache `tools/.cache.json`).
   Ne pas l'éditer à la main : modifier le générateur et relancer `node tools/build-cards.mjs`. Pour ajouter une
   catégorie sans tout régénérer (Wikipédia et Commons limitent souvent les requêtes, le cache n'est pas versionné) :
-  `node tools/build-cards.mjs --ajout=animal` (ou `militaire`, `aviation`, `rail`, `exploration` ; Wikidata seul ;
+  `node tools/build-cards.mjs --ajout=animal` (ou `militaire`, `aviation`, `rail`, `exploration`, `finance`, `histoire` ; Wikidata seul ;
   nouvelle catégorie : l'ajouter à `AJOUTS` dans le générateur). Photo fausse : `PHOTO_FIX` puis
   `node tools/build-cards.mjs --photos`.
 - `data/images.js` (adresses directes des images, `tools/build-images.mjs`, lancé par build-cards) et `data/focus.js`
@@ -27,7 +27,8 @@ en français) ; l'interface existe en FR et NL.
 - Wikimedia limite fortement les requêtes : espacer les appels, garder les caches.
 
 ## En cours / suite
-Phase 6 (nouveaux paquets) et paquet Banque nationale terminés. Restent dans `ROADMAP.md` : photos de Lansens et
+Phase 6 (nouveaux paquets), paquets Banque nationale et Histoire terminés. Commons inaccessible : passer par WDQS
+(`SERVICE wikibase:mwapi` vers commons.wikimedia.org) pour chercher des fichiers. Restent dans `ROADMAP.md` : photos de Lansens et
 Van Dorpe (pas d'autre photo libre), collègues de l'utilisateur pour le paquet BNB (photos locales, avec accord), équilibrage de Formation de gouvernement, mise à jour automatique des données, phase 5
 (comptes en ligne). Viser 50 cartes au moins par paquet thématique ; listes à faire valider avant de générer. Nouvelle catégorie : l'ajouter à `FEATURED`
 (app.js) pour qu'elle ne se noie pas dans le paquet Belgique.

@@ -477,6 +477,63 @@ const MONNAIES = [
   ['billet-2000f-horta', '2 000 francs Victor Horta', '2.000 frank Victor Horta', '2.000 Francs (1994-2001) - Vorderseite.jpg', 'Billet', 1994, 'L’architecte de l’Art nouveau bruxellois', 'De architect van de Brusselse art nouveau', ['Effigie', 'Horta'], 'epique'],
   ['billet-10000f-1997', '10 000 francs Albert II et Paola', '10.000 frank Albert II en Paola', '10.000 Francs (1997) - Vorderseite.jpg', 'Billet', 1997, 'Le dernier et le plus gros billet en francs', 'Het laatste en grootste biljet in frank', ['Effigie', 'Albert II'], 'epique'],
 ];
+// ---------- Histoire : manifestations, grandes dates et drames (paquet « Histoire ») ----------
+// Cartes « manuelles » : beaucoup de ces événements n'ont pas d'élément Wikidata avec une image. Photos relues à l'œil ;
+// pour les drames, uniquement des mémoriaux ou des lieux, jamais de victimes. art : affiche ou tableau, montré en entier.
+// [id, nom, nom NL, image, type, année, description, description NL, stat, rareté, options]
+const HISTOIRE = [
+  // Manifestations et grèves
+  ['hist-greve-1893', 'Grève générale de 1893', 'Algemene staking van 1893', 'Bruxelles Laermans greve.JPG', 'Grève', 1893, 'Les ouvriers arrachent le suffrage universel (plural)', 'De arbeiders dwingen het algemeen (meervoudig) stemrecht af', ['Lieu', 'Belgique'], 'rare', { art: true }],
+  ['hist-greve-1913', 'Grève générale de 1913', 'Algemene staking van 1913', "18-4-13, grève générale en Belgique (un rassemblement devant un local syndical, une grande banderole d'appel à la grève pacifique accrochée à la façade) - btv1b6924659b.jpg", 'Grève', 1913, '« Un homme, une voix » : grève pacifique de 400 000 ouvriers', '“Eén man, één stem”: vreedzame staking van 400.000 arbeiders', ['Lieu', 'Belgique'], 'peu-commune'],
+  ['hist-greve-1960', 'Grève de l’hiver 60', 'Staking van de eeuw', 'Borinage staakt (protestdemonstratie), Bestanddeelnr 910-1597.jpg', 'Grève', 1960, 'Cinq semaines de grève contre la loi unique', 'Vijf weken staking tegen de eenheidswet', ['Lieu', 'Wallonie'], 'rare'],
+  ['hist-mars-1962', 'Marche flamande sur Bruxelles', 'Mars op Brussel', 'Vlaamse mars op Brussel, de Vlamingen gewapend met spandoeken, Bestanddeelnr 914-3991.jpg', 'Manifestation', 1962, 'Des dizaines de milliers de Flamands réclament la frontière linguistique', 'Tienduizenden Vlamingen eisen de taalgrens', ['Lieu', 'Bruxelles'], 'peu-commune'],
+  ['hist-fn-1966', 'Grève des femmes de la FN', 'Vrouwenstaking bij FN', 'Stakende vrouwen van Herstal naar Luik om te demonsteren, de demonstranten onder, Bestanddeelnr 919-0736.jpg', 'Grève', 1966, '« À travail égal, salaire égal » : 3 000 ouvrières tiennent douze semaines', '“Gelijk loon voor gelijk werk”: 3.000 arbeidsters houden twaalf weken vol', ['Lieu', 'Herstal'], 'rare'],
+  ['hist-leuven-1968', 'Affaire de Louvain', 'Leuven Vlaams', 'Staking Vlaamse studenten te Leuven, een muurkrant levert het laatste nieuws - NA - 921-0007.jpg', 'Manifestation', 1968, '« Walen buiten » : l’université francophone part à Louvain-la-Neuve', '“Walen buiten”: de Franstalige universiteit verhuist naar Louvain-la-Neuve', ['Lieu', 'Louvain'], 'epique'],
+  ['hist-fourons', 'Affaire des Fourons', 'Voerkwestie', 'Gravenvoeren-1.jpg', 'Conflit', 1963, 'Six villages passés au Limbourg, vingt-cinq ans de querelle', 'Zes dorpen naar Limburg, vijfentwintig jaar ruzie', ['Lieu', 'Fourons'], 'peu-commune'],
+  ['hist-marche-blanche', 'Marche blanche', 'Witte Mars', 'Charleroi, mémorial « Entre terre et ciel » (101).jpg', 'Manifestation', 1996, '300 000 personnes en blanc pour les enfants disparus', '300.000 mensen in het wit voor de verdwenen kinderen', ['Lieu', 'Bruxelles'], 'legendaire'],
+  ['hist-climat-2019', 'Marches pour le climat', 'Klimaatmarsen', 'Youth for Climate - March for a better future (31835238067).jpg', 'Manifestation', 2019, 'Les élèves sèchent les cours chaque jeudi pour le climat', 'Scholieren spijbelen elke donderdag voor het klimaat', ['Lieu', 'Bruxelles'], 'commune'],
+  // Grands moments
+  ['hist-gouv-provisoire', 'Gouvernement provisoire', 'Voorlopig Bewind', 'Het voorlopig bewind, door Charles Picqué.jpg', 'Indépendance', 1830, 'Il proclame l’indépendance de la Belgique le 4 octobre 1830', 'Het roept op 4 oktober 1830 de onafhankelijkheid van België uit', ['Lieu', 'Bruxelles'], 'epique', { art: true }],
+  ['hist-expo-1897', 'Exposition de 1897', 'Wereldtentoonstelling van 1897', '1897 Léon Louis Oury Plakat Exposition Internationale Bruxelles, Affiches Brondert, Paris, Agence Rossel, Bruxelles.jpg', 'Exposition', 1897, 'Le Cinquantenaire et Tervuren accueillent le monde', 'Het Jubelpark en Tervuren ontvangen de wereld', ['Lieu', 'Bruxelles'], 'commune', { art: true }],
+  ['hist-expo-1905', 'Exposition de Liège', 'Wereldtentoonstelling van Luik', '1905 Liege Exposition.jpg', 'Exposition', 1905, 'Liège fête les 75 ans du pays', 'Luik viert de 75ste verjaardag van het land', ['Lieu', 'Liège'], 'commune', { art: true }],
+  ['hist-expo-1910', 'Exposition de 1910', 'Wereldtentoonstelling van 1910', 'App0248.jpg', 'Exposition', 1910, 'Bruxelles expose le monde… et brûle en partie', 'Brussel stelt de wereld tentoon… en brandt gedeeltelijk af', ['Lieu', 'Bruxelles'], 'commune', { art: true }],
+  ['hist-expo-1913', 'Exposition de Gand', 'Wereldtentoonstelling van Gent', '1913 S.l. s.n. ca. 1913 barcode 800000016999.jpg', 'Exposition', 1913, 'Gand construit sa gare Saint-Pierre pour l’occasion', 'Gent bouwt er zijn Sint-Pietersstation voor', ['Lieu', 'Gand'], 'peu-commune', { art: true }],
+  ['hist-expo-1935', 'Exposition de 1935', 'Wereldtentoonstelling van 1935', 'EXPO Bruxelles 1935-H.jpg', 'Exposition', 1935, 'Le Heysel et son Palais 5 sortent de terre', 'De Heizel en zijn Paleis 5 rijzen uit de grond', ['Lieu', 'Heysel'], 'peu-commune', { art: true }],
+  ['hist-expo-58', 'Expo 58', 'Expo 58', '1958 Expo 58 Atomium Maurice Luyten.jpg', 'Exposition', 1958, '42 millions de visiteurs au pied de l’Atomium', '42 miljoen bezoekers aan de voet van het Atomium', ['Lieu', 'Heysel'], 'legendaire'],
+  ['hist-jo-1920', 'Jeux d’Anvers', 'Spelen van Antwerpen', "Couverture du programme des Jeux olympiques d'Anvers 1920.jpg", 'Jeux olympiques', 1920, 'Premiers Jeux du drapeau olympique et du serment', 'Eerste Spelen met de olympische vlag en eed', ['Lieu', 'Anvers'], 'epique', { art: true }],
+  ['hist-congo-1960', 'Indépendance du Congo', 'Onafhankelijkheid van Congo', 'LumumbaBruxelles1960.jpg', 'Indépendance', 1960, 'Le 30 juin 1960, la colonie devient un État', 'Op 30 juni 1960 wordt de kolonie een staat', ['Lieu', 'Léopoldville'], 'epique'],
+  ['hist-mariage-1960', 'Mariage de Baudouin et Fabiola', 'Huwelijk van Boudewijn en Fabiola', 'Vorstelijk huwelijk te Brussel, Boudewijn en Fabiola op het balkon, Bestanddeelnr 911-8784.jpg', 'Mariage royal', 1960, 'Le roi épouse une aristocrate espagnole le 15 décembre', 'De koning trouwt op 15 december met een Spaanse aristocrate', ['Lieu', 'Bruxelles'], 'rare'],
+  ['hist-otan', 'L’OTAN à Bruxelles', 'De NAVO in Brussel', 'Brussels NATO Headquarters.jpg', 'Institution', 1967, 'Chassée de Paris, l’Alliance s’installe à Evere', 'Uit Parijs verdreven, vestigt de Alliantie zich in Evere', ['Lieu', 'Evere'], 'commune'],
+  ['hist-euro-2000', 'Euro 2000', 'EK 2000', 'Choreography Euro 2000.jpg', 'Football', 2000, 'Premier Euro organisé à deux, avec les Pays-Bas', 'Eerste EK met twee gastlanden, samen met Nederland', ['Lieu', 'Belgique'], 'peu-commune'],
+  ['hist-euro-2002', 'Passage à l’euro', 'Overgang naar de euro', '2 Euro Belgium 2011 King Albert II.jpg', 'Monnaie', 2002, 'Adieu le franc : 40,3399 francs pour un euro', 'Vaarwel frank: 40,3399 frank voor een euro', ['Taux', '40,3399'], 'commune'],
+  ['hist-tdf-2019', 'Grand Départ du Tour', 'Grand Départ van de Tour', "Bruxelles - 'Arche à Vélos' (48197041827).jpg", 'Cyclisme', 2019, 'Le Tour part de Bruxelles pour les 50 ans du premier sacre de Merckx', 'De Tour start in Brussel, 50 jaar na de eerste zege van Merckx', ['Lieu', 'Bruxelles'], 'rare'],
+  ['hist-mondial-2018', 'Diables rouges 3es', 'Rode Duivels derde', 'Belgium national football team World Cup 2018.jpg', 'Football', 2018, 'Meilleur Mondial de l’histoire, le Brésil battu en quart', 'Beste WK ooit, Brazilië verslagen in de kwartfinale', ['Lieu', 'Russie'], 'epique'],
+  // Tournants de société
+  ['hist-mariage-2003', 'Mariage pour tous', 'Homohuwelijk', '2015-05-16 13-06-59 ILCE-6000 DSC04653 (17592882048).jpg', 'Loi', 2003, 'Deuxième pays au monde à ouvrir le mariage aux couples de même sexe', 'Tweede land ter wereld dat het huwelijk openstelt voor koppels van hetzelfde geslacht', ['Rang', '2ᵉ au monde'], 'rare'],
+  ['hist-sabena-2001', 'Faillite de la Sabena', 'Faillissement van Sabena', 'DonThomasPosters13 (19291814749).jpg', 'Faillite', 2001, 'La compagnie nationale s’écrase après 78 ans de vol', 'De nationale maatschappij gaat na 78 jaar ten onder', ['Fondée', 1923], 'rare', { art: true }],
+  ['hist-zolder-1992', 'Dernier charbonnage', 'Laatste koolmijn', 'Ophaalgebouw schacht 2 Koolmijn Zolder.jpg', 'Industrie', 1992, 'Zolder ferme : la Belgique n’extrait plus de charbon', 'Zolder sluit: België delft geen steenkool meer', ['Lieu', 'Zolder'], 'peu-commune'],
+  ['hist-fortis-2008', 'Sauvetage de Fortis', 'Redding van Fortis', 'Fortis AG headquarter in Brussels.jpg', 'Crise', 2008, 'La première banque du pays sauvée par l’État, puis vendue', 'De grootste bank van het land gered door de staat, dan verkocht', ['Lieu', 'Bruxelles'], 'commune'],
+  // Drames
+  ['hist-albert-1934', 'Mort d’Albert Iᵉʳ', 'Dood van Albert I', 'Les rochers de Marche-les-Dames 1.jpg', 'Deuil national', 1934, 'Le roi-chevalier meurt en escalade à Marche-les-Dames', 'De koning-ridder sterft bij het klimmen in Marche-les-Dames', ['Lieu', 'Marche-les-Dames'], 'epique'],
+  ['hist-astrid-1935', 'Mort de la reine Astrid', 'Dood van koningin Astrid', 'Kuessnacht-Queen Astrid chapel-01ASD.jpg', 'Deuil national', 1935, 'Une chapelle marque le lieu de l’accident en Suisse', 'Een kapel markeert de plaats van het ongeval in Zwitserland', ['Lieu', 'Küssnacht'], 'epique'],
+  ['hist-cazier-1956', 'Catastrophe du Bois du Cazier', 'Mijnramp van Marcinelle', 'Marcinelle - cimetière - monument aux victimes du Bois du Cazier - 01.jpg', 'Catastrophe', 1956, '262 mineurs, dont 136 Italiens, ne remontent pas', '262 mijnwerkers, onder wie 136 Italianen, komen niet boven', ['Lieu', 'Marcinelle'], 'legendaire'],
+  ['hist-sabena-548', 'Vol Sabena 548', 'Sabena-vlucht 548', 'Berg (Kampenhout) Gedenkplaats Sabena vlucht 548 3-03-2021 14-45-47.jpg', 'Catastrophe', 1961, 'L’équipe américaine de patinage disparaît à Berg', 'De Amerikaanse kunstschaatsploeg komt om in Berg', ['Lieu', 'Berg'], 'rare'],
+  ['hist-innovation-1967', 'Incendie de l’Innovation', 'Brand in de Innovation', 'Cimetière de Bruxelles 10.jpg', 'Catastrophe', 1967, 'Le grand magasin de la rue Neuve brûle : 251 morts', 'Het warenhuis in de Nieuwstraat brandt af: 251 doden', ['Lieu', 'Bruxelles'], 'rare'],
+  ['hist-tueurs-brabant', 'Tueurs du Brabant', 'Bende van Nijvel', 'Monument slachtoffers bende van Nijvel.4.jpg', 'Affaire', 1985, '28 morts dans des supermarchés, une énigme jamais résolue', '28 doden in supermarkten, een nooit opgelost raadsel', ['Lieu', 'Brabant'], 'epique'],
+  ['hist-heysel-1985', 'Drame du Heysel', 'Heizeldrama', 'Heysel Stadium 1985 disaster monument.jpg', 'Catastrophe', 1985, '39 supporters meurent avant la finale Liverpool–Juventus', '39 supporters sterven voor de finale Liverpool–Juventus', ['Lieu', 'Heysel'], 'epique'],
+  ['hist-herald-1987', 'Naufrage du Herald', 'Ramp met de Herald', 'Herald of Free Enterprise (crop).jpg', 'Catastrophe', 1987, 'Le ferry chavire à la sortie de Zeebrugge : 193 morts', 'De ferry kapseist bij het uitvaren van Zeebrugge: 193 doden', ['Lieu', 'Zeebrugge'], 'rare'],
+  ['hist-buizingen-2010', 'Accident de Buizingen', 'Treinramp van Buizingen', 'Monument Hommage Buizingen 12Fev2011.jpg', 'Catastrophe', 2010, 'Deux trains se percutent un matin de neige', 'Twee treinen botsen op een besneeuwde ochtend', ['Lieu', 'Hal'], 'peu-commune'],
+  ['hist-attentats-2016', 'Attentats du 22 mars', 'Aanslagen van 22 maart', 'Gewond maar steeds overeind tegenover het onbegrijpelijke.jpg', 'Attentats', 2016, 'Zaventem et Maelbeek : le mémorial « Blessés mais toujours debout »', 'Zaventem en Maalbeek: het monument “Gewond maar steeds overeind”', ['Lieu', 'Bruxelles'], 'legendaire'],
+  ['hist-inondations-2021', 'Inondations de 2021', 'Overstromingen van 2021', 'Han-so-Eure grossès aiwes måjhon gåraedje.jpg', 'Catastrophe', 2021, 'Des pluies record noient la Wallonie en juillet : 39 morts', 'Recordregen zet Wallonië in juli onder water: 39 doden', ['Lieu', 'Wallonie'], 'rare'],
+];
+function buildHistoire() {
+  return HISTOIRE.map(([id, name, nlName, img, kind, y, sub, subNl, extra, rarity, opt = {}]) => ({
+    id, cat: 'histoire', name, img, rarity, manual: true, family: 'histoire', ...(opt.art && { artwork: true }),
+    subtitle: sub, nl: { name: nlName, subtitle: subNl },
+    meta: [kind, y].join(' · '),
+    stats: [['Année', y], ['Type', kind], extra],
+  }));
+}
 function buildManual(cat, list) {
   return list.map(([id, name, nlName, img, kind, y, sub, subNl, extra, rarity]) => ({
     id, cat, name, img, rarity, manual: true, family: cat, artwork: true, // rareté hors quotas (voir rarityByQuota)
@@ -541,6 +598,7 @@ const AJOUTS = {
   aviation: { build: () => buildRoute('aviation', AVIATION), editions: [] }, rail: { build: () => buildRoute('rail', RAIL), editions: [] },
   exploration: { build: () => buildRoute('exploration', EXPLORATION), editions: [] },
   finance: { build: async () => [...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES)], editions: [] },
+  histoire: { build: async () => buildHistoire(), editions: [] },
 };
 const AJOUT = (process.argv.find(a => a.startsWith('--ajout=')) || '').slice(8);
 if (AJOUT) {
@@ -1222,7 +1280,7 @@ for (const f of sciRows) {
 console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
 
 for (const c of [...await buildMilitaires(resolveTitles), ...await buildAnimaux(resolveTitles),
-  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES)]) { delete c.links; cards.push(c); }
+  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES), ...buildHistoire()]) { delete c.links; cards.push(c); }
 
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [
