@@ -1573,3 +1573,6 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .pack-prog.is-done small { color: #a87b1e; font-weight: 600; }
 .pack-done { position: absolute; z-index: 3; top: -6px; left: 50%; translate: -50% 0; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%;
   font: 800 17px/1 var(--display); color: #2a1d00; background: linear-gradient(180deg, #fff1b8, #d6a12a); box-shadow: 0 3px 8px rgba(0, 0, 0, .3); pointer-events: none; }
+
+/* Fiche d'une carte non possédée : « Demander en échange » avant les chances d'obtention */
+#detail-body .trade-ask { margin: 2px 0 18px; }

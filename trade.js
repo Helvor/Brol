@@ -508,6 +508,11 @@
   window.addEventListener('hashchange', fromHash);
   document.addEventListener('click', e => { if (e.target.closest('.t-back')) { SFX.tick(); composing = null; render(); window.scrollTo(0, 0); } });
 
-  window.TRADE_UI = { render, handle, parse };
+  // Depuis la fiche d'une carte : nouvelle offre avec cette carte déjà choisie (side : 'give' ou 'want')
+  function start(it, side) {
+    composing = { give: side === 'give' ? [it] : [], want: side === 'want' ? [it] : [], q: side === 'want' ? BY_ID.get(it.id).name : '', missing: false, tab: side };
+    API.show('trade'); renderCompose();
+  }
+  window.TRADE_UI = { render, handle, parse, start };
   fromHash();
 })();

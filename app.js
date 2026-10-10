@@ -1138,18 +1138,19 @@
   });
 
   // ---------- Album ----------
-  const filters = { cat: 'all', rarity: 'all', owned: false, special: false, q: '', series: null };
+  const filters = { cat: 'all', rarity: 'all', pack: 'all', owned: false, special: false, q: '', series: null };
   let shown = PAGE;
 
   function renderBinder() {
     const counts = { all: [0, 0], live: [0, 0] };
     for (const c of CARDS) {
+      if (filters.pack !== 'all' && !packMembers(filters.pack).has(c.id)) continue; // onglets limités au paquet choisi
       const o = totalOf(c.id) ? 1 : 0;
       (counts[c.cat] ||= [0, 0])[1]++; counts[c.cat][0] += o;
       counts.all[1]++; counts.all[0] += o;
       if (c.current && c.cat === 'politique') { counts.live[1]++; counts.live[0] += o; }
     }
-    const chips = [{ id: 'all', label: t('all') }, ...CATS.filter(c => counts[c.id]).map(c => ({ id: c.id, label: c[L()] })), { id: 'live', label: t('liveGov') }];
+    const chips = [{ id: 'all', label: t('all') }, ...CATS.filter(c => counts[c.id]).map(c => ({ id: c.id, label: c[L()] })), ...(counts.live[1] ? [{ id: 'live', label: t('liveGov') }] : [])];
     $('#cat-chips').innerHTML = chips.map(c =>
       `<button class="chip${filters.cat === c.id ? ' is-active' : ''}${c.id === 'live' ? ' live' : ''}" data-cat="${c.id}">${c.label}<small>${counts[c.id][0]}/${counts[c.id][1]}</small></button>`).join('');
 
@@ -1164,6 +1165,7 @@
       (!filters.series || filters.series.members.includes(c.id)) &&
       (filters.cat === 'all' || (filters.cat === 'live' ? c.current && c.cat === 'politique' : c.cat === filters.cat)) &&
       (filters.rarity === 'all' || c.rarity === filters.rarity) &&
+      (filters.pack === 'all' || packMembers(filters.pack).has(c.id)) &&
       (!filters.owned || totalOf(c.id)) &&
       (!filters.special || finishesOwned(c.id).some(f => f !== 'normal')) &&
       (!q || [c.name, c.nl?.name, c.subtitle, c.party, c.meta].some(s => (s || '').toLowerCase().includes(q))));
@@ -1195,6 +1197,16 @@
     SFX.tick();
     filters.cat = b.dataset.cat; shown = PAGE; renderBinder();
   });
+  // Filtre par paquet : cartes qu'il peut donner, éditions limitées comprises (sans le paquet Belgique, qui donne tout,
+  // ni celui des cartes manquantes)
+  const PACK_MEMBERS = new Map();
+  const packMembers = id => { if (!PACK_MEMBERS.has(id)) { const p = packById(id); PACK_MEMBERS.set(id, new Set([...poolOf(p), ...exclOf(id)].map(c => c.id))); } return PACK_MEMBERS.get(id); };
+  function fillPackSelect() {
+    $('#f-pack').innerHTML = `<option value="all">${t('allPacks')}</option>` + ALL_PACKS.filter(p => p.cats !== null && !p.missing)
+      .map(p => `<option value="${p.id}">${esc(pl(p, 'title'))}</option>`).join('');
+    $('#f-pack').value = filters.pack;
+  }
+  $('#f-pack').addEventListener('change', e => { filters.pack = e.target.value; filters.cat = 'all'; shown = PAGE; renderBinder(); });
   function fillRaritySelect() {
     $('#f-rarity').innerHTML = `<option value="all">${t('allRarities')}</option>` + RARITIES.map(r => `<option value="${r.id}">${rl(r.id)}</option>`).join('');
     $('#f-rarity').value = filters.rarity;
@@ -1814,7 +1826,9 @@
         <div class="kicker" style="color:var(--rt-${c.rarity})"><span class="gem" style="background:var(--r-${c.rarity})"></span>${rl(c.rarity)} · <span style="color:var(--ink-2)">${cl(c.cat)}</span></div>
         <h2>${esc(nm(c))}</h2>
         <p class="sub">${t('notOwned')}</p>
+        <button class="btn btn-line trade-ask" id="trade-card" data-side="want">${t('tradeWant')}</button>
         ${oddsTable(c)}`;
+      tradeBtn(c, 'normal');
       if (!dlg.open) dlg.showModal();
       dlg.scrollTop = 0;
       return;
@@ -1850,9 +1864,11 @@
       ${roles.length ? `<h4>${t('career')}</h4><ul>${roles.slice(0, 10).map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       <div class="links">${links.join('')}</div>
       ${cnt ? `<button class="btn btn-line" id="share-card">${t('share')}</button>` : ''}
+      ${cnt > 1 ? `<button class="btn btn-line" id="trade-card" data-side="give">${t('tradeGive')}</button>` : ''}
       ${cnt > 1 ? `<button class="btn" id="sell-one">${t('sellOne', sellValue(c, finish))}</button>` : ''}`;
     $$('#detail-body .chip-s').forEach(b => b.addEventListener('click', () => { dlg.close(); openSeriesInAlbum(b.dataset.series); }));
     $$('#detail-body .ver').forEach(b => b.addEventListener('click', () => { SFX.tick(); openDetail(id, b.dataset.fin); }));
+    tradeBtn(c, finish);
     const shareBtn = $('#share-card');
     if (shareBtn) shareBtn.onclick = async () => {
       shareBtn.disabled = true; shareBtn.textContent = t('sharing');
@@ -1914,7 +1930,7 @@
     $('#lang-btn').title = L() === 'nl' ? 'Français' : 'Nederlands';
     document.title = 'Brol';
     $('.brand-name').textContent = 'Brol';
-    fillRaritySelect();
+    fillRaritySelect(); fillPackSelect();
     applyTheme(); applySound();
     if ($('#notif')) renderNotifBtn();
   }
@@ -1925,6 +1941,12 @@
     renderWallet();
     show($('.view.is-active').id.replace('view-', ''));
   });
+
+  // Bouton « échanger » de la fiche : ouvre une offre d'échange avec la carte déjà dans « je donne » ou « je demande »
+  function tradeBtn(c, finish) {
+    const b = $('#trade-card');
+    if (b) b.onclick = () => { SFX.tick(); $('#detail').close(); window.TRADE_UI?.start({ id: c.id, fin: finish }, b.dataset.side); };
+  }
 
   // ---------- Navigation ----------
   function show(view) {
