@@ -443,13 +443,22 @@ async function features() {
       await page.click('#bug-close');
     });
     await step('fusion des doublons', async () => {
-      const ids = await page.evaluate(() => { const C = window.RDL.CARDS.filter(c => c.rarity === 'rare'); window.RDL.state.owned[C[0].id] = 4; window.RDL.state.owned[C[1].id] = 3; window.RDL.save(); return [C[0].id, C[1].id]; });
+      // 5 doublons rares de Communes (3 + 2) → une carte épique de Communes ; des doublons d'une autre catégorie
+      // (2 + 2 en Sport) ne suffisent pas et ne sont pas utilisés
+      const ids = await page.evaluate(() => { const o = window.RDL.state.owned, rare = window.RDL.CARDS.filter(c => c.rarity === 'rare');
+        rare.forEach(c => { if (o[c.id] > 1) o[c.id] = 1; });
+        const C = rare.filter(c => c.cat === 'commune'), S = rare.filter(c => c.cat === 'sport');
+        o[C[0].id] = 4; o[C[1].id] = 3; o[S[0].id] = 3; o[S[1].id] = 3; window.RDL.save(); return [C[0].id, C[1].id, S[0].id];
+      });
       await page.click('.tab[data-view="binder"]');
       await page.click('#fuse-btn');
       await page.click('[data-fuse="rare"]');
       await page.waitForSelector('.fuse-result');
-      const r = await page.evaluate(ids => [window.RDL.countOf(ids[0], 'normal'), window.RDL.countOf(ids[1], 'normal'), window.RDL.state.stats.fused], ids);
-      check(r[0] === 1 && r[1] === 1 && r[2] === 1, 'fusion incorrecte : ' + r);
+      const r = await page.evaluate(ids => [window.RDL.countOf(ids[0], 'normal'), window.RDL.countOf(ids[1], 'normal'), window.RDL.countOf(ids[2], 'normal'),
+        window.RDL.state.stats.fused, document.querySelector('[data-fuse="rare"]:not([data-max])').disabled], ids);
+      check(r[0] === 1 && r[1] === 1 && r[2] === 3 && r[3] === 1 && r[4], 'fusion incorrecte : ' + r);
+      const got = await page.evaluate(() => { const id = document.querySelector('.fuse-result .card')?.dataset.id; return window.RDL.CARDS.find(c => c.id === id); });
+      check(got?.cat === 'commune' && got?.rarity === 'epique', 'fusion de communes : ' + got?.cat + ' ' + got?.rarity);
       // Holo d'une carte déjà possédée : « Nouvelle version », pas « Nouvelle »
       await page.evaluate(() => { const c = window.RDL.CARDS.find(x => x.rarity === 'epique'); window.RDL.state.owned[c.id] = 4; delete window.RDL.state.owned[c.id + '|holo']; window.__holo = c.id; });
       await page.click('#fuse-close'); await page.click('#fuse-btn');
@@ -459,7 +468,7 @@ async function features() {
       // « Max » : toutes les fusions possibles d'un coup, la fenêtre ne remonte pas en haut
       // Doublons de communes tirés plus tôt dans le test : retirés, pour qu'il y ait exactement 4 fusions possibles
       await page.evaluate(() => { const all = window.RDL.CARDS.filter(c => c.rarity === 'commune'), o = window.RDL.state.owned;
-        all.forEach(c => { if (o[c.id] > 1) o[c.id] = 1; }); all.slice(0, 5).forEach(c => o[c.id] = 5); });
+        all.forEach(c => { if (o[c.id] > 1) o[c.id] = 1; }); all.filter(c => c.cat === 'commune').slice(0, 5).forEach(c => o[c.id] = 5); });
       await page.click('#fuse-close'); await page.click('#fuse-btn');
       const f0 = await page.evaluate(() => window.RDL.state.stats.fused);
       await page.evaluate(() => { document.querySelector('[data-fuse="commune"][data-max]').scrollIntoView({ block: 'end' }); });

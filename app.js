@@ -1294,12 +1294,23 @@
   });
 
   // ---------- Fusion des doublons ----------
-  // 5 doublons standard d'une même rareté → 1 carte au hasard de la rareté au-dessus.
-  // 3 doublons standard d'une même carte → sa version Holo. Un exemplaire de chaque carte est toujours gardé.
+  // 5 doublons standard d'une même rareté et d'une même catégorie → 1 carte de cette catégorie, rareté au-dessus
+  // (des communes donnent une commune). 3 doublons standard d'une même carte → sa version Holo.
+  // Un exemplaire de chaque carte est toujours gardé.
   const FUSE_COST = 5, HOLO_COST = 3;
   const randomCard = rarity => pickCard(CARDS.filter(c => c.rarity === rarity && c.cat !== 'edition'));
-  const fuseStock = rarity => CARDS.filter(c => c.rarity === rarity && countOf(c.id, 'normal') > 1).map(c => ({ c, extra: countOf(c.id, 'normal') - 1 }));
-  const fuseAvailable = rarity => fuseStock(rarity).reduce((a, x) => a + x.extra, 0);
+  // Cartes qu'une fusion de la catégorie peut donner. Éditions limitées (introuvables hors de leur paquet) ou
+  // catégorie sans carte de cette rareté : n'importe quelle carte de la rareté
+  const fuseTargets = (rarity, cat) => {
+    const own = cat === 'edition' ? [] : CARDS.filter(c => c.rarity === rarity && c.cat === cat);
+    return own.length ? own : CARDS.filter(c => c.rarity === rarity && c.cat !== 'edition');
+  };
+  const fuseStock = (rarity, cat) => CARDS.filter(c => c.rarity === rarity && (!cat || c.cat === cat) && countOf(c.id, 'normal') > 1)
+    .map(c => ({ c, extra: countOf(c.id, 'normal') - 1 }));
+  const fuseAvailable = (rarity, cat) => fuseStock(rarity, cat).reduce((a, x) => a + x.extra, 0);
+  // Doublons par catégorie pour une rareté, et nombre de fusions possibles (chacune dans une seule catégorie)
+  const fuseByCat = rarity => fuseStock(rarity).reduce((m, x) => m.set(x.c.cat, (m.get(x.c.cat) || 0) + x.extra), new Map());
+  const fuseCount = (rarity, cat) => [...fuseByCat(rarity)].filter(([k]) => !cat || k === cat).reduce((a, [, n]) => a + Math.floor(n / FUSE_COST), 0);
   const holoCandidates = () => CARDS.filter(c => countOf(c.id, 'normal') > HOLO_COST);
   const holoMax = id => Math.floor((countOf(id, 'normal') - 1) / HOLO_COST); // un exemplaire standard est toujours gardé
   // Provenance de la première copie de chaque version (state.origin) : identifiant du paquet, ou 'daily', 'fuse',
@@ -1311,14 +1322,16 @@
     if (src) noteOrigin(key, src);
     return { card, finish, got, isNew: got === 'card' };
   }
-  function fuseRarity(rarity) {
+  function fuseRarity(rarity, only = null) {
     const next = RARITIES[R[rarity].rank + 1];
-    if (!next || fuseAvailable(rarity) < FUSE_COST) return null;
+    // Catégorie choisie, sinon celle qui a le plus de doublons de cette rareté
+    const cat = only || [...fuseByCat(rarity)].filter(([, n]) => n >= FUSE_COST).sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (!next || !cat || fuseAvailable(rarity, cat) < FUSE_COST) return null;
     for (let k = 0; k < FUSE_COST; k++) { // on prend d'abord les cartes qu'on a en plus grand nombre
-      const top = fuseStock(rarity).sort((a, b) => b.extra - a.extra)[0];
+      const top = fuseStock(rarity, cat).sort((a, b) => b.extra - a.extra)[0];
       state.owned[top.c.id]--;
     }
-    const res = addCard(randomCard(next.id), 'normal', 'fuse');
+    const res = addCard(pickCard(fuseTargets(next.id, cat)), 'normal', 'fuse');
     state.stats.fused++;
     save(); mission('fuse');
     return res;
@@ -1350,14 +1363,20 @@
       <div class="fuse-lot">${best.map(r => `<div class="cell${r.got === 'card' ? ' is-new' : r.got === 'version' ? ' is-ver' : ''}">${cardHTML(r.card, { finish: r.finish })}</div>`).join('')}</div>
       ${results.length > best.length ? `<small>${t('fuseMore', results.length - best.length)}</small>` : ''}</div>`;
   }
+  let fuseCat = null; // catégorie choisie dans la fenêtre (null : toutes, chaque fusion restant dans une catégorie)
   function renderFuse(results = null) {
+    // Catégories qui ont des doublons standard, dans l'ordre de l'album
+    const cats = [...new Set(CARDS.filter(c => countOf(c.id, 'normal') > 1).map(c => c.cat))].sort((a, b) => CAT_RANK[a] - CAT_RANK[b]);
+    if (fuseCat && !cats.includes(fuseCat)) fuseCat = null;
+    const extraIn = cat => CARDS.filter(c => c.cat === cat).reduce((a, c) => a + Math.max(0, countOf(c.id, 'normal') - 1), 0);
+    const chips = cats.length > 1 ? `<div class="chips fuse-cats">${[null, ...cats].map(k => `<button class="chip${fuseCat === k ? ' is-active' : ''}" data-fuse-cat="${k ?? ''}">${k ? `${esc(cl(k))} <small>${extraIn(k)}</small>` : t('fuseAll')}</button>`).join('')}</div>` : '';
     const rows = RARITIES.slice(0, -1).map((r, i) => {
-      const n = fuseAvailable(r.id), next = RARITIES[i + 1];
+      const n = fuseAvailable(r.id, fuseCat), f = fuseCount(r.id, fuseCat), next = RARITIES[i + 1];
       return `<div class="fuse-row">
         <span class="fuse-recipe"><b>${FUSE_COST}×</b> <span class="gem" style="background:var(--r-${r.id})"></span>${rl(r.id)} <i>→</i> <b>1×</b> <span class="gem" style="background:var(--r-${next.id})"></span>${rl(next.id)}</span>
-        <small>${t('fuseHave', n)}</small>
-        <span class="fuse-btns"><button class="btn${n >= FUSE_COST ? ' btn-gold' : ' btn-line'}" data-fuse="${r.id}"${n >= FUSE_COST ? '' : ' disabled'}>${t('fuseGo')}</button>${
-          Math.floor(n / FUSE_COST) > 1 ? `<button class="btn btn-line" data-fuse="${r.id}" data-max="1">${t('fuseMax', Math.floor(n / FUSE_COST))}</button>` : ''}</span>
+        <small>${t('fuseHave', n)}${n >= FUSE_COST && !f ? ' · ' + t('fuseMixed') : ''}${fuseCat && n && !CARDS.some(c => c.cat === fuseCat && c.rarity === next.id && c.cat !== 'edition') ? ' · ' + t('fuseAnyCat') : ''}</small>
+        <span class="fuse-btns"><button class="btn${f ? ' btn-gold' : ' btn-line'}" data-fuse="${r.id}"${f ? '' : ' disabled'}>${t('fuseGo')}</button>${
+          f > 1 ? `<button class="btn btn-line" data-fuse="${r.id}" data-max="1">${t('fuseMax', f)}</button>` : ''}</span>
       </div>`;
     }).join('');
     const holos = holoCandidates().sort((a, b) => R[b.rarity].rank - R[a.rarity].rank);
@@ -1366,6 +1385,8 @@
       <p class="muted">${t('fuseIntro', FUSE_COST, HOLO_COST)}</p>
       ${fuseResultHTML(results)}
       <h3>${t('fuseUp')}</h3>
+      <p class="muted small">${t('fuseSameCat', FUSE_COST)}</p>
+      ${chips}
       <div class="fuse-rows">${rows}</div>
       <h3>${t('fuseHoloH', HOLO_COST)}</h3>
       ${holos.length ? `<div class="fuse-holos">${holos.slice(0, 40).map(c => `<div class="fuse-holo">
@@ -1374,13 +1395,15 @@
             holoMax(c.id) > 1 ? `<button class="btn btn-line" data-holo="${esc(c.id)}" data-max="1">${t('fuseMax', holoMax(c.id))}</button>` : ''}</span></div>`).join('')}</div>`
         : `<p class="muted small">${t('fuseNoHolo', HOLO_COST + 1)}</p>`}`;
   }
-  $('#fuse-btn').addEventListener('click', () => { SFX.tick(); renderFuse(); fuseDlg.showModal(); fuseDlg.scrollTop = 0; });
+  $('#fuse-btn').addEventListener('click', () => { SFX.tick(); fuseCat = null; renderFuse(); fuseDlg.showModal(); fuseDlg.scrollTop = 0; });
   $('#fuse-close').addEventListener('click', () => fuseDlg.close());
   fuseDlg.addEventListener('click', e => {
     if (e.target === fuseDlg) return fuseDlg.close();
+    const chip = e.target.closest('[data-fuse-cat]');
+    if (chip) { fuseCat = chip.dataset.fuseCat || null; SFX.tick(); const sc = fuseDlg.scrollTop; renderFuse(); fuseDlg.scrollTop = sc; return; }
     const b = e.target.closest('[data-fuse], [data-holo]');
     if (!b || b.disabled) return;
-    const once = () => b.dataset.fuse ? fuseRarity(b.dataset.fuse) : fuseHolo(b.dataset.holo);
+    const once = () => b.dataset.fuse ? fuseRarity(b.dataset.fuse, fuseCat) : fuseHolo(b.dataset.holo);
     const results = [];
     for (let left = b.dataset.max ? Infinity : 1, r; left > 0 && (r = once()); left--) results.push(r);
     if (!results.length) return;
