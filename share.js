@@ -95,9 +95,11 @@
     ctx.fillStyle = gradient(ctx, ix, iy, iw, ih, gold ? ['#f7ecd0', '#e6d3a1', '#d7bd80'] : ['#dcc597', '#cdb07a'], 100); ctx.fillRect(ix, iy, iw, ih);
     if (gold) { ctx.strokeStyle = '#b8891f'; ctx.lineWidth = 3; ctx.strokeRect(ix + 12, iy + 12, iw - 24, ih - 24); ctx.lineWidth = 2; ctx.strokeRect(ix + 20, iy + 20, iw - 40, ih - 40); }
     else { ctx.fillStyle = 'rgba(90,60,20,.05)'; for (let y = iy; y < iy + ih; y += 9) ctx.fillRect(ix, y, iw, 2); }
-    const statsH = 116, px = ix + 42, py = iy + 30, pw = iw - 84, ph = Math.round(ih * 0.56);
+    // Plein cadre : grand tirage droit sur toute la carte, l'étiquette posée dessus
+    const full = finish === 'plein', statsH = 116;
+    const px = full ? ix + 16 : ix + 42, py = full ? iy + 16 : iy + 30, pw = full ? iw - 32 : iw - 84, ph = full ? ih - statsH - 32 : Math.round(ih * 0.56);
     // Tirage photo, légèrement de travers
-    ctx.save(); ctx.translate(px + pw / 2, py + ph / 2); ctx.rotate(-2 * Math.PI / 180);
+    ctx.save(); ctx.translate(px + pw / 2, py + ph / 2); ctx.rotate((full ? 0 : -2) * Math.PI / 180);
     ctx.shadowColor = 'rgba(60,40,10,.4)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 8;
     ctx.fillStyle = gold ? gradient(ctx, -pw / 2, -ph / 2, pw, ph, ['#8a6516', '#f7dc84', '#b8891f', '#fff1b8', '#a87b1e']) : '#f4efe3';
     ctx.fillRect(-pw / 2, -ph / 2, pw, ph); ctx.shadowColor = 'transparent';
@@ -108,8 +110,18 @@
       else { const v = (window.FOCUS?.[c.img] || '50 20').split(' ').map(Number); cover(ctx, photo, -pw / 2 + 14, -ph / 2 + 14, pw - 28, ph - 28, v[1] / 100, false, v[0] / 100); }
       ctx.restore();
     }
-    ctx.rotate(5 * Math.PI / 180); ctx.fillStyle = 'rgba(240,232,205,.85)'; ctx.fillRect(-50, -ph / 2 - 18, 100, 34); // scotch
+    ctx.fillStyle = 'rgba(240,232,205,.85)'; // scotch
+    if (full) for (const sx of [-1, 1]) { ctx.save(); ctx.translate(sx * (pw / 2 - 20), -ph / 2 + 6); ctx.rotate(sx * 32 * Math.PI / 180); ctx.fillRect(-48, -16, 96, 32); ctx.restore(); }
+    else { ctx.rotate(5 * Math.PI / 180); ctx.fillRect(-50, -ph / 2 - 18, 100, 34); }
     ctx.restore();
+    // Plein cadre : étiquette en kraft scotchée sur le bas du tirage, sous le texte
+    if (full) {
+      ctx.save(); ctx.translate(ix + iw / 2, iy + ih - statsH - 100); ctx.rotate(-1.5 * Math.PI / 180);
+      ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 8;
+      ctx.fillStyle = gradient(ctx, -(iw - 60) / 2, -95, iw - 60, 190, ['#e2cfa6', '#d2b886'], 100); ctx.fillRect(-(iw - 60) / 2, -95, iw - 60, 190);
+      ctx.shadowColor = 'transparent'; ctx.fillStyle = 'rgba(240,232,205,.85)'; ctx.rotate(5 * Math.PI / 180); ctx.fillRect(-48, -110, 96, 32);
+      ctx.restore();
+    }
     // Reflet des versions spéciales (Holo : barre de lumière)
     if (finish === 'holo') {
       ctx.save(); ctx.globalCompositeOperation = 'overlay';
@@ -117,7 +129,7 @@
       ctx.fillRect(ix, iy, iw, ih); ctx.restore();
     }
     // Tampon ARCHIVES / CONFIDENTIEL, ou cachet de cire (légendaire, mythique)
-    const ink = gold ? '#a87b1e' : ARCH_INK[c.rarity] || ARCH_INK.commune, sy = py + ph + 4;
+    const ink = gold ? '#a87b1e' : ARCH_INK[c.rarity] || ARCH_INK.commune, sy = full ? iy + ih - statsH - 210 : py + ph + 4;
     ctx.save(); ctx.translate(ix + iw - 120, sy); ctx.rotate(-12 * Math.PI / 180);
     if (finish === 'holo') { // Holo « plastifié » : sceau holographique
       const g = ctx.createConicGradient(0, 0, -10);
@@ -197,8 +209,8 @@
     const x = (W - CW) / 2, y = 170, pad = 16, r = 30;
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 24;
     rr(ctx, x, y, CW, CH, r);
-    const arch = c.cat === 'histoire' && finish !== 'plein'; // cartes Histoire : dossier « Archives » (voir style.css)
-    const frame = arch && finish === 'normal' ? ARCH_FRAMES[c.rarity] || ARCH_FRAMES.commune : FRAMES[fin.pack || finish !== 'normal' ? finish : c.rarity] || (ed ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : FRAMES[c.rarity]);
+    const arch = c.cat === 'histoire'; // cartes Histoire : dossier « Archives » (voir style.css)
+    const frame = arch && (finish === 'normal' || finish === 'plein') ? ARCH_FRAMES[c.rarity] || ARCH_FRAMES.commune : FRAMES[fin.pack || finish !== 'normal' ? finish : c.rarity] || (ed ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : FRAMES[c.rarity]);
     ctx.fillStyle = gradient(ctx, x, y, CW, CH, ed && finish === 'normal' ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : frame, fin.id === 'tricolore' ? 0 : 135);
     ctx.fill(); ctx.restore();
     const ix = x + pad, iy = y + pad, iw = CW - pad * 2, ih = CH - pad * 2;

@@ -1599,25 +1599,33 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .card.cat-histoire.fin-or .card-stats { background: rgba(255, 246, 220, .6); border-top: .3cqw solid #b8891f; }
 .card.cat-histoire.fin-or .card-stats dd { color: #4a3410; }
 
-/* Plein cadre « négatif » : photo sur toute la carte comme une pellicule (perforations sur les côtés), étiquette tapée
-   à la machine scotchée en bas, statistiques sur la bande noire du film */
-.card.cat-histoire.fin-plein { --frame: linear-gradient(160deg, #2a2620, #0c0b09 50%, #3a342a); }
-.card.cat-histoire.fin-plein .card-in { background: #0c0b09; }
-.card.cat-histoire.fin-plein .card-photo { inset: 0 7cqw 18cqw; }
-.card.cat-histoire.fin-plein .card-photo img { filter: sepia(.35) contrast(1.08); }
-.card.cat-histoire.fin-plein .card-in::before { content: ""; position: absolute; inset: 0 0 18cqw; z-index: 2; pointer-events: none;
-  background: radial-gradient(ellipse 1.5cqw 1.1cqw at 3.5cqw 50%, #e9dfc8 98%, transparent) 0 0 / 100% 5cqw repeat-y,
-    radial-gradient(ellipse 1.5cqw 1.1cqw at calc(100% - 3.5cqw) 50%, #e9dfc8 98%, transparent) 0 0 / 100% 5cqw repeat-y; opacity: .85; }
-.card.cat-histoire.fin-plein .card-band { left: 9cqw; right: 9cqw; bottom: 20cqw; padding: 2.4cqw 4cqw 2.8cqw; background: #f4efe3; color: #2b2116;
-  rotate: -1.5deg; box-shadow: 0 1cqw 2.4cqw rgba(0, 0, 0, .45); }
-.card.cat-histoire.fin-plein .card-band::before { display: block; left: 50%; top: -2.6cqw; width: 14cqw; height: 4.6cqw; translate: -50% 0; rotate: 4deg;
+/* Plein cadre « grand tirage » : mêmes matériaux que la version standard (carton kraft, tirage bordé de blanc, scotch,
+   étiquette tapée à la machine), mais la photo occupe toute la carte */
+.card.cat-histoire.fin-plein { --frame: linear-gradient(160deg, #c79b62, #8d6633 55%, #b98a52); }
+.card.cat-histoire.fin-plein.r-legendaire { --frame: linear-gradient(135deg, #7a5a12, #f7dc84 22%, #a87b1e 45%, #fff1b8 65%, #8a6516); }
+.card.cat-histoire.fin-plein.r-mythique { --frame: linear-gradient(160deg, #5a0012, #c8102e 45%, #8a0020); }
+.card.cat-histoire.fin-plein .card-in { background: repeating-linear-gradient(0deg, rgba(90, 60, 20, .05) 0 .3cqw, transparent .3cqw 1.2cqw), linear-gradient(170deg, #dcc597, #cdb07a); }
+.card.cat-histoire.fin-plein .card-photo { inset: 2.6cqw 2.6cqw 19cqw; padding: 1.8cqw; background: #f4efe3; box-shadow: 0 .8cqw 2cqw rgba(60, 40, 10, .35); }
+.card.cat-histoire.fin-plein .card-photo img { filter: sepia(.55) contrast(1.05); }
+/* Deux bouts de scotch en haut du tirage */
+.card.cat-histoire.fin-plein .card-photo::before, .card.cat-histoire.fin-plein .card-photo::after { content: ""; position: absolute; z-index: 2; top: -1.8cqw; width: 14cqw; height: 4.6cqw;
+  background: rgba(240, 232, 205, .85); box-shadow: 0 .3cqw .8cqw rgba(0, 0, 0, .15); }
+.card.cat-histoire.fin-plein .card-photo::before { left: -2cqw; rotate: -32deg; }
+.card.cat-histoire.fin-plein .card-photo::after { right: -2cqw; rotate: 32deg; }
+.card.cat-histoire.fin-plein .card-top { top: 6cqw; left: 6cqw; right: 6cqw; }
+.card.cat-histoire.fin-plein .card-top .no { font-family: var(--type); background: rgba(244, 239, 227, .92); color: #4a3414; }
+/* Étiquette en kraft, scotchée sur le bas du tirage */
+.card.cat-histoire.fin-plein .card-band { left: 6cqw; right: 6cqw; bottom: 21cqw; padding: 2.6cqw 4cqw 3cqw; color: #2b2116; rotate: -1.5deg;
+  background: repeating-linear-gradient(0deg, rgba(90, 60, 20, .06) 0 .3cqw, transparent .3cqw 1.2cqw), linear-gradient(170deg, #e2cfa6, #d2b886);
+  box-shadow: 0 1cqw 2.4cqw rgba(0, 0, 0, .4); }
+.card.cat-histoire.fin-plein .card-band::before { display: block; left: 50%; top: -2.4cqw; width: 14cqw; height: 4.6cqw; translate: -50% 0; rotate: 4deg;
   background: rgba(240, 232, 205, .85); box-shadow: 0 .3cqw .8cqw rgba(0, 0, 0, .2); }
-.card.cat-histoire.fin-plein .card-band h3 { font-size: 6.6cqw; }
-.card.cat-histoire.fin-plein .card-band .sub { color: #4a3a26; font-size: 3.6cqw; }
+.card.cat-histoire.fin-plein .card-band h3 { font-size: 7cqw; }
+.card.cat-histoire.fin-plein .card-band .sub { color: #4a3a26; font-size: 3.7cqw; }
 .card.cat-histoire.fin-plein .card-band .meta { color: #6a4f2c; opacity: 1; }
-.card.cat-histoire.fin-plein .card-band::after { top: -9cqw; right: 1cqw; }
+.card.cat-histoire.fin-plein .card-band::after { top: -9cqw; right: 2cqw; }
 .card.cat-histoire.fin-plein:not(.r-legendaire):not(.r-mythique) .card-band::after { background: rgba(244, 239, 227, .9); mix-blend-mode: normal; }
-.card.cat-histoire.fin-plein .card-stats { background: #0c0b09; border-top: .3cqw dashed rgba(233, 223, 200, .3); }
-.card.cat-histoire.fin-plein .card-stats dt { color: #a8946c; }
-.card.cat-histoire.fin-plein .card-stats dd { color: #f0c46a; font-family: var(--type); font-weight: 400; }
-.card.cat-histoire.fin-plein .card-top .no { font-family: var(--type); background: #f0c46a; color: #1a1408; }
+.card.cat-histoire.fin-plein .card-stats { background: rgba(255, 250, 235, .55); border-top: .3cqw dashed #6a4f2c; }
+.card.cat-histoire.fin-plein .card-stats dt { color: #7a5f3a; }
+.card.cat-histoire.fin-plein .card-stats dd { color: #2b2116; font-family: var(--type); font-weight: 400; }
+.card.cat-histoire.fin-plein .card-stats div + div { border-left-color: rgba(90, 60, 20, .25); }
