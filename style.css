@@ -1563,3 +1563,13 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .card.cat-histoire:not(.fin-plein) .card-stats dt { color: #7a5f3a; }
 .card.cat-histoire:not(.fin-plein) .card-stats dd { color: #2b2116; font-family: var(--type); font-weight: 400; }
 .card.cat-histoire:not(.fin-plein) .card-stats div + div { border-left-color: rgba(90, 60, 20, .25); }
+
+/* Avancement d'un paquet : barre fine sous la description ; paquet complété : barre dorée et coche sur le paquet */
+.pack-prog { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.pack-prog .bar { flex: 1; max-width: 160px; height: 4px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.pack-prog .bar i { display: block; height: 100%; background: var(--ink-2); border-radius: inherit; }
+.pack-prog small { font-family: var(--mono); font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+.pack-prog.is-done .bar i { background: linear-gradient(90deg, #d6a12a, #f7dc84); }
+.pack-prog.is-done small { color: #a87b1e; font-weight: 600; }
+.pack-done { position: absolute; z-index: 3; top: -6px; left: 50%; translate: -50% 0; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%;
+  font: 800 17px/1 var(--display); color: #2a1d00; background: linear-gradient(180deg, #fff1b8, #d6a12a); box-shadow: 0 3px 8px rgba(0, 0, 0, .3); pointer-events: none; }

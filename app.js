@@ -730,15 +730,16 @@
     $('#event-line').innerHTML = activeEvents().length ? '' : ev ? t('nextEvent', esc(pl(ev.p, 'title')), fmtDay(ev.start)) : '';
     $('#packs').innerHTML = shopPacks().map(p => {
       const tickets = state.tickets?.[p.id] || 0;
+      const prog = p.missing ? null : packProgress(p);
       const locked = (state.coins < p.price && !tickets && (!state.free || p.special)) || !leftToday(p) || (p.missing && !missingCount());
       return `
-      <div class="pack-card${locked ? ' is-locked' : ''}${p.special ? ' is-special' : ''}${p.event ? ' is-event' : ''}" data-pack="${p.id}">
+      <div class="pack-card${locked ? ' is-locked' : ''}${prog && prog[0] === prog[1] ? ' is-done' : ''}${p.special ? ' is-special' : ''}${p.event ? ' is-event' : ''}" data-pack="${p.id}">
         ${tickets ? `<span class="ticket-ribbon">${t('ticketBadge', tickets)}</span>` : ''}
         ${p.event ? `<span class="event-ribbon">${t('eventUntil', fmtDay(eventWindow(p)[1]))}</span>` : ''}
         ${p.was ? `<span class="event-ribbon promo-ribbon">${t('promo', Math.round((1 - p.price / p.was) * 100))}</span>` : ''}
-        ${packVisual(p)}
+        ${packVisual(p)}${prog && prog[0] === prog[1] ? `<span class="pack-done" title="${t('packDone')}">✓</span>` : ''}
         <div class="pack-info">
-          <div><h2>${esc(pl(p, 'title'))}</h2><p>${esc(pl(p, 'desc'))}</p></div>
+          <div><h2>${esc(pl(p, 'title'))}</h2><p>${esc(pl(p, 'desc'))}</p>${prog ? packProgressHTML(prog) : ''}</div>
           <span class="price">${p.was ? `<s class="was">${p.was}</s>` : ''}<span class="coin"></span>${p.price}</span>
         </div>
         ${packExtras(p)}
@@ -848,6 +849,10 @@
   // Paquets limités par jour (Nouveautés) : compteur remis à zéro chaque jour
   const boughtToday = p => state.perDay?.day === ymd(now()) ? (state.perDay.n[p.id] || 0) : 0;
   const leftToday = p => p.perDay ? Math.max(0, p.perDay - boughtToday(p)) : Infinity;
+  // Avancement d'un paquet : cartes différentes possédées (toutes versions) sur les cartes qu'il peut donner,
+  // éditions limitées comprises. Paquet « manquantes » : pas d'avancement (c'est l'album entier)
+  const packProgress = p => { const pool = [...poolOf(p), ...exclOf(p.id)]; return [pool.filter(c => totalOf(c.id)).length, pool.length]; };
+  const packProgressHTML = ([a, n]) => `<div class="pack-prog${a === n ? ' is-done' : ''}"><span class="bar"><i style="width:${(a / n * 100).toFixed(1)}%"></i></span><small>${a === n ? t('packDone') : t('packProgress', a, n)}</small></div>`;
   const missingCount = () => CARDS.filter(c => c.cat !== 'edition' && !totalOf(c.id)).length;
   let buyError = null;
   function buyPacks(pack, n = 1) {
