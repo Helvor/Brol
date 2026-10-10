@@ -44,7 +44,7 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 
 ## Phase 2 — Gameplay
 
-- [x] **Fusion de doublons** (bouton Fusionner dans l'album) : 5 doublons standard d'une rareté → une carte au hasard de la rareté au-dessus ; 3 doublons d'une même carte → sa version Holo. Un exemplaire est toujours gardé. Succès associés.
+- [x] **Fusion de doublons** (bouton Fusionner dans l'album) : 5 doublons standard d'une rareté et d'une même catégorie → une carte de cette catégorie, rareté au-dessus (choix de la catégorie dans la fenêtre ; catégorie sans carte de cette rareté : n'importe quelle carte) ; 3 doublons d'une même carte → sa version Holo. Un exemplaire est toujours gardé. Succès associés.
 - [x] **Échanges par QR code ou lien** (onglet Échanges, sans serveur) : doublons uniquement, version précise de chaque carte, cartes mises de côté pendant l'échange, chaque échange ne sert qu'une fois, scanner intégré, succès d'échange. Limite connue : sans serveur, rien n'empêche un joueur de tricher (comme pour les pièces aujourd'hui).
 - [x] **Export/import de la sauvegarde** (liens en bas de page) : télécharger sa partie dans un fichier et la réimporter. Ça protège d'un cache effacé et permet de passer d'un appareil ou d'une adresse à l'autre en attendant les comptes. Le format servira aussi à migrer les parties vers le serveur en phase 5.
 - [x] **Partager une carte** : générer une image (PNG) d'une carte, avec sa version spéciale, pour la partager par message ou sur les réseaux (Web Share API sur mobile, téléchargement sinon). Garder le crédit de l'image sur le visuel.

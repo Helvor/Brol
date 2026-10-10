@@ -296,11 +296,11 @@ a { color: inherit; }
 .card.r-mythique    { --rc: var(--r-mythique); }
 /* Lueur rouge sur toutes les mythiques ; cadre et bandeau rubis sur la version standard (les autres versions gardent les leurs) */
 .card.r-mythique:not(.cat-edition) { box-shadow: 0 0 0 1px #7a0018, 0 0 22px -4px rgba(255, 40, 80, .7), 0 14px 30px -12px rgba(0, 0, 0, .6); }
-.card.r-mythique.fin-normal:not(.cat-edition) {
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire) {
   --frame: conic-gradient(from 20deg at 50% 50%, #5a0012, #ff2d55, #9a0020, #ff6b81, #6a0016, #ff2d55, #4a000e, #ff8fa0, #5a0012); }
-.card.r-mythique.fin-normal:not(.cat-edition) .card-band { background: linear-gradient(180deg, #8a0020, #4a000e); color: #fff; }
-.card.r-mythique.fin-normal:not(.cat-edition) .card-stats { background: #22000a; }
-.card.r-mythique.fin-normal:not(.cat-edition) .card-stats dd { color: #ffb3c0; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire) .card-band { background: linear-gradient(180deg, #8a0020, #4a000e); color: #fff; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire) .card-stats { background: #22000a; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire) .card-stats dd { color: #ffb3c0; }
 
 /* Édition limitée : cadre aux métaux de son paquet (--ed-frame, --band et --band-ink posés par app.js), double filet, sceau du paquet */
 .card.cat-edition { --frame: var(--ed-frame); background-size: 200% 200%; animation: gold 6s ease-in-out infinite alternate; }
@@ -1523,3 +1523,53 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   .bug-dlg { width: 100vw; }
   .bug-actions .btn { flex: 1 1 100%; justify-content: center; text-align: center; }
 }
+
+/* ===== Cartes Histoire : « Archives » — dossier kraft, tirage photo scotché, texte tapé à la machine,
+   tampon à la couleur de la rareté (cachet de cire en légendaire et mythique). Les versions spéciales gardent leur cadre ;
+   le Plein cadre garde sa mise en page, avec la police et le tampon. ===== */
+.card.cat-histoire { --acc: #6b6b6b; --type: "Special Elite", "Courier New", monospace; }
+.card.cat-histoire.r-peu-commune { --acc: #2f7d4a; } .card.cat-histoire.r-rare { --acc: #2e5fc0; } .card.cat-histoire.r-epique { --acc: #6b3db8; }
+.card.cat-histoire.r-legendaire { --acc: #b8860b; } .card.cat-histoire.r-mythique { --acc: #c8102e; }
+.card.cat-histoire.fin-normal { --frame: linear-gradient(160deg, #c79b62, #8d6633 55%, #b98a52); }
+.card.cat-histoire.r-legendaire.fin-normal { --frame: linear-gradient(135deg, #7a5a12, #f7dc84 22%, #a87b1e 45%, #fff1b8 65%, #8a6516); }
+.card.cat-histoire.r-mythique.fin-normal { --frame: linear-gradient(160deg, #5a0012, #c8102e 45%, #8a0020); }
+.card.cat-histoire.fin-normal .card-in::after { display: none; }
+.card.cat-histoire:not(.fin-plein) .card-in { background:
+  repeating-linear-gradient(0deg, rgba(90, 60, 20, .05) 0 .3cqw, transparent .3cqw 1.2cqw), linear-gradient(170deg, #dcc597, #cdb07a); }
+.card.cat-histoire:not(.fin-plein) .card-photo { inset: 5cqw 7cqw 54cqw; background: #f4efe3; padding: 2.4cqw; rotate: -2deg; box-shadow: 0 1cqw 2.4cqw rgba(60, 40, 10, .4); }
+.card.cat-histoire:not(.fin-plein):not(.fin-or) .card-photo img { filter: sepia(.55) contrast(1.05); }
+.card.cat-histoire:not(.fin-plein) .card-photo.is-artwork img { padding: 0; filter: sepia(.15); }
+/* Bout de scotch */
+.card.cat-histoire:not(.fin-plein) .card-photo::before { content: ""; position: absolute; z-index: 2; left: 42%; top: -2.4cqw; width: 16cqw; height: 5.4cqw; rotate: 3deg;
+  background: rgba(240, 232, 205, .8); box-shadow: 0 .3cqw .8cqw rgba(0, 0, 0, .15); }
+.card.cat-histoire:not(.fin-plein) .card-top { top: 2cqw; left: auto; right: 3cqw; }
+.card.cat-histoire:not(.fin-plein) .card-top .no { background: transparent; color: #4a3414; font-family: var(--type); }
+.card.cat-histoire:not(.fin-plein) .card-band { background: transparent; color: #2b2116; clip-path: none; bottom: 18cqw; padding: 2cqw 6cqw 3cqw; }
+.card.cat-histoire .card-band h3 { font-family: var(--type); font-weight: 400; font-size: 7.6cqw; line-height: 1.05; }
+.card.cat-histoire .card-band .sub, .card.cat-histoire .card-band .meta { font-family: var(--type); }
+.card.cat-histoire:not(.fin-plein) .card-band .sub { font-size: 3.9cqw; color: #4a3a26; }
+.card.cat-histoire:not(.fin-plein) .card-band .meta { color: #6a4f2c; opacity: 1; }
+/* Tampon (ARCHIVES, CONFIDENTIEL en épique) ou cachet de cire */
+.card.cat-histoire .card-band::after { content: "ARCHIVES"; position: absolute; right: 5cqw; top: -10cqw; rotate: -12deg; padding: 1cqw 2.6cqw;
+  font: 700 4.6cqw/1 var(--display); letter-spacing: .16em; color: var(--acc); border: .6cqw solid var(--acc); border-radius: 1.2cqw; opacity: .8; mix-blend-mode: multiply; }
+.card.cat-histoire.r-epique .card-band::after { content: "CONFIDENTIEL"; }
+.card.cat-histoire.r-legendaire .card-band::after, .card.cat-histoire.r-mythique .card-band::after {
+  content: ""; width: 15cqw; height: 15cqw; padding: 0; border: 0; border-radius: 50%; top: -14cqw; opacity: 1; mix-blend-mode: normal;
+  background: radial-gradient(circle at 35% 30%, #fff3c2, #d9a52c 40%, #8a6516 75%); box-shadow: 0 .8cqw 1.6cqw rgba(0, 0, 0, .35), inset 0 0 0 1.2cqw rgba(0, 0, 0, .08); }
+.card.cat-histoire.r-mythique .card-band::after { background: radial-gradient(circle at 35% 30%, #ff8fa0, #c8102e 45%, #5a0012 80%); }
+.card.cat-histoire.fin-plein .card-band::after { top: 2cqw; }
+.card.cat-histoire.fin-plein:not(.r-legendaire):not(.r-mythique) .card-band::after { mix-blend-mode: normal; background: rgba(255, 255, 255, .85); }
+.card.cat-histoire:not(.fin-plein) .card-stats { background: rgba(255, 250, 235, .55); border-top: .3cqw dashed #6a4f2c; }
+.card.cat-histoire:not(.fin-plein) .card-stats dt { color: #7a5f3a; }
+.card.cat-histoire:not(.fin-plein) .card-stats dd { color: #2b2116; font-family: var(--type); font-weight: 400; }
+.card.cat-histoire:not(.fin-plein) .card-stats div + div { border-left-color: rgba(90, 60, 20, .25); }
+
+/* Avancement d'un paquet : barre fine sous la description ; paquet complété : barre dorée et coche sur le paquet */
+.pack-prog { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.pack-prog .bar { flex: 1; max-width: 160px; height: 4px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.pack-prog .bar i { display: block; height: 100%; background: var(--ink-2); border-radius: inherit; }
+.pack-prog small { font-family: var(--mono); font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+.pack-prog.is-done .bar i { background: linear-gradient(90deg, #d6a12a, #f7dc84); }
+.pack-prog.is-done small { color: #a87b1e; font-weight: 600; }
+.pack-done { position: absolute; z-index: 3; top: -6px; left: 50%; translate: -50% 0; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%;
+  font: 800 17px/1 var(--display); color: #2a1d00; background: linear-gradient(180deg, #fff1b8, #d6a12a); box-shadow: 0 3px 8px rgba(0, 0, 0, .3); pointer-events: none; }
