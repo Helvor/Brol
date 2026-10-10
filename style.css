@@ -1576,3 +1576,56 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 
 /* Fiche d'une carte non possédée : « Demander en échange » avant les chances d'obtention */
 #detail-body .trade-ask { margin: 2px 0 18px; }
+
+/* --- Archives, versions spéciales --- */
+/* Holo « document plastifié » : film brillant à rayures sur toute la carte, sceau holographique à la place du tampon */
+.card.cat-histoire.fin-holo .card-in::after { display: block; content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none; mix-blend-mode: soft-light; opacity: .55;
+  background: repeating-linear-gradient(125deg, rgba(255, 255, 255, .5) 0 .4cqw, transparent .4cqw 3.2cqw), linear-gradient(160deg, rgba(255, 255, 255, .5), transparent 40%, rgba(255, 255, 255, .35)); animation: none; }
+.card.cat-histoire.fin-holo .card-band::after { content: ""; width: 15cqw; height: 15cqw; padding: 0; border: .5cqw solid rgba(255, 255, 255, .85); border-radius: 50%; top: -14cqw; opacity: 1; mix-blend-mode: normal;
+  background: radial-gradient(circle, rgba(255, 255, 255, .7) 0 18%, transparent 19% 32%, rgba(255, 255, 255, .5) 33% 36%, transparent 37%),
+    conic-gradient(#ff7ad9, #ffd36b, #7dffb2, #6bd7ff, #b38bff, #ff7ad9);
+  box-shadow: 0 .8cqw 1.6cqw rgba(0, 0, 0, .3); animation: holo-seal 4s linear infinite; }
+@keyframes holo-seal { to { filter: hue-rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .card.cat-histoire.fin-holo .card-band::after { animation: none; } }
+
+/* Dorée « archives royales » : parchemin bordé d'or, photo dans un cadre doré, tampon doré */
+.card.cat-histoire.fin-or .card-in { background: radial-gradient(ellipse at 50% 40%, #f7ecd0, #e6d3a1 75%, #d7bd80);
+  box-shadow: inset 0 0 0 1.4cqw #f7ecd0, inset 0 0 0 1.8cqw #b8891f, inset 0 0 0 2.4cqw #f7ecd0, inset 0 0 0 2.6cqw #b8891f; }
+.card.cat-histoire.fin-or .card-photo { background: linear-gradient(135deg, #8a6516, #f7dc84 30%, #b8891f 55%, #fff1b8 75%, #a87b1e); }
+.card.cat-histoire.fin-or .card-band, .card.cat-histoire.fin-or .card-band .sub { color: #4a3410; }
+.card.cat-histoire.fin-or .card-band .meta { color: #8a6516; }
+.card.cat-histoire.fin-or .card-band::after { content: "ARCHIVES ROYALES"; color: #a87b1e; border-color: #a87b1e; font-size: 3.8cqw; }
+.card.cat-histoire.fin-or.r-legendaire .card-band::after, .card.cat-histoire.fin-or.r-mythique .card-band::after { content: ""; font-size: 0; }
+.card.cat-histoire.fin-or .card-stats { background: rgba(255, 246, 220, .6); border-top: .3cqw solid #b8891f; }
+.card.cat-histoire.fin-or .card-stats dd { color: #4a3410; }
+
+/* Plein cadre « grand tirage » : mêmes matériaux que la version standard (carton kraft, tirage bordé de blanc, scotch,
+   étiquette tapée à la machine), mais la photo occupe toute la carte */
+.card.cat-histoire.fin-plein { --frame: linear-gradient(160deg, #c79b62, #8d6633 55%, #b98a52); }
+.card.cat-histoire.fin-plein.r-legendaire { --frame: linear-gradient(135deg, #7a5a12, #f7dc84 22%, #a87b1e 45%, #fff1b8 65%, #8a6516); }
+.card.cat-histoire.fin-plein.r-mythique { --frame: linear-gradient(160deg, #5a0012, #c8102e 45%, #8a0020); }
+.card.cat-histoire.fin-plein .card-in { background: repeating-linear-gradient(0deg, rgba(90, 60, 20, .05) 0 .3cqw, transparent .3cqw 1.2cqw), linear-gradient(170deg, #dcc597, #cdb07a); }
+.card.cat-histoire.fin-plein .card-photo { inset: 2.6cqw 2.6cqw 19cqw; padding: 1.8cqw; background: #f4efe3; box-shadow: 0 .8cqw 2cqw rgba(60, 40, 10, .35); }
+.card.cat-histoire.fin-plein .card-photo img { filter: sepia(.55) contrast(1.05); }
+/* Deux bouts de scotch en haut du tirage */
+.card.cat-histoire.fin-plein .card-photo::before, .card.cat-histoire.fin-plein .card-photo::after { content: ""; position: absolute; z-index: 2; top: -1.8cqw; width: 14cqw; height: 4.6cqw;
+  background: rgba(240, 232, 205, .85); box-shadow: 0 .3cqw .8cqw rgba(0, 0, 0, .15); }
+.card.cat-histoire.fin-plein .card-photo::before { left: -2cqw; rotate: -32deg; }
+.card.cat-histoire.fin-plein .card-photo::after { right: -2cqw; rotate: 32deg; }
+.card.cat-histoire.fin-plein .card-top { top: 6cqw; left: 6cqw; right: 6cqw; }
+.card.cat-histoire.fin-plein .card-top .no { font-family: var(--type); background: rgba(244, 239, 227, .92); color: #4a3414; }
+/* Étiquette en kraft, scotchée sur le bas du tirage */
+.card.cat-histoire.fin-plein .card-band { left: 6cqw; right: 6cqw; bottom: 21cqw; padding: 2.6cqw 4cqw 3cqw; color: #2b2116; rotate: -1.5deg;
+  background: repeating-linear-gradient(0deg, rgba(90, 60, 20, .06) 0 .3cqw, transparent .3cqw 1.2cqw), linear-gradient(170deg, #e2cfa6, #d2b886);
+  box-shadow: 0 1cqw 2.4cqw rgba(0, 0, 0, .4); }
+.card.cat-histoire.fin-plein .card-band::before { display: block; left: 50%; top: -2.4cqw; width: 14cqw; height: 4.6cqw; translate: -50% 0; rotate: 4deg;
+  background: rgba(240, 232, 205, .85); box-shadow: 0 .3cqw .8cqw rgba(0, 0, 0, .2); }
+.card.cat-histoire.fin-plein .card-band h3 { font-size: 7cqw; }
+.card.cat-histoire.fin-plein .card-band .sub { color: #4a3a26; font-size: 3.7cqw; }
+.card.cat-histoire.fin-plein .card-band .meta { color: #6a4f2c; opacity: 1; }
+.card.cat-histoire.fin-plein .card-band::after { top: -9cqw; right: 2cqw; }
+.card.cat-histoire.fin-plein:not(.r-legendaire):not(.r-mythique) .card-band::after { background: rgba(244, 239, 227, .9); mix-blend-mode: normal; }
+.card.cat-histoire.fin-plein .card-stats { background: rgba(255, 250, 235, .55); border-top: .3cqw dashed #6a4f2c; }
+.card.cat-histoire.fin-plein .card-stats dt { color: #7a5f3a; }
+.card.cat-histoire.fin-plein .card-stats dd { color: #2b2116; font-family: var(--type); font-weight: 400; }
+.card.cat-histoire.fin-plein .card-stats div + div { border-left-color: rgba(90, 60, 20, .25); }
