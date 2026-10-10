@@ -91,14 +91,16 @@
 
   // Intérieur d'une carte Histoire : tirage photo scotché, texte tapé à la machine, tampon ou cachet de cire, statistiques
   function archives(ctx, c, photo, ix, iy, iw, ih, finish) {
-    const k = gradient(ctx, ix, iy, iw, ih, ['#dcc597', '#cdb07a'], 100);
-    ctx.fillStyle = k; ctx.fillRect(ix, iy, iw, ih);
-    ctx.fillStyle = 'rgba(90,60,20,.05)'; for (let y = iy; y < iy + ih; y += 9) ctx.fillRect(ix, y, iw, 2);
+    const gold = finish === 'or'; // Dorée : parchemin bordé d'or (« archives royales »)
+    ctx.fillStyle = gradient(ctx, ix, iy, iw, ih, gold ? ['#f7ecd0', '#e6d3a1', '#d7bd80'] : ['#dcc597', '#cdb07a'], 100); ctx.fillRect(ix, iy, iw, ih);
+    if (gold) { ctx.strokeStyle = '#b8891f'; ctx.lineWidth = 3; ctx.strokeRect(ix + 12, iy + 12, iw - 24, ih - 24); ctx.lineWidth = 2; ctx.strokeRect(ix + 20, iy + 20, iw - 40, ih - 40); }
+    else { ctx.fillStyle = 'rgba(90,60,20,.05)'; for (let y = iy; y < iy + ih; y += 9) ctx.fillRect(ix, y, iw, 2); }
     const statsH = 116, px = ix + 42, py = iy + 30, pw = iw - 84, ph = Math.round(ih * 0.56);
     // Tirage photo, légèrement de travers
     ctx.save(); ctx.translate(px + pw / 2, py + ph / 2); ctx.rotate(-2 * Math.PI / 180);
     ctx.shadowColor = 'rgba(60,40,10,.4)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 8;
-    ctx.fillStyle = '#f4efe3'; ctx.fillRect(-pw / 2, -ph / 2, pw, ph); ctx.shadowColor = 'transparent';
+    ctx.fillStyle = gold ? gradient(ctx, -pw / 2, -ph / 2, pw, ph, ['#8a6516', '#f7dc84', '#b8891f', '#fff1b8', '#a87b1e']) : '#f4efe3';
+    ctx.fillRect(-pw / 2, -ph / 2, pw, ph); ctx.shadowColor = 'transparent';
     if (photo) {
       ctx.save(); ctx.beginPath(); ctx.rect(-pw / 2 + 14, -ph / 2 + 14, pw - 28, ph - 28); ctx.clip();
       ctx.filter = finish === 'or' ? 'sepia(.65) saturate(1.3)' : c.artwork ? 'sepia(.15)' : 'sepia(.55) contrast(1.05)';
@@ -115,16 +117,23 @@
       ctx.fillRect(ix, iy, iw, ih); ctx.restore();
     }
     // Tampon ARCHIVES / CONFIDENTIEL, ou cachet de cire (légendaire, mythique)
-    const ink = ARCH_INK[c.rarity] || ARCH_INK.commune, sy = py + ph + 4;
+    const ink = gold ? '#a87b1e' : ARCH_INK[c.rarity] || ARCH_INK.commune, sy = py + ph + 4;
     ctx.save(); ctx.translate(ix + iw - 120, sy); ctx.rotate(-12 * Math.PI / 180);
-    if (c.rarity === 'legendaire' || c.rarity === 'mythique') {
+    if (finish === 'holo') { // Holo « plastifié » : sceau holographique
+      const g = ctx.createConicGradient(0, 0, -10);
+      ['#ff7ad9', '#ffd36b', '#7dffb2', '#6bd7ff', '#b38bff', '#ff7ad9'].forEach((col, n) => g.addColorStop(n / 5, col));
+      ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 6;
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, -10, 46, 0, Math.PI * 2); ctx.fill(); ctx.shadowColor = 'transparent';
+      ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 4; ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.arc(0, -10, 9, 0, Math.PI * 2); ctx.fill();
+    } else if (c.rarity === 'legendaire' || c.rarity === 'mythique') {
       const g = ctx.createRadialGradient(-12, -14, 4, 0, 0, 48);
       (c.rarity === 'mythique' ? ['#ff8fa0', '#c8102e', '#5a0012'] : ['#fff3c2', '#d9a52c', '#8a6516']).forEach((col, n) => g.addColorStop(n / 2, col));
       ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 6;
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, -10, 46, 0, Math.PI * 2); ctx.fill();
     } else {
-      const word = c.rarity === 'epique' ? 'CONFIDENTIEL' : 'ARCHIVES';
-      ctx.font = `700 30px ${DISPLAY}`; ctx.letterSpacing = '4px';
+      const word = gold ? 'ARCHIVES ROYALES' : c.rarity === 'epique' ? 'CONFIDENTIEL' : 'ARCHIVES';
+      ctx.font = `700 ${gold ? 24 : 30}px ${DISPLAY}`; ctx.letterSpacing = '4px';
       const w = ctx.measureText(word).width + 30;
       ctx.globalAlpha = 0.8; ctx.strokeStyle = ink; ctx.lineWidth = 4; rr(ctx, -w / 2, -24, w, 46, 8); ctx.stroke();
       ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(word, 2, 0);
@@ -132,7 +141,7 @@
     ctx.restore();
     // Nom, description et méta, tapés à la machine
     const by = iy + ih - statsH - 20;
-    ctx.fillStyle = '#2b2116'; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    ctx.fillStyle = gold ? '#4a3410' : '#2b2116'; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
     let fs = 50, lines;
     for (; ; fs -= 2) { ctx.font = `400 ${fs}px ${TYPE}`; lines = wrap(ctx, window.I18N.name(c).toUpperCase(), iw - 70, 2); if (fs <= 32 || lines.every(l => ctx.measureText(l).width <= iw - 70)) break; }
     let ty = by - 70 - (lines.length - 1) * fs;
