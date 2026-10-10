@@ -75,6 +75,7 @@
     { id: 'commune',      fr: 'Communes',      nl: 'Gemeenten' },
     { id: 'province',     fr: 'Provinces',     nl: 'Provincies' },
     { id: 'region',       fr: 'Régions',       nl: 'Gewesten' },
+    { id: 'histoire',     fr: 'Histoire',      nl: 'Geschiedenis' },
     { id: 'evenement',    fr: 'Événements',    nl: 'Gebeurtenissen' },
     { id: 'edition',      fr: 'Éditions limitées', nl: 'Beperkte edities' },
   ];
@@ -110,6 +111,9 @@
     { id: 'en-route', title: { fr: 'En route !', nl: 'Op weg!' }, kicker: { fr: 'Édition voyage', nl: 'Reiseditie' }, big: '✈', price: 80,
       desc: { fr: 'Avions, trains, navires et explorateurs.', nl: 'Vliegtuigen, treinen, schepen en ontdekkingsreizigers.' },
       body: ['#0b1730', '#24426e'], metal: ['#eaf2ff', '#8fb4ef', '#3d5f99'], cats: ['aviation', 'rail', 'exploration'] },
+    { id: 'histoire', title: { fr: 'Histoire', nl: 'Geschiedenis' }, kicker: { fr: 'Édition histoire', nl: 'Geschiedeniseditie' }, big: '1958', price: 80,
+      desc: { fr: 'Grèves, manifestations, grandes dates et drames qui ont marqué le pays.', nl: 'Stakingen, betogingen, grote data en drama’s die het land tekenden.' },
+      body: ['#1e1710', '#4a3a26'], metal: ['#fbf1dc', '#d9b98a', '#7a5a34'], cats: ['histoire', 'evenement'] },
     // Banque nationale : la catégorie Monnaie et banque, plus les gouverneurs et ministres déjà présents en Politique
     { id: 'bnb', title: { fr: 'Banque nationale', nl: 'Nationale Bank' }, kicker: { fr: 'Édition monétaire', nl: 'Munteditie' }, big: '€ ƒ', price: 80,
       desc: { fr: 'Gouverneurs, francs, euros, or et grandes institutions.', nl: 'Gouverneurs, franken, euro’s, goud en grote instellingen.' },
@@ -319,6 +323,10 @@
       match: c => (c.cat === 'finance' && c.stats?.[1]?.[1] === 'Gouverneur') || BNB_GOVERNORS.has(c.id) },
     { id: 'resistance', title: { fr: 'Résistance', nl: 'Verzet' }, desc: { fr: 'Les résistants des deux guerres.', nl: 'De verzetsstrijders van beide oorlogen.' }, reward: 500,
       match: c => c.cat === 'militaire' && /^Résistant/.test(c.stats?.[2]?.[1] || '') },
+    { id: 'expos', title: { fr: 'Expositions universelles', nl: 'Wereldtentoonstellingen' }, desc: { fr: 'De 1897 à l’Expo 58.', nl: 'Van 1897 tot Expo 58.' }, reward: 500,
+      match: c => c.cat === 'histoire' && c.stats?.[1]?.[1] === 'Exposition' },
+    { id: 'greves', title: { fr: 'Dans la rue', nl: 'Op straat' }, desc: { fr: 'Grèves et manifestations qui ont changé le pays.', nl: 'Stakingen en betogingen die het land veranderden.' }, reward: 500,
+      match: c => c.cat === 'histoire' && ['Grève', 'Manifestation'].includes(c.stats?.[1]?.[1]) },
     ...ALL_PACKS.filter(p => p.special).map(p => ({ id: 'ed-' + p.id, edition: p.id,
       title: { fr: `Édition ${p.title.fr}`, nl: `Editie ${p.title.nl}` },
       desc: { fr: `Les cartes exclusives du paquet ${p.title.fr}.`, nl: `De exclusieve kaarten van het pakje ${p.title.nl}.` },
@@ -484,6 +492,11 @@
       ${Array.from({ length: 9 }, (_, i) => { const y = 404 - i * i * 2.4 - i * 6, w = 34 - i * 3.2; return `<path d="M${(150 - w).toFixed(1)} ${y.toFixed(1)}h${(2 * w).toFixed(1)}" stroke-width="${(4 - i * .35).toFixed(1)}"/>`; }).join('')}
       <path d="M20 130C90 60 210 60 280 110" stroke-width="1.6" stroke-dasharray="6 7"/></g>
       <path d="M272 104l14 4-10 10z" fill="${p.metal[0]}" opacity=".55"/>`,
+    // Colonnes de journal et frise chronologique
+    histoire: (k, p) => `${[0, 1, 2].map(c => Array.from({ length: 14 }, (_, i) => `<rect x="${24 + c * 88}" y="${150 + i * 14}" width="${i % 5 === 4 ? 44 : 76}" height="4" rx="2" fill="${p.metal[1]}" opacity=".13"/>`).join('')).join('')}
+      <rect x="24" y="112" width="252" height="16" rx="3" fill="${p.metal[1]}" opacity=".18"/>
+      <path d="M20 394H280" stroke="${p.metal[1]}" stroke-width="2" opacity=".4"/>
+      ${[40, 84, 128, 172, 216, 260].map((x, i) => `<circle cx="${x}" cy="394" r="${i === 3 ? 6 : 4}" fill="${p.metal[0]}" opacity="${i === 3 ? .8 : .45}"/>`).join('')}`,
     // Empreintes de pattes qui traversent le paquet
     faune: (k, p) => Array.from({ length: 9 }, (_, i) => { const x = 40 + i * 28 + (i % 2) * 18, y = 360 - i * 36, a = -35;
       return `<g transform="translate(${x} ${y}) rotate(${a})" fill="${p.metal[1]}" opacity=".22"><ellipse cx="0" cy="6" rx="9" ry="8"/>${[[-10, -6], [-4, -11], [4, -11], [10, -6]].map(([dx, dy]) => `<ellipse cx="${dx}" cy="${dy}" rx="3.4" ry="4.4"/>`).join('')}</g>`; }).join(''),
@@ -596,7 +609,7 @@
   // Chaque catégorie contient toutes les raretés (réparties par notoriété), donc les taux affichés sont justes.
   // Nouvelle catégorie : à rareté égale, ses cartes sortent trois fois plus souvent jusqu'à la date indiquée, pour
   // qu'elles ne se noient pas parmi les 1 500 cartes du paquet Belgique. Les taux par rareté ne changent pas.
-  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30' }, FEATURED_WEIGHT = 3;
+  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30', histoire: '2027-05-31' }, FEATURED_WEIGHT = 3;
   const featuredCats = () => { const d = ymd(now()); return new Set(Object.keys(FEATURED).filter(cat => d <= FEATURED[cat])); };
   function pickCard(list) {
     const feat = featuredCats(), w = c => feat.has(c.cat) ? FEATURED_WEIGHT : 1;

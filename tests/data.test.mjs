@@ -7,7 +7,7 @@ runInNewContext(readFileSync(new URL('../data/cards.js', import.meta.url), 'utf8
 const cards = window.CARDS;
 
 const CATS = ['politique', 'bourgmestre', 'monarchie', 'culture', 'groupe', 'festival', 'sport', 'science', 'militaire', 'animal', 'aviation', 'rail', 'exploration', 'finance', 'art', 'monument', 'chateau', 'folklore',
-  'gastronomie', 'biere', 'enseignement', 'commune', 'province', 'region', 'evenement', 'edition'];
+  'gastronomie', 'biere', 'enseignement', 'commune', 'province', 'region', 'histoire', 'evenement', 'edition'];
 const OPTIONAL = ['science']; // catégories ajoutées au générateur, vides tant que data/cards.js n'est pas régénéré
 const RARITIES = ['commune', 'peu-commune', 'rare', 'epique', 'legendaire', 'mythique'];
 
