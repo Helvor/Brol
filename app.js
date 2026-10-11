@@ -1400,7 +1400,8 @@
           f > 1 ? `<button class="btn btn-line" data-fuse="${r.id}" data-max="1">${t('fuseMax', f)}</button>` : ''}</span>
       </div>`;
     }).join('');
-    const holos = holoCandidates().sort((a, b) => R[b.rarity].rank - R[a.rarity].rank);
+    // Holo : celles qu'on n'a pas encore d'abord, puis par rareté
+    const holos = holoCandidates().sort((a, b) => !!countOf(a.id, 'holo') - !!countOf(b.id, 'holo') || R[b.rarity].rank - R[a.rarity].rank);
     const catsScroll = $('#fuse-body .fuse-cats')?.scrollLeft || 0; // la rangée des catégories garde sa position
     $('#fuse-body').innerHTML = `
       <h2>${t('fuseTitle')}</h2>
@@ -1413,6 +1414,7 @@
       <h3>${t('fuseHoloH', HOLO_COST)}</h3>
       ${holos.length ? `<div class="fuse-holos">${holos.slice(0, 40).map(c => `<div class="fuse-holo">
           <span class="gem" style="background:var(--r-${c.rarity})"></span><span class="fuse-name">${esc(nm(c))}</span><small>×${countOf(c.id, 'normal')}</small>
+          ${countOf(c.id, 'holo') ? `<span class="holo-have" title="${t('holoHaveT')}">${t('holoHave', countOf(c.id, 'holo'))}</span>` : `<span class="holo-new">${t('holoNew')}</span>`}
           <span class="fuse-btns"><button class="btn btn-line" data-holo="${esc(c.id)}">${t('fuseToHolo')}</button>${
             holoMax(c.id) > 1 ? `<button class="btn btn-line" data-holo="${esc(c.id)}" data-max="1">${t('fuseMax', holoMax(c.id))}</button>` : ''}</span></div>`).join('')}</div>`
         : `<p class="muted small">${t('fuseNoHolo', HOLO_COST + 1)}</p>`}`;

@@ -1658,3 +1658,8 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .reveal.is-bulk .slot:not(.is-flipped):hover .inner { transform: none; }
 .card-back.is-lite .back-logo { width: 46cqw; filter: none; }
 .stage.is-bulk .stage-rays { animation-play-state: paused; }
+
+/* Fusion Holo : Holo déjà possédée (grisé) ou nouvelle (mise en avant) */
+.fuse-holo .holo-have, .fuse-holo .holo-new { flex: none; font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
+.fuse-holo .holo-have { color: var(--ink-2); background: var(--line); }
+.fuse-holo .holo-new { color: #111; background: linear-gradient(110deg, #e9edf3, #ffffff 40%, #aee6ff 60%, #ffd1f1); box-shadow: 0 0 0 1px rgba(0, 0, 0, .12); }
