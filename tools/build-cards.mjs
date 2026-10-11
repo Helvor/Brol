@@ -770,6 +770,62 @@ function buildBalades() {
     stats: [['Durée', h], ['Province', prov], ['Niveau', NIVEAU[lvl - 1]]],
   }));
 }
+// ---------- Voitures belges : marques, modèles, usines, circuits (paquet « Voitures ») ----------
+// Cartes manuelles, photos de Commons relues à l'œil (voiture entière de préférence). Design « Showroom »
+// (style.css, .card.cat-voiture). Cadrage : VOITURE_POS (comme PAYSAGE_POS), contrôlé avec tools/planche.mjs.
+// [id, nom, nom NL, image, [stat, valeur], type, ville, description, description NL, rareté]
+const VOITURES = [
+  ["car-minerva", "Minerva", "Minerva", "1928 Minerva 32CV AK Landaulette photo1.JPG", ["Fondée", 1897], "Marque", "Anvers", "La « Rolls-Royce belge », reine des années 1920", "De “Belgische Rolls-Royce”, koningin van de jaren 1920", "mythique"],
+  ["car-jamais", "La Jamais Contente", "La Jamais Contente", "1899 La Jamais Contente (46229842875).jpg", ["Année", 1899], "Électrique", "Bruxelles", "Électrique, la première voiture à dépasser 100 km/h", "Elektrisch, de eerste auto boven 100 km/u", "mythique"],
+  ["car-imperia", "Impéria", "Impéria", "Imperia Jupiter.jpg", ["Fondée", 1904], "Marque", "Nessonvaux", "La marque des Ardennes liégeoises et sa piste sur le toit", "Het merk uit de Luikse Ardennen, met testbaan op het dak", "mythique"],
+  ["car-fn", "FN", "FN", "1929 FN Jubilee berline f3q.JPG", ["Fondée", 1889], "Marque", "Herstal", "La Fabrique nationale construisait aussi des voitures", "De Fabrique Nationale bouwde ook auto’s", "mythique"],
+  ["car-spa", "Spa-Francorchamps", "Spa-Francorchamps", "2021 ELMS Spa, United Autosport.jpg", ["Ouverture", 1921], "Circuit", "Stavelot", "Le plus beau circuit du monde, et son Raidillon", "Het mooiste circuit ter wereld, met zijn Raidillon", "mythique"],
+  ["car-excelsior", "Excelsior Albert Iᵉʳ", "Excelsior Albert I", "Excelsior Albert 1er Châssis Court Cabriolet (21138954936).jpg", ["Année", 1920], "Voiture", "Zaventem", "La voiture de luxe qui portait le nom du roi", "De luxewagen met de naam van de koning", "legendaire"],
+  ["car-metallurgique", "Métallurgique", "Métallurgique", "1921 Métallurgique 12-14 HP sports roadster fl3q.JPG", ["Fondée", 1898], "Marque", "Marchienne-au-Pont", "Des voitures de sport rapides avant 1914", "Snelle sportwagens van voor 1914", "legendaire"],
+  ["car-germain", "Germain", "Germain", "Germain.JPG", ["Fondée", 1897], "Marque", "Monceau-sur-Sambre", "Ateliers de trams et de voitures du Hainaut", "Werkplaats voor trams en auto’s in Henegouwen", "legendaire"],
+  ["car-vertigo", "Gillet Vertigo", "Gillet Vertigo", "2005 Gillet Vertigo fr3q.JPG", ["Année", 1992], "Supercar", "Namur", "Record du monde d’accélération en 1994", "Wereldrecord acceleratie in 1994", "legendaire"],
+  ["car-vdp", "Vanden Plas", "Vanden Plas", "Cadillac 353 Van den Plas Landaulette at Legendy 2018 in Prague.jpg", ["Fondé", 1870], "Carrossier", "Bruxelles", "Carrossier de luxe, des Minerva aux Cadillac", "Luxe koetswerkbouwer, van Minerva tot Cadillac", "legendaire"],
+  ["car-dieteren", "D’Ieteren", "D’Ieteren", "Hispano Suiza T49 cabriolet 1929.jpg", ["Fondé", 1805], "Carrossier", "Bruxelles", "Carrossier devenu importateur, deux siècles d’histoire", "Koetswerkbouwer en invoerder, twee eeuwen geschiedenis", "legendaire"],
+  ["car-pieper", "Pieper Auto-Mixte", "Pieper Auto-Mixte", "Piper (1901).jpg", ["Année", 1900], "Hybride", "Liège", "Une des premières voitures hybrides au monde", "Een van de eerste hybride auto’s ter wereld", "legendaire"],
+  ["car-autoworld", "Autoworld", "Autoworld", "Autoworld, Brussels, image of interior.jpg", ["Ouverture", 1986], "Musée", "Bruxelles", "Le musée de l’auto sous les arcades du Cinquantenaire", "Het automuseum onder de arcaden van het Jubelpark", "legendaire"],
+  ["car-nagant", "Nagant", "Nagant", "1909 Nagant Type D 14slash16-HP Town Car photo2.JPG", ["Fondée", 1859], "Marque", "Liège", "Des armes aux voitures, la maison liégeoise", "Van wapens tot auto’s, het Luikse huis", "epique"],
+  ["car-vivinus", "Vivinus", "Vivinus", "Vivinus.JPG", ["Fondée", 1899], "Marque", "Bruxelles", "Voiturettes légères du début du siècle", "Lichte voiturettes van rond 1900", "epique"],
+  ["car-pipe", "Pipe", "Pipe", "1909 Pipe P4K runabout f3q.JPG", ["Fondée", 1898], "Marque", "Bruxelles", "Voitures de course et de luxe de Cureghem", "Race- en luxewagens uit Kuregem", "epique"],
+  ["car-imperiata8", "Impéria TA-8", "Impéria TA-8", "Imperia tf.jpg", ["Année", 1947], "Voiture", "Nessonvaux", "La traction d’après-guerre de Nessonvaux", "De voorwielaangedreven auto van na de oorlog", "epique"],
+  ["car-vanhool", "Van Hool", "Van Hool", "Busworld Europe 2025, Brussels (P1210181).jpg", ["Fondé", 1947], "Autocars", "Lierre", "Autocars et bus belges roulant dans le monde entier", "Belgische autocars en bussen over de hele wereld", "epique"],
+  ["car-audi", "Audi Forest", "Audi Vorst", "Bruzzel19.jpg", ["Ouverture", 1949], "Usine", "Forest", "L’usine bruxelloise des Audi électriques", "De Brusselse fabriek van de elektrische Audi’s", "epique"],
+  ["car-volvogent", "Volvo Gand", "Volvo Gent", "Volvo 121 Schaffen-Diest 2012.jpg", ["Ouverture", 1965], "Usine", "Gand", "La plus grande usine automobile du pays", "De grootste autofabriek van het land", "epique"],
+  ["car-zolder", "Circuit de Zolder", "Circuit Zolder", "Circuit Zolder 6-11-2008 16-29-22.jpg", ["Ouverture", 1963], "Circuit", "Heusden-Zolder", "Le circuit limbourgeois de la Formule 1", "Het Limburgse circuit van de Formule 1", "epique"],
+  ["car-jenatzyc", "Camille Jenatzy", "Camille Jenatzy", "Camille Jenatzy at the 1912 Belgian Grand Prix.jpg", ["Naissance", 1868], "Pilote", "Bruxelles", "Le « Diable rouge », pilote et inventeur", "De “Rode Duivel”, piloot en uitvinder", "epique"],
+  ["car-springuel", "Springuel", "Springuel", "Springuel 16hp 720.jpg", ["Fondée", 1907], "Marque", "Huy", "Voitures de course hutoises, ancêtres d’Impéria", "Racewagens uit Hoei, voorlopers van Impéria", "rare"],
+  ["car-apal", "Apal", "Apal", "APAL Formel V 1965.jpg", ["Fondée", 1961], "Marque", "Blégny", "Petites sportives et formules liégeoises", "Kleine sportwagens en formulewagens uit Luik", "rare"],
+  ["car-sarolea", "Saroléa", "Saroléa", "080826-Sarolea Oiseau-Bleu.jpg", ["Fondée", 1850], "Motos", "Herstal", "La plus ancienne marque de motos belge", "Het oudste Belgische motormerk", "rare"],
+  ["car-gilletherstal", "Gillet Herstal", "Gillet Herstal", "1927 Gillet Herstal, Tour du monde, 350cm3, Musée de la Moto et du Vélo, Amneville, France.JPG", ["Fondée", 1919], "Motos", "Herstal", "Motos herstaliennes et tour du monde de 1926", "Motoren uit Herstal en wereldreis van 1926", "rare"],
+  ["car-englebert", "Englebert", "Englebert", "Englebert enamel tire advert.JPG", ["Fondée", 1877], "Pneus", "Liège", "Les pneus liégeois des Grands Prix", "De Luikse banden van de Grands Prix", "rare"],
+  ["car-miesse", "Miesse", "Miesse", "Brussels Tramway Museum 22.jpg", ["Fondée", 1894], "Camions", "Bruxelles", "Camions, bus et voitures de Bruxelles", "Vrachtwagens, bussen en auto’s uit Brussel", "rare"],
+  ["car-jonckheere", "Jonckheere", "Jonckheere", "A13XEL.jpg", ["Fondé", 1881], "Carrossier", "Roulers", "Carrossier d’autocars depuis le XIXᵉ siècle", "Koetswerkbouwer van autocars sinds de 19de eeuw", "rare"],
+  ["car-salon", "Salon de l’auto", "Autosalon", "5-12-25, Bruxelles, Salon, vue générale - btv1b531557548.jpg", ["Création", 1902], "Salon", "Bruxelles", "Le grand rendez-vous automobile de janvier", "De grote autoafspraak van januari", "rare"],
+  ["car-c30", "Volvo C30", "Volvo C30", "Volvo C30 Electric.jpg", ["Année", 2006], "Voiture", "Gand", "Construite à Gand, aussi en version électrique", "Gebouwd in Gent, ook in elektrische versie", "rare"],
+  ["car-galaxy", "Ford Galaxy", "Ford Galaxy", "2000 Ford Galaxy Zetec TDi 1.9.jpg", ["Année", 1995], "Monospace", "Genk", "Le monospace de l’usine de Genk", "De monovolume van de fabriek in Genk", "peu-commune"],
+  ["car-smax", "Ford S-Max", "Ford S-Max", "2010 Ford S-Max Zetec TDCi 2.0 Front.jpg", ["Année", 2006], "Monospace", "Genk", "Assemblée à Genk jusqu’à la fermeture de 2014", "Gebouwd in Genk tot de sluiting in 2014", "peu-commune"],
+  ["car-xc40", "Volvo XC40", "Volvo XC40", "2018 Volvo XC40 First Edition T5 AWD Automatic 2.0 Front.jpg", ["Année", 2017], "SUV", "Gand", "Le SUV gantois, aussi électrique", "De Gentse SUV, ook elektrisch", "peu-commune"],
+  ["car-mahy", "Mahymobiles", "Mahymobiles", "Mahymobiles 32.jpg", ["Ouverture", 1991], "Musée", "Leuze-en-Hainaut", "Des centaines de voitures de la collection Mahy", "Honderden wagens van de collectie Mahy", "peu-commune"],
+  ["car-supervan", "Ford Supervan 3", "Ford Supervan 3", "1994 Ford Supervan 3 3.5.jpg", ["Année", 1994], "Utilitaire", "Genk", "Une camionnette Transit à moteur de course", "Een Transit-bestelwagen met racemotor", "commune"],
+  ["car-mol", "MOL", "MOL", "MOL waterkanon b.jpg", ["Fondé", 1944], "Camions", "Hooglede", "Camions et engins spéciaux flamands", "Vlaamse vrachtwagens en speciale voertuigen", "commune"],
+];
+// Cadrage de la photo dans la carte verticale (object-position, puis zoom éventuel), relu sur les planches
+const VOITURE_POS = {
+  'car-minerva': '22% 60%', 'car-imperia': '25% 55%', 'car-fn': '40% 60%', 'car-jamais': '45% 75%', 'car-pieper': '50% 100%',
+  'car-mol': '30% 80%', 'car-volvogent': '35% 55%',
+};
+function buildVoitures() {
+  return VOITURES.map(([id, name, nlName, img, first, kind, city, sub, subNl, rarity]) => ({
+    id, cat: 'voiture', name, img, rarity, manual: true, family: 'voiture', ...(VOITURE_POS[id] && { pos: VOITURE_POS[id] }),
+    subtitle: sub, nl: { name: nlName, subtitle: subNl },
+    meta: [kind, city].join(' · '),
+    stats: [first, ['Type', kind], ['Ville', city]],
+  }));
+}
 function buildManual(cat, list) {
   return list.map(([id, name, nlName, img, kind, y, sub, subNl, extra, rarity]) => ({
     id, cat, name, img, rarity, manual: true, family: cat, artwork: true, // rareté hors quotas (voir rarityByQuota)
@@ -836,6 +892,7 @@ const AJOUTS = {
   finance: { build: async () => [...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES)], editions: [] },
   histoire: { build: async () => buildHistoire(), editions: [] }, bd: { build: async () => buildBulles(), editions: [] },
   paysage: { build: async () => buildPaysages(), editions: [] }, balade: { build: async () => buildBalades(), editions: [] },
+  voiture: { build: async () => buildVoitures(), editions: [] },
 };
 const AJOUT = (process.argv.find(a => a.startsWith('--ajout=')) || '').slice(8);
 if (AJOUT) {
@@ -1517,7 +1574,7 @@ for (const f of sciRows) {
 console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
 
 for (const c of [...await buildMilitaires(resolveTitles), ...await buildAnimaux(resolveTitles),
-  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES), ...buildHistoire(), ...buildBulles(), ...buildPaysages(), ...buildBalades()]) { delete c.links; cards.push(c); }
+  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES), ...buildHistoire(), ...buildBulles(), ...buildPaysages(), ...buildBalades(), ...buildVoitures()]) { delete c.links; cards.push(c); }
 
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [

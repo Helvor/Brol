@@ -296,11 +296,11 @@ a { color: inherit; }
 .card.r-mythique    { --rc: var(--r-mythique); }
 /* Lueur rouge sur toutes les mythiques ; cadre et bandeau rubis sur la version standard (les autres versions gardent les leurs) */
 .card.r-mythique:not(.cat-edition) { box-shadow: 0 0 0 1px #7a0018, 0 0 22px -4px rgba(255, 40, 80, .7), 0 14px 30px -12px rgba(0, 0, 0, .6); }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade) {
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture) {
   --frame: conic-gradient(from 20deg at 50% 50%, #5a0012, #ff2d55, #9a0020, #ff6b81, #6a0016, #ff2d55, #4a000e, #ff8fa0, #5a0012); }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade) .card-band { background: linear-gradient(180deg, #8a0020, #4a000e); color: #fff; }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade) .card-stats { background: #22000a; }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade) .card-stats dd { color: #ffb3c0; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture) .card-band { background: linear-gradient(180deg, #8a0020, #4a000e); color: #fff; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture) .card-stats { background: #22000a; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture) .card-stats dd { color: #ffb3c0; }
 
 /* Édition limitée : cadre aux métaux de son paquet (--ed-frame, --band et --band-ink posés par app.js), double filet, sceau du paquet */
 .card.cat-edition { --frame: var(--ed-frame); background-size: 200% 200%; animation: gold 6s ease-in-out infinite alternate; }
@@ -1906,3 +1906,51 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 @keyframes slide-l { from { opacity: .2; transform: translateX(40px); } }
 @keyframes slide-r { from { opacity: .2; transform: translateX(-40px); } }
 @media (prefers-reduced-motion: reduce) { .detail-card.slide-l, .detail-card.slide-r { animation: none; } }
+
+/* ===== Voitures belges : « Showroom » (fond noir, photo en lumière, filet chromé, emblème émaillé de la rareté) ===== */
+.card.cat-voiture { --acc: #8a8a8a; --chrome: linear-gradient(135deg, #f5f6f8, #7d828c 30%, #e8eaee 50%, #6c717a 70%, #f5f6f8); padding: 0;
+  background: radial-gradient(ellipse at 50% 30%, #2b2e35, #0b0c0f 70%); color: #eceae4; }
+.card.cat-voiture.r-peu-commune { --acc: #2f7d4a; } .card.cat-voiture.r-rare { --acc: #2e5fc0; } .card.cat-voiture.r-epique { --acc: #6b3db8; }
+.card.cat-voiture.r-legendaire { --acc: #b8860b; --chrome: linear-gradient(135deg, #fff1b8, #a87b1e 30%, #f7dc84 50%, #8a6516 70%, #fff1b8); box-shadow: 0 0 20px -6px rgba(230, 195, 106, .55), 0 14px 30px -16px rgba(0, 0, 0, .6); }
+.card.cat-voiture.r-mythique { --acc: #c8102e; --chrome: linear-gradient(135deg, #ffd0d8, #8a0020 30%, #ff6b81 50%, #6a0016 70%, #ffd0d8); box-shadow: 0 0 22px -6px rgba(255, 40, 80, .55), 0 14px 30px -16px rgba(0, 0, 0, .6); }
+.card.cat-voiture .card-in { height: 100%; border-radius: inherit; background: transparent; }
+.card.cat-voiture:not(.fin-ev) .card-in::before { display: none; }
+/* Filet chromé fin (à l'intérieur de la carte) */
+.card.card.cat-voiture .card-in::after { content: ""; display: block; position: absolute; inset: 1.6cqw; z-index: 6; border-radius: 3cqw; pointer-events: none; opacity: 1; animation: none;
+  mix-blend-mode: normal; border: .35cqw solid transparent; background: var(--chrome) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.card.cat-voiture .card-photo { inset: 1.6cqw 1.6cqw auto; height: 66cqw; border-radius: 3cqw 3cqw 0 0; overflow: hidden; background: #1b1d22; }
+.card.cat-voiture .card-photo img { object-position: var(--pos, 50% 55%); transform: scale(var(--zoom, 1)); transform-origin: var(--pos, 50% 55%); }
+.card.cat-voiture .card-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, #0b0c0f); }
+.card.cat-voiture .card-top { top: 4cqw; left: 4cqw; right: 4cqw; z-index: 3; }
+.card.cat-voiture .card-top .no { background: rgba(0, 0, 0, .55); font-size: 3.2cqw; }
+.card.cat-voiture .car-badge { position: absolute; left: 50%; top: 60cqw; translate: -50% 0; z-index: 3; width: 14cqw; height: 14cqw; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--acc) 50%, #fff), var(--acc) 55%, color-mix(in srgb, var(--acc) 60%, #000));
+  box-shadow: 0 0 0 .7cqw #d9dce2, 0 0 0 1.1cqw #6c717a, 0 1cqw 2cqw rgba(0, 0, 0, .6); font: 700 4.6cqw/1 Georgia, serif; color: #fff; }
+.card.cat-voiture .card-band { inset: 78cqw 6cqw auto; padding: 0; background: none; clip-path: none; text-align: center; color: #eceae4; }
+.card.cat-voiture .card-band::before, .card.cat-voiture .card-band::after { display: none; }
+.card.cat-voiture .card-band h3 { margin: 0; font: 600 7.4cqw/1 var(--text); letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
+.card.cat-voiture .card-band h3.is-long { font-size: 5.4cqw; letter-spacing: .08em; }
+.card.cat-voiture .card-band .sub { margin: 2.4cqw 2cqw 0; font: 400 3.4cqw/1.3 var(--text); color: #a5a8af; opacity: 1; }
+.card.cat-voiture .card-stats { left: 8cqw; right: 8cqw; bottom: 7cqw; height: auto; background: none; border: 0; text-align: center; }
+.card.cat-voiture .card-stats div + div { border-left: .25cqw solid rgba(255, 255, 255, .15); }
+.card.cat-voiture .card-stats dt { font-size: 2.3cqw; letter-spacing: .2em; color: #8d9098; }
+.card.cat-voiture .card-stats dd { font: 500 4cqw/1 var(--text); color: #eceae4; }
+.card.cat-voiture .var-dots { bottom: 24cqw; }
+/* Holo : filet et emblème irisés, reflet discret sur la photo */
+.card.cat-voiture.fin-holo { --chrome: conic-gradient(from 30deg, #ff7ad9, #ffd36b, #7dffb2, #6bd7ff, #b38bff, #ff7ad9); }
+.card.cat-voiture.fin-holo .card-photo::before { content: ""; position: absolute; inset: 0; z-index: 1; mix-blend-mode: color-dodge; opacity: .26;
+  background: linear-gradient(115deg, transparent 25%, #ff7ad9 35%, #ffd36b 43%, #7dffb2 51%, #6bd7ff 59%, #b38bff 67%, transparent 77%); }
+.card.cat-voiture.fin-holo .car-badge { background: conic-gradient(from 30deg, #ff7ad9, #ffd36b, #7dffb2, #6bd7ff, #b38bff, #ff7ad9); color: #111; }
+.card.cat-voiture.fin-holo .card-band h3 { background: linear-gradient(90deg, #ffd1f1, #fff, #b8f3ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* Dorée : noir chaud, filet, emblème et lettres en or */
+.card.cat-voiture.fin-or { --chrome: linear-gradient(135deg, #fff1b8, #a87b1e 30%, #f7dc84 50%, #8a6516 70%, #fff1b8); background: radial-gradient(ellipse at 50% 30%, #2e2614, #0b0904 70%); }
+.card.cat-voiture.fin-or .card-photo img { filter: sepia(.25) saturate(1.2); } .card.cat-voiture.fin-or .card-photo::after { background: linear-gradient(180deg, transparent 55%, #0b0904); }
+.card.cat-voiture.fin-or .car-badge { background: radial-gradient(circle at 35% 30%, #fff1b8, #d9a52c 55%, #7a5a12); color: #2a1e05; box-shadow: 0 0 0 .7cqw #f7dc84, 0 0 0 1.1cqw #7a5a12, 0 1cqw 2cqw rgba(0, 0, 0, .6); }
+.card.cat-voiture.fin-or .card-band h3, .card.cat-voiture.fin-or .card-stats dd { color: #f6d478; }
+.card.cat-voiture.fin-or .card-band .sub, .card.cat-voiture.fin-or .card-stats dt { color: #b8a06a; }
+/* Plein cadre : photo sur toute la carte, emblème en petit dans le coin */
+.card.cat-voiture.fin-plein .card-photo { inset: 1.6cqw; height: auto; border-radius: 3cqw; }
+.card.cat-voiture.fin-plein .card-photo::after { background: linear-gradient(180deg, rgba(0, 0, 0, .15), transparent 35%, rgba(0, 0, 0, .55) 62%, rgba(0, 0, 0, .92)); }
+.card.cat-voiture.fin-plein .car-badge { top: 4cqw; left: auto; right: 4cqw; translate: none; width: 12cqw; height: 12cqw; }
+.card.cat-voiture.fin-plein .card-band .sub { color: #d5d7dc; }

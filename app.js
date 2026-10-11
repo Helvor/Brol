@@ -81,6 +81,7 @@
     { id: 'bd',           fr: 'Bulles',        nl: 'Strips' },
     { id: 'paysage',      fr: 'Paysages',      nl: 'Landschappen' },
     { id: 'balade',       fr: 'Balades',       nl: 'Wandelingen' },
+    { id: 'voiture',      fr: 'Voitures',      nl: 'Auto’s' },
     { id: 'evenement',    fr: 'Événements',    nl: 'Gebeurtenissen' },
     { id: 'edition',      fr: 'Éditions limitées', nl: 'Beperkte edities' },
   ];
@@ -125,6 +126,9 @@
     { id: 'paysages', title: { fr: 'Paysages', nl: 'Landschappen' }, kicker: { fr: 'Édition carte postale', nl: 'Prentkaarteditie' }, big: '1F', price: 80,
       desc: { fr: 'Grottes, rochers, cascades, lacs, forêts, fagnes et côte, en cartes postales.', nl: 'Grotten, rotsen, watervallen, meren, bossen, venen en kust, als prentkaarten.' },
       body: ['#0e2a24', '#2f6b4f'], metal: ['#fff6e0', '#f2c86b', '#9a6b1c'], cats: ['paysage'] },
+    { id: 'voitures', title: { fr: 'Voitures belges', nl: 'Belgische auto’s' }, kicker: { fr: 'Édition showroom', nl: 'Showroomeditie' }, big: 'B', price: 80,
+      desc: { fr: 'Minerva, Impéria, la Jamais Contente, les usines et les circuits.', nl: 'Minerva, Impéria, de Jamais Contente, de fabrieken en de circuits.' },
+      body: ['#0b0c0f', '#2b2e35'], metal: ['#f5f6f8', '#b9bec7', '#6c717a'], cats: ['voiture'] },
     { id: 'balades', title: { fr: 'Balades', nl: 'Wandelingen' }, kicker: { fr: 'Édition randonnée', nl: 'Wandeleditie' }, big: 'GR', price: 80,
       desc: { fr: '60 belles balades de Belgique, avec leur point de départ sur la carte.', nl: '60 mooie wandelingen in België, met hun vertrekpunt op de kaart.' },
       body: ['#1f241b', '#4a5a36'], metal: ['#f3efe4', '#e0483a', '#8a2a20'], cats: ['balade'] },
@@ -518,6 +522,10 @@
       <rect x="24" y="112" width="252" height="16" rx="3" fill="${p.metal[1]}" opacity=".18"/>
       <path d="M20 394H280" stroke="${p.metal[1]}" stroke-width="2" opacity=".4"/>
       ${[40, 84, 128, 172, 216, 260].map((x, i) => `<circle cx="${x}" cy="394" r="${i === 3 ? 6 : 4}" fill="${p.metal[0]}" opacity="${i === 3 ? .8 : .45}"/>`).join('')}`,
+    // Calandre chromée et route
+    voitures: (k, p) => `<g opacity=".22" fill="${p.metal[0]}">${Array.from({ length: 13 }, (_, i) => `<rect x="${78 + i * 12}" y="120" width="5" height="70" rx="2"/>`).join('')}</g>
+      <rect x="70" y="112" width="160" height="86" rx="20" fill="none" stroke="${p.metal[1]}" stroke-width="3" opacity=".35"/>
+      <path d="M150 412L130 260h40Z" fill="${p.metal[0]}" opacity=".08"/><path d="M150 400v-30M150 350v-30M150 300v-25" stroke="${p.metal[0]}" stroke-width="4" opacity=".3"/>`,
     // Balisage blanc et rouge et sentier en lacets
     balades: (k, p) => `<path d="M40 412C70 360 210 360 170 300S60 250 120 200S250 150 210 90" fill="none" stroke="${p.metal[0]}" stroke-width="5" stroke-dasharray="2 12" stroke-linecap="round" opacity=".35"/>
       ${[[52, 120], [236, 250], [70, 330]].map(([x, y]) => `<g transform="translate(${x} ${y}) rotate(-6)" opacity=".5"><rect width="34" height="10" fill="${p.metal[0]}"/><rect y="10" width="34" height="10" fill="${p.metal[1]}"/></g>`).join('')}`,
@@ -668,7 +676,27 @@
       <circle cx="${x}" cy="${y}" r="12" class="wm-halo"/><circle cx="${x}" cy="${y}" r="5.5" class="wm-dot"/></svg>
       <p><span>${esc(w.start)}<br><small>${la.toFixed(4).replace('.', ',')}° N · ${lo.toFixed(4).replace('.', ',')}° E</small></span><a href="${osm}" target="_blank" rel="noopener">${t('walkOsm')}</a></p></div>`;
   }
+  // Voitures : « Showroom » (style.css, .card.cat-voiture) : photo mise en lumière, emblème émaillé de la rareté
+  function carHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c);
+    const finTag = finish !== 'normal' ? `<span class="fin-tag">${fl(finish)}</span>` : '';
+    const dots = variants && variants.length > 1
+      ? `<span class="var-dots" title="${t('versionsOwned')}">${variants.filter(v => v !== 'normal').map(v => `<i class="d-${v}"></i>`).join('')}</span>` : '';
+    return `
+      <article class="card r-${c.rarity} cat-${c.cat} fam-${c.family || 'gris'} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="card-photo"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async">` : ''}</div>
+          <div class="card-top"><span class="no">${String(c.no).padStart(4, '0')}</span>${finTag}</div>
+          <span class="car-badge">B</span>
+          <div class="card-band"><h3${name.length > 14 ? ' class="is-long"' : ''}>${esc(name)}</h3><p class="sub">${esc(window.I18N.subtitle(c))}</p></div>
+          <dl class="card-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          ${dots}
+        </div>
+      </article>`;
+  }
   function cardHTML(c, { count = 0, finish = 'normal', variants = null, imgW = 500 } = {}) {
+    if (c.cat === 'voiture') return carHTML(c, { count, finish, variants, imgW });
     if (c.landscape) return landHTML(c, { count, finish, variants, imgW });
     if (c.walk) return walkHTML(c, { count, finish, variants, imgW });
     let media;
@@ -725,7 +753,7 @@
   // Chaque catégorie contient toutes les raretés (réparties par notoriété), donc les taux affichés sont justes.
   // Nouvelle catégorie : à rareté égale, ses cartes sortent trois fois plus souvent jusqu'à la date indiquée, pour
   // qu'elles ne se noient pas parmi les 1 500 cartes du paquet Belgique. Les taux par rareté ne changent pas.
-  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30', histoire: '2027-05-31', bd: '2027-06-30', paysage: '2027-07-31', balade: '2027-08-31' }, FEATURED_WEIGHT = 3;
+  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30', histoire: '2027-05-31', bd: '2027-06-30', paysage: '2027-07-31', balade: '2027-08-31', voiture: '2027-09-30' }, FEATURED_WEIGHT = 3;
   const featuredCats = () => { const d = ymd(now()); return new Set(Object.keys(FEATURED).filter(cat => d <= FEATURED[cat])); };
   function pickCard(list) {
     const feat = featuredCats(), w = c => feat.has(c.cat) ? FEATURED_WEIGHT : 1;

@@ -188,6 +188,11 @@
     'Plateau': 'Plateau', 'Gouffre': 'Kloof', 'Estuaire': 'Monding', 'Lande': 'Heide', 'Ruisseau': 'Beek', 'Méandre': 'Meander',
     'Réserve naturelle': 'Natuurreservaat', 'Parc national': 'Nationaal park', 'Lac de barrage': 'Stuwmeer',
     'Nieuport': 'Nieuwpoort', 'La Panne': 'De Panne', 'Tournai': 'Doornik', 'Bernissart': 'Bernissart', 'Waimes': 'Weismes',
+    // Voitures
+    'Marque': 'Merk', 'Électrique': 'Elektrisch', 'Circuit': 'Circuit', 'Voiture': 'Auto', 'Supercar': 'Supercar', 'Carrossier': 'Koetswerkbouwer',
+    'Hybride': 'Hybride', 'Autocars': 'Autocars', 'Usine': 'Fabriek', 'Motos': 'Motoren', 'Pneus': 'Banden', 'Camions': 'Vrachtwagens',
+    'Salon': 'Salon', 'Monospace': 'Monovolume', 'SUV': 'SUV', 'Utilitaire': 'Bestelwagen', 'Lierre': 'Lier', 'Forest': 'Vorst',
+    'Roulers': 'Roeselare', 'Huy': 'Hoei', 'Herstal': 'Herstal', 'Stavelot': 'Stavelot',
     // Balades
     'Facile': 'Makkelijk', 'Moyen': 'Gemiddeld', 'Sportif': 'Sportief', 'Renaix': 'Ronse',
     // Bulles (fresques BD)
@@ -202,7 +207,7 @@
     'Artiste': 'Kunstenaar', 'Genre': 'Genre', 'Formation': 'Opgericht', 'Création': 'Opgericht', 'UNESCO': 'UNESCO', 'Jours': 'Dagen',
     'Élections': 'Verkiezingen', 'Gouvernement': 'Regering', 'Avant': 'Voor', 'Après': 'Na', 'Communes': 'Gemeenten', 'Régions': 'Gewesten',
     'Communautés': 'Gemeensch.', 'Loi': 'Wet', '1er scrutin': '1e stemming', 'Niveau': 'Niveau', 'Consultation': 'Raadpleging',
-    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status', 'Conflit': 'Conflict', 'Rôle': 'Rol', 'Poids': 'Gewicht', 'Taille': 'Lengte', 'Envergure': 'Spanwijdte', 'Premier vol': 'Eerste vlucht', 'Constructeur': 'Bouwer', 'Siège': 'Zetel', 'Lieu': 'Plaats', 'Durée': 'Duur', 'Altitude': 'Hoogte', 'Hauteur': 'Hoogte', 'Commune': 'Gemeente', 'Auteur': 'Auteur', 'Ouverture': 'Geopend', 'Taux': 'Koers', 'Rang': 'Rang', 'Fondée': 'Opgericht', 'Victoires': 'Overwinningen', 'Longueur': 'Lengte', 'Exploitant': 'Uitbater', 'Vitesse': 'Snelheid', 'Navire': 'Schip', 'Port': 'Haven', 'Nommé': 'Benoemd', 'Fin': 'Einde', 'Billets': 'Biljetten', 'Pays': 'Landen', 'Tonnes': 'Ton', 'Métal': 'Metaal', 'Valeur': 'Waarde', 'Effigie': 'Beeltenis', 'Origine': 'Herkomst', 'Habitat': 'Leefgebied',
+    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status', 'Conflit': 'Conflict', 'Rôle': 'Rol', 'Poids': 'Gewicht', 'Taille': 'Lengte', 'Envergure': 'Spanwijdte', 'Premier vol': 'Eerste vlucht', 'Constructeur': 'Bouwer', 'Siège': 'Zetel', 'Lieu': 'Plaats', 'Fondé': 'Opgericht', 'Durée': 'Duur', 'Altitude': 'Hoogte', 'Hauteur': 'Hoogte', 'Commune': 'Gemeente', 'Auteur': 'Auteur', 'Ouverture': 'Geopend', 'Taux': 'Koers', 'Rang': 'Rang', 'Fondée': 'Opgericht', 'Victoires': 'Overwinningen', 'Longueur': 'Lengte', 'Exploitant': 'Uitbater', 'Vitesse': 'Snelheid', 'Navire': 'Schip', 'Port': 'Haven', 'Nommé': 'Benoemd', 'Fin': 'Einde', 'Billets': 'Biljetten', 'Pays': 'Landen', 'Tonnes': 'Ton', 'Métal': 'Metaal', 'Valeur': 'Waarde', 'Effigie': 'Beeltenis', 'Origine': 'Herkomst', 'Habitat': 'Leefgebied',
   };
   const META = [
     [/^En fonction$/, 'In functie'], [/^Sur le trône$/, 'Op de troon'], [/^Gouv\. /, 'Reg. '],

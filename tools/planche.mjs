@@ -2,7 +2,7 @@
 // data/focus.js, PAYSAGE_POS…), en PNG à relire à l'œil avant de livrer un paquet. Signale aussi les photos qui
 // ne chargent pas et celles trop petites pour la carte (floues à l'écran).
 // Usage : node tools/planche.mjs <catégorie> [dossier de sortie = .] [version = normal]
-// Exemple : node tools/planche.mjs paysage /tmp holo   → /tmp/planche-paysage-1.png, -2.png… (30 cartes par planche)
+// Exemple : node tools/planche.mjs paysage /tmp holo   → /tmp/planche-paysage-1.png, -2.png… (18 cartes par planche)
 // Cadrage à corriger : MANUAL dans tools/build-focus.py (photos) ou PAYSAGE_POS dans le générateur (Paysages).
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -10,11 +10,11 @@ import { chromium } from 'playwright';
 
 const [cat, out = '.', finish = 'normal'] = process.argv.slice(2);
 if (!cat) { console.error('Usage : node tools/planche.mjs <catégorie> [dossier] [version]'); process.exit(1); }
-const URL = 'http://localhost:5173/', PER = 30;
+const URL = "http://localhost:5173/", PER = 18;
 const server = spawn(process.execPath, [fileURLToPath(new globalThis.URL('serve.mjs', import.meta.url))], { stdio: 'ignore' });
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 for (let i = 0; i < 50; i++) { try { if ((await fetch(URL)).ok) break; } catch (_) { /* démarrage */ } await new Promise(r => setTimeout(r, 100)); }
-const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+const page = await browser.newPage({ viewport: { width: 1500, height: 3200 } });
 await page.goto(URL);
 await page.waitForFunction(() => window.RDL);
 const ids = await page.evaluate(cat => window.RDL.CARDS.filter(c => c.cat === cat).map(c => c.id), cat);
@@ -25,7 +25,7 @@ for (let n = 0; n * PER < ids.length; n++) {
     document.getElementById('planche')?.remove();
     const st = document.getElementById('planche-css') || Object.assign(document.createElement('style'), { id: 'planche-css' });
     st.textContent = `#planche{position:fixed;inset:0;z-index:9999;background:#e9e6df;padding:14px;overflow:auto}
-      #planche .grid{grid-template-columns:repeat(10,1fr);gap:12px 10px} #planche .lbl{font:600 11px sans-serif;color:#555;margin-top:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}`;
+      #planche .grid{grid-template-columns:repeat(6,1fr);gap:14px 12px} #planche .lbl{font:600 11px sans-serif;color:#555;margin-top:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}`;
     document.head.append(st);
     const R = window.RDL, d = document.createElement('div'); d.id = 'planche';
     d.innerHTML = `<div class="grid">${ids.map(id => { const c = R.BY_ID.get(id);
