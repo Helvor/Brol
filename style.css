@@ -1895,3 +1895,14 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .slot .tag { z-index: 6; }
 #detail .close { z-index: 10; }
 @media (max-width: 760px) { #detail.is-land .detail-card { margin-top: 40px; } }
+
+/* Fiche : carte précédente / suivante (boutons sur ordinateur, balayage sur téléphone) */
+.detail-nav { position: absolute; top: 50%; translate: 0 -50%; z-index: 5; width: 26px; height: 64px; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--bg-2); color: var(--ink); font: 400 30px/1 var(--display); cursor: pointer; opacity: .85; padding: 0; }
+.detail-nav:hover { opacity: 1; border-color: var(--gold); }
+#detail-prev { left: 3px; } #detail-next { right: 3px; }
+@media (max-width: 760px), (hover: none) { .detail-nav { display: none; } }
+.detail-card.slide-l { animation: slide-l .28s ease-out; } .detail-card.slide-r { animation: slide-r .28s ease-out; }
+@keyframes slide-l { from { opacity: .2; transform: translateX(40px); } }
+@keyframes slide-r { from { opacity: .2; transform: translateX(-40px); } }
+@media (prefers-reduced-motion: reduce) { .detail-card.slide-l, .detail-card.slide-r { animation: none; } }

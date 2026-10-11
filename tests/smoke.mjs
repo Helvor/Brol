@@ -480,7 +480,7 @@ async function features() {
       await page.selectOption('#f-pack', 'histoire');
       const f = await page.evaluate(() => ({ n: document.querySelectorAll('#grid .cell').length, chips: [...document.querySelectorAll('#cat-chips .chip')].map(c => c.dataset.cat) }));
       const want = await page.evaluate(() => window.RDL.CARDS.filter(c => ['histoire', 'evenement'].includes(c.cat)).length);
-      check(f.n === Math.min(want, 120) && f.chips.join() === 'all,histoire,evenement', 'filtre Histoire : ' + JSON.stringify({ ...f, want }));
+      check(f.n === Math.min(want, 120) && f.chips.join() === 'all,evenement,histoire', 'filtre Histoire : ' + JSON.stringify({ ...f, want }));
       // Une carte Histoire retirée de l'album : sa fiche propose de la demander en échange
       const id = await page.evaluate(() => { const c = window.RDL.CARDS.find(c => c.cat === 'histoire'), o = window.RDL.state.owned;
         for (const k of Object.keys(o)) if (k.split('|')[0] === c.id) delete o[k]; window.RDL.save(); return c.id; });
@@ -513,6 +513,20 @@ async function features() {
         km: document.querySelector('#detail-card .wk-km')?.textContent.trim() }));
       check(r.map && /openstreetmap\.org\/\?mlat=/.test(r.osm) && /^\d+KM$/.test(r.km), 'fiche d’une balade : ' + JSON.stringify(r));
       await page.click('#detail-close');
+    });
+    await step('fiche : carte suivante et précédente, filtres triés', async () => {
+      await page.click('.tab[data-view="binder"]');
+      await page.selectOption('#f-pack', 'all'); await page.selectOption('#f-cat', 'all');
+      const ids = await page.$$eval('#grid .cell > *', els => els.slice(0, 3).map(e => e.dataset.id));
+      await page.click(`#grid [data-id="${ids[1]}"]`);
+      await page.keyboard.press('ArrowRight');
+      const next = await page.$eval('#detail', d => d.dataset.id);
+      await page.keyboard.press('ArrowLeft'); await page.keyboard.press('ArrowLeft');
+      const prev = await page.$eval('#detail', d => d.dataset.id);
+      await page.click('#detail-close');
+      const sorted = await page.evaluate(() => { const l = [...document.querySelectorAll('#f-pack option')].slice(1).map(o => o.textContent);
+        return l.join('|') === [...l].sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' })).join('|'); });
+      check(next === ids[2] && prev === ids[0] && sorted, 'navigation dans la fiche : ' + JSON.stringify({ ids, next, prev, sorted }));
     });
     await step('export puis import de la sauvegarde', async () => {
       await page.evaluate(() => { window.RDL.state.coins = 4321; window.RDL.save(); });

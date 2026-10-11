@@ -1175,7 +1175,12 @@
     const slot = e.target.closest('.slot');
     if (!slot) return;
     if (!slot.classList.contains('is-flipped')) flip(slot);
-    else { const r = current.revealed[slot.dataset.i]; openDetail(r.card.id, r.finish); }
+    else {
+      const r = current.revealed[slot.dataset.i];
+      // Balayage : seulement entre les cartes déjà retournées
+      setNav($$('#reveal .slot.is-flipped').map(s => current.revealed[s.dataset.i]).map(x => ({ id: x.card.id, fin: x.finish })));
+      openDetail(r.card.id, r.finish);
+    }
   });
 
   function flip(slot, auto = false) {
@@ -1291,6 +1296,7 @@
   });
 
   // ---------- Album ----------
+  let albumList = []; // cartes affichées dans l'album, dans l'ordre (balayage dans la fiche)
   const filters = { cat: 'all', rarity: 'all', pack: 'all', owned: false, special: false, q: '', series: null };
   let shown = PAGE;
 
@@ -1303,7 +1309,13 @@
       counts.all[1]++; counts.all[0] += o;
       if (c.current && c.cat === 'politique') { counts.live[1]++; counts.live[0] += o; }
     }
-    const chips = [{ id: 'all', label: t('all') }, ...CATS.filter(c => counts[c.id]).map(c => ({ id: c.id, label: c[L()] })), ...(counts.live[1] ? [{ id: 'live', label: t('liveGov') }] : [])];
+    // Catégories par ordre alphabétique (« Tout » d'abord, « Au gouvernement » à la fin), aussi dans la liste déroulante
+    const coll = new Intl.Collator(L(), { sensitivity: 'base' });
+    const cats = CATS.filter(c => counts[c.id]).map(c => ({ id: c.id, label: c[L()] })).sort((a, b) => coll.compare(a.label, b.label));
+    const chips = [{ id: 'all', label: t('all') }, ...cats, ...(counts.live[1] ? [{ id: 'live', label: t('liveGov') }] : [])];
+    if (!chips.some(c => c.id === filters.cat)) filters.cat = 'all';
+    $('#f-cat').innerHTML = chips.map(c => `<option value="${c.id}">${c.id === 'all' ? t('allCats') : esc(c.label)} (${counts[c.id][0]}/${counts[c.id][1]})</option>`).join('');
+    $('#f-cat').value = filters.cat;
     $('#cat-chips').innerHTML = chips.map(c =>
       `<button class="chip${filters.cat === c.id ? ' is-active' : ''}${c.id === 'live' ? ' live' : ''}" data-cat="${c.id}">${c.label}<small>${counts[c.id][0]}/${counts[c.id][1]}</small></button>`).join('');
 
@@ -1324,6 +1336,7 @@
       (!q || [c.name, c.nl?.name, c.subtitle, c.party, c.meta].some(s => (s || '').toLowerCase().includes(q))));
 
     if (filters.series) list.sort((a, b) => !totalOf(a.id) - !totalOf(b.id)); // série : cartes obtenues d'abord
+    albumList = list;
     $('#series-banner').hidden = !filters.series;
     if (filters.series) $('#series-banner').innerHTML = `<span>${t('seriesBanner')} : <b>${esc(sl(filters.series, 'title'))}</b></span><button class="linkish" id="clear-series">${t('clearFilter')}</button>`;
     const grid = $('#grid');
@@ -1358,8 +1371,9 @@
   const PACK_MEMBERS = new Map();
   const packMembers = id => { if (!PACK_MEMBERS.has(id)) { const p = packById(id); PACK_MEMBERS.set(id, new Set([...poolOf(p), ...exclOf(id)].map(c => c.id))); } return PACK_MEMBERS.get(id); };
   function fillPackSelect() {
+    const coll = new Intl.Collator(L(), { sensitivity: 'base' });
     $('#f-pack').innerHTML = `<option value="all">${t('allPacks')}</option>` + ALL_PACKS.filter(p => p.cats !== null && !p.missing)
-      .map(p => `<option value="${p.id}">${esc(pl(p, 'title'))}</option>`).join('');
+      .sort((a, b) => coll.compare(pl(a, 'title'), pl(b, 'title'))).map(p => `<option value="${p.id}">${esc(pl(p, 'title'))}</option>`).join('');
     $('#f-pack').value = filters.pack;
   }
   $('#f-pack').addEventListener('change', e => { filters.pack = e.target.value; filters.cat = 'all'; shown = PAGE; renderBinder(); });
@@ -1367,6 +1381,7 @@
     $('#f-rarity').innerHTML = `<option value="all">${t('allRarities')}</option>` + RARITIES.map(r => `<option value="${r.id}">${rl(r.id)}</option>`).join('');
     $('#f-rarity').value = filters.rarity;
   }
+  $('#f-cat').addEventListener('change', e => { filters.cat = e.target.value; shown = PAGE; renderBinder(); $('#cat-chips .is-active')?.scrollIntoView({ inline: 'center', block: 'nearest' }); });
   $('#f-rarity').addEventListener('change', e => { filters.rarity = e.target.value; shown = PAGE; renderBinder(); });
   $('#f-owned').addEventListener('change', e => { filters.owned = e.target.checked; shown = PAGE; renderBinder(); });
   $('#f-special').addEventListener('change', e => { filters.special = e.target.checked; shown = PAGE; renderBinder(); });
@@ -1375,12 +1390,12 @@
   const pressKey = e => (e.key === 'Enter' || e.key === ' ') && !e.repeat;
   $('#grid').addEventListener('keydown', e => {
     const card = e.target.closest('.card, .empty-slot[data-id]');
-    if (card && pressKey(e)) { e.preventDefault(); openDetail(card.dataset.id, card.dataset.fin); }
+    if (card && pressKey(e)) { e.preventDefault(); setNav(albumList.map(c => ({ id: c.id }))); openDetail(card.dataset.id, card.dataset.fin); }
   });
   $('#grid').addEventListener('click', e => {
     if (e.target.id === 'more') { shown += PAGE; renderBinder(); return; }
     const card = e.target.closest('.card, .empty-slot[data-id]');
-    if (card) { SFX.tick(); openDetail(card.dataset.id, card.dataset.fin); }
+    if (card) { SFX.tick(); setNav(albumList.map(c => ({ id: c.id }))); openDetail(card.dataset.id, card.dataset.fin); }
   });
   // Doublons revendables : un exemplaire de chaque version est toujours gardé
   function dupValue() {
@@ -1978,6 +1993,9 @@
   }
   function openDetail(id, finish = 'normal') {
     const c = BY_ID.get(id);
+    dlg.dataset.id = id;
+    const i = nav.findIndex(x => x.id === id);
+    $('#detail-prev').hidden = !(i > 0); $('#detail-next').hidden = !(i >= 0 && i < nav.length - 1);
     const owned = finishesOwned(id);
     $('#detail').classList.toggle('is-land', !!c.landscape);
     // Carte pas encore obtenue (album) : l'emplacement vide, son nom, sa rareté et ses chances d'obtention
@@ -2053,6 +2071,31 @@
     dlg.scrollTop = 0;
   }
   $('#detail-close').addEventListener('click', () => dlg.close());
+  // Carte précédente ou suivante : balayage sur téléphone, flèches du clavier et boutons ‹ › sur ordinateur.
+  // La liste (album filtré, cartes retournées d'un paquet) est fixée au moment où l'on ouvre la fiche.
+  let nav = [];
+  function setNav(list) { nav = list; }
+  function navTo(step) {
+    const id = dlg.dataset.id, i = nav.findIndex(x => x.id === id);
+    if (i < 0 || !nav[i + step]) return;
+    const x = nav[i + step];
+    SFX.tick();
+    const card = $('#detail-card');
+    card.classList.remove('slide-l', 'slide-r'); void card.offsetWidth; card.classList.add(step > 0 ? 'slide-l' : 'slide-r');
+    openDetail(x.id, x.fin || (totalOf(x.id) ? bestFinish(x.id) : 'normal'));
+  }
+  $('#detail-prev').addEventListener('click', () => navTo(-1));
+  $('#detail-next').addEventListener('click', () => navTo(1));
+  dlg.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') navTo(-1); else if (e.key === 'ArrowRight') navTo(1); });
+  let touch = null;
+  dlg.addEventListener('touchstart', e => { const t0 = e.touches[0]; touch = e.touches.length === 1 && !e.target.closest('.card-odds table, .walk-map') ? [t0.clientX, t0.clientY] : null; }, { passive: true });
+  dlg.addEventListener('touchend', e => {
+    if (!touch) return;
+    const t1 = e.changedTouches[0], dx = t1.clientX - touch[0], dy = t1.clientY - touch[1];
+    touch = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > 1.6 * Math.abs(dy)) navTo(dx < 0 ? 1 : -1);
+  }, { passive: true });
+  dlg.addEventListener('close', () => { nav = []; });
   dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 
   // ---------- Thème, son, langue ----------
