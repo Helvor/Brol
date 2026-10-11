@@ -376,7 +376,7 @@ async function features() {
         return { ok, allNew, eleventh: !!R.buyPacks(p, 1) };
       });
       check(r.ok === 10 && r.allNew && !r.eleventh, 'paquet Nouveautés : ' + JSON.stringify(r));
-      // Cas limite : il ne manque que 5 cartes (toutes mythiques) → le paquet donne exactement ces 5, sans doublon
+      // Il ne manque que 5 mythiques : une seule par paquet, le reste en versions manquantes de cartes obtenues
       const last = await page.evaluate(() => {
         const R = window.RDL, p = R.PACKS.find(x => x.id === 'nouveautes');
         const pool = R.CARDS.filter(c => c.cat !== 'edition');
@@ -384,22 +384,19 @@ async function features() {
         for (const c of pool) if (!missing.includes(c.id)) R.state.owned[c.id] ||= 1;
         for (const id of missing) for (const k of Object.keys(R.state.owned)) if (k === id || k.startsWith(id + '|')) delete R.state.owned[k];
         R.state.perDay = null; R.state.coins = 10000;
-        const res = R.buyPacks(p, 1);
-        const got = res ? res.packs[0].revealed.map(d => d.card.id).sort() : [];
-        return { same: JSON.stringify(got) === JSON.stringify(missing.slice().sort()), again: !!R.buyPacks(p, 1) };
+        const rv = R.buyPacks(p, 1)?.packs[0].revealed || [];
+        return { n: rv.length, myth: rv.filter(d => missing.includes(d.card.id)).length, versions: rv.filter(d => d.got === 'version').length, again: !!R.buyPacks(p, 1) };
       });
-      check(last.same && !last.again, 'paquet Nouveautés, 5 cartes manquantes : ' + JSON.stringify(last));
-      // Il ne manque plus qu'une carte : le paquet reste disponible et la contient, le reste est tiré au hasard
-      const one = await page.evaluate(() => {
+      check(last.n === 5 && last.myth === 1 && last.versions === 4 && last.again, 'paquet Nouveautés, 5 mythiques manquantes : ' + JSON.stringify(last));
+      // Album complet : cinq nouvelles versions (Holo, Plein cadre, Dorée), jamais un doublon
+      const full = await page.evaluate(() => {
         const R = window.RDL, p = R.PACKS.find(x => x.id === 'nouveautes');
-        const id = R.CARDS.find(c => c.cat !== 'edition' && c.rarity === 'legendaire').id;
-        for (const k of Object.keys(R.state.owned)) if (k === id || k.startsWith(id + '|')) delete R.state.owned[k];
+        for (const c of R.CARDS) if (c.cat !== 'edition') R.state.owned[c.id] ||= 1;
         R.state.perDay = null; R.state.coins = 10000;
-        const res = R.buyPacks(p, 1);
-        const rv = res ? res.packs[0].revealed : [];
-        return { n: rv.length, has: rv.some(d => d.card.id === id && d.isNew), others: rv.filter(d => d.card.id !== id).every(d => !d.isNew), full: !R.buyPacks(p, 1) };
+        const rv = R.buyPacks(p, 1)?.packs[0].revealed || [];
+        return { n: rv.length, versions: rv.filter(d => d.got === 'version' && d.finish !== 'normal').length, top: rv.filter(d => ['legendaire', 'mythique'].includes(d.card.rarity)).length };
       });
-      check(one.n === 5 && one.has && one.others && one.full, 'paquet Nouveautés, dernière carte : ' + JSON.stringify(one));
+      check(full.n === 5 && full.versions === 5 && full.top <= 1, 'paquet Nouveautés, album complet : ' + JSON.stringify(full));
     });
     await step('défi de la semaine et ticket Prestige', async () => {
       const r = await page.evaluate(() => {
