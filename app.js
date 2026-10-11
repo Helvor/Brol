@@ -16,12 +16,14 @@
     // Taux durcis en octobre 2026 (avant : 50 / 26 / 15,5 / 6 / 2,2 / 0,3) : une légendaire ou mieux tous les 7 à 8
     // paquets au lieu de 5, une mythique tous les 55 paquets au lieu de 40. Les cartes rares se revendent plus cher
     // en échange, pour que la revente d'un paquet reste au même niveau.
+    // Octobre 2026 (bis) : la 5ᵉ carte ne gonfle plus les légendaires et mythiques (TOP_LAST) ; revente relevée
+    // (rare 6, épique 30, légendaire 140, mythique 600 au lieu de 5 / 25 / 110 / 450) pour la même valeur de paquet.
     { id: 'commune',     label: { fr: 'Commune',     nl: 'Gewoon' },        weight: 52,   sell: 1 },
     { id: 'peu-commune', label: { fr: 'Peu commune', nl: 'Ongewoon' },      weight: 27,   sell: 2 },
-    { id: 'rare',        label: { fr: 'Rare',        nl: 'Zeldzaam' },      weight: 14.5, sell: 5 },
-    { id: 'epique',      label: { fr: 'Épique',      nl: 'Episch' },        weight: 5,    sell: 25 },
-    { id: 'legendaire',  label: { fr: 'Légendaire',  nl: 'Legendarisch' },  weight: 1.3,  sell: 110 },
-    { id: 'mythique',    label: { fr: 'Mythique',    nl: 'Mythisch' },      weight: 0.2,  sell: 450 },
+    { id: 'rare',        label: { fr: 'Rare',        nl: 'Zeldzaam' },      weight: 14.5, sell: 6 },
+    { id: 'epique',      label: { fr: 'Épique',      nl: 'Episch' },        weight: 5,    sell: 30 },
+    { id: 'legendaire',  label: { fr: 'Légendaire',  nl: 'Legendarisch' },  weight: 1.3,  sell: 140 },
+    { id: 'mythique',    label: { fr: 'Mythique',    nl: 'Mythisch' },      weight: 0.2,  sell: 600 },
   ];
   const R = Object.fromEntries(RARITIES.map((r, i) => [r.id, { ...r, rank: i }]));
   const rl = id => R[id].label[L()];
@@ -212,7 +214,7 @@
   };
   const FREE_EVERY_MS = 2 * 60 * 1000;
   const FREE_MAX = 8;
-  const PITY = 40; // une légendaire ou mieux au plus tard tous les 40 paquets
+  const PITY = 50; // une légendaire ou mieux au plus tard tous les 50 paquets (40 avant la baisse d'octobre 2026)
   const BULK = 10, BULK_DISCOUNT = 0.9; // lot de 10 paquets : 10 % moins cher, payé en pièces
   const bulkOf = p => p.bulk || BULK; // Prestige : lot de 5 (25 cartes rares à l'écran au lieu de 50)
   const bulkPrice = p => Math.round(p.price * bulkOf(p) * BULK_DISCOUNT);
@@ -251,7 +253,7 @@
   for (const c of CARDS) if (c.cat === 'edition') { if (!EXCL.has(c.pack)) EXCL.set(c.pack, []); EXCL.get(c.pack).push(c); }
   const exclOf = id => EXCL.get(id) || [];
   const EXCL_CHANCE = { prestige: 0.25 }, EXCL_DEFAULT = 0.125;
-  const EXCL_WEIGHT = { epique: 60, legendaire: 30, mythique: 10 };
+  const EXCL_WEIGHT = { epique: 75, legendaire: 20, mythique: 5 }; // octobre 2026 : 60 / 30 / 10 avant
   const exclChance = p => exclOf(p.id).length ? (EXCL_CHANCE[p.id] ?? EXCL_DEFAULT) : 0;
   function pickExclusive(p) {
     const list = exclOf(p.id);
@@ -631,10 +633,17 @@
     for (const c of list) { if ((roll -= w(c)) < 0) return c; }
     return list[list.length - 1];
   }
-  function pickRarity(minRank = 0) {
+  // 5ᵉ carte d'un paquet : la garantie « rare ou mieux » (ou « épique ou mieux ») remonte les communes, mais ne doit
+  // presque pas gonfler les légendaires et mythiques : leur poids y est multiplié par TOP_LAST (octobre 2026 : une
+  // mythique tous les 90 paquets environ au lieu de 57, une légendaire tous les 14 au lieu de 9). Le paquet Prestige
+  // (5ᵉ carte légendaire ou mieux) et la garantie anti-malchance ne sont pas concernés.
+  const TOP_LAST = 0.31;
+  const rarityWeight = (r, top) => R[r.id].rank >= R.legendaire.rank ? r.weight * top : r.weight;
+  const lastTop = minRank => minRank < R.legendaire.rank ? TOP_LAST : 1;
+  function pickRarity(minRank = 0, top = 1) {
     const pool = RARITIES.filter((_, i) => i >= minRank);
-    let roll = Math.random() * pool.reduce((a, r) => a + r.weight, 0);
-    for (const r of pool) { if ((roll -= r.weight) < 0) return r.id; }
+    let roll = Math.random() * pool.reduce((a, r) => a + rarityWeight(r, top), 0);
+    for (const r of pool) { if ((roll -= rarityWeight(r, top)) < 0) return r.id; }
     return pool[pool.length - 1].id;
   }
   function pickFinish(boost = 1, packId = null) {
@@ -662,7 +671,8 @@
     const taken = new Set();
     for (let i = 0; i < PACK_SIZE; i++) {
       const last = i === PACK_SIZE - 1;
-      const rank = R[pickRarity(last ? (forceLegend ? R.legendaire.rank : R[pack.last || 'rare'].rank) : 0)].rank;
+      const min = last ? (forceLegend ? R.legendaire.rank : R[pack.last || 'rare'].rank) : 0;
+      const rank = R[pickRarity(min, last ? lastTop(min) : 1)].rank;
       let list = [];
       // Si la rareté tirée n'existe pas dans ce paquet, on prend la plus proche (vers le bas d'abord).
       // Si elle existe mais que toutes ses cartes sont déjà sorties dans ce paquet (petits paquets, ex. Tour des
@@ -693,12 +703,12 @@
   function packOdds(pack) {
     const have = new Set(poolOf(pack).map(c => c.rarity));
     const mapTo = r => { for (let d = 0; d < RARITIES.length; d++) for (const x of [r - d, r + d]) if (x >= 0 && x < RARITIES.length && have.has(RARITIES[x].id)) return x; return r; };
-    const slot = minRank => {
-      const out = RARITIES.map(() => 0), pool = RARITIES.filter((_, i) => i >= minRank), tot = pool.reduce((a, r) => a + r.weight, 0);
-      pool.forEach(r => { out[mapTo(R[r.id].rank)] += r.weight / tot; });
+    const slot = (minRank, top = 1) => {
+      const out = RARITIES.map(() => 0), pool = RARITIES.filter((_, i) => i >= minRank), tot = pool.reduce((a, r) => a + rarityWeight(r, top), 0);
+      pool.forEach(r => { out[mapTo(R[r.id].rank)] += rarityWeight(r, top) / tot; });
       return out;
     };
-    const a = slot(0), b = slot(R[pack.last || 'rare'].rank);
+    const lr = R[pack.last || 'rare'].rank, a = slot(0), b = slot(lr, lastTop(lr));
     return RARITIES.map((r, i) => ({ id: r.id, p: a[i], last: b[i] }));
   }
 

@@ -18,6 +18,12 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   niveau (vérifié avec `tools/simulate.mjs` et `tools/check-odds.mjs`). Nouvelle catégorie mise en avant : à rareté
   égale, ses cartes sortent 3 fois plus souvent jusqu'à une date (`FEATURED` dans app.js, Mémoire jusqu'au 31 janvier
   2027), affiché dans le tableau des chances.
+- [x] **Légendaires et mythiques plus rares** (octobre 2026, bis) : la 5ᵉ carte garantie (« rare ou mieux », « épique
+  ou mieux » pour les événements) ne gonfle presque plus le haut de gamme (`TOP_LAST` = 0,31 dans app.js) : une mythique
+  tous les 90 paquets (57 avant), une légendaire tous les 14 (9 avant) ; paquets d'événement, éditions limitées
+  comprises : une mythique tous les 40 environ (20 avant), une légendaire tous les 7 (3,4 avant). Éditions limitées pondérées 75 / 20 / 5 (60 / 30 / 10), anti-malchance à 50
+  paquets (40). Prestige inchangé. Revente relevée (rare 6, épique 30, légendaire 140, mythique 600) : même économie
+  qu'avant d'après `tools/simulate.mjs` (revente d'un paquet ~58 % de son prix).
 - [x] **Paquet « Histoire »** (octobre 2026) : 39 cartes « manuelles » (`HISTOIRE` dans le générateur, catégorie
   `histoire`) plus les 6 événements existants : grèves et manifestations (1893, 1913, 1960, marche flamande de 1962, FN 1966, Louvain 68, Fourons, Marche
   blanche, climat), grandes dates (expositions universelles, Jeux d'Anvers, indépendance du Congo, Expo 58, euro…),

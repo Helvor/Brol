@@ -359,7 +359,7 @@ async function features() {
       check(r.n === 3 && r.kinds === 3, 'trois missions différentes attendues : ' + JSON.stringify(r));
       check(r.early === 0, 'mission réclamée avant d’être faite');
       check(r.gain === r.reward && r.coins === r.reward && r.twice === 0, 'récompense de mission : ' + JSON.stringify(r));
-      check(r.multBefore === 1 && r.multAfter === 1.5 && r.myth === 675, 'bonus d’album : ' + JSON.stringify(r));
+      check(r.multBefore === 1 && r.multAfter === 1.5 && r.myth === 900, 'bonus d’album : ' + JSON.stringify(r));
     });
     await step('paquet Nouveautés : cartes absentes, 10 par jour', async () => {
       const r = await page.evaluate(() => {
