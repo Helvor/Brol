@@ -694,6 +694,82 @@ function buildPaysages() {
     stats: [['Type', kind], ['Province', prov], extra],
   }));
 }
+// ---------- Balades : 60 belles balades de Belgique (paquet « Balades ») ----------
+// Cartes manuelles, photos de Commons relues à l'œil. Design « fiche de randonnée » (style.css, .card.cat-balade) ;
+// la fiche détaillée montre le départ sur une carte des provinces (data/provinces.js) et un lien OpenStreetMap.
+// Distances, durées et niveaux : boucle type, indicatifs. [id, nom, nom NL, image, km, durée, niveau 1-3, province,
+// départ, [lat, lon], description, description NL, rareté]
+const BALADES = [
+  ["bal-ninglinspo", "Ninglinspo", "Ninglinspo", "Ninglinspo 01.jpg", 6, "2 h 30", 3, "Liège", "Sedoz, Aywaille", [50.4684, 5.7425], "Le seul torrent de Belgique, ses bassins et cascades", "De enige bergstroom van België, met poelen en watervallen", "mythique"],
+  ["bal-echelles", "Promenade des Échelles", "Wandeling van de Ladders", "Promenadedeséchelles.jpg", 7, "2 h 30", 3, "Luxembourg", "Rochehaut", [49.8397, 5.0025], "Échelles et rochers entre Rochehaut et Frahan", "Ladders en rotsen tussen Rochehaut en Frahan", "mythique"],
+  ["bal-fagnes", "Caillebotis des Fagnes", "Vlonderpad door de Venen", "Réserve Naturelle des Hautes Fagnes (Parc Naturel Hautes Fagnes-Eifel) 122.jpg", 6, "2 h", 1, "Liège", "Signal de Botrange", [50.5013, 6.0937], "Les planches de bois à travers la Fagne wallonne", "Houten vlonders door de Fagne wallonne", "mythique"],
+  ["bal-hallerbos", "Hallerbos", "Hallerbos", "Hallerbos (26787455905).jpg", 5, "1 h 30", 1, "Brabant flamand", "Hal", [50.7363, 4.2597], "Le tapis bleu des jacinthes, fin avril", "Het blauwe tapijt van hyacinten, eind april", "mythique"],
+  ["bal-geant", "Tombeau du Géant", "Graf van de Reus", "Bouillon (72).JPG", 8, "2 h 45", 2, "Luxembourg", "Botassart", [49.7905, 5.1355], "Boucle autour du méandre de Botassart", "Lus rond de meander van Botassart", "mythique"],
+  ["bal-rouge", "Forêt de Soignes", "Zoniënwoud", "Source au Jardin Jean Massart.jpg", 7, "2 h", 1, "Bruxelles", "Rouge-Cloître", [50.8125, 4.4335], "Hêtraie cathédrale au départ du prieuré", "Kathedraalbeukenbos vanaf de priorij", "mythique"],
+  ["bal-hoegne", "Vallée de la Hoëgne", "Vallei van de Hoëgne", "Vallée de la Hoëgne (Parc naturel Hautes Fagnes-Eifel) 18.jpg", 10, "3 h 15", 3, "Liège", "Pont de Belle-Hé, Sart", [50.5205, 5.944], "Cascades et rochers le long du torrent ardennais", "Watervallen en rotsen langs de Ardense beek", "legendaire"],
+  ["bal-fiances", "Croix des Fiancés", "Kruis van de Verloofden", "Jalhay Croix des Fiancés et borne 151 (1).jpg", 9, "2 h 45", 2, "Liège", "Baraque Michel", [50.5117, 6.0444], "Sur la trace des fiancés perdus en 1871", "Op het spoor van de verloofden van 1871", "legendaire"],
+  ["bal-freyr", "Rochers de Freyr", "Rotsen van Freyr", "Anseremme 050908 (6).JPG", 6, "2 h", 3, "Namur", "Freyr, Hastière", [50.2226, 4.8947], "Crêtes au-dessus de la Meuse et des grimpeurs", "Kammen boven de Maas en de klimmers", "legendaire"],
+  ["bal-lesse", "La Lesse à Walzin", "De Lesse bij Walzin", "Dréhance (Walzin) JPG02.jpg", 9, "2 h 45", 2, "Namur", "Anseremme", [50.2367, 4.9083], "D’Anseremme au château de Walzin", "Van Anseremme naar het kasteel van Walzin", "legendaire"],
+  ["bal-orval", "Forêt d’Orval", "Bos van Orval", "Abbe D'Orval - Old and New - panoramio.jpg", 8, "2 h 30", 2, "Luxembourg", "Abbaye d’Orval", [49.64, 5.3486], "Bois et étangs autour de l’abbaye", "Bossen en vijvers rond de abdij", "legendaire"],
+  ["bal-coo", "Cascade de Coo", "Watervallen van Coo", "Flickr - …trialsanderrors - The Coo waterfalls near Spa, Belgium, ca. 1895.jpg", 7, "2 h 15", 2, "Liège", "Coo, Stavelot", [50.3936, 5.8762], "L’Amblève, la cascade et les crêtes", "De Amblève, de waterval en de heuvelkammen", "legendaire"],
+  ["bal-kalmthout", "Kalmthoutse Heide", "Kalmthoutse Heide", "2920 Kalmthout, Belgium - panoramio (5).jpg", 9, "2 h 30", 1, "Anvers", "De Vroente, Kalmthout", [51.389, 4.431], "Bruyères, pins et dunes intérieures", "Heide, dennen en landduinen", "legendaire"],
+  ["bal-zwin", "Zwin", "Zwin", "Zwin Natuur Park 81.jpg", 6, "1 h 45", 1, "Flandre-Occidentale", "Knokke-Heist", [51.3612, 3.37], "Prés salés et oiseaux à la frontière", "Schorren en vogels aan de grens", "legendaire"],
+  ["bal-chiny", "Rocher du Hât", "Rotsen van Hât", "Simwès a Djamogne.jpg", 7, "2 h 30", 3, "Luxembourg", "Chiny", [49.7383, 5.3433], "Belvédère sur un méandre de la Semois", "Uitkijk op een meander van de Semois", "epique"],
+  ["bal-herbeumont", "Château d’Herbeumont", "Kasteel van Herbeumont", "HerbeumontChateau201207061705.jpg", 8, "2 h 30", 2, "Luxembourg", "Herbeumont", [49.7808, 5.2375], "Ruines et Semois sous les sapins", "Ruïnes en Semois onder de sparren", "epique"],
+  ["bal-herou", "Le Hérou", "Le Hérou", "Le Hérou (Parc naturel des Deux Ourthes) 12.jpg", 8, "2 h 45", 3, "Luxembourg", "Nadrin", [50.1611, 5.6886], "Crête rocheuse au-dessus de l’Ourthe", "Rotskam boven de Ourthe", "epique"],
+  ["bal-laroche", "Crêtes de La Roche", "Kammen van La Roche", "La Roche-en-Ardenne 090529 (2).JPG", 9, "3 h", 3, "Luxembourg", "La Roche-en-Ardenne", [50.1817, 5.575], "Points de vue sur la ville et son château", "Uitzichten op de stad en haar kasteel", "epique"],
+  ["bal-durbuy", "Durbuy et l’Ourthe", "Durbuy en de Ourthe", "20090710 durbuy43.jpg", 7, "2 h", 2, "Luxembourg", "Durbuy", [50.3522, 5.4564], "La plus petite ville du monde et sa rivière", "Het kleinste stadje ter wereld en zijn rivier", "epique"],
+  ["bal-gileppe", "Tour du lac de la Gileppe", "Rond het meer van de Gileppe", "Barrage de la Gilieppe 13.jpg", 13, "3 h 30", 2, "Liège", "Barrage de la Gileppe", [50.5878, 5.9744], "Le lac et son lion de pierre", "Het meer en zijn stenen leeuw", "epique"],
+  ["bal-reinhard", "Robertville et Reinhardstein", "Robertville en Reinhardstein", "Burcht Reinhardstein.jpg", 8, "2 h 30", 2, "Liège", "Lac de Robertville", [50.45, 6.1136], "Du lac au château perché sur la Warche", "Van het meer naar de burcht boven de Warche", "epique"],
+  ["bal-fondry", "Fondry des Chiens", "Fondry des Chiens", "Fondry des Chiens (Parc naturel Viroin-Hermeton - Parc national de L'Entre-Sambre-et-Meuse) 01.jpg", 7, "2 h", 2, "Namur", "Nismes", [50.0692, 4.5565], "Gouffre de calcaire et pelouses sèches", "Kalksteenkloof en droge graslanden", "epique"],
+  ["bal-molignee", "Vallée de la Molignée", "Vallei van de Molignée", "Falaën Molignée.jpg", 10, "3 h", 2, "Namur", "Maredsous", [50.3044, 4.7646], "Entre abbayes, ruines et vieux chemin de fer", "Tussen abdijen, ruïnes en oude spoorweg", "epique"],
+  ["bal-hogekempen", "Mechelse Heide", "Mechelse Heide", "Hoge Kempen (10).JPG", 8, "2 h 15", 1, "Limbourg", "Maasmechelen", [50.98, 5.64], "Bruyères violettes du parc national", "Paarse heide in het nationale park", "epique"],
+  ["bal-lommel", "Lommelse Sahara", "Lommelse Sahara", "Lommelse Sahara (22).JPG", 6, "1 h 45", 1, "Limbourg", "Lommel", [51.2306, 5.2511], "Un désert de sable blanc et un lac", "Een woestijn van wit zand en een meer", "epique"],
+  ["bal-westhoek", "Dunes du Westhoek", "Duinen van de Westhoek", "Natuurreservaat De Westhoek 87.jpg", 7, "2 h", 2, "Flandre-Occidentale", "La Panne", [51.087, 2.564], "Dunes sauvages à la frontière française", "Wilde duinen aan de Franse grens", "epique"],
+  ["bal-kemmel", "Kemmelberg", "Kemmelberg", "Saint-Jans-Cappel.- Eté2016 Vue sur le Mont-Rouge et le Mont Kemmel (3).jpg", 9, "2 h 45", 2, "Flandre-Occidentale", "Kemmel", [50.779, 2.8132], "Le sommet des monts de Flandre", "De top van de Vlaamse heuvels", "epique"],
+  ["bal-stpierre", "Montagne Saint-Pierre", "Sint-Pietersberg", "Poppelmondedal.png", 8, "2 h 30", 2, "Liège", "Lanaye", [50.8144, 5.685], "Pelouses calcaires au-dessus du canal Albert", "Kalkgraslanden boven het Albertkanaal", "epique"],
+  ["bal-belvaux", "Gouffre de Belvaux", "Kloof van Belvaux", "Domaine des grottes de Han 32.jpg", 6, "1 h 45", 1, "Namur", "Han-sur-Lesse", [50.1147, 5.2033], "Là où la Lesse disparaît sous terre", "Waar de Lesse onder de grond verdwijnt", "rare"],
+  ["bal-chaleux", "Aiguilles de Chaleux", "Naalden van Chaleux", "Aiguilles de Chaleux R01.jpg", 8, "2 h 30", 3, "Namur", "Hulsonniaux", [50.22, 4.9451], "Aiguilles de calcaire au bord de la Lesse", "Kalksteennaalden langs de Lesse", "rare"],
+  ["bal-crupet", "Crupet et sa grotte", "Crupet en zijn grot", "Crupet grotte St Antoine 02.JPG", 7, "2 h", 2, "Namur", "Crupet", [50.3486, 4.96], "Village, donjon et grotte Saint-Antoine", "Dorp, donjon en grot van Sint-Antonius", "rare"],
+  ["bal-montaigle", "Ruines de Montaigle", "Ruïnes van Montaigle", "Falaen (42).jpg", 6, "1 h 45", 2, "Namur", "Falaën", [50.2933, 4.8156], "Un château fort sur son éperon rocheux", "Een burcht op zijn rotsuitloper", "rare"],
+  ["bal-poilvache", "Poilvache", "Poilvache", "20090816 poilvache26.jpg", 7, "2 h 15", 3, "Namur", "Houx, Yvoir", [50.3052, 4.8995], "Ruines médiévales au-dessus de la Meuse", "Middeleeuwse ruïnes boven de Maas", "rare"],
+  ["bal-veves", "Château de Vêves", "Kasteel van Vêves", "Castle of Veves.jpg", 8, "2 h 30", 2, "Namur", "Celles", [50.2208, 4.9826], "Le château de conte de fées et la campagne", "Het sprookjeskasteel en het platteland", "rare"],
+  ["bal-viroin", "Vallée du Viroin", "Vallei van de Viroin", "00 Treignes - Viroin - JPG2.jpg", 9, "2 h 30", 2, "Namur", "Treignes", [50.088, 4.675], "Au fil de la rivière jusqu’à Vierves", "Langs de rivier tot Vierves", "rare"],
+  ["bal-bohan", "Bohan et la Semois", "Bohan en de Semois", "0 Bohan - Village 19651502.JPG", 8, "2 h 30", 2, "Namur", "Bohan", [49.8642, 4.8856], "Méandres de la Semois à la frontière", "Meanders van de Semois aan de grens", "rare"],
+  ["bal-marche", "Rochers de Marche-les-Dames", "Rotsen van Marche-les-Dames", "Rochers de Marche-les-Dames 04.jpg", 6, "2 h", 2, "Namur", "Marche-les-Dames", [50.4825, 4.9474], "Falaises boisées au bord de la Meuse", "Beboste kliffen langs de Maas", "rare"],
+  ["bal-eaudheure", "Lacs de l’Eau d’Heure", "Meren van de Eau d’Heure", "Barrages de l'Eau d'Heure; Lac de l'Eau d'heure vu du barrage de Falemprise.jpg", 10, "2 h 45", 1, "Hainaut", "Cerfontaine", [50.1858, 4.384], "Le tour des grands lacs et du barrage", "Rond de grote meren en de stuwdam", "rare"],
+  ["bal-enclus", "Kluisbos", "Kluisbos", "Bois de l'Enclus 03.jpg", 7, "2 h", 2, "Flandre-Orientale", "Kluisbergen", [50.7625, 3.5128], "Forêt pentue des Ardennes flamandes", "Hellend bos in de Vlaamse Ardennen", "rare"],
+  ["bal-bruegel", "Promenade Bruegel", "Bruegelwandeling", "Galmaarden - Vollezele - Congobergstraat 3 (2021-05-02 12-02-07.jpg", 10, "2 h 45", 1, "Brabant flamand", "Dilbeek", [50.8167, 4.2], "Les paysages peints par Bruegel", "De landschappen die Bruegel schilderde", "rare"],
+  ["bal-meerdaal", "Meerdaalwoud", "Meerdaalwoud", "Autumnforest.jpg", 9, "2 h 30", 1, "Brabant flamand", "Oud-Heverlee", [50.8, 4.69], "Grandes hêtraies entre Louvain et Wavre", "Grote beukenbossen tussen Leuven en Waver", "rare"],
+  ["bal-bosland", "Bosland", "Bosland", "The Tree House - Pijnven 4-08-2021 17-27-00.jpg", 8, "2 h 15", 1, "Limbourg", "Pelt", [51.2, 5.35], "La plus grande forêt de Flandre", "Het grootste bos van Vlaanderen", "rare"],
+  ["bal-malchamps", "Fagne de Malchamps", "Venn van Malchamps", "Fagne des Malchamps - ein Venn in Belgien. 05.jpg", 6, "1 h 45", 1, "Liège", "Spa", [50.4602, 5.9014], "Bruyères et pins au-dessus de Spa", "Heide en dennen boven Spa", "peu-commune"],
+  ["bal-tailles", "Plateau des Tailles", "Plateau van Tailles", "Grande Fagne du plateau des Tailles.JPG", 8, "2 h 15", 1, "Luxembourg", "Baraque de Fraiture", [50.2167, 5.75], "Fagnes sur le haut plateau ardennais", "Venen op het hoge Ardense plateau", "peu-commune"],
+  ["bal-villers", "Abbaye de Villers", "Abdij van Villers", "0 Villers-la-Ville 050910 (37).JPG", 6, "1 h 45", 1, "Brabant wallon", "Villers-la-Ville", [50.5878, 4.5294], "Ruines cisterciennes et vallée de la Thyle", "Cisterciënzer ruïnes en de Thylevallei", "peu-commune"],
+  ["bal-valdieu", "Val-Dieu", "Val-Dieu", "Val-Dieu - kerstgroep 3.jpg", 8, "2 h 15", 1, "Liège", "Aubel", [50.704, 5.81], "Bocage, vergers et abbaye du pays de Herve", "Hagen, boomgaarden en abdij in het Land van Herve", "peu-commune"],
+  ["bal-aubert", "Mont-Saint-Aubert", "Sint-Aubertusberg", "Mont-Saint-Aubert Balade des poètes du soleil couchant (3).JPG", 7, "2 h", 2, "Hainaut", "Tournai", [50.6547, 3.3997], "Belvédère sur Tournai et la plaine", "Uitkijk over Doornik en de vlakte", "peu-commune"],
+  ["bal-harchies", "Marais d’Harchies", "Moerassen van Harchies", "Hensies RN1aJPG.jpg", 6, "1 h 30", 1, "Hainaut", "Bernissart", [50.47, 3.69], "Étangs nés des affaissements miniers", "Vijvers ontstaan door mijnverzakkingen", "peu-commune"],
+  ["bal-doode", "Doode Bemde", "Doode Bemde", "Huldenberg Reservaat, De dode Beemden - panoramio (2).jpg", 7, "2 h", 1, "Brabant flamand", "Neerijse", [50.817, 4.628], "Marais de la vallée de la Dyle", "Moeras in de Dijlevallei", "peu-commune"],
+  ["bal-kalkense", "Kalkense Meersen", "Kalkense Meersen", "Kalkense Meersen-9.jpg", 8, "2 h", 1, "Flandre-Orientale", "Wichelen", [51.006, 3.98], "Prés inondables le long de l’Escaut", "Overstromingsweiden langs de Schelde", "peu-commune"],
+  ["bal-damme", "Damme et sa vaart", "Damme en de vaart", "20110523 Damse Vaart, Belgium (15).jpg", 9, "2 h 15", 1, "Flandre-Occidentale", "Damme", [51.251, 3.281], "Peupliers et moulins le long du canal", "Populieren en molens langs de vaart", "peu-commune"],
+  ["bal-cambre", "Bois de la Cambre", "Ter Kamerenbos", "Près de l'Embarcadère du Lac à l'automne - panoramio.jpg", 4, "1 h", 1, "Bruxelles", "Avenue Louise", [50.8069, 4.3778], "Le lac, l’île et les grandes pelouses", "Het meer, het eiland en de grote gazons", "commune"],
+  ["bal-woluwe", "Parc de Woluwe", "Woluwepark", "2286-00020 Parc de Woluwe (12).JPG", 5, "1 h 15", 1, "Bruxelles", "Woluwe-Saint-Pierre", [50.8286, 4.4278], "Étangs et pelouses du parc à l’anglaise", "Vijvers en gazons van het Engelse park", "commune"],
+  ["bal-laeken", "Parc de Laeken", "Park van Laken", "Laeken, Brussels, Belgium - panoramio (40).jpg", 5, "1 h 15", 1, "Bruxelles", "Laeken", [50.8925, 4.3486], "Grandes pelouses face au château royal", "Grote gazons tegenover het koninklijk kasteel", "commune"],
+  ["bal-ixelles", "Étangs d’Ixelles", "Vijvers van Elsene", "2009-10-09 Ixelles 10.jpg", 4, "1 h", 1, "Bruxelles", "Flagey", [50.827, 4.373], "Des étangs à l’abbaye de la Cambre", "Van de vijvers naar de abdij Ter Kameren", "commune"],
+  ["bal-promverte", "Promenade verte", "Groene Wandeling", "Calligraphie Ferroviaire (13-11-02)de Sten and François.jpg", 10, "2 h 30", 1, "Bruxelles", "Uccle", [50.79, 4.35], "Le grand tour vert de Bruxelles, par morceaux", "De grote groene ronde van Brussel, in stukken", "commune"],
+  ["bal-averbode", "Averbode Bos & Heide", "Averbode Bos & Heide", "Averbode bos-heide - ven.jpg", 7, "2 h", 1, "Brabant flamand", "Averbode", [51.028, 4.98], "Landes et marais près de l’abbaye", "Heide en moeras bij de abdij", "commune"],
+  ["bal-muziekbos", "Muziekbos", "Muziekbos", "Muziekbos 38.jpg", 6, "1 h 45", 2, "Flandre-Orientale", "Renaix", [50.765, 3.617], "Jacinthes et collines des Ardennes flamandes", "Hyacinten en heuvels van de Vlaamse Ardennen", "commune"],
+  ["bal-zilvermeer", "Zilvermeer", "Zilvermeer", "Zilvermeer Mol - panoramio.jpg", 6, "1 h 30", 1, "Anvers", "Mol", [51.225, 5.17], "Lac de sable blanc et pinèdes de Campine", "Meer met wit zand en Kempense dennenbossen", "commune"],
+  ["bal-genval", "Lac de Genval", "Meer van Genval", "Overijse JPG01b.jpg", 4, "1 h", 1, "Brabant wallon", "Genval", [50.718, 4.499], "Le tour du lac aux villas Belle Époque", "Rond het meer met villa’s uit de belle époque", "commune"],
+];
+const NIVEAU = ['Facile', 'Moyen', 'Sportif'];
+function buildBalades() {
+  return BALADES.map(([id, name, nlName, img, km, h, lvl, prov, start, geo, sub, subNl, rarity]) => ({
+    id, cat: 'balade', name, img, rarity, manual: true, family: 'balade', walk: { km, lvl, start, geo },
+    subtitle: sub, nl: { name: nlName, subtitle: subNl },
+    meta: [`${km} km`, prov].join(' · '),
+    stats: [['Durée', h], ['Province', prov], ['Niveau', NIVEAU[lvl - 1]]],
+  }));
+}
 function buildManual(cat, list) {
   return list.map(([id, name, nlName, img, kind, y, sub, subNl, extra, rarity]) => ({
     id, cat, name, img, rarity, manual: true, family: cat, artwork: true, // rareté hors quotas (voir rarityByQuota)
@@ -759,7 +835,7 @@ const AJOUTS = {
   exploration: { build: () => buildRoute('exploration', EXPLORATION), editions: [] },
   finance: { build: async () => [...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES)], editions: [] },
   histoire: { build: async () => buildHistoire(), editions: [] }, bd: { build: async () => buildBulles(), editions: [] },
-  paysage: { build: async () => buildPaysages(), editions: [] },
+  paysage: { build: async () => buildPaysages(), editions: [] }, balade: { build: async () => buildBalades(), editions: [] },
 };
 const AJOUT = (process.argv.find(a => a.startsWith('--ajout=')) || '').slice(8);
 if (AJOUT) {
@@ -1441,7 +1517,7 @@ for (const f of sciRows) {
 console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
 
 for (const c of [...await buildMilitaires(resolveTitles), ...await buildAnimaux(resolveTitles),
-  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES), ...buildHistoire(), ...buildBulles(), ...buildPaysages()]) { delete c.links; cards.push(c); }
+  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES), ...buildHistoire(), ...buildBulles(), ...buildPaysages(), ...buildBalades()]) { delete c.links; cards.push(c); }
 
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [
