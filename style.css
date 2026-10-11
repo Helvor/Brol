@@ -1635,18 +1635,26 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .timeline { overflow-y: hidden; overscroll-behavior: contain; }
 @media (max-width: 760px) { .chips, .tabs, .reveal, .hand { overflow-y: hidden; overscroll-behavior: contain; } }
 
-/* Lot de 10 sur téléphone (surtout iPhone) : 50 cartes à l'écran. Pas de 3D (50 calques graphiques), retournement à
-   plat ; dos allégé ; lueur des cartes rares fixe ; rayons du fond immobiles */
+/* Lot de 10 sur téléphone (surtout iPhone) : 50 cartes à l'écran. À plat au repos (50 calques 3D saturent l'iPhone) ;
+   retournement en perspective le temps de .is-turning (rotation d'un seul élément, sans calque 3D par carte). Dos allégé ; lueur pulsée seulement pour les légendaires et mythiques ; rayons du fond immobiles */
 .reveal.is-bulk .slot .inner { transform-style: flat; transition: none; }
 .reveal.is-bulk .slot .face { backface-visibility: visible; -webkit-backface-visibility: visible; }
 .reveal.is-bulk .slot .front { transform: none; opacity: 0; }
-.reveal.is-bulk .slot.is-flipped .inner { transform: none; animation: flip-flat .32s ease-out; }
+.reveal.is-bulk .slot.is-flipped .inner { transform: none; }
 .reveal.is-bulk .slot.is-flipped .front { opacity: 1; }
 .reveal.is-bulk .slot.is-flipped .back { opacity: 0; }
-.reveal.is-bulk .slot.big-hit.is-flipped .inner { animation: flip-flat .32s ease-out, pop-flat .6s cubic-bezier(.2, .9, .3, 1.3) .3s; }
-@keyframes flip-flat { 0% { transform: scaleX(1); } 50% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+.reveal.is-bulk .slot.is-turning .inner { animation: turn-3d .5s ease-in-out; }
+.reveal.is-bulk .slot.is-turning .back { animation: turn-back .5s step-end; }
+.reveal.is-bulk .slot.is-turning .front { animation: turn-front .5s step-end; }
+.reveal.is-bulk .slot.big-hit.is-flipped:not(.is-turning) .inner { animation: pop-flat .6s cubic-bezier(.2, .9, .3, 1.3); }
+/* Rotation en perspective sur un seul élément (pas de preserve-3d) : jusqu'à la tranche, la face change, puis retour */
+@keyframes turn-3d { 0% { transform: perspective(500px) rotateY(0); } 50% { transform: perspective(500px) rotateY(90deg); }
+  50.01% { transform: perspective(500px) rotateY(-90deg); } 100% { transform: perspective(500px) rotateY(0); } }
+@keyframes turn-back { 0% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes turn-front { 0% { opacity: 0; } 50% { opacity: 1; } }
 @keyframes pop-flat { 40% { transform: scale(1.1); } }
 .reveal.is-bulk .slot.tease .back::after { animation: none; opacity: .85; box-shadow: 0 0 0 2px var(--hit), 0 0 14px 2px var(--hit); }
+.reveal.is-bulk .slot.tease.big-hit .back::after { animation: tease 1.2s ease-in-out infinite; }
 .reveal.is-bulk .slot:not(.is-flipped):hover .inner { transform: none; }
 .card-back.is-lite .back-logo { width: 46cqw; filter: none; }
 .stage.is-bulk .stage-rays { animation-play-state: paused; }
