@@ -1828,3 +1828,8 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .slot.is-land .card-back::before { inset: 2.6cqw; } .slot.is-land .card-back::after { inset: 3.8cqw; }
 .slot.is-land .card-back .back-foot { bottom: 5cqw; font-size: 2.6cqw; }
 .slot.is-land.tease .back::after { border-radius: 2% / 2.8%; }
+
+/* Lot de 10 du paquet Paysages : 5 cartes horizontales par rangée sur ordinateur, 2 sur téléphone */
+.reveal.is-bulk.is-landbulk { width: min(1320px, 100%); }
+.reveal.is-bulk .slot.is-land { width: auto; max-width: none; }
+@media (max-width: 760px) { .reveal.is-bulk.is-landbulk { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 8px; } }

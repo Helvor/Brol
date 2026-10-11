@@ -1063,6 +1063,9 @@
     flipRun++; autoFlipping = false;
     const bulk = current.n > 1;
     $('#reveal').classList.toggle('is-bulk', bulk);
+    // Lot de 10 du paquet Paysages : cartes à l'horizontale (dans un lot mixte, un Paysage reste couché dans sa case)
+    const allLand = current.revealed.every(r => r.card.landscape);
+    $('#reveal').classList.toggle('is-landbulk', bulk && allLand);
     $('#reveal').innerHTML = current.revealed.map(({ card, finish, got }, i) => {
       const rank = R[card.rarity].rank;
       const special = finish !== 'normal';
@@ -1070,7 +1073,7 @@
       const tag = (ed ? t('edTag') + ' · ' : '') + gotLabel(got, finish, bulk);
       const hit = ev ? F[finish].color : ed ? packById(card.pack).metal[1] : finish === 'or' ? '#f6d478' : special && rank < R.epique.rank ? '#9fe8ff' : `var(--r-${card.rarity})`;
       return `
-      <div class="slot${card.landscape && !bulk ? ' is-land' : ''}${rank >= R.epique.rank || special || ed ? ' tease' : ''}${rank >= R.legendaire.rank || finTier(finish) >= F.plein.rank || ed ? ' big-hit' : ''}${ed ? ' is-ed' : ''}"
+      <div class="slot${card.landscape && (!bulk || allLand) ? ' is-land' : ''}${rank >= R.epique.rank || special || ed ? ' tease' : ''}${rank >= R.legendaire.rank || finTier(finish) >= F.plein.rank || ed ? ' big-hit' : ''}${ed ? ' is-ed' : ''}"
            style="--hit: ${hit}; --dx: calc(${2 - i % PACK_SIZE} * (var(--w) + 22px)); --dr: ${(i % PACK_SIZE - 2) * 6}deg; animation-delay: ${bulk ? Math.floor(i / PACK_SIZE) * 70 + (i % PACK_SIZE) * 25 : i * 90}ms" data-i="${i}">
         ${tag ? `<span class="tag${got === 'card' ? '' : got === 'version' ? ' ver' : ' dup'}${special && got !== 'version' ? ' special' : ''}${ev ? ' ev' : ''}${ed ? ' ed' : ''}"${ev || ed ? ` style="--tagc:${hit}"` : ''}>${tag}</span>` : ''}
         <div class="inner">
