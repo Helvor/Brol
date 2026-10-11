@@ -182,6 +182,12 @@
     'Jeux olympiques': 'Olympische Spelen', 'Mariage royal': 'Koninklijk huwelijk', 'Loi': 'Wet', 'Faillite': 'Faillissement',
     'Industrie': 'Industrie', 'Crise': 'Crisis', 'Deuil national': 'Nationale rouw', 'Catastrophe': 'Ramp', 'Affaire': 'Zaak',
     'Attentats': 'Aanslagen', 'Fourons': 'Voeren', 'Heysel': 'Heizel', 'Russie': 'Rusland', 'Hal': 'Halle', '2ᵉ au monde': '2de ter wereld',
+    // Paysages
+    'Grotte': 'Grot', 'Forêt': 'Bos', 'Cascade': 'Waterval', 'Rocher': 'Rots', 'Sommet': 'Top', 'Colline': 'Heuvel', 'Lac': 'Meer',
+    'Vallée': 'Vallei', 'Fagne': 'Venn', 'Dunes': 'Duinen', 'Dune': 'Duin', 'Marais': 'Moeras', 'Étang': 'Vijver', 'Rivière': 'Rivier',
+    'Plateau': 'Plateau', 'Gouffre': 'Kloof', 'Estuaire': 'Monding', 'Lande': 'Heide', 'Ruisseau': 'Beek', 'Méandre': 'Meander',
+    'Réserve naturelle': 'Natuurreservaat', 'Parc national': 'Nationaal park', 'Lac de barrage': 'Stuwmeer',
+    'Nieuport': 'Nieuwpoort', 'La Panne': 'De Panne', 'Tournai': 'Doornik', 'Bernissart': 'Bernissart', 'Waimes': 'Weismes',
     // Bulles (fresques BD)
     'Fresque': 'Muurschildering', 'Statue': 'Standbeeld', 'Digue de mer': 'Zeedijk', 'Gare de Hoeilaart': 'Station Hoeilaart',
     'Auderghem': 'Oudergem', 'Louvain-la-Neuve': 'Louvain-la-Neuve', 'Marolles': 'Marollen', 'Galerie Horta': 'Hortagalerij',
@@ -194,7 +200,7 @@
     'Artiste': 'Kunstenaar', 'Genre': 'Genre', 'Formation': 'Opgericht', 'Création': 'Opgericht', 'UNESCO': 'UNESCO', 'Jours': 'Dagen',
     'Élections': 'Verkiezingen', 'Gouvernement': 'Regering', 'Avant': 'Voor', 'Après': 'Na', 'Communes': 'Gemeenten', 'Régions': 'Gewesten',
     'Communautés': 'Gemeensch.', 'Loi': 'Wet', '1er scrutin': '1e stemming', 'Niveau': 'Niveau', 'Consultation': 'Raadpleging',
-    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status', 'Conflit': 'Conflict', 'Rôle': 'Rol', 'Poids': 'Gewicht', 'Taille': 'Lengte', 'Envergure': 'Spanwijdte', 'Premier vol': 'Eerste vlucht', 'Constructeur': 'Bouwer', 'Siège': 'Zetel', 'Lieu': 'Plaats', 'Auteur': 'Auteur', 'Ouverture': 'Geopend', 'Taux': 'Koers', 'Rang': 'Rang', 'Fondée': 'Opgericht', 'Victoires': 'Overwinningen', 'Longueur': 'Lengte', 'Exploitant': 'Uitbater', 'Vitesse': 'Snelheid', 'Navire': 'Schip', 'Port': 'Haven', 'Nommé': 'Benoemd', 'Fin': 'Einde', 'Billets': 'Biljetten', 'Pays': 'Landen', 'Tonnes': 'Ton', 'Métal': 'Metaal', 'Valeur': 'Waarde', 'Effigie': 'Beeltenis', 'Origine': 'Herkomst', 'Habitat': 'Leefgebied',
+    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status', 'Conflit': 'Conflict', 'Rôle': 'Rol', 'Poids': 'Gewicht', 'Taille': 'Lengte', 'Envergure': 'Spanwijdte', 'Premier vol': 'Eerste vlucht', 'Constructeur': 'Bouwer', 'Siège': 'Zetel', 'Lieu': 'Plaats', 'Altitude': 'Hoogte', 'Hauteur': 'Hoogte', 'Commune': 'Gemeente', 'Auteur': 'Auteur', 'Ouverture': 'Geopend', 'Taux': 'Koers', 'Rang': 'Rang', 'Fondée': 'Opgericht', 'Victoires': 'Overwinningen', 'Longueur': 'Lengte', 'Exploitant': 'Uitbater', 'Vitesse': 'Snelheid', 'Navire': 'Schip', 'Port': 'Haven', 'Nommé': 'Benoemd', 'Fin': 'Einde', 'Billets': 'Biljetten', 'Pays': 'Landen', 'Tonnes': 'Ton', 'Métal': 'Metaal', 'Valeur': 'Waarde', 'Effigie': 'Beeltenis', 'Origine': 'Herkomst', 'Habitat': 'Leefgebied',
   };
   const META = [
     [/^En fonction$/, 'In functie'], [/^Sur le trône$/, 'Op de troon'], [/^Gouv\. /, 'Reg. '],

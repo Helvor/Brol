@@ -495,6 +495,20 @@ async function features() {
       await page.click('.tab[data-view="binder"]');
       await page.selectOption('#f-pack', 'all');
     });
+    await step('paysages : cartes horizontales', async () => {
+      // Album : une carte Paysage possédée prend deux colonnes, à plat ; à l'ouverture elle est couchée dans sa case
+      await page.evaluate(() => { const o = window.RDL.state.owned; window.RDL.CARDS.filter(c => c.cat === 'paysage').slice(0, 3).forEach(c => o[c.id] = 1); window.RDL.save(); });
+      await page.click('.tab[data-view="binder"]');
+      await page.selectOption('#f-pack', 'paysages');
+      const r = await page.evaluate(() => {
+        const cell = document.querySelector('#grid .cell.is-wide .card.is-land')?.closest('.cell'), card = cell?.querySelector('.card');
+        const b = card?.getBoundingClientRect(), slot = document.querySelector('#grid .cell:not(.is-wide)');
+        return { wide: !!cell, ratio: b ? +(b.width / b.height).toFixed(2) : 0, n: document.querySelectorAll('#grid .cell').length,
+          all: document.querySelectorAll('#grid .cell.is-wide').length, html: window.RDL.cardHTML(window.RDL.CARDS.find(c => c.cat === 'paysage'), {}).includes('class="land"') };
+      });
+      check(r.wide && r.ratio > 1.3 && r.ratio < 1.5 && r.n === r.all && r.html, 'paysages dans l’album : ' + JSON.stringify(r));
+      await page.selectOption('#f-pack', 'all');
+    });
     await step('export puis import de la sauvegarde', async () => {
       await page.evaluate(() => { window.RDL.state.coins = 4321; window.RDL.save(); });
       const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#export')]);

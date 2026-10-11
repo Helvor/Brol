@@ -79,6 +79,7 @@
     { id: 'region',       fr: 'Régions',       nl: 'Gewesten' },
     { id: 'histoire',     fr: 'Histoire',      nl: 'Geschiedenis' },
     { id: 'bd',           fr: 'Bulles',        nl: 'Strips' },
+    { id: 'paysage',      fr: 'Paysages',      nl: 'Landschappen' },
     { id: 'evenement',    fr: 'Événements',    nl: 'Gebeurtenissen' },
     { id: 'edition',      fr: 'Éditions limitées', nl: 'Beperkte edities' },
   ];
@@ -120,6 +121,9 @@
     { id: 'bulles', title: { fr: 'Bulles', nl: 'Strips' }, kicker: { fr: 'Édition BD', nl: 'Stripeditie' }, big: 'BAM!', price: 80,
       desc: { fr: 'Fresques du Parcours BD, statues et musées de la bande dessinée.', nl: 'Stripmuren, standbeelden en musea van het beeldverhaal.' },
       body: ['#0d1b3d', '#1f4fb0'], metal: ['#fff7c2', '#ffd21f', '#b8860b'], cats: ['bd'] },
+    { id: 'paysages', title: { fr: 'Paysages', nl: 'Landschappen' }, kicker: { fr: 'Édition carte postale', nl: 'Prentkaarteditie' }, big: '1F', price: 80,
+      desc: { fr: 'Grottes, rochers, cascades, lacs, forêts, fagnes et côte, en cartes postales.', nl: 'Grotten, rotsen, watervallen, meren, bossen, venen en kust, als prentkaarten.' },
+      body: ['#0e2a24', '#2f6b4f'], metal: ['#fff6e0', '#f2c86b', '#9a6b1c'], cats: ['paysage'] },
     // Banque nationale : la catégorie Monnaie et banque, plus les gouverneurs et ministres déjà présents en Politique
     { id: 'bnb', title: { fr: 'Banque nationale', nl: 'Nationale Bank' }, kicker: { fr: 'Édition monétaire', nl: 'Munteditie' }, big: '€ ƒ', price: 80,
       desc: { fr: 'Gouverneurs, francs, euros, or et grandes institutions.', nl: 'Gouverneurs, franken, euro’s, goud en grote instellingen.' },
@@ -333,6 +337,8 @@
       match: c => c.cat === 'histoire' && c.stats?.[1]?.[1] === 'Exposition' },
     { id: 'greves', title: { fr: 'Dans la rue', nl: 'Op straat' }, desc: { fr: 'Grèves et manifestations qui ont changé le pays.', nl: 'Stakingen en betogingen die het land veranderden.' }, reward: 500,
       match: c => c.cat === 'histoire' && ['Grève', 'Manifestation'].includes(c.stats?.[1]?.[1]) },
+    { id: 'sous-terre', title: { fr: 'Sous terre', nl: 'Onder de grond' }, desc: { fr: 'Les grottes de Wallonie.', nl: 'De grotten van Wallonië.' }, reward: 500,
+      match: c => c.cat === 'paysage' && c.stats?.[0]?.[1] === 'Grotte' },
     { id: 'digue', title: { fr: 'Sur la digue', nl: 'Op de zeedijk' }, desc: { fr: 'Les statues de BD de Middelkerke.', nl: 'De stripbeelden van Middelkerke.' }, reward: 500,
       match: c => c.cat === 'bd' && /Middelkerke$/.test(c.meta || '') },
     ...ALL_PACKS.filter(p => p.special).map(p => ({ id: 'ed-' + p.id, edition: p.id,
@@ -505,6 +511,11 @@
       <rect x="24" y="112" width="252" height="16" rx="3" fill="${p.metal[1]}" opacity=".18"/>
       <path d="M20 394H280" stroke="${p.metal[1]}" stroke-width="2" opacity=".4"/>
       ${[40, 84, 128, 172, 216, 260].map((x, i) => `<circle cx="${x}" cy="394" r="${i === 3 ? 6 : 4}" fill="${p.metal[0]}" opacity="${i === 3 ? .8 : .45}"/>`).join('')}`,
+    // Collines, soleil et timbre dentelé
+    paysages: (k, p) => `<circle cx="214" cy="150" r="34" fill="${p.metal[1]}" opacity=".22"/>
+      <path d="M0 330L60 260L110 300L170 220L230 290L300 240V412H0Z" fill="${p.metal[1]}" opacity=".14"/>
+      <path d="M0 370L80 320L150 350L220 300L300 340V412H0Z" fill="${p.metal[0]}" opacity=".1"/>
+      <g transform="translate(218 92) rotate(8)" opacity=".35"><rect x="-26" y="-32" width="52" height="64" fill="none" stroke="${p.metal[0]}" stroke-width="3" stroke-dasharray="3 4"/></g>`,
     // Trame de points et bulles de BD
     bulles: (k, p) => `<defs><pattern id="bd${k}" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="6" cy="6" r="2.2" fill="${p.metal[1]}" opacity=".2"/></pattern></defs>
       <rect x="0" y="18" width="300" height="394" fill="url(#bd${k})"/>
@@ -569,7 +580,46 @@
   const cardBackLite = () => `<div class="card-back is-lite">${BACK_MARK}<div class="back-foot">${t('back')}</div></div>`;
 
   // ---------- Rendu d'une carte ----------
+  // Paysages : carte horizontale « carte postale » (style.css, .card.is-land). Elle est posée dans un cadre .land :
+  // couchée d'un quart de tour dans les cases verticales (ouverture, fusion, échanges), à plat dans l'album (sur
+  // deux colonnes) et dans la fiche. Une carte 88 × 63 tournée a exactement la taille d'une case 63 × 88.
+  const STAMP_VAL = { commune: '1F', 'peu-commune': '2F', rare: '5F', epique: '10F', legendaire: '50F', mythique: '100F' };
+  const STAMP_SVG = '<svg viewBox="0 0 40 30" aria-hidden="true"><circle cx="29" cy="9" r="4" fill="currentColor" opacity=".8"/><path d="M0 30L12 12L19 21L25 15L40 30Z" fill="currentColor"/></svg>';
+  // « Souvenir des Grottes de Han », « Souvenir du Mont Kemmel », « Souvenir de la Forêt de Soignes »…
+  const souvenirOf = name => {
+    if (L() === 'nl') return 'Groeten uit';
+    const w = name.split(/[ ’']/)[0];
+    if (/^(Grottes|Rochers|Lacs|Dunes|Aiguilles|Hautes|Fonds|Marais)$/.test(w)) return 'Souvenir des';
+    if (/^(Lac|Mont|Rocher|Signal|Parc|Plateau|Gouffre|Tombeau|Zwin)$/.test(w)) return 'Souvenir du';
+    if (/^(Forêt|Cascade|Boucle|Croix|Grotte|Vallée|Fagne|Baraque|Embouchure)$/.test(w)) return 'Souvenir de la';
+    return 'Souvenir de';
+  };
+  // Nom en grosses lettres : plus petit quand un mot est long (« Hertogenwald ») ou le nom entier (trois lignes sinon)
+  const nameSize = name => { const w = Math.max(...name.split(/\s+/).map(x => x.length)); return w > 12 || name.length > 26 ? ' is-xlong' : w > 9 || name.length > 18 ? ' is-long' : ''; };
+  function landHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c), prov = c.stats?.[1]?.[1] || '';
+    const top = R[c.rarity].rank >= R.legendaire.rank;
+    const finTag = finish !== 'normal' ? `<span class="fin-tag">${fl(finish)}</span>` : '';
+    const dots = variants && variants.length > 1
+      ? `<span class="var-dots" title="${t('versionsOwned')}">${variants.filter(v => v !== 'normal').map(v => `<i class="d-${v}"></i>`).join('')}</span>` : '';
+    return `<div class="land">
+      <article class="card is-land r-${c.rarity} cat-${c.cat} fam-${c.family || 'gris'} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="card-photo"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, Math.round(imgW * 1.6))}" alt="" loading="lazy" decoding="async">` : ''}</div>
+          <p class="pc-hello">${souvenirOf(c.name)}</p>
+          <h3 class="pc-name${nameSize(name)}">${esc(name)}</h3>
+          <div class="pc-stamp"><div>${STAMP_SVG}<b>${STAMP_VAL[c.rarity]}</b><i>${esc(rl(c.rarity))}</i></div></div>
+          <div class="pc-postmark"><span>${esc(tv(prov))}<small>${top ? '★ ★ ★' : L() === 'nl' ? 'België' : 'Belgique'}</small></span></div>
+          <div class="card-top"><span class="no">${String(c.no).padStart(4, '0')}</span>${finTag}</div>
+          <div class="pc-band"><p class="sub">${esc(window.I18N.subtitle(c))}</p>
+            <dl class="pc-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd>${esc(tv(v))}</dd></div>`).join('')}</dl></div>
+          ${dots}
+        </div>
+      </article></div>`;
+  }
   function cardHTML(c, { count = 0, finish = 'normal', variants = null, imgW = 500 } = {}) {
+    if (c.landscape) return landHTML(c, { count, finish, variants, imgW });
     let media;
     const photo = photoOf(c, finish);
     if (c.cat === 'evenement') {
@@ -624,7 +674,7 @@
   // Chaque catégorie contient toutes les raretés (réparties par notoriété), donc les taux affichés sont justes.
   // Nouvelle catégorie : à rareté égale, ses cartes sortent trois fois plus souvent jusqu'à la date indiquée, pour
   // qu'elles ne se noient pas parmi les 1 500 cartes du paquet Belgique. Les taux par rareté ne changent pas.
-  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30', histoire: '2027-05-31', bd: '2027-06-30' }, FEATURED_WEIGHT = 3;
+  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30', histoire: '2027-05-31', bd: '2027-06-30', paysage: '2027-07-31' }, FEATURED_WEIGHT = 3;
   const featuredCats = () => { const d = ymd(now()); return new Set(Object.keys(FEATURED).filter(cat => d <= FEATURED[cat])); };
   function pickCard(list) {
     const feat = featuredCats(), w = c => feat.has(c.cat) ? FEATURED_WEIGHT : 1;
@@ -1200,11 +1250,14 @@
     if (filters.series) $('#series-banner').innerHTML = `<span>${t('seriesBanner')} : <b>${esc(sl(filters.series, 'title'))}</b></span><button class="linkish" id="clear-series">${t('clearFilter')}</button>`;
     const grid = $('#grid');
     if (!list.length) { grid.innerHTML = `<p class="empty">${filters.owned || filters.special ? t('emptyOwned') : t('emptyAll')}</p>`; return; }
+    // Paysages (cartes horizontales sur deux colonnes) : un nombre pair de colonnes, sans trou en bout de rangée
+    grid.classList.toggle('has-wide', list.slice(0, shown).some(c => c.landscape));
     grid.innerHTML = list.slice(0, shown).map(c => {
       const n = totalOf(c.id);
-      if (n) return `<div class="cell">${cardHTML(c, { count: n, finish: bestFinish(c.id), variants: finishesOwned(c.id) }).replace('<article ', `<article tabindex="0" role="button" aria-label="${esc(nm(c))}, ${esc(rl(c.rarity))}" `)}</div>`;
+      const wide = c.landscape ? ' is-wide' : '';
+      if (n) return `<div class="cell${wide}">${cardHTML(c, { count: n, finish: bestFinish(c.id), variants: finishesOwned(c.id) }).replace('<article ', `<article tabindex="0" role="button" aria-label="${esc(nm(c))}, ${esc(rl(c.rarity))}" `)}</div>`;
       const where = c.cat === 'edition' && packById(c.pack) ? `<span class="ed-where">${t('edWhere', esc(pl(packById(c.pack), 'title')))}</span>` : '';
-      return `<div class="cell"><div class="empty-slot" data-id="${esc(c.id)}" tabindex="0" role="button" aria-label="${esc(nm(c))}, ${esc(rl(c.rarity))}"><span class="gem" style="background:var(--r-${c.rarity})"></span><span class="no">${String(c.no).padStart(4, '0')}</span><span class="name">${esc(nm(c))}</span>${where}</div></div>`;
+      return `<div class="cell${wide}"><div class="empty-slot" data-id="${esc(c.id)}" tabindex="0" role="button" aria-label="${esc(nm(c))}, ${esc(rl(c.rarity))}"><span class="gem" style="background:var(--r-${c.rarity})"></span><span class="no">${String(c.no).padStart(4, '0')}</span><span class="name">${esc(nm(c))}</span>${where}</div></div>`;
     }).join('') + (list.length > shown ? `<button class="btn btn-line grid-more" id="more">${t('more', fmt(list.length - shown))}</button>` : '');
   }
   function renderWallet() {
@@ -1848,10 +1901,11 @@
   function openDetail(id, finish = 'normal') {
     const c = BY_ID.get(id);
     const owned = finishesOwned(id);
+    $('#detail').classList.toggle('is-land', !!c.landscape);
     // Carte pas encore obtenue (album) : l'emplacement vide, son nom, sa rareté et ses chances d'obtention
     if (!owned.length) {
       const where = c.cat === 'edition' && packById(c.pack) ? `<span class="ed-where">${t('edWhere', esc(pl(packById(c.pack), 'title')))}</span>` : '';
-      $('#detail-card').innerHTML = `<div class="cell"><div class="empty-slot"><span class="gem" style="background:var(--r-${c.rarity})"></span><span class="no">${String(c.no).padStart(4, '0')}</span><span class="name">${esc(nm(c))}</span>${where}</div></div>`;
+      $('#detail-card').innerHTML = `<div class="cell${c.landscape ? ' is-wide' : ''}"><div class="empty-slot"><span class="gem" style="background:var(--r-${c.rarity})"></span><span class="no">${String(c.no).padStart(4, '0')}</span><span class="name">${esc(nm(c))}</span>${where}</div></div>`;
       $('#detail-body').innerHTML = `
         <div class="kicker" style="color:var(--rt-${c.rarity})"><span class="gem" style="background:var(--r-${c.rarity})"></span>${rl(c.rarity)} · <span style="color:var(--ink-2)">${cl(c.cat)}</span></div>
         <h2>${esc(nm(c))}</h2>
@@ -1865,7 +1919,7 @@
     }
     if (!owned.includes(finish) && owned.length) finish = owned.at(-1);
     const cnt = countOf(id, finish);
-    $('#detail-card').innerHTML = cardHTML(c, { finish });
+    $('#detail-card').innerHTML = cardHTML(c, { finish, imgW: 700 });
     const photo = photoOf(c, finish);
     const links = [];
     if (/^Q\d+$/.test(c.id)) links.push(`<a href="https://www.wikidata.org/wiki/${c.id}" target="_blank" rel="noopener">${t('wikidata')}</a>`);
@@ -2008,7 +2062,7 @@
     PACKS, SERIES, RARITIES, BULK, bulkOf, bulkPrice, buyPacks, sellDuplicates, dupValue, claimSeries,
     EVENT_PACKS, activeEvents, fuseRarity, fuseHolo, fuseAvailable, claimDaily, dailyReady, drawPack, exclOf, packById,
     mission, missionsToday, claimMission, MISSION, resaleMult, sellValue, weeklyNow, claimWeekly, WEEKLY, statsOf,
-    packOdds, exclChance, packFinish, PACK_SIZE, PITY, RARITIES_W: RARITIES,
+    packOdds, exclChance, packFinish, PACK_SIZE, PITY, RARITIES_W: RARITIES, souvenirOf,
   };
 
   // ---------- Version installable (PWA) ----------

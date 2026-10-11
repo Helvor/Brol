@@ -620,6 +620,80 @@ function buildBulles() {
     stats: [[kind === 'Musée' ? 'Ouverture' : 'Création', y ?? '—'], ['Auteur', author], ['Lieu', place]],
   }));
 }
+// ---------- Paysages : grottes, rochers, cascades, lacs, forêts, fagnes, côte (paquet « Paysages ») ----------
+// Cartes manuelles, photos de Commons relues à l'œil. Cartes horizontales au style carte postale « Souvenir de… »
+// (style.css, .card.cat-paysage). Cadrage : PAYSAGE_POS (point visé de la photo et zoom).
+// [id, nom, nom NL, image, type, province, stat, description, description NL, rareté]
+const PAYSAGES = [
+  ["pay-han", "Grottes de Han", "Grotten van Han", "Caves of Han 01.jpg", "Grotte", "Namur", ["Commune", "Rochefort"], "Une rivière souterraine et des salles géantes", "Een ondergrondse rivier en reusachtige zalen", "mythique"],
+  ["pay-geant", "Tombeau du Géant", "Graf van de Reus", "0 Botassart - Tombeau du Géant (1).jpg", "Méandre", "Luxembourg", ["Commune", "Bouillon"], "La Semois enlace une colline boisée", "De Semois omarmt een beboste heuvel", "mythique"],
+  ["pay-fagnes", "Hautes Fagnes", "Hoge Venen", "Réserve Naturelle des Hautes Fagnes (Parc Naturel Hautes Fagnes-Eifel) 115.jpg", "Fagne", "Liège", ["Commune", "Waimes"], "Tourbières et caillebotis sur le toit du pays", "Hoogvenen en vlonderpaden op het dak van het land", "mythique"],
+  ["pay-soignes", "Forêt de Soignes", "Zoniënwoud", "2003-10-12 Forêt de Soignes-Zoniënwoud 01.jpg", "Forêt", "Bruxelles", ["Superficie", "4 400 ha"], "Hêtraie cathédrale, patrimoine de l’UNESCO", "Kathedraalbeukenbos, UNESCO-werelderfgoed", "mythique"],
+  ["pay-hallerbos", "Hallerbos", "Hallerbos", "Halle - Hallerbos.jpg", "Forêt", "Brabant flamand", ["Commune", "Hal"], "Le tapis bleu des jacinthes, en avril", "Het blauwe tapijt van wilde hyacinten, in april", "mythique"],
+  ["pay-coo", "Cascade de Coo", "Watervallen van Coo", "15 mètres de dénivellé (9402883630).jpg", "Cascade", "Liège", ["Hauteur", "15 m"], "L’Amblève dévale en deux chutes", "De Amblève stort in twee watervallen naar beneden", "mythique"],
+  ["pay-bayard", "Rocher Bayard", "Rots van Bayard", "20090816 dinant42.jpg", "Rocher", "Namur", ["Commune", "Dinant"], "L’aiguille que le cheval Bayard aurait fendue", "De rotsnaald die het paard Bayard zou hebben gespleten", "legendaire"],
+  ["pay-freyr", "Rochers de Freyr", "Rotsen van Freyr", "Hastiere, Belgium - panoramio.jpg", "Rocher", "Namur", ["Commune", "Hastière"], "Falaises d’escalade au-dessus de la Meuse", "Klimrotsen boven de Maas", "legendaire"],
+  ["pay-botrange", "Signal de Botrange", "Signaal van Botrange", "Hohes Venn - panoramio (7).jpg", "Sommet", "Liège", ["Altitude", "694 m"], "Le point culminant de la Belgique", "Het hoogste punt van België", "legendaire"],
+  ["pay-zwin", "Zwin", "Zwin", "Zwin Natuur Park 33.jpg", "Réserve naturelle", "Flandre-Occidentale", ["Commune", "Knokke-Heist"], "Prés salés et oiseaux à la frontière", "Schorren en vogels aan de grens", "legendaire"],
+  ["pay-kemmel", "Mont Kemmel", "Kemmelberg", "Mont Kemmel.jpg", "Colline", "Flandre-Occidentale", ["Altitude", "156 m"], "Le sommet des monts de Flandre", "De top van de Vlaamse heuvels", "legendaire"],
+  ["pay-eaudheure", "Lacs de l’Eau d’Heure", "Meren van de Eau d’Heure", "Lacs de l'Eau d'Heure 002.jpg", "Lac de barrage", "Hainaut", ["Commune", "Froidchapelle"], "Le plus grand ensemble de lacs du pays", "Het grootste merengebied van het land", "legendaire"],
+  ["pay-frahan", "Boucle de la Semois", "Lus van de Semois", "Frahan (Parc naturel de l'Ardenne méridionale, Parc national de la Vallée de la Semois) 05.jpg", "Méandre", "Luxembourg", ["Commune", "Bouillon"], "Le village de Frahan dans son méandre", "Het dorp Frahan in zijn meander", "legendaire"],
+  ["pay-hogekempen", "Parc national Hoge Kempen", "Nationaal Park Hoge Kempen", "Hoge Kempen (17).JPG", "Parc national", "Limbourg", ["Commune", "Maasmechelen"], "Le premier parc national de Belgique", "Het eerste nationale park van België", "legendaire"],
+  ["pay-remouchamps", "Grotte de Remouchamps", "Grot van Remouchamps", "Remouchamps Sintervorhänge Detail.jpg", "Grotte", "Liège", ["Commune", "Aywaille"], "La plus longue navigation souterraine d’Europe", "De langste ondergrondse boottocht van Europa", "epique"],
+  ["pay-belvaux", "Gouffre de Belvaux", "Kloof van Belvaux", "Domaine des grottes de Han 31.jpg", "Gouffre", "Namur", ["Commune", "Rochefort"], "La Lesse plonge sous terre vers les grottes de Han", "De Lesse duikt onder de grond naar de grotten van Han", "epique"],
+  ["pay-ninglinspo", "Ninglinspo", "Ninglinspo", "Ninglinspo - Aywaille 310714 (3).JPG", "Ruisseau", "Liège", ["Commune", "Aywaille"], "Le seul torrent de Belgique", "De enige bergstroom van België", "epique"],
+  ["pay-robertville", "Lac de Robertville", "Meer van Robertville", "Lac de Robertville (2024 - 2).jpg", "Lac de barrage", "Liège", ["Commune", "Waimes"], "Barrage sur la Warche, près du château de Reinhardstein", "Stuwdam op de Warche, bij de burcht Reinhardstein", "epique"],
+  ["pay-gileppe", "Lac de la Gileppe", "Meer van de Gileppe", "Barrage de la Gileppe.JPG", "Lac de barrage", "Liège", ["Commune", "Jalhay"], "Un barrage gardé par un lion de pierre", "Een stuwdam bewaakt door een stenen leeuw", "epique"],
+  ["pay-kalmthout", "Kalmthoutse Heide", "Kalmthoutse Heide", "20260125 Kalmthoutseheide 016b.JPG", "Lande", "Anvers", ["Commune", "Kalmthout"], "Bruyères, pins et dunes intérieures", "Heide, dennen en landduinen", "epique"],
+  ["pay-westhoek", "Dunes du Westhoek", "Duinen van de Westhoek", "Natuurreservaat De Westhoek 84.jpg", "Dunes", "Flandre-Occidentale", ["Commune", "La Panne"], "Dunes sauvages à la frontière française", "Wilde duinen aan de Franse grens", "epique"],
+  ["pay-ijzer", "Embouchure de l’Yser", "IJzermonding", "Kustduinen en vuurtoren bij de Ijzermonding - 223752 - onroerenderfgoed.jpg", "Estuaire", "Flandre-Occidentale", ["Commune", "Nieuport"], "Là où l’Yser rejoint la mer du Nord", "Waar de IJzer in de Noordzee uitmondt", "epique"],
+  ["pay-enclus", "Mont de l’Enclus", "Kluisberg", "Russeignies 01.jpg", "Colline", "Hainaut", ["Altitude", "141 m"], "Belvédère sur les plaines de l’Escaut", "Uitkijk over de Scheldevlakte", "epique"],
+  ["pay-hertogenwald", "Hertogenwald", "Hertogenwald", "05-02-27 Hohes Venn 02.JPG", "Forêt", "Liège", ["Commune", "Eupen"], "Grande forêt d’épicéas aux portes des Fagnes", "Groot sparrenbos aan de rand van de Venen", "epique"],
+  ["pay-fiances", "Croix des Fiancés", "Kruis van de Verloofden", "Be Fagnes Croix fiances borne.jpg", "Fagne", "Liège", ["Commune", "Malmedy"], "Deux fiancés perdus dans la neige en 1871", "Twee verloofden verdwaald in de sneeuw in 1871", "epique"],
+  ["pay-hotton", "Grottes de Hotton", "Grotten van Hotton", "Hotton-Caves-15.JPG", "Grotte", "Luxembourg", ["Commune", "Hotton"], "La grotte des Mille et Une Nuits", "De grot van Duizend-en-één-nacht", "epique"],
+  ["pay-marche", "Rochers de Marche-les-Dames", "Rotsen van Marche-les-Dames", "Roy-måtche.jpg", "Rocher", "Namur", ["Commune", "Namur"], "Falaises au bord de la Meuse", "Kliffen aan de oever van de Maas", "epique"],
+  ["pay-lommel", "Lommelse Sahara", "Lommelse Sahara", "Lommelse Sahara (11).JPG", "Dunes", "Limbourg", ["Commune", "Lommel"], "Un désert de sable blanc en Campine", "Een woestijn van wit zand in de Kempen", "epique"],
+  ["pay-chaleux", "Aiguilles de Chaleux", "Naalden van Chaleux", "0 Hulsonniaux - Aiguilles de Chaleux (1).jpg", "Rocher", "Namur", ["Commune", "Houyet"], "Aiguilles de calcaire au bord de la Lesse", "Kalksteennaalden aan de Lesse", "rare"],
+  ["pay-merveilleuse", "Grotte La Merveilleuse", "Grot La Merveilleuse", "2004-10-24 Grotte, Dinant - 6.jpg", "Grotte", "Namur", ["Commune", "Dinant"], "Concrétions et cascades de calcite", "Druipstenen en kalksinterwatervallen", "rare"],
+  ["pay-bayehon", "Cascade du Bayehon", "Waterval van Bayehon", "Cascade de Bayehon, Longfaye.jpg", "Cascade", "Liège", ["Commune", "Waimes"], "Une chute cachée au bord des Fagnes", "Een verborgen waterval aan de rand van de Venen", "rare"],
+  ["pay-butgenbach", "Lac de Bütgenbach", "Meer van Bütgenbach", "Bütgenbach (2).JPG", "Lac de barrage", "Liège", ["Commune", "Bütgenbach"], "Lac de barrage sur la Warche", "Stuwmeer op de Warche", "rare"],
+  ["pay-genval", "Lac de Genval", "Meer van Genval", "Alcove in Fall (6290426775).jpg", "Lac", "Brabant wallon", ["Commune", "Rixensart"], "Lac des années 1900 bordé de villas", "Meer uit de jaren 1900, omzoomd met villa’s", "rare"],
+  ["pay-virelles", "Lac de Virelles", "Meer van Virelles", "Etang Virelles - été.jpg", "Étang", "Hainaut", ["Commune", "Chimay"], "Étang et réserve naturelle", "Vijver en natuurreservaat", "rare"],
+  ["pay-warfaaz", "Lac de Warfaaz", "Meer van Warfaaz", "Warfaaz1.JPG", "Lac de barrage", "Liège", ["Commune", "Spa"], "Lac de barrage aux portes de Spa", "Stuwmeer aan de rand van Spa", "rare"],
+  ["pay-malchamps", "Fagne de Malchamps", "Venn van Malchamps", "Fagne des Malchamps - ein Venn in Belgien. 02.jpg", "Fagne", "Liège", ["Commune", "Spa"], "Bruyères et pins au-dessus de Spa", "Heide en dennen boven Spa", "rare"],
+  ["pay-fraiture", "Baraque de Fraiture", "Baraque de Fraiture", "Piste de Ski - Baraque de Fraiture - Avril 2019.jpg", "Sommet", "Luxembourg", ["Altitude", "652 m"], "Le point culminant de la province de Luxembourg", "Het hoogste punt van de provincie Luxemburg", "rare"],
+  ["pay-harchies", "Marais d’Harchies", "Moerassen van Harchies", "0 Marais d'Harchies (4).JPG", "Marais", "Hainaut", ["Commune", "Bernissart"], "Étangs nés des affaissements miniers", "Vijvers ontstaan door mijnverzakkingen", "rare"],
+  ["pay-aubert", "Mont-Saint-Aubert", "Sint-Aubertusberg", "Le Mont Saint-Aubert (5).JPG", "Colline", "Hainaut", ["Altitude", "149 m"], "Belvédère sur Tournai", "Uitkijk over Doornik", "rare"],
+  ["pay-blekker", "Hoge Blekker", "Hoge Blekker", "Hoge Blekker (31500710002).jpg", "Dune", "Flandre-Occidentale", ["Hauteur", "33 m"], "La plus haute dune de la côte belge", "De hoogste duin van de Belgische kust", "rare"],
+  ["pay-viroin", "Vallée du Viroin", "Vallei van de Viroin", "Treignes - Viroin 1 JPG.jpg", "Vallée", "Namur", ["Commune", "Viroinval"], "La rivière de l’Entre-Sambre-et-Meuse", "De rivier van Entre-Sambre-et-Meuse", "rare"],
+  ["pay-fondry", "Fondry des Chiens", "Fondry des Chiens", "Fondry des Chiens (Parc naturel Viroin-Hermeton - Parc national de L'Entre-Sambre-et-Meuse) 08.jpg", "Gouffre", "Namur", ["Commune", "Viroinval"], "Un gouffre de calcaire sculpté par l’eau", "Een kalksteenkloof uitgesleten door water", "rare"],
+  ["pay-lesse", "Vallée de la Lesse", "Vallei van de Lesse", "0 Dréhance - Château de Walzin (1).jpg", "Vallée", "Namur", ["Commune", "Dinant"], "Le château de Walzin sur son rocher", "Het kasteel van Walzin op zijn rots", "peu-commune"],
+  ["pay-herou", "Le Hérou", "Le Hérou", "Le Hérou (Parc naturel des Deux Ourthes) 03.jpg", "Vallée", "Luxembourg", ["Commune", "Houffalize"], "Crête rocheuse au-dessus de l’Ourthe", "Rotskam boven de Ourthe", "peu-commune"],
+  ["pay-goyet", "Grottes de Goyet", "Grotten van Goyet", "Grottes de Goyet 3.jpg", "Grotte", "Namur", ["Commune", "Gesves"], "Grottes habitées par l’homme de Néandertal", "Grotten bewoond door de neanderthaler", "peu-commune"],
+  ["pay-molignee", "Vallée de la Molignée", "Vallei van de Molignée", "Sosoye Rv1aJPG.jpg", "Vallée", "Namur", ["Commune", "Anhée"], "La vallée des abbayes de Maredsous", "De vallei van de abdij van Maredsous", "peu-commune"],
+  ["pay-eaunoire", "L’Eau Noire", "Eau Noire", "0 Nismes - Eau Noire (1).jpg", "Rivière", "Namur", ["Commune", "Viroinval"], "La rivière qui disparaît sous terre", "De rivier die onder de grond verdwijnt", "peu-commune"],
+  ["pay-eupen", "Lac d’Eupen", "Meer van Eupen", "Eupen Talsperre (10).JPG", "Lac de barrage", "Liège", ["Commune", "Eupen"], "Lac de barrage sur la Vesdre", "Stuwmeer op de Vesder", "peu-commune"],
+  ["pay-tailles", "Plateau des Tailles", "Plateau van Tailles", "Grande Fagne du plateau des Tailles.JPG", "Plateau", "Luxembourg", ["Commune", "Vielsalm"], "Fagnes sur le haut plateau ardennais", "Venen op het hoge Ardense plateau", "commune"],
+  ["pay-quareux", "Fonds de Quareux", "Fonds de Quareux", "Fonds de Quarreux - 05.jpg", "Vallée", "Liège", ["Commune", "Aywaille"], "L’Amblève entre les gros blocs de quartzite", "De Amblève tussen grote kwartsietblokken", "commune"],
+  ["pay-bourgoyen", "Bourgoyen-Ossemeersen", "Bourgoyen-Ossemeersen", "Gent Bourgoyen 132.JPG", "Réserve naturelle", "Flandre-Orientale", ["Commune", "Gand"], "Prairies humides aux portes de Gand", "Natte weiden aan de rand van Gent", "commune"],
+  ["pay-doode", "Doode Bemde", "Doode Bemde", "Dijle River, Doode Bemde, Neerijse, Flemish Brabant, Belgium - 20110402-02.jpg", "Marais", "Brabant flamand", ["Commune", "Oud-Heverlee"], "Marais de la vallée de la Dyle", "Moeras in de Dijlevallei", "commune"],
+  ["pay-maten", "De Maten", "De Maten", "De Maten 014.jpg", "Réserve naturelle", "Limbourg", ["Commune", "Genk"], "Étangs et landes de Campine", "Vijvers en heide in de Kempen", "commune"],
+  ["pay-kalkense", "Kalkense Meersen", "Kalkense Meersen", "Kalkense Meersen - 2025-02.jpg", "Réserve naturelle", "Flandre-Orientale", ["Commune", "Wichelen"], "Prés inondables le long de l’Escaut", "Overstromingsweiden langs de Schelde", "commune"],
+];
+// Cadrage de la photo (object-position, puis zoom éventuel), relu sur les captures
+const PAYSAGE_POS = {
+  'pay-kemmel': '50% 80%;--zoom:1.25', // beaucoup de ciel
+  'pay-botrange': '50% 30%',
+};
+function buildPaysages() {
+  return PAYSAGES.map(([id, name, nlName, img, kind, prov, extra, sub, subNl, rarity]) => ({
+    id, cat: 'paysage', name, img, rarity, manual: true, family: 'paysage', landscape: true,
+    ...(PAYSAGE_POS[id] && { pos: PAYSAGE_POS[id] }),
+    subtitle: sub, nl: { name: nlName, subtitle: subNl },
+    meta: [kind, prov].join(' · '),
+    stats: [['Type', kind], ['Province', prov], extra],
+  }));
+}
 function buildManual(cat, list) {
   return list.map(([id, name, nlName, img, kind, y, sub, subNl, extra, rarity]) => ({
     id, cat, name, img, rarity, manual: true, family: cat, artwork: true, // rareté hors quotas (voir rarityByQuota)
@@ -685,6 +759,7 @@ const AJOUTS = {
   exploration: { build: () => buildRoute('exploration', EXPLORATION), editions: [] },
   finance: { build: async () => [...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES)], editions: [] },
   histoire: { build: async () => buildHistoire(), editions: [] }, bd: { build: async () => buildBulles(), editions: [] },
+  paysage: { build: async () => buildPaysages(), editions: [] },
 };
 const AJOUT = (process.argv.find(a => a.startsWith('--ajout=')) || '').slice(8);
 if (AJOUT) {
@@ -1366,7 +1441,7 @@ for (const f of sciRows) {
 console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
 
 for (const c of [...await buildMilitaires(resolveTitles), ...await buildAnimaux(resolveTitles),
-  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES), ...buildHistoire(), ...buildBulles()]) { delete c.links; cards.push(c); }
+  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES), ...buildHistoire(), ...buildBulles(), ...buildPaysages()]) { delete c.links; cards.push(c); }
 
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [

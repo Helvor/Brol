@@ -1724,3 +1724,99 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   letter-spacing: .08em; color: #fff; background: #e3132d; border: .5cqw solid #111; transform: rotate(-4deg); }
 .card.cat-bd.fin-plein .card-top { top: 2cqw; } .card.cat-bd.fin-plein .card-top .fin-tag { display: none; }
 .card.cat-bd.fin-plein .card-stats { background: #111; border-top: .7cqw solid var(--acc); }
+
+/* ===== Paysages : cartes horizontales « carte postale » (Souvenir de…) ===== */
+/* Cadre .land : à plat dans l'album (.cell.is-wide, sur deux colonnes) et dans la fiche ; ailleurs (ouverture,
+   fusion, échanges, séries) la carte est couchée d'un quart de tour dans une case verticale de même taille */
+.land { position: relative; width: 100%; aspect-ratio: 63 / 88; }
+.land > .card.is-land { position: absolute; left: 50%; top: 50%; width: 139.683%; translate: -50% -50%; rotate: -90deg; }
+.cell.is-wide, .detail-card .cell.is-wide { grid-column: span 2; }
+.cell.is-wide .land, .detail-card .land { aspect-ratio: 88 / 63; }
+.cell.is-wide .land > .card.is-land, .detail-card .land > .card.is-land { position: relative; left: auto; top: auto; width: 100%; translate: none; rotate: none; }
+.cell.is-wide .empty-slot { aspect-ratio: 88 / 63; border-radius: 2% / 2.8%; }
+#detail.is-land .detail-inner { grid-template-columns: 1fr; }
+#detail.is-land .detail-card { max-width: 640px; margin: 0 auto; width: 100%; }
+.grid.has-wide { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 1100px) { .grid.has-wide { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 760px) { .grid .cell.is-wide { grid-column: 1 / -1; } }
+
+.card.is-land { --acc: #8a8a8a; --stamp: #6f7a86; --line: transparent; aspect-ratio: 88 / 63; padding: 0; border-radius: 1.6cqw; background: #fff; color: #2b2620; }
+.card.is-land.r-peu-commune { --acc: #2f7d4a; --stamp: #3f8a5a; --line: #3f8a5a; } .card.is-land.r-rare { --acc: #2e5fc0; --stamp: #2e5fc0; --line: #2e5fc0; }
+.card.is-land.r-epique { --acc: #6b3db8; --stamp: #7a4ac8; --line: #7a4ac8; }
+.card.is-land.r-legendaire { --acc: #b8860b; --stamp: #c9971c; background: linear-gradient(135deg, #7a5a12, #f7dc84 22%, #a87b1e 45%, #fff1b8 65%, #8a6516); }
+.card.is-land.r-mythique { --acc: #c8102e; --stamp: #c8102e; background: conic-gradient(from 20deg, #5a0012, #ff2d55, #9a0020, #ff6b81, #6a0016, #ff2d55, #5a0012); }
+.card.is-land .card-in { position: absolute; inset: .9cqw; height: auto; border-radius: 1cqw; background: #2a2c33; }
+.card.is-land:not(.fin-ev) .card-in::before, .card.is-land .card-in::after { display: none; }
+.card.is-land .card-in > * { z-index: 4; }
+.card.is-land .card-photo { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: #2a2c33; }
+/* Cadrage par carte : --pos (point visé), puis zoom éventuel (« 50% 70%;--zoom:1.2 » dans PAYSAGE_POS) */
+.card.is-land .card-photo img { object-position: var(--pos, 50% 50%); transform: scale(var(--zoom, 1)); transform-origin: var(--pos, 50% 50%); filter: saturate(1.25) contrast(1.05); }
+.card.is-land .card-photo::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, .4), rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, .3)); }
+/* Liseré intérieur de la couleur de la rareté */
+.card.is-land .card-photo::before { content: ""; position: absolute; inset: 0; z-index: 2; border-radius: 1cqw; pointer-events: none; box-shadow: inset 0 0 0 .5cqw var(--line); }
+.card.is-land .pc-hello { position: absolute; left: 4cqw; top: 3cqw; margin: 0; font: 400 4.4cqw/1 "Lobster", cursive; color: #fff; text-shadow: .3cqw .3cqw 0 rgba(0, 0, 0, .5); rotate: -4deg; }
+.card.is-land .pc-name { position: absolute; left: 3cqw; right: 20cqw; top: 9cqw; margin: 0; font: 400 8cqw/.95 "Alfa Slab One", serif; color: #fff4c7;
+  -webkit-text-stroke: .35cqw var(--acc); paint-order: stroke fill; text-shadow: .7cqw .7cqw 0 #1a1a1a; text-transform: uppercase; letter-spacing: .02em; overflow-wrap: break-word; }
+/* Timbre dentelé (perforations par masque) et cachet de la poste */
+.card.is-land .pc-name.is-long { font-size: 6.6cqw; } .card.is-land .pc-name.is-xlong { font-size: 5.4cqw; }
+.card.is-land.fin-plein .pc-name.is-long { font-size: 7.6cqw; } .card.is-land.fin-plein .pc-name.is-xlong { font-size: 6.2cqw; }
+.card.is-land .pc-stamp { position: absolute; right: 2.4cqw; top: 2.4cqw; width: 12cqw; aspect-ratio: 4 / 5; padding: 1cqw; background: #fff;
+  -webkit-mask: radial-gradient(circle at center, transparent .55cqw, #000 .6cqw) -.9cqw -.9cqw / 1.8cqw 1.8cqw, linear-gradient(#000, #000) .9cqw .9cqw / calc(100% - 1.8cqw) calc(100% - 1.8cqw) no-repeat;
+  mask: radial-gradient(circle at center, transparent .55cqw, #000 .6cqw) -.9cqw -.9cqw / 1.8cqw 1.8cqw, linear-gradient(#000, #000) .9cqw .9cqw / calc(100% - 1.8cqw) calc(100% - 1.8cqw) no-repeat;
+  filter: drop-shadow(0 .3cqw .4cqw rgba(0, 0, 0, .25)); }
+.card.is-land .pc-stamp > div { position: relative; height: 100%; background: var(--stamp); color: #fff; display: grid; place-items: center; overflow: hidden; }
+.card.is-land .pc-stamp svg { width: 70%; opacity: .9; }
+.card.is-land .pc-stamp b { position: absolute; left: .8cqw; top: .6cqw; font: 700 2.6cqw/1 var(--display); }
+.card.is-land .pc-stamp i { position: absolute; right: .8cqw; bottom: .6cqw; font: 600 1.4cqw/1 var(--display); font-style: normal; letter-spacing: .08em; text-transform: uppercase; }
+.card.is-land.r-legendaire .pc-stamp > div { background: linear-gradient(135deg, #7a5a12, #f7dc84 30%, #a87b1e 55%, #fff1b8 75%, #8a6516); color: #3a2a08; }
+.card.is-land.r-mythique .pc-stamp > div { background: radial-gradient(circle at 30% 25%, #ff6b81, #c8102e 55%, #5a0012); }
+.card.is-land.r-mythique .pc-stamp > div::after { content: ""; position: absolute; inset: .6cqw; border: .25cqw solid #f7dc84; }
+.card.is-land .pc-postmark { position: absolute; right: 9cqw; top: 9cqw; width: 15cqw; aspect-ratio: 1; border-radius: 50%; border: .35cqw solid rgba(255, 255, 255, .85);
+  display: grid; place-items: center; text-align: center; color: rgba(255, 255, 255, .9); rotate: -14deg; }
+.card.is-land .pc-postmark::before { content: ""; position: absolute; inset: 1.1cqw; border-radius: 50%; border: .2cqw solid currentColor; }
+.card.is-land .pc-postmark span { font: 700 1.6cqw/1.15 var(--display); letter-spacing: .06em; text-transform: uppercase; max-width: 10.5cqw; overflow-wrap: anywhere; }
+.card.is-land .pc-postmark small { display: block; font-size: 1.9cqw; }
+.card.is-land .card-top { top: auto; bottom: 13.6cqw; left: 3cqw; right: auto; gap: 1cqw; }
+.card.is-land .card-top .no { font-size: 1.9cqw; padding: .4cqw .9cqw; border-radius: .5cqw; background: rgba(0, 0, 0, .55); }
+.card.is-land .card-top .fin-tag { font-size: 1.7cqw; padding: .5cqw .9cqw; border-radius: .4cqw; }
+/* Bande du bas : description et stats, posée sur la photo */
+.card.is-land .pc-band { position: absolute; left: 2cqw; right: 2cqw; bottom: 2cqw; height: 10cqw; background: rgba(246, 239, 220, .93); border-radius: .6cqw;
+  border-left: 1.2cqw solid var(--acc); box-shadow: 0 .6cqw 1.6cqw rgba(0, 0, 0, .3); display: flex; align-items: center; padding: 0 2.4cqw; gap: 3cqw; }
+.card.is-land .pc-band .sub { margin: 0; font: 400 2.2cqw/1.15 "Special Elite", monospace; color: #3a3226; flex: 1.4; min-width: 0; }
+.card.is-land .pc-stats { display: flex; gap: 2.6cqw; flex: 2; justify-content: flex-end; margin: 0; min-width: 0; }
+.card.is-land .pc-stats dt { font: 600 1.4cqw/1 var(--display); letter-spacing: .1em; text-transform: uppercase; color: #8a7a5a; }
+.card.is-land .pc-stats dd { margin: .4cqw 0 0; font: 700 2.6cqw/1 var(--display); color: #2b2620; white-space: nowrap; }
+.card.is-land .var-dots { right: 3cqw; bottom: 13.6cqw; gap: .8cqw; padding: .7cqw; }
+.card.is-land .var-dots i { width: 2cqw; height: 2cqw; }
+.card.is-land.r-mythique { box-shadow: 0 0 22px -4px rgba(255, 40, 80, .7), 0 14px 30px -12px rgba(0, 0, 0, .6); }
+
+/* Holo : cadre chromé, reflet irisé qui glisse sur la photo, timbre holographique */
+.card.is-land.fin-holo { background: linear-gradient(160deg, #5d6470, #e9edf3 18%, #8a92a0 36%, #ffffff 52%, #6f7783 70%, #dfe4ec 88%, #4f5560); }
+.card.is-land.fin-holo .card-photo::after { mix-blend-mode: color-dodge; opacity: .45;
+  background: linear-gradient(115deg, transparent 20%, #ff7ad9 32%, #ffd36b 40%, #7dffb2 48%, #6bd7ff 56%, #b38bff 64%, transparent 76%) 0 0 / 250% 100%; animation: pc-foil 5s ease-in-out infinite alternate; }
+@keyframes pc-foil { to { background-position: 100% 0; } }
+.card.is-land.fin-holo .pc-stamp > div { background: conic-gradient(from 30deg, #ff7ad9, #ffd36b, #7dffb2, #6bd7ff, #b38bff, #ff7ad9); color: #111; animation: bd-foil 4s linear infinite; }
+.card.is-land.fin-holo .pc-band { border-left-color: #b38bff; }
+@media (prefers-reduced-motion: reduce) { .card.is-land.fin-holo .card-photo::after, .card.is-land.fin-holo .pc-stamp > div { animation: none; } }
+/* Dorée « carte de luxe » : cadre or épais, lettres dorées, bande noire et or */
+.card.is-land.fin-or { background: linear-gradient(135deg, #6e4f0c, #f9e08a 18%, #b8891f 36%, #fff3c2 52%, #a87b1e 70%, #f3d47a 86%, #7a5a12); }
+.card.is-land.fin-or .card-in { inset: 1.8cqw; }
+.card.is-land.fin-or .card-photo img { filter: sepia(.3) saturate(1.3) contrast(1.05); }
+.card.is-land.fin-or .pc-name { -webkit-text-stroke: .35cqw #5a3f08; background: linear-gradient(180deg, #fff6cf, #f2c94c 50%, #b8891f); -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; text-shadow: none; filter: drop-shadow(.6cqw .6cqw 0 #1a1a1a); }
+.card.is-land.fin-or .pc-hello { color: #f6d478; }
+.card.is-land.fin-or .pc-band { background: rgba(14, 11, 6, .9); border-left-color: #d9a52c; }
+.card.is-land.fin-or .pc-band .sub { color: #e8cf8a; } .card.is-land.fin-or .pc-stats dt { color: #b8a06a; } .card.is-land.fin-or .pc-stats dd { color: #f6d478; }
+.card.is-land.fin-or .pc-stamp > div { background: linear-gradient(135deg, #7a5a12, #f7dc84 30%, #a87b1e 55%, #fff1b8 75%, #8a6516); color: #3a2a08; }
+/* Plein cadre « grand format » : plus de liseré ni de bande, la photo seule, les infos en petit dessus */
+.card.is-land.fin-plein .card-in { inset: 0; border-radius: 1.6cqw; }
+.card.is-land.fin-plein .card-photo::before { display: none; }
+.card.is-land.fin-plein .card-photo::after { background: linear-gradient(180deg, rgba(0, 0, 0, .45), rgba(0, 0, 0, 0) 36%, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, .65)); }
+.card.is-land.fin-plein .pc-name { font-size: 9.4cqw; }
+.card.is-land.fin-plein .pc-band { left: 0; right: 0; bottom: 0; height: 9cqw; background: none; box-shadow: none; border: 0; border-radius: 0; }
+.card.is-land.fin-plein .pc-band .sub, .card.is-land.fin-plein .pc-stats dd { color: #fff; text-shadow: 0 .2cqw .6cqw rgba(0, 0, 0, .8); }
+.card.is-land.fin-plein .pc-stats dt { color: rgba(255, 255, 255, .75); }
+.card.is-land.fin-plein .card-top { bottom: 10cqw; }
+.card.is-land.fin-plein.r-legendaire { box-shadow: 0 0 0 .5cqw #d9a52c, 0 14px 30px -12px rgba(0, 0, 0, .6); }
+.card.is-land.fin-plein.r-mythique { box-shadow: 0 0 0 .5cqw #c8102e, 0 0 22px -4px rgba(255, 40, 80, .7), 0 14px 30px -12px rgba(0, 0, 0, .6); }
