@@ -18,6 +18,12 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   niveau (vérifié avec `tools/simulate.mjs` et `tools/check-odds.mjs`). Nouvelle catégorie mise en avant : à rareté
   égale, ses cartes sortent 3 fois plus souvent jusqu'à une date (`FEATURED` dans app.js, Mémoire jusqu'au 31 janvier
   2027), affiché dans le tableau des chances.
+- [x] **Légendaires et mythiques plus rares** (octobre 2026, bis) : la 5ᵉ carte garantie (« rare ou mieux », « épique
+  ou mieux » pour les événements) ne gonfle presque plus le haut de gamme (`TOP_LAST` = 0,31 dans app.js) : une mythique
+  tous les 90 paquets (57 avant), une légendaire tous les 14 (9 avant) ; paquets d'événement, éditions limitées
+  comprises : une mythique tous les 40 environ (20 avant), une légendaire tous les 7 (3,4 avant). Éditions limitées pondérées 75 / 20 / 5 (60 / 30 / 10), anti-malchance à 50
+  paquets (40). Prestige inchangé. Revente relevée (rare 6, épique 30, légendaire 140, mythique 600) : même économie
+  qu'avant d'après `tools/simulate.mjs` (revente d'un paquet ~58 % de son prix).
 - [x] **Paquet « Histoire »** (octobre 2026) : 39 cartes « manuelles » (`HISTOIRE` dans le générateur, catégorie
   `histoire`) plus les 6 événements existants : grèves et manifestations (1893, 1913, 1960, marche flamande de 1962, FN 1966, Louvain 68, Fourons, Marche
   blanche, climat), grandes dates (expositions universelles, Jeux d'Anvers, indépendance du Congo, Expo 58, euro…),
@@ -31,6 +37,13 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   (trame Ben-Day, onomatopée selon la rareté ; Holo foil, Dorée collector, Plein cadre couverture d'album), aussi dans
   l'image de partage. Série « Sur la digue ». Mis en avant jusqu'au 30 juin 2027. Lieux inconnus notés « — » (Jommeke,
   Benoît Brisefer, Ralf König) : à compléter si on trouve l'adresse.
+- [x] **Paquet « Paysages »** (octobre 2026) : 54 cartes « manuelles » (`PAYSAGES` dans le générateur, catégorie
+  `paysage`) : grottes, rochers, cascades, lacs, forêts, fagnes, dunes et collines des trois Régions. Mythiques : Grottes
+  de Han, Tombeau du Géant, Hautes Fagnes, Forêt de Soignes, Hallerbos, Cascade de Coo. **Premières cartes
+  horizontales** (`landscape: true`), style carte postale « Souvenir de… » (timbre et cachet selon la rareté ; Holo,
+  Dorée, Plein cadre) : à plat sur deux colonnes dans l'album et dans la fiche, couchées d'un quart de tour dans les
+  cases verticales (ouverture, fusion, échanges), image de partage horizontale. Cadrage par carte : `PAYSAGE_POS`.
+  Série « Sous terre ». Écartés faute de photo libre utilisable : forêt d'Anlier, bocage de Herve, vallée de la Hoëgne.
 - [x] **Communes : rareté par score pondéré** (octobre 2026) : habitants 40 %, notoriété (nombre de Wikipédias) 30 %,
   patrimoine protégé 25 % (classé dans sa Région), revenu par habitant 5 % ; superficie non comptée. Chiffres officiels,
   sans Wikimedia : Statbel (population, revenus ; fichiers téléchargés à la main, le site bloque les robots, réduits par

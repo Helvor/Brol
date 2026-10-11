@@ -33,6 +33,11 @@
   const POP_ACC = { commune: '#9a9a9a', 'peu-commune': '#2fae5f', rare: '#2e6fe0', epique: '#8a4be0', legendaire: '#f2b300', mythique: '#e3132d' };
   const POP_WORD = { commune: 'PLOP', 'peu-commune': 'PIF!', rare: 'PAF!', epique: 'BAM!', legendaire: 'BOUM!', mythique: 'KABOOM!' };
   const IRIS = ['#ff7ad9', '#ffd36b', '#7dffb2', '#6bd7ff', '#b38bff'];
+  // Paysages : carte postale horizontale « Souvenir de… » (voir style.css, .card.is-land)
+  const LOBSTER = '"Lobster", cursive', SLAB = '"Alfa Slab One", Georgia, serif', ELITE = '"Special Elite", "Courier New", monospace';
+  const LAND_ACC = { commune: '#8a8a8a', 'peu-commune': '#2f7d4a', rare: '#2e5fc0', epique: '#6b3db8', legendaire: '#b8860b', mythique: '#c8102e' };
+  const LAND_STAMP = { commune: '#6f7a86', 'peu-commune': '#3f8a5a', rare: '#2e5fc0', epique: '#7a4ac8', legendaire: '#c9971c', mythique: '#c8102e' };
+  const STAMP_VAL = { commune: '1F', 'peu-commune': '2F', rare: '5F', epique: '10F', legendaire: '50F', mythique: '100F' };
 
   function loadImage(src) {
     return new Promise(res => {
@@ -263,7 +268,93 @@
     });
   }
 
+  // Carte postale : (x, y, w, h) = intérieur du cadre ; u = 1 % de la largeur de la carte (comme 1cqw)
+  function postcard(ctx, c, photo, x, y, w, h, finish, u) {
+    const full = finish === 'plein', gold = finish === 'or', holo = finish === 'holo', top = c.rarity === 'legendaire' || c.rarity === 'mythique';
+    const acc = LAND_ACC[c.rarity] || LAND_ACC.commune;
+    ctx.fillStyle = '#2a2c33'; ctx.fillRect(x, y, w, h);
+    if (photo) {
+      // Cadrage : « 50% 70%;--zoom:1.2 » (comme dans le jeu)
+      const m = /^(\d+)%\s+(\d+)%(?:;--zoom:([\d.]+))?/.exec(c.pos || '') || [];
+      const px = (+m[1] || 50) / 100, py = (+m[2] || 50) / 100, zoom = +m[3] || 1;
+      ctx.save(); ctx.filter = gold ? 'sepia(.3) saturate(1.3) contrast(1.05)' : 'saturate(1.25) contrast(1.05)';
+      cover(ctx, photo, x - w * (zoom - 1) * px, y - h * (zoom - 1) * py, w * zoom, h * zoom, py, false, px);
+      ctx.restore();
+    }
+    const g = ctx.createLinearGradient(0, y, 0, y + h);
+    g.addColorStop(0, `rgba(0,0,0,${full ? .45 : .4})`); g.addColorStop(full ? .36 : .38, 'rgba(0,0,0,0)'); g.addColorStop(full ? .62 : .7, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${full ? .65 : .3})`);
+    ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+    if (holo) { ctx.save(); ctx.globalCompositeOperation = 'color-dodge'; ctx.globalAlpha = .4; ctx.fillStyle = gradient(ctx, x, y, w, h, ['#00000000', ...IRIS, '#00000000'], 115); ctx.fillRect(x, y, w, h); ctx.restore(); }
+    // « Souvenir de » et nom en grosses lettres
+    ctx.save(); ctx.translate(x + 4 * u, y + 7 * u); ctx.rotate(-4 * Math.PI / 180);
+    ctx.font = `400 ${4.4 * u}px ${LOBSTER}`; ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.textBaseline = 'alphabetic';
+    const hello = API.souvenirOf ? API.souvenirOf(c.name) : 'Souvenir de';
+    ctx.fillText(hello, .3 * u, .3 * u); ctx.fillStyle = gold ? '#f6d478' : '#fff'; ctx.fillText(hello, 0, 0); ctx.restore();
+    const name = window.I18N.name(c).toUpperCase();
+    let fs = (full ? 9.4 : 8) * u, lines;
+    for (; ; fs -= .2 * u) { ctx.font = `400 ${fs}px ${SLAB}`; lines = wrap(ctx, name, w * .74, 2); if (fs < 5 * u || lines.every(l => ctx.measureText(l).width <= w * .74)) break; }
+    ctx.lineJoin = 'round';
+    lines.forEach((l, n) => {
+      const ly = y + 9 * u + fs * .82 + n * fs * .95;
+      ctx.fillStyle = '#1a1a1a'; ctx.fillText(l, x + 3 * u + .7 * u, ly + .7 * u);
+      ctx.strokeStyle = gold ? '#5a3f08' : acc; ctx.lineWidth = .7 * u; ctx.strokeText(l, x + 3 * u, ly);
+      ctx.fillStyle = gold ? gradient(ctx, x, ly - fs, w, fs, ['#fff6cf', '#f2c94c', '#b8891f'], 90) : '#fff4c7'; ctx.fillText(l, x + 3 * u, ly);
+    });
+    // Timbre dentelé et cachet
+    const sw = 12 * u, sh = 15 * u, sx = x + w - 2.4 * u - sw, sy = y + 2.4 * u;
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.25)'; ctx.shadowBlur = .6 * u; ctx.shadowOffsetY = .3 * u;
+    ctx.fillStyle = '#fff'; ctx.fillRect(sx, sy, sw, sh); ctx.restore();
+    ctx.save(); ctx.globalCompositeOperation = 'destination-out';
+    for (let t = 0; t <= sw; t += 1.8 * u) for (const yy of [sy, sy + sh]) { ctx.beginPath(); ctx.arc(sx + t, yy, .55 * u, 0, Math.PI * 2); ctx.fill(); }
+    for (let t = 0; t <= sh; t += 1.8 * u) for (const xx of [sx, sx + sw]) { ctx.beginPath(); ctx.arc(xx, sy + t, .55 * u, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+    const ix = sx + 1 * u, iy = sy + 1 * u, iw = sw - 2 * u, ih = sh - 2 * u;
+    if (holo) { const cg = ctx.createConicGradient(.5, ix + iw / 2, iy + ih / 2); [...IRIS, IRIS[0]].forEach((col, n) => cg.addColorStop(n / 5, col)); ctx.fillStyle = cg; }
+    else if (gold || c.rarity === 'legendaire') ctx.fillStyle = gradient(ctx, ix, iy, iw, ih, ['#7a5a12', '#f7dc84', '#a87b1e', '#fff1b8', '#8a6516']);
+    else ctx.fillStyle = LAND_STAMP[c.rarity] || LAND_STAMP.commune;
+    ctx.fillRect(ix, iy, iw, ih);
+    const ink = holo || gold || c.rarity === 'legendaire' ? '#3a2a08' : '#fff';
+    ctx.fillStyle = ink; ctx.beginPath(); ctx.moveTo(ix + iw * .15, iy + ih * .8); ctx.lineTo(ix + iw * .42, iy + ih * .45); ctx.lineTo(ix + iw * .58, iy + ih * .63); ctx.lineTo(ix + iw * .7, iy + ih * .5); ctx.lineTo(ix + iw * .9, iy + ih * .8); ctx.fill();
+    ctx.beginPath(); ctx.arc(ix + iw * .68, iy + ih * .32, iw * .07, 0, Math.PI * 2); ctx.fill();
+    ctx.font = `700 ${2.6 * u}px ${DISPLAY}`; ctx.textAlign = 'left'; ctx.fillText(STAMP_VAL[c.rarity] || '1F', ix + .8 * u, iy + 2.8 * u);
+    ctx.font = `600 ${1.4 * u}px ${DISPLAY}`; ctx.textAlign = 'right'; ctx.fillText(API.rarityLabel(c.rarity).toUpperCase(), ix + iw - .6 * u, iy + ih - .6 * u); ctx.textAlign = 'left';
+    ctx.save(); ctx.translate(x + w - 16.5 * u, y + 16.5 * u); ctx.rotate(-14 * Math.PI / 180);
+    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = .35 * u; ctx.beginPath(); ctx.arc(0, 0, 7.5 * u, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = .2 * u; ctx.beginPath(); ctx.arc(0, 0, 6.3 * u, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.textAlign = 'center'; ctx.font = `700 ${1.6 * u}px ${DISPLAY}`;
+    ctx.fillText(clip(ctx, String(window.I18N.tv(c.stats?.[1]?.[1] || '')).toUpperCase(), 11 * u), 0, 0);
+    ctx.font = `700 ${1.9 * u}px ${DISPLAY}`; ctx.fillText(top ? '★ ★ ★' : window.I18N.lang === 'nl' ? 'BELGIË' : 'BELGIQUE', 0, 2.4 * u);
+    ctx.restore(); ctx.textAlign = 'left';
+    // Bande du bas : description et stats
+    const bx = full ? x : x + 2 * u, bw = full ? w : w - 4 * u, bh = full ? 9 * u : 10 * u, by = y + h - (full ? 0 : 2 * u) - bh;
+    if (!full) {
+      ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 1.6 * u; ctx.shadowOffsetY = .6 * u;
+      ctx.fillStyle = gold ? 'rgba(14,11,6,.92)' : 'rgba(246,239,220,.94)'; rr(ctx, bx, by, bw, bh, .6 * u); ctx.fill(); ctx.restore();
+      ctx.fillStyle = gold ? '#d9a52c' : holo ? '#b38bff' : acc; ctx.fillRect(bx, by, 1.2 * u, bh);
+    }
+    const light = full, txt = light ? '#fff' : gold ? '#e8cf8a' : '#3a3226';
+    if (light) { ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = .6 * u; }
+    ctx.fillStyle = txt; ctx.font = `400 ${2.2 * u}px ${ELITE}`;
+    const subL = wrap(ctx, window.I18N.subtitle(c) || '', bw * .36, 2);
+    subL.forEach((l, n) => ctx.fillText(l, bx + 3.6 * u, by + bh / 2 + (n - (subL.length - 1) / 2) * 2.6 * u + .8 * u));
+    const stats = (API.statsOf ? API.statsOf(c) : c.stats).slice(0, 3);
+    ctx.textAlign = 'left'; let cx = bx + bw - 2.4 * u;
+    const cols = stats.map(([k, v]) => { ctx.font = `700 ${2.6 * u}px ${DISPLAY}`; const vv = String(window.I18N.tv(v)); const vw = ctx.measureText(vv).width;
+      ctx.font = `600 ${1.4 * u}px ${DISPLAY}`; const kk = window.I18N.statKey(k).toUpperCase(); return { kk, vv, cw: Math.max(vw, ctx.measureText(kk).width) }; });
+    for (const col of cols.reverse()) {
+      cx -= col.cw;
+      ctx.fillStyle = light ? 'rgba(255,255,255,.75)' : gold ? '#b8a06a' : '#8a7a5a'; ctx.font = `600 ${1.4 * u}px ${DISPLAY}`; ctx.fillText(col.kk, cx, by + bh / 2 - .8 * u);
+      ctx.fillStyle = light ? '#fff' : gold ? '#f6d478' : '#2b2620'; ctx.font = `700 ${2.6 * u}px ${DISPLAY}`; ctx.fillText(col.vv, cx, by + bh / 2 + 2.2 * u);
+      cx -= 2.6 * u;
+    }
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
+    // Numéro
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.font = `600 ${1.9 * u}px ${MONO}`; const nw = ctx.measureText(String(c.no).padStart(4, '0')).width + 1.8 * u;
+    rr(ctx, x + 3 * u, by - 4.2 * u, nw, 3 * u, .5 * u); ctx.fill(); ctx.fillStyle = '#f1eee6'; ctx.fillText(String(c.no).padStart(4, '0'), x + 3.9 * u, by - 2 * u);
+  }
+
   async function render(c, finish) {
+    if (c.landscape) try { await Promise.all([document.fonts?.load(`40px ${LOBSTER}`), document.fonts?.load(`40px ${SLAB}`), document.fonts?.load(`20px ${ELITE}`)]); } catch (_) { /* police de secours */ }
     if (c.cat === 'histoire') try { await document.fonts?.load(`40px ${TYPE}`); } catch (_) { /* police de secours */ }
     if (c.cat === 'bd') try { await Promise.all([document.fonts?.load(`40px ${POP}`), document.fonts?.load(`700 24px ${COMIC}`)]); } catch (_) { /* police de secours */ }
     await document.fonts?.ready;
@@ -295,17 +386,21 @@
     ctx.textAlign = 'left';
 
     // Carte
-    const x = (W - CW) / 2, y = 170, pad = 16, r = 30;
+    // Paysage : carte horizontale, plus large et moins haute
+    const land = !!c.landscape, cw = land ? 960 : CW, ch = land ? Math.round(960 * 63 / 88) : CH;
+    const x = (W - cw) / 2, y = land ? 300 : 170, pad = land ? (finish === 'plein' ? 0 : finish === 'or' ? 17 : 9) : 16, r = land ? 15 : 30;
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 24;
-    rr(ctx, x, y, CW, CH, r);
+    rr(ctx, x, y, cw, ch, r);
     const arch = c.cat === 'histoire'; // cartes Histoire : dossier « Archives » (voir style.css)
     const bd = c.cat === 'bd'; // cartes Bulles : design « Pop »
-    const frame = bd && (finish === 'normal' || finish === 'plein') ? [POP_ACC[c.rarity] || POP_ACC.commune, POP_ACC[c.rarity] || POP_ACC.commune] : arch && (finish === 'normal' || finish === 'plein') ? ARCH_FRAMES[c.rarity] || ARCH_FRAMES.commune : FRAMES[fin.pack || finish !== 'normal' ? finish : c.rarity] || (ed ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : FRAMES[c.rarity]);
-    ctx.fillStyle = gradient(ctx, x, y, CW, CH, ed && finish === 'normal' ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : frame, fin.id === 'tricolore' ? 0 : 135);
+    const frame = land ? (finish === 'holo' ? FRAMES.holo : finish === 'or' ? FRAMES.or : c.rarity === 'legendaire' ? FRAMES.legendaire : c.rarity === 'mythique' ? ['#5a0012', '#ff2d55', '#9a0020', '#ff6b81', '#5a0012'] : ['#ffffff', '#f4f1ea'])
+      : bd && (finish === 'normal' || finish === 'plein') ? [POP_ACC[c.rarity] || POP_ACC.commune, POP_ACC[c.rarity] || POP_ACC.commune] : arch && (finish === 'normal' || finish === 'plein') ? ARCH_FRAMES[c.rarity] || ARCH_FRAMES.commune : FRAMES[fin.pack || finish !== 'normal' ? finish : c.rarity] || (ed ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : FRAMES[c.rarity]);
+    ctx.fillStyle = gradient(ctx, x, y, cw, ch, ed && finish === 'normal' ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : frame, fin.id === 'tricolore' ? 0 : 135);
     ctx.fill(); ctx.restore();
-    const ix = x + pad, iy = y + pad, iw = CW - pad * 2, ih = CH - pad * 2;
-    ctx.save(); rr(ctx, ix, iy, iw, ih, 18); ctx.clip();
-    if (arch) archives(ctx, c, photo, ix, iy, iw, ih, finish);
+    const ix = x + pad, iy = y + pad, iw = cw - pad * 2, ih = ch - pad * 2;
+    ctx.save(); rr(ctx, ix, iy, iw, ih, land ? 10 : 18); ctx.clip();
+    if (land) postcard(ctx, c, photo, ix, iy, iw, ih, finish, cw / 100);
+    else if (arch) archives(ctx, c, photo, ix, iy, iw, ih, finish);
     else if (bd) pop(ctx, c, photo, ix, iy, iw, ih, finish);
     else {
       ctx.fillStyle = finish === 'noir' ? '#050505' : '#15161a'; ctx.fillRect(ix, iy, iw, ih);
@@ -379,13 +474,23 @@
         ctx.fillText(clip(ctx, String(window.I18N.tv(v)), colW - 20), sx, sy + 88);
       });
     }
-    // En haut de la carte : numéro, version, rareté
+    ctx.restore();
+    // Paysage : version et rareté sous la carte ; autres cartes : numéro, version et rareté en haut de la carte
+    if (land) {
+      const tag = (finish !== 'normal' ? API.finishLabel(finish) + ' · ' : '') + API.rarityLabel(c.rarity);
+      ctx.font = `800 26px ${DISPLAY}`; const tw = ctx.measureText(tag.toUpperCase()).width + 32;
+      ctx.fillStyle = glow; rr(ctx, (W - tw) / 2, y + ch + 40, tw, 44, 8); ctx.fill();
+      ctx.fillStyle = '#111'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillText(tag.toUpperCase(), W / 2, y + ch + 63); ctx.textAlign = 'left';
+    }
+    ctx.save(); rr(ctx, ix, iy, iw, ih, 18); ctx.clip();
+    if (!land) {
     ctx.fillStyle = 'rgba(10,10,12,.7)'; rr(ctx, ix + 20, iy + 20, 104, 40, 8); ctx.fill();
     ctx.fillStyle = '#f1eee6'; ctx.font = `600 24px ${MONO}`; ctx.fillText(String(c.no).padStart(4, '0'), ix + 34, iy + 49);
     const tag = (finish !== 'normal' ? API.finishLabel(finish) + ' · ' : '') + API.rarityLabel(c.rarity);
     ctx.font = `800 24px ${DISPLAY}`; const tw = ctx.measureText(tag.toUpperCase()).width + 28;
     ctx.fillStyle = glow; rr(ctx, ix + iw - 20 - tw, iy + 20, tw, 40, 8); ctx.fill();
     ctx.fillStyle = '#111'; ctx.fillText(tag.toUpperCase(), ix + iw - 6 - tw, iy + 49);
+    }
     ctx.restore();
 
     // Pied : crédit de la photo

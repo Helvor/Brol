@@ -359,7 +359,7 @@ async function features() {
       check(r.n === 3 && r.kinds === 3, 'trois missions différentes attendues : ' + JSON.stringify(r));
       check(r.early === 0, 'mission réclamée avant d’être faite');
       check(r.gain === r.reward && r.coins === r.reward && r.twice === 0, 'récompense de mission : ' + JSON.stringify(r));
-      check(r.multBefore === 1 && r.multAfter === 1.5 && r.myth === 675, 'bonus d’album : ' + JSON.stringify(r));
+      check(r.multBefore === 1 && r.multAfter === 1.5 && r.myth === 900, 'bonus d’album : ' + JSON.stringify(r));
     });
     await step('paquet Nouveautés : cartes absentes, 10 par jour', async () => {
       const r = await page.evaluate(() => {
@@ -493,6 +493,20 @@ async function features() {
       await page.waitForSelector('#view-trade.is-active [data-side="want"] .t-item');
       check(await page.$eval('[data-side="want"] .t-item', el => el.dataset.key) === id, 'échange depuis la fiche : carte demandée absente');
       await page.click('.tab[data-view="binder"]');
+      await page.selectOption('#f-pack', 'all');
+    });
+    await step('paysages : cartes horizontales', async () => {
+      // Album : une carte Paysage possédée prend deux colonnes, à plat ; à l'ouverture elle est couchée dans sa case
+      await page.evaluate(() => { const o = window.RDL.state.owned; window.RDL.CARDS.filter(c => c.cat === 'paysage').slice(0, 3).forEach(c => o[c.id] = 1); window.RDL.save(); });
+      await page.click('.tab[data-view="binder"]');
+      await page.selectOption('#f-pack', 'paysages');
+      const r = await page.evaluate(() => {
+        const cell = document.querySelector('#grid .cell.is-wide .card.is-land')?.closest('.cell'), card = cell?.querySelector('.card');
+        const b = card?.getBoundingClientRect(), slot = document.querySelector('#grid .cell:not(.is-wide)');
+        return { wide: !!cell, ratio: b ? +(b.width / b.height).toFixed(2) : 0, n: document.querySelectorAll('#grid .cell').length,
+          all: document.querySelectorAll('#grid .cell.is-wide').length, html: window.RDL.cardHTML(window.RDL.CARDS.find(c => c.cat === 'paysage'), {}).includes('class="land"') };
+      });
+      check(r.wide && r.ratio > 1.3 && r.ratio < 1.5 && r.n === r.all && r.html, 'paysages dans l’album : ' + JSON.stringify(r));
       await page.selectOption('#f-pack', 'all');
     });
     await step('export puis import de la sauvegarde', async () => {
