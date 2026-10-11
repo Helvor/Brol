@@ -44,6 +44,12 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   Dorée, Plein cadre) : à plat sur deux colonnes dans l'album et dans la fiche, couchées d'un quart de tour dans les
   cases verticales (ouverture, fusion, échanges), image de partage horizontale. Cadrage par carte : `PAYSAGE_POS`.
   Série « Sous terre ». Écartés faute de photo libre utilisable : forêt d'Anlier, bocage de Herve, vallée de la Hoëgne.
+- [x] **Paquet « Balades »** (octobre 2026) : 60 balades (`BALADES` dans le générateur, catégorie `balade`), design
+  « fiche de randonnée » (balisage, pastille des kilomètres, profil de dénivelé décoratif, niveau 1 à 3 ; liseré de
+  rareté dessiné à l'intérieur de la carte). La fiche montre le point de départ sur la carte des provinces
+  (`data/provinces.js`, hors ligne) et un lien OpenStreetMap. Distances, durées et niveaux indicatifs (boucle type) :
+  à affiner. Série « Rando sportive ». Mythiques : Ninglinspo, Échelles, caillebotis des Fagnes, Hallerbos, Tombeau du
+  Géant, Forêt de Soignes.
 - [x] **Communes : rareté par score pondéré** (octobre 2026) : habitants 40 %, notoriété (nombre de Wikipédias) 30 %,
   patrimoine protégé 25 % (classé dans sa Région), revenu par habitant 5 % ; superficie non comptée. Chiffres officiels,
   sans Wikimedia : Statbel (population, revenus ; fichiers téléchargés à la main, le site bloque les robots, réduits par

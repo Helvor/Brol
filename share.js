@@ -353,6 +353,56 @@
     rr(ctx, x + 3 * u, by - 4.2 * u, nw, 3 * u, .5 * u); ctx.fill(); ctx.fillStyle = '#f1eee6'; ctx.fillText(String(c.no).padStart(4, '0'), x + 3.9 * u, by - 2 * u);
   }
 
+  // Balade : fiche de randonnée (voir style.css, .card.cat-balade)
+  function walkCard(ctx, c, photo, x, y, w, h, finish) {
+    const u = w / 100, acc = LAND_ACC[c.rarity] || LAND_ACC.commune, gold = finish === 'or', holo = finish === 'holo', full = finish === 'plein';
+    const ink = gold ? '#17130a' : '#23281f', paper = gold ? '#f6e7b4' : '#f3efe4';
+    ctx.fillStyle = holo ? gradient(ctx, x, y, w, h, ['#f3efe4', '#e9f3ff', '#fbe9ff'], 160) : paper; ctx.fillRect(x, y, w, h);
+    const accFill = (gx, gy, gw, gh) => holo ? gradient(ctx, gx, gy, gw, gh, IRIS) : gold ? gradient(ctx, gx, gy, gw, gh, ['#8a6516', '#f7dc84', '#b8891f', '#fff1b8']) : acc;
+    // Photo
+    const px = full ? x : x + 4 * u, py = y + (full ? 11 : 14) * u, pw = full ? w : w - 8 * u, ph = full ? h - 29 * u : 66 * u;
+    if (!full) { ctx.fillStyle = gold ? '#d9a52c' : '#fff'; ctx.fillRect(px - .8 * u, py - .8 * u, pw + 1.6 * u, ph + 1.6 * u); }
+    if (photo) { ctx.save(); ctx.beginPath(); ctx.rect(px, py, pw, ph); ctx.clip(); cover(ctx, photo, px, py, pw, ph, .5); ctx.restore(); }
+    if (full) { const g = ctx.createLinearGradient(0, py + ph * .45, 0, py + ph); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.75)'); ctx.fillStyle = g; ctx.fillRect(px, py, pw, ph); }
+    // Barre du haut : balisage, « Balade », numéro
+    ctx.fillStyle = ink; ctx.fillRect(x, y, w, 11 * u);
+    ctx.fillStyle = paper; ctx.fillRect(x + 3.6 * u, y + 2.4 * u, 9.8 * u, 6.2 * u);
+    ctx.fillStyle = '#fff'; ctx.fillRect(x + 4 * u, y + 2.8 * u, 9 * u, 2.7 * u); ctx.fillStyle = accFill(x + 4 * u, y + 5.5 * u, 9 * u, 2.7 * u); ctx.fillRect(x + 4 * u, y + 5.5 * u, 9 * u, 2.7 * u);
+    ctx.fillStyle = paper; ctx.textBaseline = 'middle'; ctx.font = `700 ${3.6 * u}px ${DISPLAY}`; ctx.letterSpacing = `${.4 * u}px`;
+    ctx.fillText(window.I18N.lang === 'nl' ? 'WANDELING' : 'BALADE', x + 16 * u, y + 5.6 * u); ctx.letterSpacing = '0px';
+    ctx.textAlign = 'right'; ctx.font = `600 ${3.4 * u}px ${MONO}`; ctx.fillText(String(c.no).padStart(4, '0'), x + w - 4 * u, y + 5.6 * u); ctx.textAlign = 'left';
+    // Pastille des kilomètres
+    const kx = x + w - 16 * u, ky = full ? y + 27 * u : y + 81 * u;
+    ctx.fillStyle = paper; ctx.beginPath(); ctx.arc(kx, ky, 12 * u, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = accFill(kx - 11 * u, ky - 11 * u, 22 * u, 22 * u); ctx.beginPath(); ctx.arc(kx, ky, 11 * u, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = holo || gold ? '#111' : '#fff'; ctx.textAlign = 'center'; ctx.font = `800 ${8 * u}px ${DISPLAY}`; ctx.fillText(String(c.walk?.km ?? ''), kx, ky - 1.4 * u);
+    ctx.font = `700 ${3.4 * u}px ${DISPLAY}`; ctx.fillText('KM', kx, ky + 5 * u); ctx.textAlign = 'left';
+    // Nom et description
+    const light = full, name = window.I18N.name(c).toUpperCase();
+    let fs = 8.4 * u, lines; for (; ; fs -= .3 * u) { ctx.font = `800 ${fs}px ${DISPLAY}`; lines = wrap(ctx, name, w - 36 * u, 2); if (fs < 5 * u || lines.every(l => ctx.measureText(l).width <= w - 36 * u)) break; }
+    const ny = full ? y + h - 46 * u : y + 86 * u;
+    ctx.textBaseline = 'alphabetic'; ctx.fillStyle = light ? '#fff' : gold ? '#3a2a08' : ink;
+    lines.forEach((l, n) => ctx.fillText(l, x + 5 * u, ny + fs * .8 + n * fs * .95));
+    ctx.font = `500 ${3.6 * u}px ${TEXT}`; ctx.fillStyle = light ? '#fff' : '#59604f';
+    ctx.fillText(clip(ctx, window.I18N.subtitle(c) || '', w - 10 * u), x + 5 * u, ny + fs * .8 + lines.length * fs * .95 + 1.4 * u);
+    // Profil de dénivelé décoratif (même tirage que dans le jeu n'est pas nécessaire : simple ondulation)
+    const by = y + h - 18 * u, pr = 13 * u; let seed = [...c.id].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 233280, 7);
+    ctx.beginPath(); ctx.moveTo(x, by);
+    for (let i = 0; i <= 24; i++) { seed = (seed * 9301 + 49297) % 233280; ctx.lineTo(x + i * w / 24, by - pr * (.2 + .5 * (.5 + .5 * Math.sin(i / 3 + seed % 7)) + .3 * seed / 233280)); }
+    ctx.lineTo(x + w, by); ctx.closePath(); ctx.globalAlpha = .3; ctx.fillStyle = accFill(x, by - pr, w, pr); ctx.fill(); ctx.globalAlpha = 1;
+    // Stats
+    ctx.fillStyle = ink; ctx.fillRect(x, by, w, 18 * u);
+    const st = (API.statsOf ? API.statsOf(c) : c.stats).slice(0, 3), colW = w / 3;
+    st.forEach(([k, v], n) => {
+      const sx = x + 4 * u + n * colW;
+      if (n) { ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(x + n * colW, by + 3 * u, 2, 12 * u); }
+      ctx.fillStyle = '#a8ad9c'; ctx.font = `600 ${2.8 * u}px ${DISPLAY}`; ctx.fillText(window.I18N.statKey(k).toUpperCase(), sx, by + 6.5 * u);
+      ctx.fillStyle = gold ? '#f6d478' : paper; ctx.font = `600 ${4.4 * u}px ${MONO}`; ctx.fillText(clip(ctx, String(window.I18N.tv(v)), colW - 6 * u), sx, by + 13 * u);
+    });
+    // Liseré de rareté
+    if (c.rarity === 'legendaire' || c.rarity === 'mythique') { ctx.strokeStyle = c.rarity === 'mythique' ? '#c8102e' : '#d9a52c'; ctx.lineWidth = 2.8 * u; ctx.strokeRect(x, y, w, h); }
+  }
+
   async function render(c, finish) {
     if (c.landscape) try { await Promise.all([document.fonts?.load(`40px ${LOBSTER}`), document.fonts?.load(`40px ${SLAB}`), document.fonts?.load(`20px ${ELITE}`)]); } catch (_) { /* police de secours */ }
     if (c.cat === 'histoire') try { await document.fonts?.load(`40px ${TYPE}`); } catch (_) { /* police de secours */ }
@@ -388,18 +438,19 @@
     // Carte
     // Paysage : carte horizontale, plus large et moins haute
     const land = !!c.landscape, cw = land ? 960 : CW, ch = land ? Math.round(960 * 63 / 88) : CH;
-    const x = (W - cw) / 2, y = land ? 300 : 170, pad = land ? (finish === 'plein' ? 0 : finish === 'or' ? 17 : 9) : 16, r = land ? 15 : 30;
+    const x = (W - cw) / 2, y = land ? 300 : 170, pad = c.walk ? 0 : land ? (finish === 'plein' ? 0 : finish === 'or' ? 17 : 9) : 16, r = land ? 15 : 30;
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 24;
     rr(ctx, x, y, cw, ch, r);
     const arch = c.cat === 'histoire'; // cartes Histoire : dossier « Archives » (voir style.css)
     const bd = c.cat === 'bd'; // cartes Bulles : design « Pop »
-    const frame = land ? (finish === 'holo' ? FRAMES.holo : finish === 'or' ? FRAMES.or : c.rarity === 'legendaire' ? FRAMES.legendaire : c.rarity === 'mythique' ? ['#5a0012', '#ff2d55', '#9a0020', '#ff6b81', '#5a0012'] : ['#ffffff', '#f4f1ea'])
+    const frame = c.walk ? ['#f3efe4', '#e9e3d2'] : land ? (finish === 'holo' ? FRAMES.holo : finish === 'or' ? FRAMES.or : c.rarity === 'legendaire' ? FRAMES.legendaire : c.rarity === 'mythique' ? ['#5a0012', '#ff2d55', '#9a0020', '#ff6b81', '#5a0012'] : ['#ffffff', '#f4f1ea'])
       : bd && (finish === 'normal' || finish === 'plein') ? [POP_ACC[c.rarity] || POP_ACC.commune, POP_ACC[c.rarity] || POP_ACC.commune] : arch && (finish === 'normal' || finish === 'plein') ? ARCH_FRAMES[c.rarity] || ARCH_FRAMES.commune : FRAMES[fin.pack || finish !== 'normal' ? finish : c.rarity] || (ed ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : FRAMES[c.rarity]);
     ctx.fillStyle = gradient(ctx, x, y, cw, ch, ed && finish === 'normal' ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : frame, fin.id === 'tricolore' ? 0 : 135);
     ctx.fill(); ctx.restore();
     const ix = x + pad, iy = y + pad, iw = cw - pad * 2, ih = ch - pad * 2;
     ctx.save(); rr(ctx, ix, iy, iw, ih, land ? 10 : 18); ctx.clip();
     if (land) postcard(ctx, c, photo, ix, iy, iw, ih, finish, cw / 100);
+    else if (c.walk) walkCard(ctx, c, photo, ix, iy, iw, ih, finish);
     else if (arch) archives(ctx, c, photo, ix, iy, iw, ih, finish);
     else if (bd) pop(ctx, c, photo, ix, iy, iw, ih, finish);
     else {
@@ -476,14 +527,14 @@
     }
     ctx.restore();
     // Paysage : version et rareté sous la carte ; autres cartes : numéro, version et rareté en haut de la carte
-    if (land) {
+    if (land || c.walk) {
       const tag = (finish !== 'normal' ? API.finishLabel(finish) + ' · ' : '') + API.rarityLabel(c.rarity);
       ctx.font = `800 26px ${DISPLAY}`; const tw = ctx.measureText(tag.toUpperCase()).width + 32;
       ctx.fillStyle = glow; rr(ctx, (W - tw) / 2, y + ch + 40, tw, 44, 8); ctx.fill();
       ctx.fillStyle = '#111'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillText(tag.toUpperCase(), W / 2, y + ch + 63); ctx.textAlign = 'left';
     }
     ctx.save(); rr(ctx, ix, iy, iw, ih, 18); ctx.clip();
-    if (!land) {
+    if (!land && !c.walk) {
     ctx.fillStyle = 'rgba(10,10,12,.7)'; rr(ctx, ix + 20, iy + 20, 104, 40, 8); ctx.fill();
     ctx.fillStyle = '#f1eee6'; ctx.font = `600 24px ${MONO}`; ctx.fillText(String(c.no).padStart(4, '0'), ix + 34, iy + 49);
     const tag = (finish !== 'normal' ? API.finishLabel(finish) + ' · ' : '') + API.rarityLabel(c.rarity);

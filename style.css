@@ -296,11 +296,11 @@ a { color: inherit; }
 .card.r-mythique    { --rc: var(--r-mythique); }
 /* Lueur rouge sur toutes les mythiques ; cadre et bandeau rubis sur la version standard (les autres versions gardent les leurs) */
 .card.r-mythique:not(.cat-edition) { box-shadow: 0 0 0 1px #7a0018, 0 0 22px -4px rgba(255, 40, 80, .7), 0 14px 30px -12px rgba(0, 0, 0, .6); }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd) {
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade) {
   --frame: conic-gradient(from 20deg at 50% 50%, #5a0012, #ff2d55, #9a0020, #ff6b81, #6a0016, #ff2d55, #4a000e, #ff8fa0, #5a0012); }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd) .card-band { background: linear-gradient(180deg, #8a0020, #4a000e); color: #fff; }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd) .card-stats { background: #22000a; }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd) .card-stats dd { color: #ffb3c0; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade) .card-band { background: linear-gradient(180deg, #8a0020, #4a000e); color: #fff; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade) .card-stats { background: #22000a; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade) .card-stats dd { color: #ffb3c0; }
 
 /* Édition limitée : cadre aux métaux de son paquet (--ed-frame, --band et --band-ink posés par app.js), double filet, sceau du paquet */
 .card.cat-edition { --frame: var(--ed-frame); background-size: 200% 200%; animation: gold 6s ease-in-out infinite alternate; }
@@ -1833,3 +1833,59 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .reveal.is-bulk.is-landbulk { width: min(1320px, 100%); }
 .reveal.is-bulk .slot.is-land { width: auto; max-width: none; }
 @media (max-width: 760px) { .reveal.is-bulk.is-landbulk { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 8px; } }
+
+/* ===== Balades : « fiche de randonnée » (balisage, pastille des kilomètres, profil de dénivelé décoratif) ===== */
+.card.cat-balade { --acc: #8a8a8a; --paper: #f3efe4; --ink-w: #23281f; --ring: transparent; padding: 0; background: var(--paper); color: var(--ink-w); }
+.card.cat-balade.r-peu-commune { --acc: #2f7d4a; } .card.cat-balade.r-rare { --acc: #2e5fc0; } .card.cat-balade.r-epique { --acc: #6b3db8; }
+.card.cat-balade.r-legendaire { --acc: #b8860b; --ring: #d9a52c; } .card.cat-balade.r-mythique { --acc: #c8102e; --ring: #c8102e; }
+.card.cat-balade.r-mythique { box-shadow: 0 0 22px -6px rgba(255, 40, 80, .55), 0 14px 30px -16px rgba(0, 0, 0, .55); }
+.card.cat-balade .card-in { height: 100%; border-radius: inherit; background: transparent; }
+.card.cat-balade:not(.fin-ev) .card-in::before { display: none; }
+/* Liseré de rareté dessiné à l'intérieur : rien ne dépasse sur les cartes voisines */
+.card.card.cat-balade .card-in::after { content: ""; display: block; position: absolute; inset: 0; z-index: 9; border-radius: inherit; pointer-events: none; background: none;
+  box-shadow: inset 0 0 0 1.4cqw var(--ring); mix-blend-mode: normal; opacity: 1; animation: none; }
+.card.cat-balade .wk-top { position: absolute; left: 0; right: 0; top: 0; z-index: 3; height: 11cqw; background: var(--ink-w); display: flex; align-items: center; gap: 2.4cqw; padding: 0 4cqw; color: var(--paper); }
+.card.cat-balade .wk-mark { width: 9cqw; height: 5.4cqw; display: grid; grid-template-rows: 1fr 1fr; border-radius: .6cqw; overflow: hidden; box-shadow: 0 0 0 .4cqw var(--paper); flex: none; }
+.card.cat-balade .wk-mark i:first-child { background: #fff; } .card.cat-balade .wk-mark i:last-child { background: var(--acc); }
+.card.cat-balade .wk-top b { font: 700 3.6cqw/1 var(--display); letter-spacing: .12em; text-transform: uppercase; }
+.card.cat-balade .wk-top .no { margin-left: auto; font: 600 3.4cqw/1 var(--mono); opacity: .8; }
+.card.cat-balade .wk-top .fin-tag { font-size: 3cqw; padding: .6cqw 1.6cqw; }
+.card.cat-balade .card-photo { inset: 14cqw 4cqw auto; height: 66cqw; border-radius: 1.6cqw; overflow: hidden; box-shadow: 0 0 0 .6cqw #fff, 0 1cqw 2cqw rgba(0, 0, 0, .25); }
+.card.cat-balade .card-photo img { object-position: center 50%; }
+.card.cat-balade .wk-km { position: absolute; right: 5cqw; top: 70cqw; z-index: 3; display: grid; place-items: center; align-content: center; width: 22cqw; height: 22cqw; border-radius: 50%;
+  background: var(--acc); color: #fff; box-shadow: 0 0 0 1cqw var(--paper); font: 800 8cqw/.9 var(--display); text-align: center; }
+.card.cat-balade .wk-km small { display: block; font-size: 3.6cqw; letter-spacing: .1em; }
+.card.cat-balade .card-band { inset: 84cqw 30cqw auto 5cqw; padding: 0; background: none; color: var(--ink-w); clip-path: none; }
+.card.cat-balade .card-band h3 { font: 800 8.4cqw/.95 var(--display); text-transform: uppercase; color: var(--ink-w); margin: 0; }
+.card.cat-balade .card-band .sub { margin: 1.4cqw 0 0; font: 500 3.6cqw/1.25 var(--text); color: #59604f; opacity: 1; }
+.card.cat-balade .card-band::before, .card.cat-balade .card-band::after { display: none; }
+.card.cat-balade .wk-prof { position: absolute; left: 0; right: 0; bottom: 18cqw; height: 13cqw; }
+.card.cat-balade .wk-prof svg { width: 100%; height: 100%; display: block; }
+.card.cat-balade .pf-area { fill: var(--acc); opacity: .3; } .card.cat-balade .pf-line { fill: none; stroke: var(--acc); stroke-width: 3; stroke-linejoin: round; }
+.card.cat-balade .card-stats { height: 18cqw; background: var(--ink-w); border-top: 0; }
+.card.cat-balade .card-stats dt { color: #a8ad9c; } .card.cat-balade .card-stats dd { color: var(--paper); }
+.card.cat-balade .wk-lvl { display: inline-flex; gap: .8cqw; } .card.cat-balade .wk-lvl i { width: 2.6cqw; height: 2.6cqw; border-radius: 50%; background: rgba(255, 255, 255, .2); }
+.card.cat-balade .wk-lvl i.on { background: var(--acc); }
+.card.cat-balade .var-dots { bottom: 20cqw; }
+/* Holo : pastille et balisage holographiques, fond irisé */
+.card.cat-balade.fin-holo { background: linear-gradient(160deg, #f3efe4, #e9f3ff 50%, #fbe9ff); }
+.card.cat-balade.fin-holo .wk-mark i:last-child, .card.cat-balade.fin-holo .wk-km { background: conic-gradient(from 30deg, #ff7ad9, #ffd36b, #7dffb2, #6bd7ff, #b38bff, #ff7ad9); color: #111; }
+/* Dorée : fiche couleur parchemin doré, pastille en or */
+.card.cat-balade.fin-or { --ink-w: #17130a; background: linear-gradient(160deg, #fff6d6, #f1dc9c); }
+.card.cat-balade.fin-or .card-band { background: none; } .card.cat-balade.fin-or .card-band h3 { color: #3a2a08; }
+.card.cat-balade.fin-or .card-stats { background: #17130a; } .card.cat-balade.fin-or .card-stats dd { color: #f6d478; }
+.card.cat-balade.fin-or .wk-km { background: linear-gradient(135deg, #8a6516, #f7dc84 40%, #b8891f 70%, #fff1b8); color: #2a1e05; }
+.card.cat-balade.fin-or .card-photo { box-shadow: 0 0 0 .8cqw #d9a52c; }
+/* Plein cadre : photo sur toute la fiche, nom en blanc */
+.card.cat-balade.fin-plein .card-photo { inset: 11cqw 0 18cqw; height: auto; border-radius: 0; box-shadow: none; }
+.card.cat-balade.fin-plein .card-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(0, 0, 0, .75)); }
+.card.cat-balade.fin-plein .card-band { inset: auto 5cqw 33cqw; } .card.cat-balade.fin-plein .card-band h3, .card.cat-balade.fin-plein .card-band .sub { color: #fff; }
+.card.cat-balade.fin-plein .wk-km { top: 16cqw; } .card.cat-balade.fin-plein .wk-prof { opacity: .85; }
+
+/* Fiche d'une balade : carte des provinces et point de départ */
+.walk-map { margin: 0 0 24px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg-3); }
+.walk-map svg { width: 100%; max-width: 420px; display: block; margin: 0 auto; }
+.walk-map path { fill: color-mix(in srgb, var(--ink) 12%, transparent); stroke: var(--bg-2); stroke-width: 1.2; }
+.walk-map .wm-halo { fill: #c8102e; opacity: .25; } .walk-map .wm-dot { fill: #c8102e; stroke: #fff; stroke-width: 2; }
+.walk-map p { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin: 8px 0 0; font-size: 13px; }
+.walk-map small { color: var(--ink-2); font-family: var(--mono); } .walk-map a { white-space: nowrap; }

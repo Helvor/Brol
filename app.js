@@ -80,6 +80,7 @@
     { id: 'histoire',     fr: 'Histoire',      nl: 'Geschiedenis' },
     { id: 'bd',           fr: 'Bulles',        nl: 'Strips' },
     { id: 'paysage',      fr: 'Paysages',      nl: 'Landschappen' },
+    { id: 'balade',       fr: 'Balades',       nl: 'Wandelingen' },
     { id: 'evenement',    fr: 'Événements',    nl: 'Gebeurtenissen' },
     { id: 'edition',      fr: 'Éditions limitées', nl: 'Beperkte edities' },
   ];
@@ -124,6 +125,9 @@
     { id: 'paysages', title: { fr: 'Paysages', nl: 'Landschappen' }, kicker: { fr: 'Édition carte postale', nl: 'Prentkaarteditie' }, big: '1F', price: 80,
       desc: { fr: 'Grottes, rochers, cascades, lacs, forêts, fagnes et côte, en cartes postales.', nl: 'Grotten, rotsen, watervallen, meren, bossen, venen en kust, als prentkaarten.' },
       body: ['#0e2a24', '#2f6b4f'], metal: ['#fff6e0', '#f2c86b', '#9a6b1c'], cats: ['paysage'] },
+    { id: 'balades', title: { fr: 'Balades', nl: 'Wandelingen' }, kicker: { fr: 'Édition randonnée', nl: 'Wandeleditie' }, big: 'GR', price: 80,
+      desc: { fr: '60 belles balades de Belgique, avec leur point de départ sur la carte.', nl: '60 mooie wandelingen in België, met hun vertrekpunt op de kaart.' },
+      body: ['#1f241b', '#4a5a36'], metal: ['#f3efe4', '#e0483a', '#8a2a20'], cats: ['balade'] },
     // Banque nationale : la catégorie Monnaie et banque, plus les gouverneurs et ministres déjà présents en Politique
     { id: 'bnb', title: { fr: 'Banque nationale', nl: 'Nationale Bank' }, kicker: { fr: 'Édition monétaire', nl: 'Munteditie' }, big: '€ ƒ', price: 80,
       desc: { fr: 'Gouverneurs, francs, euros, or et grandes institutions.', nl: 'Gouverneurs, franken, euro’s, goud en grote instellingen.' },
@@ -338,6 +342,8 @@
       match: c => c.cat === 'histoire' && c.stats?.[1]?.[1] === 'Exposition' },
     { id: 'greves', title: { fr: 'Dans la rue', nl: 'Op straat' }, desc: { fr: 'Grèves et manifestations qui ont changé le pays.', nl: 'Stakingen en betogingen die het land veranderden.' }, reward: 500,
       match: c => c.cat === 'histoire' && ['Grève', 'Manifestation'].includes(c.stats?.[1]?.[1]) },
+    { id: 'sommets', title: { fr: 'Rando sportive', nl: 'Sportieve wandeling' }, desc: { fr: 'Les balades de niveau sportif.', nl: 'De sportieve wandelingen.' }, reward: 500,
+      match: c => c.cat === 'balade' && c.walk?.lvl === 3 },
     { id: 'sous-terre', title: { fr: 'Sous terre', nl: 'Onder de grond' }, desc: { fr: 'Les grottes de Wallonie.', nl: 'De grotten van Wallonië.' }, reward: 500,
       match: c => c.cat === 'paysage' && c.stats?.[0]?.[1] === 'Grotte' },
     { id: 'digue', title: { fr: 'Sur la digue', nl: 'Op de zeedijk' }, desc: { fr: 'Les statues de BD de Middelkerke.', nl: 'De stripbeelden van Middelkerke.' }, reward: 500,
@@ -512,6 +518,9 @@
       <rect x="24" y="112" width="252" height="16" rx="3" fill="${p.metal[1]}" opacity=".18"/>
       <path d="M20 394H280" stroke="${p.metal[1]}" stroke-width="2" opacity=".4"/>
       ${[40, 84, 128, 172, 216, 260].map((x, i) => `<circle cx="${x}" cy="394" r="${i === 3 ? 6 : 4}" fill="${p.metal[0]}" opacity="${i === 3 ? .8 : .45}"/>`).join('')}`,
+    // Balisage blanc et rouge et sentier en lacets
+    balades: (k, p) => `<path d="M40 412C70 360 210 360 170 300S60 250 120 200S250 150 210 90" fill="none" stroke="${p.metal[0]}" stroke-width="5" stroke-dasharray="2 12" stroke-linecap="round" opacity=".35"/>
+      ${[[52, 120], [236, 250], [70, 330]].map(([x, y]) => `<g transform="translate(${x} ${y}) rotate(-6)" opacity=".5"><rect width="34" height="10" fill="${p.metal[0]}"/><rect y="10" width="34" height="10" fill="${p.metal[1]}"/></g>`).join('')}`,
     // Collines, soleil et timbre dentelé
     paysages: (k, p) => `<circle cx="214" cy="150" r="34" fill="${p.metal[1]}" opacity=".22"/>
       <path d="M0 330L60 260L110 300L170 220L230 290L300 240V412H0Z" fill="${p.metal[1]}" opacity=".14"/>
@@ -619,8 +628,49 @@
         </div>
       </article></div>`;
   }
+  // Balades : « fiche de randonnée » (style.css, .card.cat-balade) : balisage, pastille des kilomètres, profil
+  // décoratif (pas le vrai relief : il est tiré de l'identifiant, toujours le même pour une carte)
+  function walkProfile(id) {
+    let x = [...id].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 233280, 7);
+    const pts = Array.from({ length: 25 }, (_, i) => { x = (x * 9301 + 49297) % 233280; return [i * 12.5, 40 - (Math.sin(i / 3 + x % 7) * 10 + (x / 233280) * 16)]; });
+    const line = pts.map(([a, y], i) => `${i ? 'L' : 'M'}${a.toFixed(1)} ${y.toFixed(1)}`).join(' ');
+    return `<svg viewBox="0 0 300 64" preserveAspectRatio="none" aria-hidden="true"><path d="${line} L300 64 L0 64Z" class="pf-area"/><path d="${line}" class="pf-line"/></svg>`;
+  }
+  function walkHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), lvl = c.walk?.lvl || 1;
+    const finTag = finish !== 'normal' ? `<span class="fin-tag">${fl(finish)}</span>` : '';
+    const dots = variants && variants.length > 1
+      ? `<span class="var-dots" title="${t('versionsOwned')}">${variants.filter(v => v !== 'normal').map(v => `<i class="d-${v}"></i>`).join('')}</span>` : '';
+    const st = statsOf(c);
+    return `
+      <article class="card r-${c.rarity} cat-${c.cat} fam-${c.family || 'gris'} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="wk-top"><span class="wk-mark"><i></i><i></i></span><b>${L() === 'nl' ? 'Wandeling' : 'Balade'}</b>${finTag}<span class="no">${String(c.no).padStart(4, '0')}</span></div>
+          <div class="card-photo">${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async">` : ''}</div>
+          <div class="wk-km">${c.walk?.km ?? ''}<small>KM</small></div>
+          <div class="card-band"><h3>${esc(nm(c))}</h3><p class="sub">${esc(window.I18N.subtitle(c))}</p></div>
+          <div class="wk-prof">${walkProfile(c.id)}</div>
+          <dl class="card-stats">${st.slice(0, 2).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd>${esc(tv(v))}</dd></div>`).join('')}
+            <div><dt>${esc(window.I18N.statKey('Niveau'))}</dt><dd><span class="wk-lvl" title="${esc(tv(st[2]?.[1] || ''))}">${[1, 2, 3].map(i => `<i${i <= lvl ? ' class="on"' : ''}></i>`).join('')}</span></dd></div></dl>
+          ${dots}
+        </div>
+      </article>`;
+  }
+  // Fiche d'une balade : point de départ sur la carte des provinces (data/provinces.js), lien OpenStreetMap
+  function walkMap(c) {
+    const w = c.walk; if (!w?.geo) return '';
+    const [la, lo] = w.geo, proj = ([a, b]) => `${((b - 2.5) * 66).toFixed(1)} ${((51.53 - a) * 103).toFixed(1)}`;
+    const provs = (window.BE_PROVINCES || []).map(p => `<path d="${p.rings.map(r => 'M' + r.map(proj).join('L') + 'Z').join('')}"/>`).join('');
+    const [x, y] = proj([la, lo]).split(' ');
+    const osm = `https://www.openstreetmap.org/?mlat=${la}&mlon=${lo}#map=14/${la}/${lo}`;
+    return `<h4>${t('walkStart')}</h4><div class="walk-map"><svg viewBox="-6 -6 330 250" role="img" aria-label="${esc(w.start)}">${provs}
+      <circle cx="${x}" cy="${y}" r="12" class="wm-halo"/><circle cx="${x}" cy="${y}" r="5.5" class="wm-dot"/></svg>
+      <p><span>${esc(w.start)}<br><small>${la.toFixed(4).replace('.', ',')}° N · ${lo.toFixed(4).replace('.', ',')}° E</small></span><a href="${osm}" target="_blank" rel="noopener">${t('walkOsm')}</a></p></div>`;
+  }
   function cardHTML(c, { count = 0, finish = 'normal', variants = null, imgW = 500 } = {}) {
     if (c.landscape) return landHTML(c, { count, finish, variants, imgW });
+    if (c.walk) return walkHTML(c, { count, finish, variants, imgW });
     let media;
     const photo = photoOf(c, finish);
     if (c.cat === 'evenement') {
@@ -675,7 +725,7 @@
   // Chaque catégorie contient toutes les raretés (réparties par notoriété), donc les taux affichés sont justes.
   // Nouvelle catégorie : à rareté égale, ses cartes sortent trois fois plus souvent jusqu'à la date indiquée, pour
   // qu'elles ne se noient pas parmi les 1 500 cartes du paquet Belgique. Les taux par rareté ne changent pas.
-  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30', histoire: '2027-05-31', bd: '2027-06-30', paysage: '2027-07-31' }, FEATURED_WEIGHT = 3;
+  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30', histoire: '2027-05-31', bd: '2027-06-30', paysage: '2027-07-31', balade: '2027-08-31' }, FEATURED_WEIGHT = 3;
   const featuredCats = () => { const d = ymd(now()); return new Set(Object.keys(FEATURED).filter(cat => d <= FEATURED[cat])); };
   function pickCard(list) {
     const feat = featuredCats(), w = c => feat.has(c.cat) ? FEATURED_WEIGHT : 1;
@@ -1938,6 +1988,7 @@
         <dt>${t('copies')}</dt><dd>${cnt}${finish !== 'normal' ? ` (${fl(finish)})` : ''}</dd>
         <dt>${t('value')}</dt><dd>${t('coins', sellValue(c, finish))}${resaleMult() > 1 ? ` <small class="late">${t('lateBonus', String(LATE_MULT).replace('.', ','))}</small>` : ''}</dd>
       </dl>
+      ${walkMap(c)}
       ${oddsTable(c, finish)}
       ${SERIES_OF.has(id) ? `<h4>${t('seriesH')}</h4><p class="series-list">${SERIES_OF.get(id).map(s => `<button class="chip-s" data-series="${s.id}">${esc(sl(s, 'title'))}</button>`).join('')}</p>` : ''}
       ${known.length ? `<h4>${t('knownFor')}</h4><ul class="known">${known.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}

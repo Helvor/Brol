@@ -509,6 +509,14 @@ async function features() {
       check(r.wide && r.ratio > 1.3 && r.ratio < 1.5 && r.n === r.all && r.html, 'paysages dans l’album : ' + JSON.stringify(r));
       await page.selectOption('#f-pack', 'all');
     });
+    await step('balades : fiche avec point de départ', async () => {
+      const id = await page.evaluate(() => { const c = window.RDL.CARDS.find(c => c.cat === 'balade'); window.RDL.state.owned[c.id] = 1; window.RDL.save(); return c.id; });
+      await page.evaluate(id => window.RDL.openDetail(id), id);
+      const r = await page.evaluate(() => ({ map: !!document.querySelector('#detail .walk-map svg circle'), osm: document.querySelector('#detail .walk-map a')?.href || '',
+        km: document.querySelector('#detail-card .wk-km')?.textContent.trim() }));
+      check(r.map && /openstreetmap\.org\/\?mlat=/.test(r.osm) && /^\d+KM$/.test(r.km), 'fiche d’une balade : ' + JSON.stringify(r));
+      await page.click('#detail-close');
+    });
     await step('export puis import de la sauvegarde', async () => {
       await page.evaluate(() => { window.RDL.state.coins = 4321; window.RDL.save(); });
       const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#export')]);
