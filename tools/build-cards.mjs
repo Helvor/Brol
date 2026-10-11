@@ -534,6 +534,92 @@ function buildHistoire() {
     stats: [['Année', y], ['Type', kind], extra],
   }));
 }
+// ---------- Bulles : fresques du Parcours BD, statues et lieux de la BD (paquet « Bulles ») ----------
+// Cartes manuelles : les fresques n'ont presque jamais d'élément Wikidata. Photos de Commons (liberté de panorama en
+// Belgique), relues à l'œil. Adresses : article « Parcours BD de Bruxelles » de Wikipédia et catégories Commons.
+// Année : création de la série (ou ouverture du lieu). Design « Pop » (style.css, .card.cat-bd).
+// [id, nom, nom NL, image, auteur, année, type, lieu, ville, rareté]
+const BULLES = [
+  // Mythiques
+  ['bd-tintin', 'Tintin', 'Kuifje', 'Comic Mural Tintin, Hergé, Brussels (cropped).jpg', 'Hergé', 1929, 'Fresque', 'Rue de l’Étuve', 'Bruxelles', 'mythique'],
+  ['bd-schtroumpfs', 'Les Schtroumpfs', 'De Smurfen', 'BEL Brussels, Carrefour de LEurope 002.jpg', 'Peyo', 1958, 'Fresque', 'Carrefour de l’Europe', 'Bruxelles', 'mythique'],
+  ['bd-gaston', 'Gaston Lagaffe', 'Guust Flater', 'Comic wall Gaston Laggaffe, André Franquin. Brussels.jpg', 'Franquin', 1957, 'Fresque', 'Rue de l’Écuyer', 'Bruxelles', 'mythique'],
+  ['bd-lucky-luke', 'Lucky Luke', 'Lucky Luke', 'Comic Wall Lucky Luke, Morris. Brussels.jpg', 'Morris', 1946, 'Fresque', 'Rue de la Buanderie', 'Bruxelles', 'mythique'],
+  ['bd-chat', 'Le Chat', 'De Kat', 'Brussels - 2010-May - IMG 7134.jpg', 'Geluck', 1983, 'Fresque', 'Boulevard du Midi', 'Bruxelles', 'mythique'],
+  ['bd-spirou', 'Spirou', 'Robbedoes', 'Spirou Bruselas.jpg', 'Rob-Vel', 1938, 'Fresque', 'Place Sainctelette', 'Bruxelles', 'mythique'],
+  // Légendaires
+  ['bd-blake-mortimer', 'Blake et Mortimer', 'Blake en Mortimer', 'Comic wall Blake & Mortimer 2. Edgar P. Jacobs. Brussels.jpg', 'Jacobs', 1946, 'Fresque', 'Rue du Houblon', 'Bruxelles', 'legendaire'],
+  ['bd-boule-bill', 'Boule et Bill', 'Bollie en Billie', 'Cartoon auf einer Hausfassade in Brüssel (Belgien) 1.jpg', 'Roba', 1959, 'Fresque', 'Rue du Chevreuil', 'Bruxelles', 'legendaire'],
+  ['bd-asterix', 'Astérix et Obélix', 'Asterix en Obelix', 'Asterix&Obelix Brussels.jpg', 'Goscinny et Uderzo', 1959, 'Fresque', 'Rue de la Buanderie', 'Bruxelles', 'legendaire'],
+  ['bd-marsupilami', 'Marsupilami', 'Marsupilami', 'Marsupilaminest.JPG', 'Franquin', 1952, 'Fresque', 'Av. Houba-de Strooper', 'Bruxelles', 'legendaire'],
+  ['bd-quick-flupke', 'Quick et Flupke', 'Quick en Flupke', 'Stups-und-Steppke-Wandgemaelde in Bruessel.jpg', 'Hergé', 1930, 'Fresque', 'Rue Notre-Seigneur', 'Bruxelles', 'legendaire'],
+  ['bd-bob-bobette', 'Bob et Bobette', 'Suske en Wiske', 'Comic wall Bot et Bobette 3, Willy Vandersteen. Brussels.jpg', 'Vandersteen', 1945, 'Fresque', 'Rue de Laeken', 'Bruxelles', 'legendaire'],
+  ['bd-corto', 'Corto Maltese', 'Corto Maltese', 'Corto Maltese.JPG', 'Hugo Pratt', 1967, 'Fresque', 'Quai des Péniches', 'Bruxelles', 'legendaire'],
+  ['bd-cbbd', 'Centre belge de la BD', 'Belgisch Stripcentrum', 'Musée de la Bande Dessineée @ Brussels (8177099049).jpg', 'Victor Horta', 1989, 'Musée', 'Rue des Sables', 'Bruxelles', 'legendaire'],
+  // Épiques
+  ['bd-musee-herge', 'Musée Hergé', 'Hergé Museum', 'Belgique - Louvain-la-Neuve - Musée Hergé - 03.jpg', 'Portzamparc', 2009, 'Musée', 'Rue du Labrador', 'Louvain-la-Neuve', 'epique'],
+  ['bd-gaston-statue', 'Statue de Gaston', 'Standbeeld van Guust', 'Gaston Lagaffe statue @ Brussels (8177725325).jpg', 'Franquin', 1957, 'Statue', 'Boulevard Pachéco', 'Bruxelles', 'epique'],
+  ['bd-cubitus', 'Cubitus', 'Dommel', 'Comic wall Cubitus by Dupa. Brussels.jpg', 'Dupa', 1968, 'Fresque', 'Rue de Flandre', 'Bruxelles', 'epique'],
+  ['bd-xiii', 'XIII', 'XIII', 'Stripmuur XIII.jpg', 'Vance et Van Hamme', 1984, 'Fresque', 'Rue Ph. de Champagne', 'Bruxelles', 'epique'],
+  ['bd-thorgal', 'Thorgal', 'Thorgal', 'Stripmuur Thorgal.jpg', 'Rosiński et Van Hamme', 1977, 'Fresque', 'Place Anneessens', 'Bruxelles', 'epique'],
+  ['bd-titeuf', 'Titeuf', 'Titeuf', 'Titeuf-Comicwand in Bruessel 1 II.jpg', 'Zep', 1992, 'Fresque', 'Avenue Bockstael', 'Bruxelles', 'epique'],
+  ['bd-ric-hochet', 'Ric Hochet', 'Rik Ringers', 'BEL Brussels, Rue du Bon Secours 001.jpg', 'Tibet', 1955, 'Fresque', 'Rue du Bon Secours', 'Bruxelles', 'epique'],
+  ['bd-petit-spirou', 'Le Petit Spirou', 'De kleine Robbe', 'Kleine Robbe.JPG', 'Tome et Janry', 1987, 'Fresque', 'Bd du Centenaire', 'Bruxelles', 'epique'],
+  ['bd-neron', 'Néron', 'Nero', 'Néron Bruxelles place Saint-Géry.jpg', 'Marc Sleen', 1947, 'Fresque', 'Place Saint-Géry', 'Bruxelles', 'epique'],
+  ['bd-jommeke', 'Jommeke', 'Jommeke', 'Parcours BD Jommeke 2.jpg', 'Jef Nys', 1955, 'Fresque', '—', 'Bruxelles', 'epique'],
+  ['bd-kiekeboe', 'Kiekeboe', 'Kiekeboe', 'Heysel - panoramio.jpg', 'Merho', 1977, 'Fresque', 'Av. du Gros Tilleul', 'Bruxelles', 'epique'],
+  ['bd-billy-the-cat', 'Billy the Cat', 'Billy the Cat', 'Comic wall Billy the cat by Stéphane Colman and Stephen Desberg. Brussels.jpg', 'Colman et Desberg', 1981, 'Fresque', 'Rue d’Ophem', 'Bruxelles', 'epique'],
+  ['bd-yakari', 'Yakari', 'Yakari', 'Yakari danse-1.jpg', 'Derib et Job', 1969, 'Fresque', 'Rue Dethy', 'Bruxelles', 'epique'],
+  ['bd-natacha', 'Natacha', 'Natasja', 'Natasja luchtstewardes 2.JPG', 'Walthéry', 1970, 'Fresque', 'Rue Jan Bollen', 'Bruxelles', 'epique'],
+  // Rares
+  ['bd-benoit-brisefer', 'Benoît Brisefer', 'Steven Sterk', 'Steven Sterk.jpg', 'Peyo', 1960, 'Fresque', '—', 'Bruxelles', 'rare'],
+  ['bd-broussaille', 'Broussaille', 'Broussaille', 'Mur BD Broussaille, Frank Pé. Bruxelles.jpg', 'Frank Pé', 1978, 'Fresque', 'Rue Plattesteen', 'Bruxelles', 'rare'],
+  ['bd-scorpion', 'Le Scorpion', 'De Schorpioen', 'Comic wall Le Scorpion by Enrico Marini. Brussels.jpg', 'Marini et Desberg', 2000, 'Fresque', 'Rue du Treurenberg', 'Bruxelles', 'rare'],
+  ['bd-martine', 'Martine', 'Tiny', 'Stripmuur Tiny.jpg', 'Marlier et Delahaye', 1954, 'Fresque', 'Avenue de la Reine', 'Bruxelles', 'rare'],
+  ['bd-kampioenen', 'F.C. De Kampioenen', 'F.C. De Kampioenen', 'FC de Kampioenen.jpg', 'Hec Leemans', 1990, 'Fresque', 'Rue du Canal', 'Bruxelles', 'rare'],
+  ['bd-gil-jourdan', 'Gil Jourdan', 'Gil Jourdan', 'Gil Jourdan crop.jpg', 'Tillieux', 1956, 'Fresque', 'Rue Léopold Iᵉʳ', 'Bruxelles', 'rare'],
+  ['bd-kinky-cosy', 'Kinky & Cosy', 'Kinky & Cosy', 'Nix - Kinky and Cosy 2016.jpg', 'Nix', null, 'Fresque', 'Rue des Bogards', 'Bruxelles', 'rare'],
+  ['bd-leonard', 'Léonard', 'Leonardo', 'Stripfiguur Leonardo.jpg', 'Turk et De Groot', 1975, 'Fresque', 'Marolles', 'Bruxelles', 'rare'],
+  ['bd-yoko-tsuno', 'Yoko Tsuno', 'Yoko Tsuno', 'Yuko Tsuno Comic Mural - panoramio.jpg', 'Leloup', 1970, 'Fresque', 'Rue Terre-Neuve', 'Bruxelles', 'rare'],
+  ['bd-jeune-albert', 'Le Jeune Albert', 'De jonge Albert', 'Al Memory.jpg', 'Chaland', 1985, 'Fresque', 'Rue des Alexiens', 'Bruxelles', 'rare'],
+  ['bd-victor-sackville', 'Victor Sackville', 'Victor Sackville', 'Mur BD Victor Sackville, Francis Carin. Bruxelles.jpg', 'Carin', 1985, 'Fresque', 'Rue Plattesteen', 'Bruxelles', 'rare'],
+  ['bd-castors', 'La Patrouille des Castors', 'De Beverpatroelje', 'De Beverpatroelje.jpg', 'Mitacq', 1954, 'Fresque', 'Rue Blaes', 'Bruxelles', 'rare'],
+  ['bd-olivier-rameau', 'Olivier Rameau', 'Olivier Rameau', 'Comic mural Olivier Rameau, Dany (Daniel Henrotin), Bruxelles.jpg', 'Dany', 1968, 'Fresque', 'Rue du Chêne', 'Bruxelles', 'rare'],
+  ['bd-moof', 'Musée des figurines', 'Figurinenmuseum', 'Bruxelles central, galerie Horta avec statue en août 2012 - panoramio.jpg', '—', null, 'Musée', 'Galerie Horta', 'Bruxelles', 'rare'],
+  ['bd-nero-hoeilaart', 'Néron à Hoeilaart', 'Nero in Hoeilaart', 'Hoeilaart station Nero beeld - 0.JPG', 'Marc Sleen', 1947, 'Statue', 'Gare de Hoeilaart', 'Hoeilaart', 'rare'],
+  ['bd-agent-212', 'Agent 212', 'Agent 212', 'Monique Mol - Agent 212 - Stripstandbeelden Middelkerke 21-4-2018 10-49-46.jpg', 'Kox et Cauvin', 1975, 'Statue', 'Digue de mer', 'Middelkerke', 'rare'],
+  // Peu communes
+  ['bd-ange', 'L’Ange', 'De Engel', 'Comic wall l\'archange, Yslaire. Brussels.jpg', 'Yslaire', 1998, 'Fresque', 'Rue des Chartreux', 'Bruxelles', 'peu-commune'],
+  ['bd-blondin-cirage', 'Blondin et Cirage', 'Blondie en Blinkie', 'Blondie en Blinkie.JPG', 'Jijé', 1939, 'Fresque', 'Rue des Capucins', 'Bruxelles', 'peu-commune'],
+  ['bd-caroline-baldwin', 'Caroline Baldwin', 'Caroline Baldwin', 'Comic wall Caroline Baldwin, André Taymans and Bruno Wesel. Brussels.jpg', 'Taymans', null, 'Fresque', 'Rue de la Poudrière', 'Bruxelles', 'peu-commune'],
+  ['bd-cori', 'Cori le Moussaillon', 'Corry de scheepsjongen', 'Comic wall Cori le Moussaillon by Bob de Moor. Brussels.jpg', 'Bob de Moor', 1951, 'Fresque', 'Rue des Fabriques', 'Bruxelles', 'peu-commune'],
+  ['bd-monsieur-jean', 'Monsieur Jean', 'Meneer Johan', 'Comic wall Monsieur Jean, Dupuy-Berberian, Bruxelles.jpg', 'Dupuy et Berberian', 1990, 'Fresque', 'Rue des Bogards', 'Bruxelles', 'peu-commune'],
+  ['bd-nic', 'Les Rêves de Nic', 'Nic', 'Droom je, Nick?.jpg', 'Hermann', 1980, 'Fresque', 'Rue des Fabriques', 'Bruxelles', 'peu-commune'],
+  ['bd-odilon-verjus', 'Odilon Verjus', 'Odilon Verjus', 'Kapucijnenstraat, Brussel.jpg', 'Verron et Yann', null, 'Fresque', 'Rue des Capucins', 'Bruxelles', 'peu-commune'],
+  ['bd-passage', 'Le Passage', 'De Doorgang', 'Comic wand "Le Passage", François Schuiten. Bruxelles..jpg', 'Schuiten', 1983, 'Fresque', 'Rue du Marché au Charbon', 'Bruxelles', 'peu-commune'],
+  ['bd-scrameustache', 'Le Scrameustache', 'De Katamarom', 'De Katamarom.jpg', 'Gos', 1972, 'Fresque', 'Chaussée de Wavre', 'Auderghem', 'peu-commune'],
+  ['bd-lambik', 'Lambique', 'Lambik', 'Monique Mol - Lambik - Stripstandbeelden Middelkerke 21-4-2018 11-04-19.jpg', 'Vandersteen', 1945, 'Statue', 'Digue de mer', 'Middelkerke', 'peu-commune'],
+  ['bd-urbanus', 'Urbanus', 'Urbanus', 'Luc Cauwenberghs - Urbanus - Stripstandbeelden Middelkerke 21-4-2018 11-51-54.jpg', 'Linthout et Urbanus', 1983, 'Statue', 'Digue de mer', 'Middelkerke', 'peu-commune'],
+  ['bd-rode-ridder', 'Le Chevalier rouge', 'De Rode Ridder', 'Josyanne Vanhoutte - De Rode Ridder - Stripstandbeelden Middelkerke 21-4-2018 10-52-02.jpg', 'Vandersteen', 1959, 'Statue', 'Digue de mer', 'Middelkerke', 'peu-commune'],
+  ['bd-cedric', 'Cédric', 'Cédric', 'Josyanne Vanhoutte - Cédric - Stripstandbeelden Middelkerke 21-4-2018 10-57-35.jpg', 'Laudec et Cauvin', 1986, 'Statue', 'Digue de mer', 'Middelkerke', 'peu-commune'],
+  // Communes
+  ['bd-froud-stouf', 'Froud et Stouf', 'Froud en Stouf', 'Froud en Stouf stripmuur Brussel CROPPED.jpg', 'Jannin', null, 'Fresque', 'Rue Ph. de Champagne', 'Bruxelles', 'commune'],
+  ['bd-isabelle', 'Isabelle', 'Isabel', 'Stripmuur Isabel bis.jpg', 'Will', 1969, 'Fresque', 'Rue de la Verdure', 'Bruxelles', 'commune'],
+  ['bd-jojo', 'Jojo', 'Jojo', 'Jojo - Rue Piermans 2011.jpg', 'Geerts', 1983, 'Fresque', 'Rue Pieremans', 'Bruxelles', 'commune'],
+  ['bd-lincoln', 'Lincoln', 'Lincoln', 'Stripmuur Lincoln.JPG', 'Jouvray', 2002, 'Fresque', 'Rue de la Grotte', 'Bruxelles', 'commune'],
+  ['bd-lombard', 'Fresque du Lombard', 'Lombardmuur', 'BD BruxellesDSC09196.jpg', 'Le Lombard', 1946, 'Fresque', 'Av. Paul-Henri Spaak', 'Bruxelles', 'commune'],
+  ['bd-passe-moi-lciel', 'Passe-moi l’ciel', 'Oh! Lieve hemel', 'Oh! Lieve hemel.jpg', 'Stuf et Janry', null, 'Fresque', 'Rue des Minimes', 'Bruxelles', 'commune'],
+  ['bd-roi-des-mouches', 'Le Roi des mouches', 'De vliegenkoning', 'Le roi des mouches - panoramio.jpg', 'Mezzo et Pirus', 2005, 'Fresque', 'Rue Hubert Stiernet', 'Bruxelles', 'commune'],
+  ['bd-ralf-konig', 'Ralf König', 'Ralf König', 'Ralf König mural Brussels (cropped) (cropped).jpg', 'Ralf König', null, 'Fresque', '—', 'Bruxelles', 'commune'],
+];
+function buildBulles() {
+  return BULLES.map(([id, name, nlName, img, author, y, kind, place, city, rarity]) => ({
+    id, cat: 'bd', name, img, rarity, manual: true, family: 'bd',
+    subtitle: [author, y].filter(v => v && v !== '—').join(', '), nl: { name: nlName, subtitle: [author.replace(/ et /g, ' en '), y].filter(v => v && v !== '—').join(', ') },
+    meta: [kind, city].join(' · '),
+    stats: [[kind === 'Musée' ? 'Ouverture' : 'Création', y ?? '—'], ['Auteur', author], ['Lieu', place]],
+  }));
+}
 function buildManual(cat, list) {
   return list.map(([id, name, nlName, img, kind, y, sub, subNl, extra, rarity]) => ({
     id, cat, name, img, rarity, manual: true, family: cat, artwork: true, // rareté hors quotas (voir rarityByQuota)
@@ -598,7 +684,7 @@ const AJOUTS = {
   aviation: { build: () => buildRoute('aviation', AVIATION), editions: [] }, rail: { build: () => buildRoute('rail', RAIL), editions: [] },
   exploration: { build: () => buildRoute('exploration', EXPLORATION), editions: [] },
   finance: { build: async () => [...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES)], editions: [] },
-  histoire: { build: async () => buildHistoire(), editions: [] },
+  histoire: { build: async () => buildHistoire(), editions: [] }, bd: { build: async () => buildBulles(), editions: [] },
 };
 const AJOUT = (process.argv.find(a => a.startsWith('--ajout=')) || '').slice(8);
 if (AJOUT) {
@@ -1280,7 +1366,7 @@ for (const f of sciRows) {
 console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
 
 for (const c of [...await buildMilitaires(resolveTitles), ...await buildAnimaux(resolveTitles),
-  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES), ...buildHistoire()]) { delete c.links; cards.push(c); }
+  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES), ...buildHistoire(), ...buildBulles()]) { delete c.links; cards.push(c); }
 
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [

@@ -25,6 +25,12 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   ou de lieux uniquement. Séries « Expositions universelles » et « Dans la rue ». Mis en avant jusqu'au 31 mai 2027.
   Écartés faute d'image libre : grève de 1936 (photo sans source sûre), manifestation anti-missiles,
   marche multicolore, pacte scolaire, peine de mort, euthanasie, abdication d'Albert II, Ghislenghien.
+- [x] **Paquet « Bulles »** (octobre 2026) : 65 cartes « manuelles » (`BULLES` dans le générateur, catégorie `bd`) :
+  fresques du Parcours BD de Bruxelles, statues (Gaston, Néron à Hoeilaart, digue de Middelkerke), Centre belge de la
+  BD, Musée Hergé et MOOF. Mythiques : Tintin, Schtroumpfs, Gaston, Lucky Luke, Le Chat, Spirou. Design « Pop »
+  (trame Ben-Day, onomatopée selon la rareté ; Holo foil, Dorée collector, Plein cadre couverture d'album), aussi dans
+  l'image de partage. Série « Sur la digue ». Mis en avant jusqu'au 30 juin 2027. Lieux inconnus notés « — » (Jommeke,
+  Benoît Brisefer, Ralf König) : à compléter si on trouve l'adresse.
 - [x] **Communes : rareté par score pondéré** (octobre 2026) : habitants 40 %, notoriété (nombre de Wikipédias) 30 %,
   patrimoine protégé 25 % (classé dans sa Région), revenu par habitant 5 % ; superficie non comptée. Chiffres officiels,
   sans Wikimedia : Statbel (population, revenus ; fichiers téléchargés à la main, le site bloque les robots, réduits par

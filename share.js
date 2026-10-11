@@ -28,6 +28,12 @@
   const ARCH_FRAMES = { commune: ['#c79b62', '#8d6633', '#b98a52'], legendaire: FRAMES.legendaire, mythique: ['#5a0012', '#c8102e', '#8a0020'] };
   const ARCH_INK = { commune: '#6b6b6b', 'peu-commune': '#2f7d4a', rare: '#2e5fc0', epique: '#6b3db8', legendaire: '#b8860b', mythique: '#c8102e' };
 
+  // Bulles (BD) : design « Pop » (voir style.css, .card.cat-bd)
+  const POP = '"Bangers", Impact, sans-serif', COMIC = '"Comic Neue", "Comic Sans MS", sans-serif';
+  const POP_ACC = { commune: '#9a9a9a', 'peu-commune': '#2fae5f', rare: '#2e6fe0', epique: '#8a4be0', legendaire: '#f2b300', mythique: '#e3132d' };
+  const POP_WORD = { commune: 'PLOP', 'peu-commune': 'PIF!', rare: 'PAF!', epique: 'BAM!', legendaire: 'BOUM!', mythique: 'KABOOM!' };
+  const IRIS = ['#ff7ad9', '#ffd36b', '#7dffb2', '#6bd7ff', '#b38bff'];
+
   function loadImage(src) {
     return new Promise(res => {
       if (!src) return res(null);
@@ -175,8 +181,91 @@
     });
   }
 
+  // Trame de points (Ben-Day)
+  function dots(ctx, x, y, w, h, step, r, color) {
+    ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); ctx.fillStyle = color;
+    for (let py = y + step / 2; py < y + h; py += step) for (let px = x + step / 2; px < x + w; px += step) { ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+  }
+  // Onomatopée dans une explosion, centrée en (x, y)
+  function burst(ctx, x, y, w, h, word, fill, ink) {
+    const pts = [[50, 0], [62, 26], [96, 10], [76, 42], [100, 58], [70, 66], [80, 100], [50, 78], [20, 100], [30, 66], [0, 58], [24, 42], [4, 10], [38, 26]];
+    ctx.save(); ctx.translate(x, y); ctx.rotate(-8 * Math.PI / 180);
+    ctx.beginPath(); pts.forEach(([px, py], n) => ctx[n ? 'lineTo' : 'moveTo']((px / 100 - .5) * w, (py / 100 - .5) * h)); ctx.closePath();
+    ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = '#111'; ctx.lineWidth = 5; ctx.lineJoin = 'round'; ctx.stroke();
+    ctx.fillStyle = ink; ctx.font = `400 ${Math.round(h * .42)}px ${POP}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = '2px';
+    ctx.fillText(word, 0, 2); ctx.restore();
+  }
+  function pop(ctx, c, photo, ix, iy, iw, ih, finish) {
+    const acc = POP_ACC[c.rarity] || POP_ACC.commune, statsH = 116, full = finish === 'plein', gold = finish === 'or', holo = finish === 'holo';
+    // Fond tramé de la couleur de la rareté (irisé en Holo, or en Dorée)
+    ctx.fillStyle = holo ? gradient(ctx, ix, iy, iw, ih, IRIS) : gold ? gradient(ctx, ix, iy, iw, ih, ['#ffe58a', '#e0b23a', '#f7d777'], 160) : acc; ctx.fillRect(ix, iy, iw, ih);
+    dots(ctx, ix, iy, iw, ih, 16, 3.6, holo ? 'rgba(255,255,255,.7)' : gold ? 'rgba(120,80,0,.35)' : c.rarity === 'mythique' ? 'rgba(255,225,74,.55)' : 'rgba(0,0,0,.18)');
+    // Case : la photo de travers, bord noir et ombre décalée (pleine en Plein cadre)
+    const px = full ? ix : ix + 26, py = full ? iy : iy + 26, pw = full ? iw : iw - 52, ph = full ? ih - statsH : Math.round(ih * 0.6);
+    ctx.save(); ctx.translate(px + pw / 2, py + ph / 2); if (!full) ctx.rotate(-1.5 * Math.PI / 180);
+    if (!full) { ctx.fillStyle = '#111'; ctx.fillRect(-pw / 2 + 10, -ph / 2 + 10, pw, ph); ctx.fillRect(-pw / 2 - 5, -ph / 2 - 5, pw + 10, ph + 10); }
+    if (photo) {
+      ctx.save(); ctx.beginPath(); ctx.rect(-pw / 2, -ph / 2, pw, ph); ctx.clip();
+      ctx.filter = gold ? 'sepia(.35) saturate(1.3) contrast(1.1)' : 'saturate(1.4) contrast(1.15)';
+      const v = (window.FOCUS?.[c.img] || '50 20').split(' ').map(Number); cover(ctx, photo, -pw / 2, -ph / 2, pw, ph, v[1] / 100, false, v[0] / 100);
+      ctx.filter = 'none'; ctx.globalCompositeOperation = 'multiply'; dots(ctx, -pw / 2, -ph / 2, pw, ph, 11, 2.6, `rgba(0,0,0,${full ? .22 : .35})`);
+      ctx.restore();
+    }
+    ctx.restore();
+    // Nom et sous-titre : encadré blanc (noir et or en Dorée), ou titre d'album en haut en Plein cadre
+    const name = window.I18N.name(c).toUpperCase(), sub = window.I18N.subtitle(c) || '';
+    ctx.textBaseline = 'alphabetic'; ctx.letterSpacing = '2px';
+    if (full) {
+      let fs = 86; for (; fs > 44; fs -= 2) { ctx.font = `400 ${fs}px ${POP}`; if (ctx.measureText(name).width <= iw - 60) break; }
+      ctx.save(); ctx.translate(ix + iw / 2, iy + 70 + fs * .8); ctx.rotate(-2 * Math.PI / 180); ctx.textAlign = 'center';
+      ctx.fillStyle = '#111'; ctx.fillText(name, 6, 6); ctx.strokeStyle = '#111'; ctx.lineWidth = 10; ctx.lineJoin = 'round'; ctx.strokeText(name, 0, 0);
+      ctx.fillStyle = '#ffe14a'; ctx.fillText(name, 0, 0);
+      if (sub) { ctx.font = `700 24px ${COMIC}`; ctx.letterSpacing = '0px'; const w = ctx.measureText(sub).width + 30;
+        ctx.fillStyle = '#fff'; ctx.fillRect(-w / 2, 22, w, 40); ctx.strokeStyle = '#111'; ctx.lineWidth = 4; ctx.strokeRect(-w / 2, 22, w, 40);
+        ctx.fillStyle = '#111'; ctx.fillText(sub, 0, 51); }
+      ctx.restore();
+      // Logo d'éditeur
+      ctx.save(); ctx.translate(ix + iw - 80, iy + ih - statsH - 50); ctx.rotate(-4 * Math.PI / 180);
+      ctx.fillStyle = '#e3132d'; ctx.fillRect(-56, -24, 112, 48); ctx.strokeStyle = '#111'; ctx.lineWidth = 4; ctx.strokeRect(-56, -24, 112, 48);
+      ctx.fillStyle = '#fff'; ctx.font = `400 34px ${POP}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = '4px'; ctx.fillText('BROL', 2, 2);
+      ctx.restore();
+    } else {
+      const bx = ix + 26, bw = iw - 52, bh = 150, by = iy + ih - statsH - bh - 34;
+      ctx.save(); ctx.translate(bx + bw / 2, by + bh / 2); ctx.rotate(1 * Math.PI / 180);
+      ctx.fillStyle = '#111'; ctx.fillRect(-bw / 2 + 9, -bh / 2 + 9, bw, bh); ctx.fillStyle = gold ? '#111' : '#fff'; ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
+      ctx.strokeStyle = '#111'; ctx.lineWidth = 5; ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
+      let fs = 64; for (; fs > 36; fs -= 2) { ctx.font = `400 ${fs}px ${POP}`; if (ctx.measureText(name).width <= bw - 50) break; }
+      ctx.fillStyle = gold ? '#f6d478' : '#111'; ctx.fillText(clip(ctx, name, bw - 50), -bw / 2 + 25, -6);
+      ctx.font = `700 24px ${COMIC}`; ctx.letterSpacing = '0px'; ctx.fillStyle = gold ? '#e8cf8a' : '#333';
+      ctx.fillText(clip(ctx, sub, bw - 50), -bw / 2 + 25, 44);
+      ctx.restore();
+    }
+    // Onomatopée de la rareté
+    const word = POP_WORD[c.rarity] || POP_WORD.commune, bw2 = c.rarity === 'mythique' ? 220 : 180;
+    let fill = c.rarity === 'legendaire' || c.rarity === 'mythique' ? '#ffe14a' : '#fff';
+    if (holo) { fill = ctx.createConicGradient(0.5, 0, 0); [...IRIS, IRIS[0]].forEach((col, n) => fill.addColorStop(n / 5, col)); }
+    if (gold) fill = gradient(ctx, -bw2 / 2, -50, bw2, 100, ['#8a6516', '#f7dc84', '#b8891f', '#fff1b8']);
+    const ox = ix + iw - bw2 / 2 + 6, oy = full ? iy + ih - statsH - 150 : iy + ih - statsH - 210;
+    if (holo) { ctx.save(); ctx.translate(ox, oy); burst(ctx, 0, 0, bw2, 104, word, fill, '#111'); ctx.restore(); }
+    else burst(ctx, ox, oy, bw2, 104, word, fill, c.rarity === 'mythique' && !gold ? '#e3132d' : '#111');
+    // Statistiques
+    const st = iy + ih - statsH;
+    ctx.fillStyle = '#111'; ctx.fillRect(ix, st, iw, statsH);
+    if (full) { ctx.fillStyle = acc; ctx.fillRect(ix, st, iw, 8); }
+    const stats = (API.statsOf ? API.statsOf(c) : c.stats).slice(0, 3), colW = (iw - 40) / 3;
+    ctx.letterSpacing = '0px'; ctx.textAlign = 'left';
+    stats.forEach(([key, v], n) => {
+      const sx = ix + 22 + n * colW;
+      if (n) { ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(sx - 12, st + 24, 2, statsH - 48); }
+      ctx.fillStyle = '#8d8d95'; ctx.font = `600 20px ${DISPLAY}`; ctx.fillText(wrap(ctx, window.I18N.statKey(key).toUpperCase(), colW - 20, 1)[0], sx, st + 46);
+      ctx.fillStyle = gold ? '#f6d478' : '#fff'; ctx.font = `700 30px ${COMIC}`; ctx.fillText(clip(ctx, String(window.I18N.tv(v)), colW - 20), sx, st + 88);
+    });
+  }
+
   async function render(c, finish) {
     if (c.cat === 'histoire') try { await document.fonts?.load(`40px ${TYPE}`); } catch (_) { /* police de secours */ }
+    if (c.cat === 'bd') try { await Promise.all([document.fonts?.load(`40px ${POP}`), document.fonts?.load(`700 24px ${COMIC}`)]); } catch (_) { /* police de secours */ }
     await document.fonts?.ready;
     const L = window.I18N.lang, ed = c.cat === 'edition' && API.packById(c.pack);
     const fin = API.FINISHES.find(f => f.id === finish) || API.FINISHES[0];
@@ -210,12 +299,14 @@
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 24;
     rr(ctx, x, y, CW, CH, r);
     const arch = c.cat === 'histoire'; // cartes Histoire : dossier « Archives » (voir style.css)
-    const frame = arch && (finish === 'normal' || finish === 'plein') ? ARCH_FRAMES[c.rarity] || ARCH_FRAMES.commune : FRAMES[fin.pack || finish !== 'normal' ? finish : c.rarity] || (ed ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : FRAMES[c.rarity]);
+    const bd = c.cat === 'bd'; // cartes Bulles : design « Pop »
+    const frame = bd && (finish === 'normal' || finish === 'plein') ? [POP_ACC[c.rarity] || POP_ACC.commune, POP_ACC[c.rarity] || POP_ACC.commune] : arch && (finish === 'normal' || finish === 'plein') ? ARCH_FRAMES[c.rarity] || ARCH_FRAMES.commune : FRAMES[fin.pack || finish !== 'normal' ? finish : c.rarity] || (ed ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : FRAMES[c.rarity]);
     ctx.fillStyle = gradient(ctx, x, y, CW, CH, ed && finish === 'normal' ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : frame, fin.id === 'tricolore' ? 0 : 135);
     ctx.fill(); ctx.restore();
     const ix = x + pad, iy = y + pad, iw = CW - pad * 2, ih = CH - pad * 2;
     ctx.save(); rr(ctx, ix, iy, iw, ih, 18); ctx.clip();
     if (arch) archives(ctx, c, photo, ix, iy, iw, ih, finish);
+    else if (bd) pop(ctx, c, photo, ix, iy, iw, ih, finish);
     else {
       ctx.fillStyle = finish === 'noir' ? '#050505' : '#15161a'; ctx.fillRect(ix, iy, iw, ih);
       const statsH = 116, bandH = 190, full = finish === 'plein';
