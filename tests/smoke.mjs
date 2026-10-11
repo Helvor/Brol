@@ -69,21 +69,21 @@ async function run(name, options) {
     check(await page.evaluate(() => window.RDL.state.stats.packs) === before + 1, 'paquet non compté');
   });
 
-  await step('lot de 10 paquets', async () => {
+  await step('lot de 5 paquets', async () => {
     await page.click('#stage-close', { force: true }).catch(() => {});
     await page.evaluate(() => { window.RDL.state.coins = 2000; window.RDL.save(); });
     await view('shop');
     const before = await page.evaluate(() => ({ packs: window.RDL.state.stats.packs, price: window.RDL.bulkPrice(window.RDL.PACKS[0]) }));
-    check(before.price < 10 * (await page.evaluate(() => window.RDL.PACKS[0].price)), 'le lot de 10 n’est pas moins cher');
+    check(before.price < 5 * (await page.evaluate(() => window.RDL.PACKS[0].price)), 'le lot de 5 n’est pas moins cher');
     await page.$eval('.buy10', el => el.click()); // le bouton peut se trouver sous la barre fixe du bas sur mobile
     await page.waitForSelector('#stage:not([hidden])');
     await click('#stage-pack');
     await page.waitForSelector('#reveal.is-bulk .slot');
-    check(await page.locator('#reveal .slot').count() === 50, 'le lot ne contient pas 50 cartes');
+    check(await page.locator('#reveal .slot').count() === 25, 'le lot ne contient pas 25 cartes');
     await click('#flip-all');
     await page.waitForSelector('#to-album:not([hidden])', { timeout: 30000 });
-    check(await page.locator('#reveal .slot.is-flipped').count() === 50, 'toutes les cartes du lot ne sont pas retournées');
-    check(await page.evaluate(() => window.RDL.state.stats.packs) === before.packs + 10, 'lot non compté comme 10 paquets');
+    check(await page.locator('#reveal .slot.is-flipped').count() === 25, 'toutes les cartes du lot ne sont pas retournées');
+    check(await page.evaluate(() => window.RDL.state.stats.packs) === before.packs + 5, 'lot non compté comme 5 paquets');
   });
 
   await step('paquet Prestige (légendaire ou mieux garantie)', async () => {
