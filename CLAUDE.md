@@ -15,6 +15,9 @@ en français) ; l'interface existe en FR et NL.
   `node tools/build-cards.mjs --photos`.
 - `data/images.js` (adresses directes des images, `tools/build-images.mjs`, lancé par build-cards) et `data/focus.js`
   (cadrage sur le visage, `python3 tools/build-focus.py [--hors-ligne]`, demande opencv-python-headless).
+- Cadrage : `node tools/planche.mjs <catégorie> [dossier] [version]` rend toutes les cartes d'une catégorie avec le vrai
+  jeu (planches PNG à relire) et signale les photos non chargées ou trop petites. Corriger avec `MANUAL` dans
+  `tools/build-focus.py` (photos) ou `PAYSAGE_POS` dans le générateur.
 - Sauvegarde du joueur : localStorage `rue-de-la-loi:v1` (`state.owned` : clé `id` ou `id|finish`).
 
 ## Règles de travail
