@@ -5,7 +5,7 @@
 //   - « farmeur » : achète toujours le paquet qui rapporte le plus à la revente, par lots de 10 dès qu'il peut,
 //     et vend tout après chaque ouverture.
 // Les deux récupèrent les succès, les séries complètes et les paquets gratuits. Les mini-jeux ne sont pas comptés.
-// Temps estimé par action : 12 s pour un paquet, 35 s pour un lot de 10.
+// Temps estimé par action : 12 s pour un paquet, 20 s pour un lot de 5.
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -62,7 +62,7 @@ async function simulate(strategy) {
       const res = R.buyPacks(pack, n);
       if (!res) { advance(30); collect(); if (strategy === 'normal' || s.free) continue; const v = R.sellDuplicates(); sold += v.gain; continue; }
       spent += res.cost; packs += n;
-      advance(n === 1 ? 12 : 35);
+      advance(n === 1 ? 12 : 20);
       if (strategy === 'farmeur' || packs % 10 === 0) sold += R.sellDuplicates().gain;
       collect();
     }

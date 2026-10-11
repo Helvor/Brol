@@ -141,8 +141,8 @@
     { id: 'nouveautes', title: { fr: 'Nouveautés', nl: 'Nieuwigheden' }, kicker: { fr: 'Édition collection', nl: 'Verzameleditie' }, big: '+5', price: 150, was: 300, // promo (prix normal : was)
       desc: { fr: 'Cinq cartes qui manquent à ton album, garanti.', nl: 'Vijf kaarten die nog in je album ontbreken, gegarandeerd.' },
       body: ['#0b1c24', '#16424f'], metal: ['#e6fdff', '#7fd8e0', '#2f7c86'], cats: null, missing: true, perDay: 10, special: true },
-    // Paquet spécial : 5ᵉ carte légendaire ou mieux (≈ 12 % de mythiques). Pièces uniquement, jamais gratuit ; lot de 10 possible.
-    { id: 'prestige', title: { fr: 'Prestige', nl: 'Prestige' }, kicker: { fr: 'Édition prestige', nl: 'Prestige-editie' }, big: 'L+', price: 400, was: 600, bulk: 5, // promo (prix normal : was)
+    // Paquet spécial : 5ᵉ carte légendaire ou mieux (≈ 12 % de mythiques). Pièces uniquement, jamais gratuit ; lot de 5 possible.
+    { id: 'prestige', title: { fr: 'Prestige', nl: 'Prestige' }, kicker: { fr: 'Édition prestige', nl: 'Prestige-editie' }, big: 'L+', price: 400, was: 600, // promo (prix normal : was)
       desc: { fr: 'Toutes les cartes. 5ᵉ carte légendaire ou mieux, garantie.', nl: 'Alle kaarten. 5de kaart gegarandeerd legendarisch of beter.' },
       body: ['#050506', '#2a2210'], metal: ['#fff6cf', '#f0c24a', '#8a6410'], cats: null, last: 'legendaire', special: true },
   ];
@@ -162,7 +162,7 @@
   const span = (end, days) => [ymd(addDays(end, -days)), ymd(end)];
 
   // ---------- Paquets d'événement : en vente seulement pendant leur période ----------
-  // when(année) → [début, fin] inclus. Pièces uniquement, ni gratuit ni lot de 10.
+  // when(année) → [début, fin] inclus. Pièces uniquement, ni gratuit ni lot de 5.
   const EVENT_PACKS = [
     { id: 'carnaval', when: y => span(addDays(easter(y), -47), 10), title: { fr: 'Carnaval', nl: 'Carnaval' }, kicker: { fr: 'Édition Mardi gras', nl: 'Vastenavondeditie' }, big: 'MG',
       desc: { fr: 'Folklore, festivals et groupes. 5ᵉ carte épique ou mieux.', nl: 'Folklore, festivals en groepen. 5de kaart episch of beter.' },
@@ -209,7 +209,7 @@
   // Ce qu'apporte une carte tirée, avant de l'ajouter : une nouvelle carte (absente de l'album, toutes versions
   // confondues), une nouvelle version d'une carte qu'on a déjà (Holo, Or…), ou un doublon de la même version.
   const gotKind = (id, finish) => !totalOf(id) ? 'card' : !countOf(id, finish) ? 'version' : 'dup';
-  // Étiquette : « Nouvelle », « Nouvelle version », « Doublon · Or » (court dans la grille du lot de 10)
+  // Étiquette : « Nouvelle », « Nouvelle version », « Doublon · Or » (court dans la grille du lot de 5)
   const gotLabel = (got, finish, short = false) => {
     const fin = finish !== 'normal' ? ` · ${fl(finish)}` : '';
     if (got === 'version') return short ? t('newVerShort') : t('newVer');
@@ -219,8 +219,9 @@
   const FREE_EVERY_MS = 2 * 60 * 1000;
   const FREE_MAX = 8;
   const PITY = 50; // une légendaire ou mieux au plus tard tous les 50 paquets (40 avant la baisse d'octobre 2026)
-  const BULK = 10, BULK_DISCOUNT = 0.9; // lot de 10 paquets : 10 % moins cher, payé en pièces
-  const bulkOf = p => p.bulk || BULK; // Prestige : lot de 5 (25 cartes rares à l'écran au lieu de 50)
+  // Lot de 5 paquets (10 avant octobre 2026 : la collection avançait trop vite) : 10 % moins cher, payé en pièces
+  const BULK = 5, BULK_DISCOUNT = 0.9;
+  const bulkOf = p => p.bulk || BULK;
   const bulkPrice = p => Math.round(p.price * bulkOf(p) * BULK_DISCOUNT);
 
   // Les paquets sans assez de cartes (ex. Sciences avant la régénération des données) sont masqués
@@ -576,7 +577,7 @@
     <rect x="21" y="10" width="30" height="42" rx="4.5" fill="url(#bk-gold)" stroke="#fff1b8" stroke-width="1" transform="rotate(12 36 52)"/>
     <path transform="rotate(12 36 52)" d="M30.5 19.5v23M30.5 19.5h6.5a5.6 5.6 0 0 1 0 11.2h-6.5M30.5 30.7h7.4a6 6 0 0 1 0 12h-7.4" fill="none" stroke="#0c1020" stroke-width="4.6" stroke-linecap="square"/></g></svg>`;
   const cardBack = () => `<div class="card-back">${sealSVG({ ring: t('backSeal'), center: '', color: '#e2b33c', size: 200, centerSize: 52 })}${BACK_MARK}<div class="back-foot">${t('back')}</div></div>`;
-  // Dos allégé pour les lots de 10 (50 cartes à l'écran) : sans le sceau à texte circulaire, coûteux à dessiner 50 fois
+  // Dos allégé pour les lots (25 cartes à l'écran) : sans le sceau à texte circulaire, coûteux à dessiner 25 fois
   const cardBackLite = () => `<div class="card-back is-lite">${BACK_MARK}<div class="back-foot">${t('back')}</div></div>`;
 
   // ---------- Rendu d'une carte ----------
@@ -1063,7 +1064,7 @@
     flipRun++; autoFlipping = false;
     const bulk = current.n > 1;
     $('#reveal').classList.toggle('is-bulk', bulk);
-    // Lot de 10 du paquet Paysages : cartes à l'horizontale (dans un lot mixte, un Paysage reste couché dans sa case)
+    // Lot de 5 du paquet Paysages : cartes à l'horizontale (dans un lot mixte, un Paysage reste couché dans sa case)
     const allLand = current.revealed.every(r => r.card.landscape);
     $('#reveal').classList.toggle('is-landbulk', bulk && allLand);
     $('#reveal').innerHTML = current.revealed.map(({ card, finish, got }, i) => {
@@ -1098,7 +1099,7 @@
   function flip(slot, auto = false) {
     if (slot.classList.contains('is-flipped')) return;
     const r = current.revealed[slot.dataset.i];
-    // Lot de 10 : la face n'est créée qu'au retournement (50 cartes d'un coup faisaient ramer le téléphone)
+    // Lot de 5 : la face n'est créée qu'au retournement (50 cartes d'un coup faisaient ramer le téléphone)
     const front = slot.querySelector('.front');
     if (!front.firstElementChild) front.innerHTML = cardHTML(r.card, { finish: r.finish, imgW: 250 }); // vignette : petite image
     slot.classList.add('is-flipped');

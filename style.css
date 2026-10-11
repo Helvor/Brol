@@ -1139,7 +1139,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   .t-fins { padding-left: 0; }
 }
 
-/* ============ Lot de 10 paquets ============ */
+/* ============ Lot de 5 paquets ============ */
 .buy10 { align-self: flex-start; padding: 7px 12px; font-size: 15px; gap: 10px; }
 .buy10 .price { font-size: 14px; }
 .buy10 small { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--r-peu-commune); letter-spacing: 0; }
@@ -1151,7 +1151,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .stage.is-bulk .stage-pack { margin-top: 14vh; }
 .reveal.is-bulk { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px 12px; width: min(820px, 100%); padding: 16px 0 24px; }
 .reveal.is-bulk .slot { --w: 100%; width: auto; }
-/* Lot de 10 : 50 cartes à l'écran, les reflets animés des cadres et finitions restent figés (ils tournent dans la vue détail) */
+/* Lot de 5 : 25 cartes à l'écran, les reflets animés des cadres et finitions restent figés (ils tournent dans la vue détail) */
 .reveal.is-bulk .card, .reveal.is-bulk .card *, .reveal.is-bulk .card *::before, .reveal.is-bulk .card *::after { animation: none; }
 .reveal.is-bulk .slot .tag { font-size: 10px; top: -9px; padding: 2px 6px; letter-spacing: .06em; white-space: nowrap; }
 @media (max-width: 760px) {
@@ -1630,7 +1630,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .timeline { overflow-y: hidden; overscroll-behavior: contain; }
 @media (max-width: 760px) { .chips, .tabs, .hand { overflow-y: hidden; overscroll-behavior: contain; } }
 
-/* Lot de 10 sur téléphone (surtout iPhone) : 50 cartes à l'écran. À plat au repos (50 calques 3D saturent l'iPhone) ;
+/* Lot de 5 sur téléphone (surtout iPhone) : 25 cartes à l'écran. À plat au repos (50 calques 3D saturent l'iPhone) ;
    retournement en perspective le temps de .is-turning (rotation d'un seul élément, sans calque 3D par carte). Dos allégé ; lueur pulsée seulement pour les légendaires et mythiques ; rayons du fond immobiles */
 .reveal.is-bulk .slot .inner { transform-style: flat; transition: none; }
 .reveal.is-bulk .slot .face { backface-visibility: visible; -webkit-backface-visibility: visible; }
@@ -1816,7 +1816,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .card.is-land.fin-plein.r-legendaire { box-shadow: 0 0 0 .5cqw #d9a52c, 0 14px 30px -12px rgba(0, 0, 0, .6); }
 .card.is-land.fin-plein.r-mythique { box-shadow: 0 0 0 .5cqw #c8102e, 0 0 22px -4px rgba(255, 40, 80, .7), 0 14px 30px -12px rgba(0, 0, 0, .6); }
 
-/* Ouverture d'un paquet : un Paysage est à plat, dans une case horizontale (dos compris) ; dans un lot de 10 il reste couché */
+/* Ouverture d'un paquet : un Paysage est à plat, dans une case horizontale (dos compris) ; dans un lot mixte il reste couché */
 .slot.is-land { width: calc(var(--w) * 1.75); }
 @media (max-width: 760px) { .slot.is-land { width: 92vw; max-width: 560px; } }
 .slot.is-land .inner { aspect-ratio: 88 / 63; }
@@ -1829,7 +1829,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .slot.is-land .card-back .back-foot { bottom: 5cqw; font-size: 2.6cqw; }
 .slot.is-land.tease .back::after { border-radius: 2% / 2.8%; }
 
-/* Lot de 10 du paquet Paysages : 5 cartes horizontales par rangée sur ordinateur, 2 sur téléphone */
+/* Lot de 5 du paquet Paysages : 5 cartes horizontales par rangée sur ordinateur, 2 sur téléphone */
 .reveal.is-bulk.is-landbulk { width: min(1320px, 100%); }
 .reveal.is-bulk .slot.is-land { width: auto; max-width: none; }
 @media (max-width: 760px) { .reveal.is-bulk.is-landbulk { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 8px; } }
