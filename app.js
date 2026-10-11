@@ -1399,6 +1399,7 @@
       </div>`;
     }).join('');
     const holos = holoCandidates().sort((a, b) => R[b.rarity].rank - R[a.rarity].rank);
+    const catsScroll = $('#fuse-body .fuse-cats')?.scrollLeft || 0; // la rangée des catégories garde sa position
     $('#fuse-body').innerHTML = `
       <h2>${t('fuseTitle')}</h2>
       <p class="muted">${t('fuseIntro', FUSE_COST, HOLO_COST)}</p>
@@ -1413,6 +1414,8 @@
           <span class="fuse-btns"><button class="btn btn-line" data-holo="${esc(c.id)}">${t('fuseToHolo')}</button>${
             holoMax(c.id) > 1 ? `<button class="btn btn-line" data-holo="${esc(c.id)}" data-max="1">${t('fuseMax', holoMax(c.id))}</button>` : ''}</span></div>`).join('')}</div>`
         : `<p class="muted small">${t('fuseNoHolo', HOLO_COST + 1)}</p>`}`;
+    const catsRow = $('#fuse-body .fuse-cats');
+    if (catsRow) catsRow.scrollLeft = catsScroll;
   }
   $('#fuse-btn').addEventListener('click', () => { SFX.tick(); fuseCat = null; renderFuse(); fuseDlg.showModal(); fuseDlg.scrollTop = 0; });
   $('#fuse-close').addEventListener('click', () => fuseDlg.close());
