@@ -143,7 +143,7 @@
       body: ['#10261a', '#2c4a5a'], metal: ['#ffd9b8', '#d08a52', '#7c4320'], cats: ['commune', 'province', 'region', 'enseignement'] },
     // Nouveautés : uniquement des cartes absentes de l'album (version standard). 10 par jour au plus, à l'unité.
     { id: 'nouveautes', title: { fr: 'Nouveautés', nl: 'Nieuwigheden' }, kicker: { fr: 'Édition collection', nl: 'Verzameleditie' }, big: '+5', price: 150, was: 300, // promo (prix normal : was)
-      desc: { fr: 'Cinq cartes qui manquent à ton album, garanti.', nl: 'Vijf kaarten die nog in je album ontbreken, gegarandeerd.' },
+      desc: { fr: 'Cinq cartes qui manquent à ton album (une légendaire ou mythique au plus), puis des versions manquantes.', nl: 'Vijf kaarten die nog in je album ontbreken (hoogstens één legendarische of mythische), daarna ontbrekende versies.' },
       body: ['#0b1c24', '#16424f'], metal: ['#e6fdff', '#7fd8e0', '#2f7c86'], cats: null, missing: true, perDay: 10, special: true },
     // Paquet spécial : 5ᵉ carte légendaire ou mieux (≈ 12 % de mythiques). Pièces uniquement, jamais gratuit ; lot de 5 possible.
     { id: 'prestige', title: { fr: 'Prestige', nl: 'Prestige' }, kicker: { fr: 'Édition prestige', nl: 'Prestige-editie' }, big: 'L+', price: 400, was: 600, // promo (prix normal : was)
@@ -754,20 +754,50 @@
     for (const f of BASE_FINISHES.slice(1).reverse()) { if ((roll -= f.chance * boost) < 0) return f.id; }
     return 'normal';
   }
-  function drawPack(pack, forceLegend) {
-    const pool = poolOf(pack).filter(c => BY_ID.has(c.id) && (!pack.missing || !totalOf(c.id)));
-    // Nouveautés, moins de 5 cartes manquantes : elles sont toutes dans le paquet, le reste est tiré au hasard
-    // (sans ça, la dernière carte d'un album ne s'obtenait plus qu'au hasard des autres paquets)
-    if (pack.missing && pool.length < PACK_SIZE) {
-      const out = pool.map(card => ({ card, finish: pickFinish(pack.finishBoost, pack.id) }));
-      const rest = poolOf(pack).filter(c => BY_ID.has(c.id) && !pool.includes(c));
-      while (out.length < PACK_SIZE) {
-        const r = pickRarity(0), free = rest.filter(c => !out.some(o => o.card === c));
-        const list = free.filter(c => c.rarity === r).length ? free.filter(c => c.rarity === r) : free;
-        out.push({ card: pickCard(list), finish: pickFinish(pack.finishBoost, pack.id) });
-      }
-      return out.sort((a, b) => R[a.card.rarity].rank - R[b.card.rarity].rank || finTier(a.finish) - finTier(b.finish));
+  // Paquet Nouveautés : cinq cartes absentes de l'album, une légendaire ou mythique au plus (sans ça, avec 15
+  // mythiques manquantes, trois paquets suffisaient à les avoir toutes). Quand il ne reste plus assez de cartes à
+  // découvrir (ou plus du tout), il complète avec des versions manquantes (Holo, Plein cadre, Dorée) de cartes déjà
+  // obtenues ; en dernier recours, des cartes au hasard.
+  const NEW_VERSIONS = BASE_FINISHES.filter(f => f.chance > 0);
+  const isTop = c => R[c.rarity].rank >= R.legendaire.rank;
+  const missingVersions = () => CARDS.filter(c => c.cat !== 'edition' && totalOf(c.id))
+    .flatMap(c => NEW_VERSIONS.filter(f => !countOf(c.id, f.id)).map(f => ({ card: c, finish: f.id })));
+  function pickByRarity(list) {
+    const rank = R[pickRarity(0)].rank;
+    for (let d = 0; d < RARITIES.length; d++) for (const r of [rank - d, rank + d]) {
+      const same = list.filter(c => R[c.rarity].rank === r);
+      if (same.length) return pickCard(same);
     }
+    return null;
+  }
+  function drawMissing(pack) {
+    const out = [], taken = new Set(), noTop = () => out.some(o => isTop(o.card));
+    const cards = CARDS.filter(c => c.cat !== 'edition' && !totalOf(c.id));
+    let versions = null;
+    while (out.length < PACK_SIZE) {
+      const free = cards.filter(c => !taken.has(c.id) && !(noTop() && isTop(c)));
+      if (free.length) { const card = pickByRarity(free); taken.add(card.id); out.push({ card, finish: pickFinish(pack.finishBoost, pack.id) }); continue; }
+      versions ||= missingVersions();
+      const vfree = versions.filter(v => !taken.has(v.card.id) && !(noTop() && isTop(v.card)));
+      if (!vfree.length) break;
+      // Version : Holo plus souvent que Plein cadre, Plein cadre plus souvent que Dorée (mêmes proportions qu'ailleurs)
+      let roll = Math.random() * NEW_VERSIONS.reduce((a, f) => a + f.chance, 0), fin = NEW_VERSIONS[0].id;
+      for (const f of NEW_VERSIONS) { if ((roll -= f.chance) < 0) { fin = f.id; break; } }
+      const withFin = vfree.filter(v => v.finish === fin), pickFrom = withFin.length ? withFin : vfree;
+      const card = pickByRarity([...new Set(pickFrom.map(v => v.card))]);
+      const v = pickFrom.find(x => x.card === card && (x.finish === fin || !withFin.length));
+      taken.add(card.id); out.push(v);
+    }
+    const rest = poolOf(pack).filter(c => BY_ID.has(c.id) && !taken.has(c.id) && !isTop(c));
+    while (out.length < PACK_SIZE && rest.length) {
+      const card = pickByRarity(rest); rest.splice(rest.indexOf(card), 1);
+      out.push({ card, finish: pickFinish(pack.finishBoost, pack.id) });
+    }
+    return out.sort((a, b) => R[a.card.rarity].rank - R[b.card.rarity].rank || finTier(a.finish) - finTier(b.finish));
+  }
+  function drawPack(pack, forceLegend) {
+    if (pack.missing) return drawMissing(pack);
+    const pool = poolOf(pack).filter(c => BY_ID.has(c.id));
     const out = [];
     const taken = new Set();
     for (let i = 0; i < PACK_SIZE; i++) {
@@ -784,7 +814,7 @@
           if (r < 0 || r >= RARITIES.length || list.length) continue;
           const same = pool.filter(c => c.rarity === RARITIES[r].id);
           list = same.filter(c => !taken.has(c.id));
-          if (!list.length && !pack.missing) list = same; // jamais de doublon dans le paquet Nouveautés
+          if (!list.length) list = same;
         }
       }
       const card = pickCard(list);
@@ -855,7 +885,7 @@
     $('#packs').innerHTML = shopPacks().map(p => {
       const tickets = state.tickets?.[p.id] || 0;
       const prog = p.missing ? null : packProgress(p);
-      const locked = (state.coins < p.price && !tickets && (!state.free || p.special)) || !leftToday(p) || (p.missing && !missingCount());
+      const locked = (state.coins < p.price && !tickets && (!state.free || p.special)) || !leftToday(p) || (p.missing && !missingAny());
       return `
       <div class="pack-card${locked ? ' is-locked' : ''}${prog && prog[0] === prog[1] ? ' is-done' : ''}${p.special ? ' is-special' : ''}${p.event ? ' is-event' : ''}" data-pack="${p.id}">
         ${tickets ? `<span class="ticket-ribbon">${t('ticketBadge', tickets)}</span>` : ''}
@@ -870,7 +900,7 @@
         <button class="linkish odds-btn">${t('packOdds')}</button>
         <table class="pack-odds" hidden><thead><tr><th></th><th>${t('oddsCards')}</th><th>${t('oddsLast')}</th></tr></thead><tbody>${packOdds(p).filter(o => o.p + o.last > 0).map(o =>
           `<tr><td><span class="gem" style="background:var(--r-${o.id})"></span>${rl(o.id)}</td><td>${pctOdds(o.p)}</td><td>${pctOdds(o.last)}</td></tr>`).join('')}${packOddsExtra(p)}</tbody></table>
-        ${p.perDay ? `<span class="pack-note">${!missingCount() ? t('albumFull') : !leftToday(p) ? t('perDay') : (missingCount() < PACK_SIZE ? t('lastMissing', missingCount()) + ' · ' : '') + t('perDayLeft', leftToday(p), p.perDay)}</span>`
+        ${p.perDay ? `<span class="pack-note">${!missingAny() ? t('albumFull') : !leftToday(p) ? t('perDay') : (!missingCount() ? t('newVersionsOnly') + ' · ' : missingCount() < PACK_SIZE && CARDS.filter(c => c.cat !== 'edition' && !totalOf(c.id) && isTop(c)).length <= 1 ? t('lastMissing', missingCount()) + ' · ' : '') + t('perDayLeft', leftToday(p), p.perDay)}</span>`
           : p.event ? `<span class="pack-note">${t('eventNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', bulkOf(p))} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
       </div>`;
     }).join('');
@@ -978,12 +1008,14 @@
   const packProgress = p => { const pool = [...poolOf(p), ...exclOf(p.id)]; return [pool.filter(c => totalOf(c.id)).length, pool.length]; };
   const packProgressHTML = ([a, n]) => `<div class="pack-prog${a === n ? ' is-done' : ''}"><span class="bar"><i style="width:${(a / n * 100).toFixed(1)}%"></i></span><small>${a === n ? t('packDone') : t('packProgress', a, n)}</small></div>`;
   const missingCount = () => CARDS.filter(c => c.cat !== 'edition' && !totalOf(c.id)).length;
+  // Nouveautés : à vendre tant qu'il reste une carte ou une version (Holo, Plein cadre, Dorée) à découvrir
+  const missingAny = () => missingCount() || missingVersions().length;
   let buyError = null;
   function buyPacks(pack, n = 1) {
     tickFree();
     buyError = null;
     if (pack.perDay && leftToday(pack) < n) { buyError = 'perDay'; return null; }
-    if (pack.missing && !missingCount()) { buyError = 'albumFull'; return null; }
+    if (pack.missing && !missingAny()) { buyError = 'albumFull'; return null; }
     let usedFree = false, usedTicket = false;
     const cost = n === 1 ? pack.price : bulkPrice(pack);
     if (n === 1 && state.tickets?.[pack.id] > 0) { state.tickets[pack.id]--; usedTicket = true; }
@@ -1217,7 +1249,7 @@
     const again = $('#again');
     again.hidden = false;
     if (n > 1) { again.textContent = t('again10', n, fmt(bulkPrice(pack))); again.disabled = state.coins < bulkPrice(pack); }
-    else { const free = (state.free && !pack.special) || state.tickets?.[pack.id] > 0; again.textContent = t('again', free ? null : pack.price); again.disabled = (!free && state.coins < pack.price) || !leftToday(pack) || (pack.missing && !missingCount()); }
+    else { const free = (state.free && !pack.special) || state.tickets?.[pack.id] > 0; again.textContent = t('again', free ? null : pack.price); again.disabled = (!free && state.coins < pack.price) || !leftToday(pack) || (pack.missing && !missingAny()); }
     $('#to-album').hidden = false;
     $('#stage-close').hidden = false;
     checkAchievements();

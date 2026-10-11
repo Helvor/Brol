@@ -44,6 +44,10 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   Dorée, Plein cadre) : à plat sur deux colonnes dans l'album et dans la fiche, couchées d'un quart de tour dans les
   cases verticales (ouverture, fusion, échanges), image de partage horizontale. Cadrage par carte : `PAYSAGE_POS`.
   Série « Sous terre ». Écartés faute de photo libre utilisable : forêt d'Anlier, bocage de Herve, vallée de la Hoëgne.
+- [x] **Paquet Nouveautés revu** (octobre 2026) : une légendaire ou mythique au plus par paquet (avant, avec 15
+  mythiques manquantes, trois paquets suffisaient) ; quand il ne reste plus assez de cartes à découvrir, il complète
+  avec des versions manquantes (Holo, Plein cadre, Dorée) de cartes obtenues, et reste en vente une fois l'album
+  complet (« nouvelles versions »).
 - [x] **Paquet « Balades »** (octobre 2026) : 60 balades (`BALADES` dans le générateur, catégorie `balade`), design
   « fiche de randonnée » (balisage, pastille des kilomètres, profil de dénivelé décoratif, niveau 1 à 3 ; liseré de
   rareté dessiné à l'intérieur de la carte). La fiche montre le point de départ sur la carte des provinces
