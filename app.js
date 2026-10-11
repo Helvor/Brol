@@ -1031,6 +1031,8 @@
     const front = slot.querySelector('.front');
     if (!front.firstElementChild) front.innerHTML = cardHTML(r.card, { finish: r.finish, imgW: 250 }); // vignette : petite image
     slot.classList.add('is-flipped');
+    // Lot : retournement en perspective le temps de .is-turning (voir style.css)
+    if (current.n > 1) { slot.classList.add('is-turning'); setTimeout(() => slot.classList.remove('is-turning'), 520); }
     SFX.flip();
     setTimeout(() => { SFX.reveal(R[r.card.rarity].rank); if (r.finish !== 'normal') SFX.shimmer(); }, 250);
     if (slot.classList.contains('big-hit')) {
