@@ -176,7 +176,7 @@ a { color: inherit; }
   position: fixed; inset: 0; z-index: 100; overflow: auto;
   background: radial-gradient(ellipse at 50% 40%, #1d2029 0%, #0a0b0e 70%);
   color: #f1eee6;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: safe center;
   padding: 40px 20px 140px;
   animation: fade-in .3s ease;
 }
@@ -745,16 +745,11 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
   .pack-info h2 { font-size: 20px; }
   .pack-info p { font-size: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-  /* Ouverture : carrousel horizontal avec aimantation */
+  /* Ouverture : les cartes les unes sous les autres, on fait défiler la page vers le bas */
   .stage { justify-content: flex-start; padding: 70px 0 170px; }
   .stage-pack { width: min(260px, 66vw); margin-top: 6vh; }
-  .reveal {
-    flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%; max-width: none;
-    padding: 24px 15vw 30px; gap: 16px; margin-top: 4vh;
-  }
-  .reveal::-webkit-scrollbar { display: none; }
-  .slot { --w: 70vw; flex: none; scroll-snap-align: center; max-width: 330px; animation-name: deal-m; }
+  .reveal { flex-direction: column; flex-wrap: nowrap; align-items: center; width: 100%; max-width: none; padding: 24px 0 30px; gap: 26px; margin-top: 4vh; }
+  .slot { --w: 70vw; flex: none; max-width: 330px; animation-name: deal-m; }
   @keyframes deal-m { from { opacity: 0; transform: translateY(40px) scale(.92); } }
   .slot:not(.is-flipped):hover .inner { transform: none; }
   .stage-bar { padding: 14px 14px calc(18px + env(safe-area-inset-bottom)); }
@@ -1633,7 +1628,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 /* Rangées qui défilent à l'horizontale (onglets de l'album et de la fusion, barre du bas, cartes d'un paquet, mini-jeux) :
    jamais de défilement vertical à l'intérieur, sinon sur iPhone la rangée « flotte » quand on la tire du doigt */
 .timeline { overflow-y: hidden; overscroll-behavior: contain; }
-@media (max-width: 760px) { .chips, .tabs, .reveal, .hand { overflow-y: hidden; overscroll-behavior: contain; } }
+@media (max-width: 760px) { .chips, .tabs, .hand { overflow-y: hidden; overscroll-behavior: contain; } }
 
 /* Lot de 10 sur téléphone (surtout iPhone) : 50 cartes à l'écran. À plat au repos (50 calques 3D saturent l'iPhone) ;
    retournement en perspective le temps de .is-turning (rotation d'un seul élément, sans calque 3D par carte). Dos allégé ; lueur pulsée seulement pour les légendaires et mythiques ; rayons du fond immobiles */
@@ -1820,3 +1815,16 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .card.is-land.fin-plein .card-top { bottom: 10cqw; }
 .card.is-land.fin-plein.r-legendaire { box-shadow: 0 0 0 .5cqw #d9a52c, 0 14px 30px -12px rgba(0, 0, 0, .6); }
 .card.is-land.fin-plein.r-mythique { box-shadow: 0 0 0 .5cqw #c8102e, 0 0 22px -4px rgba(255, 40, 80, .7), 0 14px 30px -12px rgba(0, 0, 0, .6); }
+
+/* Ouverture d'un paquet : un Paysage est à plat, dans une case horizontale (dos compris) ; dans un lot de 10 il reste couché */
+.slot.is-land { width: calc(var(--w) * 1.75); }
+@media (max-width: 760px) { .slot.is-land { width: 92vw; max-width: 560px; } }
+.slot.is-land .inner { aspect-ratio: 88 / 63; }
+.slot.is-land .land { aspect-ratio: 88 / 63; }
+.slot.is-land .land > .card.is-land { position: relative; left: auto; top: auto; width: 100%; translate: none; rotate: none; }
+.slot.is-land .card-back { border-radius: 2% / 2.8%; }
+.slot.is-land .card-back svg { width: 40cqw; }
+.slot.is-land .card-back .back-logo { width: 22cqw; }
+.slot.is-land .card-back::before { inset: 2.6cqw; } .slot.is-land .card-back::after { inset: 3.8cqw; }
+.slot.is-land .card-back .back-foot { bottom: 5cqw; font-size: 2.6cqw; }
+.slot.is-land.tease .back::after { border-radius: 2% / 2.8%; }

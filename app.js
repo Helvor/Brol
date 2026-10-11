@@ -1070,7 +1070,7 @@
       const tag = (ed ? t('edTag') + ' · ' : '') + gotLabel(got, finish, bulk);
       const hit = ev ? F[finish].color : ed ? packById(card.pack).metal[1] : finish === 'or' ? '#f6d478' : special && rank < R.epique.rank ? '#9fe8ff' : `var(--r-${card.rarity})`;
       return `
-      <div class="slot${rank >= R.epique.rank || special || ed ? ' tease' : ''}${rank >= R.legendaire.rank || finTier(finish) >= F.plein.rank || ed ? ' big-hit' : ''}${ed ? ' is-ed' : ''}"
+      <div class="slot${card.landscape && !bulk ? ' is-land' : ''}${rank >= R.epique.rank || special || ed ? ' tease' : ''}${rank >= R.legendaire.rank || finTier(finish) >= F.plein.rank || ed ? ' big-hit' : ''}${ed ? ' is-ed' : ''}"
            style="--hit: ${hit}; --dx: calc(${2 - i % PACK_SIZE} * (var(--w) + 22px)); --dr: ${(i % PACK_SIZE - 2) * 6}deg; animation-delay: ${bulk ? Math.floor(i / PACK_SIZE) * 70 + (i % PACK_SIZE) * 25 : i * 90}ms" data-i="${i}">
         ${tag ? `<span class="tag${got === 'card' ? '' : got === 'version' ? ' ver' : ' dup'}${special && got !== 'version' ? ' special' : ''}${ev ? ' ev' : ''}${ed ? ' ed' : ''}"${ev || ed ? ` style="--tagc:${hit}"` : ''}>${tag}</span>` : ''}
         <div class="inner">
@@ -1080,10 +1080,7 @@
       </div>`;
     }).join('');
     current.revealed.slice(0, PACK_SIZE).forEach((_, i) => SFX.deal(i));
-    const reveal = $('#reveal');
-    reveal.scrollLeft = 0;
-    requestAnimationFrame(() => { reveal.scrollLeft = 0; });
-    setTimeout(() => { reveal.scrollLeft = 0; }, 900);
+    stage.scrollTop = 0;
     $('#flip-all').hidden = false;
     if (current.pityTriggered) setTimeout(() => toast(t('pityHit')), 400);
   }
@@ -1116,22 +1113,20 @@
       setTimeout(flash, 300);
       if (navigator.vibrate) navigator.vibrate(80);
     }
-    const reveal = $('#reveal');
     const next = $('#reveal .slot:not(.is-flipped)');
-    if (next && !auto && current.n === 1 && reveal.scrollWidth > reveal.clientWidth + 4) {
-      setTimeout(() => reveal.scrollTo({ left: next.offsetLeft - (reveal.clientWidth - next.offsetWidth) / 2, behavior: 'smooth' }), 700);
-    }
+    // Défilement vertical : la carte suivante remonte au centre si elle n'est pas entièrement visible
+    if (next && !auto && current.n === 1 && !inView(next)) setTimeout(() => next.scrollIntoView({ block: 'center', behavior: 'smooth' }), 700);
     if (!next) setTimeout(finishReveal, 700);
   }
+  const inView = el => { const b = el.getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight - 120; };
   // « Tout retourner » : une carte à la fois, avec le temps de lire le nom.
-  // Sur téléphone (carrousel), on fait défiler jusqu'à la carte avant de la retourner.
+  // Quand les cartes ne tiennent pas à l'écran (téléphone, paysages), on fait défiler jusqu'à la carte avant de la retourner.
   let autoFlipping = false, flipRun = 0;
   $('#flip-all').addEventListener('click', async () => {
     if (autoFlipping) return;
     autoFlipping = true;
     const run = ++flipRun;
     $('#flip-all').hidden = true;
-    const reveal = $('#reveal');
     if (current.n > 1) {
       const slots = $$('#reveal .slot');
       for (let r = 0; r < slots.length; r += PACK_SIZE) {
@@ -1145,15 +1140,12 @@
       autoFlipping = false;
       return;
     }
-    const carousel = () => reveal.scrollWidth > reveal.clientWidth + 4;
     for (const s of $$('#reveal .slot:not(.is-flipped)')) {
       if (stage.hidden || run !== flipRun) break;
-      if (carousel()) {
-        reveal.scrollTo({ left: s.offsetLeft - (reveal.clientWidth - s.offsetWidth) / 2, behavior: 'smooth' });
-        await sleep(250);
-      }
+      const scroll = !inView(s);
+      if (scroll) { s.scrollIntoView({ block: 'center', behavior: 'smooth' }); await sleep(350); }
       flip(s, true);
-      await sleep((carousel() ? 800 : 550) + (s.classList.contains('big-hit') ? 500 : 0));
+      await sleep((scroll ? 800 : 550) + (s.classList.contains('big-hit') ? 500 : 0));
     }
     autoFlipping = false;
   });
