@@ -427,7 +427,7 @@ a { color: inherit; }
 }
 .chip:hover { color: var(--ink); }
 .chip.is-active { color: var(--ink); }
-.chip.is-active::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: -1px; height: 3px; background: var(--ink); }
+.chip.is-active::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 0; height: 3px; background: var(--ink); }
 .chip small { font-family: var(--mono); font-weight: 500; font-size: 11px; margin-left: 5px; letter-spacing: 0; }
 .chip.live::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #22b35e; margin-right: 6px; vertical-align: 2px; }
 
@@ -904,7 +904,7 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
     background: var(--bg); border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(4, 1fr);
   }
   .tab { padding: 0 4px; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 4px; }
-  .tab.is-active::after { top: -1px; bottom: auto; left: 20%; right: 20%; }
+  .tab.is-active::after { top: 0; bottom: auto; left: 20%; right: 20%; }
   body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
   .toast { bottom: calc(76px + env(safe-area-inset-bottom)); }
 }
@@ -1629,3 +1629,24 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .card.cat-histoire.fin-plein .card-stats dt { color: #7a5f3a; }
 .card.cat-histoire.fin-plein .card-stats dd { color: #2b2116; font-family: var(--type); font-weight: 400; }
 .card.cat-histoire.fin-plein .card-stats div + div { border-left-color: rgba(90, 60, 20, .25); }
+
+/* Rangées qui défilent à l'horizontale (onglets de l'album et de la fusion, barre du bas, cartes d'un paquet, mini-jeux) :
+   jamais de défilement vertical à l'intérieur, sinon sur iPhone la rangée « flotte » quand on la tire du doigt */
+.timeline { overflow-y: hidden; overscroll-behavior: contain; }
+@media (max-width: 760px) { .chips, .tabs, .reveal, .hand { overflow-y: hidden; overscroll-behavior: contain; } }
+
+/* Lot de 10 sur téléphone (surtout iPhone) : 50 cartes à l'écran. Pas de 3D (50 calques graphiques), retournement à
+   plat ; dos allégé ; lueur des cartes rares fixe ; rayons du fond immobiles */
+.reveal.is-bulk .slot .inner { transform-style: flat; transition: none; }
+.reveal.is-bulk .slot .face { backface-visibility: visible; -webkit-backface-visibility: visible; }
+.reveal.is-bulk .slot .front { transform: none; opacity: 0; }
+.reveal.is-bulk .slot.is-flipped .inner { transform: none; animation: flip-flat .32s ease-out; }
+.reveal.is-bulk .slot.is-flipped .front { opacity: 1; }
+.reveal.is-bulk .slot.is-flipped .back { opacity: 0; }
+.reveal.is-bulk .slot.big-hit.is-flipped .inner { animation: flip-flat .32s ease-out, pop-flat .6s cubic-bezier(.2, .9, .3, 1.3) .3s; }
+@keyframes flip-flat { 0% { transform: scaleX(1); } 50% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+@keyframes pop-flat { 40% { transform: scale(1.1); } }
+.reveal.is-bulk .slot.tease .back::after { animation: none; opacity: .85; box-shadow: 0 0 0 2px var(--hit), 0 0 14px 2px var(--hit); }
+.reveal.is-bulk .slot:not(.is-flipped):hover .inner { transform: none; }
+.card-back.is-lite .back-logo { width: 46cqw; filter: none; }
+.stage.is-bulk .stage-rays { animation-play-state: paused; }

@@ -552,16 +552,18 @@
     <rect x="21" y="10" width="30" height="42" rx="4.5" fill="url(#bk-gold)" stroke="#fff1b8" stroke-width="1" transform="rotate(12 36 52)"/>
     <path transform="rotate(12 36 52)" d="M30.5 19.5v23M30.5 19.5h6.5a5.6 5.6 0 0 1 0 11.2h-6.5M30.5 30.7h7.4a6 6 0 0 1 0 12h-7.4" fill="none" stroke="#0c1020" stroke-width="4.6" stroke-linecap="square"/></g></svg>`;
   const cardBack = () => `<div class="card-back">${sealSVG({ ring: t('backSeal'), center: '', color: '#e2b33c', size: 200, centerSize: 52 })}${BACK_MARK}<div class="back-foot">${t('back')}</div></div>`;
+  // Dos allégé pour les lots de 10 (50 cartes à l'écran) : sans le sceau à texte circulaire, coûteux à dessiner 50 fois
+  const cardBackLite = () => `<div class="card-back is-lite">${BACK_MARK}<div class="back-foot">${t('back')}</div></div>`;
 
   // ---------- Rendu d'une carte ----------
-  function cardHTML(c, { count = 0, finish = 'normal', variants = null } = {}) {
+  function cardHTML(c, { count = 0, finish = 'normal', variants = null, imgW = 500 } = {}) {
     let media;
     const photo = photoOf(c, finish);
     if (c.cat === 'evenement') {
       media = `<div class="event-big">${esc(String(c.stats[0][1]).replace(/\s/g, ' '))}</div>`;
     } else if (photo) {
       const fallback = `this.outerHTML='<div class=&quot;portrait&quot;>${SILHOUETTE.replace(/"/g, '&quot;')}<span>${esc(initials(c.name))}</span></div>'`;
-      media = `<img src="${imgUrl(photo)}" alt="" loading="lazy" decoding="async"${focusStyle(photo)} onerror="${fallback}">`;
+      media = `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async"${focusStyle(photo)} onerror="${fallback}">`;
     } else {
       media = `<div class="portrait">${SILHOUETTE}<span>${esc(initials(c.name))}</span></div>`;
     }
@@ -1001,7 +1003,7 @@
            style="--hit: ${hit}; --dx: calc(${2 - i % PACK_SIZE} * (var(--w) + 22px)); --dr: ${(i % PACK_SIZE - 2) * 6}deg; animation-delay: ${bulk ? Math.floor(i / PACK_SIZE) * 70 + (i % PACK_SIZE) * 25 : i * 90}ms" data-i="${i}">
         ${tag ? `<span class="tag${got === 'card' ? '' : got === 'version' ? ' ver' : ' dup'}${special && got !== 'version' ? ' special' : ''}${ev ? ' ev' : ''}${ed ? ' ed' : ''}"${ev || ed ? ` style="--tagc:${hit}"` : ''}>${tag}</span>` : ''}
         <div class="inner">
-          <div class="face back">${cardBack()}</div>
+          <div class="face back">${bulk ? cardBackLite() : cardBack()}</div>
           <div class="face front">${bulk ? '' : cardHTML(card, { finish })}</div>
         </div>
       </div>`;
@@ -1027,7 +1029,7 @@
     const r = current.revealed[slot.dataset.i];
     // Lot de 10 : la face n'est créée qu'au retournement (50 cartes d'un coup faisaient ramer le téléphone)
     const front = slot.querySelector('.front');
-    if (!front.firstElementChild) front.innerHTML = cardHTML(r.card, { finish: r.finish });
+    if (!front.firstElementChild) front.innerHTML = cardHTML(r.card, { finish: r.finish, imgW: 250 }); // vignette : petite image
     slot.classList.add('is-flipped');
     SFX.flip();
     setTimeout(() => { SFX.reveal(R[r.card.rarity].rank); if (r.finish !== 'normal') SFX.shimmer(); }, 250);
