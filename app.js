@@ -81,6 +81,7 @@
     { id: 'bd',           fr: 'Bulles',        nl: 'Strips' },
     { id: 'paysage',      fr: 'Paysages',      nl: 'Landschappen' },
     { id: 'balade',       fr: 'Balades',       nl: 'Wandelingen' },
+    { id: 'voiture',      fr: 'Voitures',      nl: 'Auto’s' },
     { id: 'evenement',    fr: 'Événements',    nl: 'Gebeurtenissen' },
     { id: 'edition',      fr: 'Éditions limitées', nl: 'Beperkte edities' },
   ];
@@ -125,6 +126,9 @@
     { id: 'paysages', title: { fr: 'Paysages', nl: 'Landschappen' }, kicker: { fr: 'Édition carte postale', nl: 'Prentkaarteditie' }, big: '1F', price: 80,
       desc: { fr: 'Grottes, rochers, cascades, lacs, forêts, fagnes et côte, en cartes postales.', nl: 'Grotten, rotsen, watervallen, meren, bossen, venen en kust, als prentkaarten.' },
       body: ['#0e2a24', '#2f6b4f'], metal: ['#fff6e0', '#f2c86b', '#9a6b1c'], cats: ['paysage'] },
+    { id: 'voitures', title: { fr: 'Voitures belges', nl: 'Belgische auto’s' }, kicker: { fr: 'Édition showroom', nl: 'Showroomeditie' }, big: 'B', price: 80,
+      desc: { fr: 'Minerva, Impéria, la Jamais Contente, les usines et les circuits.', nl: 'Minerva, Impéria, de Jamais Contente, de fabrieken en de circuits.' },
+      body: ['#0b0c0f', '#2b2e35'], metal: ['#f5f6f8', '#b9bec7', '#6c717a'], cats: ['voiture'] },
     { id: 'balades', title: { fr: 'Balades', nl: 'Wandelingen' }, kicker: { fr: 'Édition randonnée', nl: 'Wandeleditie' }, big: 'GR', price: 80,
       desc: { fr: '60 belles balades de Belgique, avec leur point de départ sur la carte.', nl: '60 mooie wandelingen in België, met hun vertrekpunt op de kaart.' },
       body: ['#1f241b', '#4a5a36'], metal: ['#f3efe4', '#e0483a', '#8a2a20'], cats: ['balade'] },
@@ -518,6 +522,10 @@
       <rect x="24" y="112" width="252" height="16" rx="3" fill="${p.metal[1]}" opacity=".18"/>
       <path d="M20 394H280" stroke="${p.metal[1]}" stroke-width="2" opacity=".4"/>
       ${[40, 84, 128, 172, 216, 260].map((x, i) => `<circle cx="${x}" cy="394" r="${i === 3 ? 6 : 4}" fill="${p.metal[0]}" opacity="${i === 3 ? .8 : .45}"/>`).join('')}`,
+    // Calandre chromée et route
+    voitures: (k, p) => `<g opacity=".22" fill="${p.metal[0]}">${Array.from({ length: 13 }, (_, i) => `<rect x="${78 + i * 12}" y="120" width="5" height="70" rx="2"/>`).join('')}</g>
+      <rect x="70" y="112" width="160" height="86" rx="20" fill="none" stroke="${p.metal[1]}" stroke-width="3" opacity=".35"/>
+      <path d="M150 412L130 260h40Z" fill="${p.metal[0]}" opacity=".08"/><path d="M150 400v-30M150 350v-30M150 300v-25" stroke="${p.metal[0]}" stroke-width="4" opacity=".3"/>`,
     // Balisage blanc et rouge et sentier en lacets
     balades: (k, p) => `<path d="M40 412C70 360 210 360 170 300S60 250 120 200S250 150 210 90" fill="none" stroke="${p.metal[0]}" stroke-width="5" stroke-dasharray="2 12" stroke-linecap="round" opacity=".35"/>
       ${[[52, 120], [236, 250], [70, 330]].map(([x, y]) => `<g transform="translate(${x} ${y}) rotate(-6)" opacity=".5"><rect width="34" height="10" fill="${p.metal[0]}"/><rect y="10" width="34" height="10" fill="${p.metal[1]}"/></g>`).join('')}`,
@@ -668,7 +676,27 @@
       <circle cx="${x}" cy="${y}" r="12" class="wm-halo"/><circle cx="${x}" cy="${y}" r="5.5" class="wm-dot"/></svg>
       <p><span>${esc(w.start)}<br><small>${la.toFixed(4).replace('.', ',')}° N · ${lo.toFixed(4).replace('.', ',')}° E</small></span><a href="${osm}" target="_blank" rel="noopener">${t('walkOsm')}</a></p></div>`;
   }
+  // Voitures : « Showroom » (style.css, .card.cat-voiture) : photo mise en lumière, emblème émaillé de la rareté
+  function carHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c);
+    const finTag = finish !== 'normal' ? `<span class="fin-tag">${fl(finish)}</span>` : '';
+    const dots = variants && variants.length > 1
+      ? `<span class="var-dots" title="${t('versionsOwned')}">${variants.filter(v => v !== 'normal').map(v => `<i class="d-${v}"></i>`).join('')}</span>` : '';
+    return `
+      <article class="card r-${c.rarity} cat-${c.cat} fam-${c.family || 'gris'} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="card-photo"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async">` : ''}</div>
+          <div class="card-top"><span class="no">${String(c.no).padStart(4, '0')}</span>${finTag}</div>
+          <span class="car-badge">B</span>
+          <div class="card-band"><h3${name.length > 14 ? ' class="is-long"' : ''}>${esc(name)}</h3><p class="sub">${esc(window.I18N.subtitle(c))}</p></div>
+          <dl class="card-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          ${dots}
+        </div>
+      </article>`;
+  }
   function cardHTML(c, { count = 0, finish = 'normal', variants = null, imgW = 500 } = {}) {
+    if (c.cat === 'voiture') return carHTML(c, { count, finish, variants, imgW });
     if (c.landscape) return landHTML(c, { count, finish, variants, imgW });
     if (c.walk) return walkHTML(c, { count, finish, variants, imgW });
     let media;
@@ -725,7 +753,7 @@
   // Chaque catégorie contient toutes les raretés (réparties par notoriété), donc les taux affichés sont justes.
   // Nouvelle catégorie : à rareté égale, ses cartes sortent trois fois plus souvent jusqu'à la date indiquée, pour
   // qu'elles ne se noient pas parmi les 1 500 cartes du paquet Belgique. Les taux par rareté ne changent pas.
-  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30', histoire: '2027-05-31', bd: '2027-06-30', paysage: '2027-07-31', balade: '2027-08-31' }, FEATURED_WEIGHT = 3;
+  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30', histoire: '2027-05-31', bd: '2027-06-30', paysage: '2027-07-31', balade: '2027-08-31', voiture: '2027-09-30' }, FEATURED_WEIGHT = 3;
   const featuredCats = () => { const d = ymd(now()); return new Set(Object.keys(FEATURED).filter(cat => d <= FEATURED[cat])); };
   function pickCard(list) {
     const feat = featuredCats(), w = c => feat.has(c.cat) ? FEATURED_WEIGHT : 1;
@@ -1175,7 +1203,12 @@
     const slot = e.target.closest('.slot');
     if (!slot) return;
     if (!slot.classList.contains('is-flipped')) flip(slot);
-    else { const r = current.revealed[slot.dataset.i]; openDetail(r.card.id, r.finish); }
+    else {
+      const r = current.revealed[slot.dataset.i];
+      // Balayage : seulement entre les cartes déjà retournées
+      setNav($$('#reveal .slot.is-flipped').map(s => current.revealed[s.dataset.i]).map(x => ({ id: x.card.id, fin: x.finish })));
+      openDetail(r.card.id, r.finish);
+    }
   });
 
   function flip(slot, auto = false) {
@@ -1291,6 +1324,7 @@
   });
 
   // ---------- Album ----------
+  let albumList = []; // cartes affichées dans l'album, dans l'ordre (balayage dans la fiche)
   const filters = { cat: 'all', rarity: 'all', pack: 'all', owned: false, special: false, q: '', series: null };
   let shown = PAGE;
 
@@ -1303,7 +1337,13 @@
       counts.all[1]++; counts.all[0] += o;
       if (c.current && c.cat === 'politique') { counts.live[1]++; counts.live[0] += o; }
     }
-    const chips = [{ id: 'all', label: t('all') }, ...CATS.filter(c => counts[c.id]).map(c => ({ id: c.id, label: c[L()] })), ...(counts.live[1] ? [{ id: 'live', label: t('liveGov') }] : [])];
+    // Catégories par ordre alphabétique (« Tout » d'abord, « Au gouvernement » à la fin), aussi dans la liste déroulante
+    const coll = new Intl.Collator(L(), { sensitivity: 'base' });
+    const cats = CATS.filter(c => counts[c.id]).map(c => ({ id: c.id, label: c[L()] })).sort((a, b) => coll.compare(a.label, b.label));
+    const chips = [{ id: 'all', label: t('all') }, ...cats, ...(counts.live[1] ? [{ id: 'live', label: t('liveGov') }] : [])];
+    if (!chips.some(c => c.id === filters.cat)) filters.cat = 'all';
+    $('#f-cat').innerHTML = chips.map(c => `<option value="${c.id}">${c.id === 'all' ? t('allCats') : esc(c.label)} (${counts[c.id][0]}/${counts[c.id][1]})</option>`).join('');
+    $('#f-cat').value = filters.cat;
     $('#cat-chips').innerHTML = chips.map(c =>
       `<button class="chip${filters.cat === c.id ? ' is-active' : ''}${c.id === 'live' ? ' live' : ''}" data-cat="${c.id}">${c.label}<small>${counts[c.id][0]}/${counts[c.id][1]}</small></button>`).join('');
 
@@ -1324,6 +1364,7 @@
       (!q || [c.name, c.nl?.name, c.subtitle, c.party, c.meta].some(s => (s || '').toLowerCase().includes(q))));
 
     if (filters.series) list.sort((a, b) => !totalOf(a.id) - !totalOf(b.id)); // série : cartes obtenues d'abord
+    albumList = list;
     $('#series-banner').hidden = !filters.series;
     if (filters.series) $('#series-banner').innerHTML = `<span>${t('seriesBanner')} : <b>${esc(sl(filters.series, 'title'))}</b></span><button class="linkish" id="clear-series">${t('clearFilter')}</button>`;
     const grid = $('#grid');
@@ -1358,8 +1399,9 @@
   const PACK_MEMBERS = new Map();
   const packMembers = id => { if (!PACK_MEMBERS.has(id)) { const p = packById(id); PACK_MEMBERS.set(id, new Set([...poolOf(p), ...exclOf(id)].map(c => c.id))); } return PACK_MEMBERS.get(id); };
   function fillPackSelect() {
+    const coll = new Intl.Collator(L(), { sensitivity: 'base' });
     $('#f-pack').innerHTML = `<option value="all">${t('allPacks')}</option>` + ALL_PACKS.filter(p => p.cats !== null && !p.missing)
-      .map(p => `<option value="${p.id}">${esc(pl(p, 'title'))}</option>`).join('');
+      .sort((a, b) => coll.compare(pl(a, 'title'), pl(b, 'title'))).map(p => `<option value="${p.id}">${esc(pl(p, 'title'))}</option>`).join('');
     $('#f-pack').value = filters.pack;
   }
   $('#f-pack').addEventListener('change', e => { filters.pack = e.target.value; filters.cat = 'all'; shown = PAGE; renderBinder(); });
@@ -1367,6 +1409,7 @@
     $('#f-rarity').innerHTML = `<option value="all">${t('allRarities')}</option>` + RARITIES.map(r => `<option value="${r.id}">${rl(r.id)}</option>`).join('');
     $('#f-rarity').value = filters.rarity;
   }
+  $('#f-cat').addEventListener('change', e => { filters.cat = e.target.value; shown = PAGE; renderBinder(); $('#cat-chips .is-active')?.scrollIntoView({ inline: 'center', block: 'nearest' }); });
   $('#f-rarity').addEventListener('change', e => { filters.rarity = e.target.value; shown = PAGE; renderBinder(); });
   $('#f-owned').addEventListener('change', e => { filters.owned = e.target.checked; shown = PAGE; renderBinder(); });
   $('#f-special').addEventListener('change', e => { filters.special = e.target.checked; shown = PAGE; renderBinder(); });
@@ -1375,12 +1418,12 @@
   const pressKey = e => (e.key === 'Enter' || e.key === ' ') && !e.repeat;
   $('#grid').addEventListener('keydown', e => {
     const card = e.target.closest('.card, .empty-slot[data-id]');
-    if (card && pressKey(e)) { e.preventDefault(); openDetail(card.dataset.id, card.dataset.fin); }
+    if (card && pressKey(e)) { e.preventDefault(); setNav(albumList.map(c => ({ id: c.id }))); openDetail(card.dataset.id, card.dataset.fin); }
   });
   $('#grid').addEventListener('click', e => {
     if (e.target.id === 'more') { shown += PAGE; renderBinder(); return; }
     const card = e.target.closest('.card, .empty-slot[data-id]');
-    if (card) { SFX.tick(); openDetail(card.dataset.id, card.dataset.fin); }
+    if (card) { SFX.tick(); setNav(albumList.map(c => ({ id: c.id }))); openDetail(card.dataset.id, card.dataset.fin); }
   });
   // Doublons revendables : un exemplaire de chaque version est toujours gardé
   function dupValue() {
@@ -1978,6 +2021,9 @@
   }
   function openDetail(id, finish = 'normal') {
     const c = BY_ID.get(id);
+    dlg.dataset.id = id;
+    const i = nav.findIndex(x => x.id === id);
+    $('#detail-prev').hidden = !(i > 0); $('#detail-next').hidden = !(i >= 0 && i < nav.length - 1);
     const owned = finishesOwned(id);
     $('#detail').classList.toggle('is-land', !!c.landscape);
     // Carte pas encore obtenue (album) : l'emplacement vide, son nom, sa rareté et ses chances d'obtention
@@ -2053,6 +2099,31 @@
     dlg.scrollTop = 0;
   }
   $('#detail-close').addEventListener('click', () => dlg.close());
+  // Carte précédente ou suivante : balayage sur téléphone, flèches du clavier et boutons ‹ › sur ordinateur.
+  // La liste (album filtré, cartes retournées d'un paquet) est fixée au moment où l'on ouvre la fiche.
+  let nav = [];
+  function setNav(list) { nav = list; }
+  function navTo(step) {
+    const id = dlg.dataset.id, i = nav.findIndex(x => x.id === id);
+    if (i < 0 || !nav[i + step]) return;
+    const x = nav[i + step];
+    SFX.tick();
+    const card = $('#detail-card');
+    card.classList.remove('slide-l', 'slide-r'); void card.offsetWidth; card.classList.add(step > 0 ? 'slide-l' : 'slide-r');
+    openDetail(x.id, x.fin || (totalOf(x.id) ? bestFinish(x.id) : 'normal'));
+  }
+  $('#detail-prev').addEventListener('click', () => navTo(-1));
+  $('#detail-next').addEventListener('click', () => navTo(1));
+  dlg.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') navTo(-1); else if (e.key === 'ArrowRight') navTo(1); });
+  let touch = null;
+  dlg.addEventListener('touchstart', e => { const t0 = e.touches[0]; touch = e.touches.length === 1 && !e.target.closest('.card-odds table, .walk-map') ? [t0.clientX, t0.clientY] : null; }, { passive: true });
+  dlg.addEventListener('touchend', e => {
+    if (!touch) return;
+    const t1 = e.changedTouches[0], dx = t1.clientX - touch[0], dy = t1.clientY - touch[1];
+    touch = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > 1.6 * Math.abs(dy)) navTo(dx < 0 ? 1 : -1);
+  }, { passive: true });
+  dlg.addEventListener('close', () => { nav = []; });
   dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 
   // ---------- Thème, son, langue ----------

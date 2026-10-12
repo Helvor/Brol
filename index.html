@@ -68,6 +68,7 @@
         </div>
         <div class="filters">
           <input id="search" type="search" data-i18n-ph="search" autocomplete="off">
+          <select id="f-cat"></select>
           <select id="f-rarity"></select>
           <select id="f-pack"></select>
           <label class="check"><input id="f-owned" type="checkbox"><span></span><em data-i18n="owned">Possédées</em></label>
@@ -145,6 +146,8 @@
   <dialog id="detail">
     <div class="detail-inner">
       <div id="detail-card" class="detail-card"></div>
+      <button class="detail-nav" id="detail-prev" aria-label="‹" hidden>‹</button>
+      <button class="detail-nav" id="detail-next" aria-label="›" hidden>›</button>
       <div class="detail-info">
         <button class="close" id="detail-close" aria-label="×">×</button>
         <div id="detail-body"></div>

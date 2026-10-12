@@ -48,6 +48,11 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   mythiques manquantes, trois paquets suffisaient) ; quand il ne reste plus assez de cartes à découvrir, il complète
   avec des versions manquantes (Holo, Plein cadre, Dorée) de cartes obtenues, et reste en vente une fois l'album
   complet (« nouvelles versions »).
+- [x] **Paquet « Voitures belges »** (octobre 2026) : 37 cartes (`VOITURES` dans le générateur, catégorie `voiture`) :
+  marques (Minerva, Impéria, FN, Métallurgique, Germain…), la Jamais Contente et la Pieper Auto-Mixte (hybride),
+  carrossiers, usines (Forest, Gand, Genk), circuits, motos et camions. Design « Showroom » (fond noir, filet
+  chromé, emblème émaillé de la rareté). Moins de 50 cartes : la plupart des marques anciennes n'ont pas de photo
+  libre utilisable (Edran, Ranger, Opel Anvers, Jeecy-Vea…). Cadrage relu avec `tools/planche.mjs` (`VOITURE_POS`).
 - [x] **Paquet « Balades »** (octobre 2026) : 60 balades (`BALADES` dans le générateur, catégorie `balade`), design
   « fiche de randonnée » (balisage, pastille des kilomètres, profil de dénivelé décoratif, niveau 1 à 3 ; liseré de
   rareté dessiné à l'intérieur de la carte). La fiche montre le point de départ sur la carte des provinces
