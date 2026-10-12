@@ -403,6 +403,55 @@
     if (c.rarity === 'legendaire' || c.rarity === 'mythique') { ctx.strokeStyle = c.rarity === 'mythique' ? '#c8102e' : '#d9a52c'; ctx.lineWidth = 2.8 * u; ctx.strokeRect(x, y, w, h); }
   }
 
+  // Voiture : « Showroom » (voir style.css, .card.cat-voiture)
+  function showroom(ctx, c, photo, x, y, w, h, finish) {
+    const u = w / 100, acc = LAND_ACC[c.rarity] || LAND_ACC.commune, gold = finish === 'or', holo = finish === 'holo', full = finish === 'plein';
+    const bg = ctx.createRadialGradient(x + w / 2, y + h * .3, 10, x + w / 2, y + h * .3, h * .8);
+    bg.addColorStop(0, gold ? '#2e2614' : '#2b2e35'); bg.addColorStop(1, gold ? '#0b0904' : '#0b0c0f');
+    ctx.fillStyle = bg; ctx.fillRect(x, y, w, h);
+    const px = x + 1.6 * u, py = y + 1.6 * u, pw = w - 3.2 * u, ph = full ? h - 3.2 * u : 66 * u;
+    if (photo) {
+      const m = /^(\d+)%\s+(\d+)%(?:;--zoom:([\d.]+))?/.exec(c.pos || '') || [];
+      const fx = (+m[1] || 50) / 100, fy = (+m[2] || 55) / 100, z = +m[3] || 1;
+      ctx.save(); rr(ctx, px, py, pw, ph, full ? 3 * u : [3 * u, 3 * u, 0, 0]); ctx.clip();
+      if (gold) ctx.filter = 'sepia(.25) saturate(1.2)';
+      cover(ctx, photo, px - pw * (z - 1) * fx, py - ph * (z - 1) * fy, pw * z, ph * z, fy, false, fx); ctx.restore();
+    }
+    const g = ctx.createLinearGradient(0, py, 0, py + ph);
+    if (full) { g.addColorStop(0, 'rgba(0,0,0,.15)'); g.addColorStop(.35, 'rgba(0,0,0,0)'); g.addColorStop(.62, 'rgba(0,0,0,.55)'); g.addColorStop(1, 'rgba(0,0,0,.92)'); }
+    else { g.addColorStop(.55, 'rgba(11,12,15,0)'); g.addColorStop(1, gold ? '#0b0904' : '#0b0c0f'); }
+    ctx.fillStyle = g; ctx.fillRect(px, py, pw, ph);
+    if (holo) { ctx.save(); ctx.globalCompositeOperation = 'color-dodge'; ctx.globalAlpha = .26; ctx.fillStyle = gradient(ctx, px, py, pw, ph, ['#00000000', ...IRIS, '#00000000'], 115); ctx.fillRect(px, py, pw, ph); ctx.restore(); }
+    // Emblème émaillé
+    const bx = full ? x + w - 10 * u : x + w / 2, by = full ? y + 10 * u : y + 67 * u, br = (full ? 6 : 7) * u;
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 2 * u; ctx.shadowOffsetY = u;
+    ctx.fillStyle = '#6c717a'; ctx.beginPath(); ctx.arc(bx, by, br + 1.1 * u, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    ctx.fillStyle = gold ? '#f7dc84' : '#d9dce2'; ctx.beginPath(); ctx.arc(bx, by, br + .7 * u, 0, Math.PI * 2); ctx.fill();
+    if (holo) { const cg = ctx.createConicGradient(.5, bx, by); [...IRIS, IRIS[0]].forEach((col, n) => cg.addColorStop(n / 5, col)); ctx.fillStyle = cg; }
+    else { const rg = ctx.createRadialGradient(bx - br * .3, by - br * .4, 1, bx, by, br); const base = gold ? '#d9a52c' : acc;
+      rg.addColorStop(0, gold ? '#fff1b8' : '#ffffffaa'); rg.addColorStop(.25, base); rg.addColorStop(1, base); ctx.fillStyle = rg; }
+    ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
+    ctx.letterSpacing = '0px'; ctx.fillStyle = holo || gold ? '#2a1e05' : '#fff'; ctx.font = `700 ${4.6 * u}px Georgia, serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('B', bx, by + .3 * u);
+    // Nom, description, stats
+    const name = window.I18N.name(c).toUpperCase();
+    ctx.letterSpacing = `${1.2 * u}px`; let fs = 7.4 * u;
+    for (; fs > 4 * u; fs -= .2 * u) { ctx.font = `600 ${fs}px ${TEXT}`; if (ctx.measureText(name).width <= w - 12 * u) break; }
+    ctx.textBaseline = 'alphabetic'; ctx.fillStyle = gold ? '#f6d478' : '#eceae4'; ctx.fillText(name, x + w / 2, y + 84 * u);
+    ctx.letterSpacing = '0px'; ctx.font = `400 ${3.4 * u}px ${TEXT}`; ctx.fillStyle = gold ? '#b8a06a' : full ? '#d5d7dc' : '#a5a8af';
+    wrap(ctx, window.I18N.subtitle(c) || '', w - 16 * u, 2).forEach((l, n) => ctx.fillText(l, x + w / 2, y + 91 * u + n * 4.4 * u));
+    const st = (API.statsOf ? API.statsOf(c) : c.stats).slice(0, 3), cw = (w - 16 * u) / 3;
+    st.forEach(([k, v], n) => {
+      const cx = x + 8 * u + cw * (n + .5);
+      if (n) { ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fillRect(x + 8 * u + cw * n, y + h - 16 * u, 2, 9 * u); }
+      ctx.letterSpacing = `${.5 * u}px`; ctx.fillStyle = gold ? '#b8a06a' : '#8d9098'; ctx.font = `500 ${2.3 * u}px ${TEXT}`; ctx.fillText(window.I18N.statKey(k).toUpperCase(), cx, y + h - 12.5 * u);
+      ctx.letterSpacing = '0px'; ctx.fillStyle = gold ? '#f6d478' : '#eceae4'; ctx.font = `500 ${4 * u}px ${TEXT}`; ctx.fillText(clip(ctx, String(window.I18N.tv(v)), cw - 2 * u), cx, y + h - 7 * u);
+    });
+    ctx.textAlign = 'left';
+    // Filet chromé (ou doré, rubis, irisé)
+    const ring = holo ? IRIS : gold || c.rarity === 'legendaire' ? ['#fff1b8', '#a87b1e', '#f7dc84', '#8a6516', '#fff1b8'] : c.rarity === 'mythique' ? ['#ffd0d8', '#8a0020', '#ff6b81', '#6a0016', '#ffd0d8'] : ['#f5f6f8', '#7d828c', '#e8eaee', '#6c717a', '#f5f6f8'];
+    ctx.strokeStyle = gradient(ctx, x, y, w, h, ring); ctx.lineWidth = .5 * u; rr(ctx, x + 1.6 * u, y + 1.6 * u, w - 3.2 * u, h - 3.2 * u, 3 * u); ctx.stroke();
+  }
+
   async function render(c, finish) {
     if (c.landscape) try { await Promise.all([document.fonts?.load(`40px ${LOBSTER}`), document.fonts?.load(`40px ${SLAB}`), document.fonts?.load(`20px ${ELITE}`)]); } catch (_) { /* police de secours */ }
     if (c.cat === 'histoire') try { await document.fonts?.load(`40px ${TYPE}`); } catch (_) { /* police de secours */ }
@@ -438,12 +487,12 @@
     // Carte
     // Paysage : carte horizontale, plus large et moins haute
     const land = !!c.landscape, cw = land ? 960 : CW, ch = land ? Math.round(960 * 63 / 88) : CH;
-    const x = (W - cw) / 2, y = land ? 300 : 170, pad = c.walk ? 0 : land ? (finish === 'plein' ? 0 : finish === 'or' ? 17 : 9) : 16, r = land ? 15 : 30;
+    const x = (W - cw) / 2, y = land ? 300 : 170, pad = c.walk || c.cat === 'voiture' ? 0 : land ? (finish === 'plein' ? 0 : finish === 'or' ? 17 : 9) : 16, r = land ? 15 : 30;
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 24;
     rr(ctx, x, y, cw, ch, r);
     const arch = c.cat === 'histoire'; // cartes Histoire : dossier « Archives » (voir style.css)
     const bd = c.cat === 'bd'; // cartes Bulles : design « Pop »
-    const frame = c.walk ? ['#f3efe4', '#e9e3d2'] : land ? (finish === 'holo' ? FRAMES.holo : finish === 'or' ? FRAMES.or : c.rarity === 'legendaire' ? FRAMES.legendaire : c.rarity === 'mythique' ? ['#5a0012', '#ff2d55', '#9a0020', '#ff6b81', '#5a0012'] : ['#ffffff', '#f4f1ea'])
+    const frame = c.cat === 'voiture' ? ['#0b0c0f', '#0b0c0f'] : c.walk ? ['#f3efe4', '#e9e3d2'] : land ? (finish === 'holo' ? FRAMES.holo : finish === 'or' ? FRAMES.or : c.rarity === 'legendaire' ? FRAMES.legendaire : c.rarity === 'mythique' ? ['#5a0012', '#ff2d55', '#9a0020', '#ff6b81', '#5a0012'] : ['#ffffff', '#f4f1ea'])
       : bd && (finish === 'normal' || finish === 'plein') ? [POP_ACC[c.rarity] || POP_ACC.commune, POP_ACC[c.rarity] || POP_ACC.commune] : arch && (finish === 'normal' || finish === 'plein') ? ARCH_FRAMES[c.rarity] || ARCH_FRAMES.commune : FRAMES[fin.pack || finish !== 'normal' ? finish : c.rarity] || (ed ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : FRAMES[c.rarity]);
     ctx.fillStyle = gradient(ctx, x, y, cw, ch, ed && finish === 'normal' ? [ed.metal[2], ed.metal[0], ed.metal[1], ed.metal[0], ed.metal[2]] : frame, fin.id === 'tricolore' ? 0 : 135);
     ctx.fill(); ctx.restore();
@@ -451,6 +500,7 @@
     ctx.save(); rr(ctx, ix, iy, iw, ih, land ? 10 : 18); ctx.clip();
     if (land) postcard(ctx, c, photo, ix, iy, iw, ih, finish, cw / 100);
     else if (c.walk) walkCard(ctx, c, photo, ix, iy, iw, ih, finish);
+    else if (c.cat === 'voiture') showroom(ctx, c, photo, ix, iy, iw, ih, finish);
     else if (arch) archives(ctx, c, photo, ix, iy, iw, ih, finish);
     else if (bd) pop(ctx, c, photo, ix, iy, iw, ih, finish);
     else {
@@ -527,14 +577,14 @@
     }
     ctx.restore();
     // Paysage : version et rareté sous la carte ; autres cartes : numéro, version et rareté en haut de la carte
-    if (land || c.walk) {
+    if (land || c.walk || c.cat === 'voiture') {
       const tag = (finish !== 'normal' ? API.finishLabel(finish) + ' · ' : '') + API.rarityLabel(c.rarity);
       ctx.font = `800 26px ${DISPLAY}`; const tw = ctx.measureText(tag.toUpperCase()).width + 32;
       ctx.fillStyle = glow; rr(ctx, (W - tw) / 2, y + ch + 40, tw, 44, 8); ctx.fill();
       ctx.fillStyle = '#111'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillText(tag.toUpperCase(), W / 2, y + ch + 63); ctx.textAlign = 'left';
     }
     ctx.save(); rr(ctx, ix, iy, iw, ih, 18); ctx.clip();
-    if (!land && !c.walk) {
+    if (!land && !c.walk && c.cat !== 'voiture') {
     ctx.fillStyle = 'rgba(10,10,12,.7)'; rr(ctx, ix + 20, iy + 20, 104, 40, 8); ctx.fill();
     ctx.fillStyle = '#f1eee6'; ctx.font = `600 24px ${MONO}`; ctx.fillText(String(c.no).padStart(4, '0'), ix + 34, iy + 49);
     const tag = (finish !== 'normal' ? API.finishLabel(finish) + ' · ' : '') + API.rarityLabel(c.rarity);
