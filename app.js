@@ -143,7 +143,7 @@
       body: ['#10261a', '#2c4a5a'], metal: ['#ffd9b8', '#d08a52', '#7c4320'], cats: ['commune', 'province', 'region', 'enseignement'] },
     // Nouveautés : uniquement des cartes absentes de l'album (version standard). 10 par jour au plus, à l'unité.
     { id: 'nouveautes', title: { fr: 'Nouveautés', nl: 'Nieuwigheden' }, kicker: { fr: 'Édition collection', nl: 'Verzameleditie' }, big: '+5', price: 150, was: 300, // promo (prix normal : was)
-      desc: { fr: 'Cinq cartes qui manquent à ton album (une légendaire ou mythique au plus), puis des versions manquantes.', nl: 'Vijf kaarten die nog in je album ontbreken (hoogstens één legendarische of mythische), daarna ontbrekende versies.' },
+      desc: { fr: 'Cinq cartes absentes de ton album (au plus une légendaire ou mythique), puis des versions.', nl: 'Vijf kaarten die in je album ontbreken (hoogstens één legendarische of mythische), daarna versies.' },
       body: ['#0b1c24', '#16424f'], metal: ['#e6fdff', '#7fd8e0', '#2f7c86'], cats: null, missing: true, perDay: 10, special: true },
     // Paquet spécial : 5ᵉ carte légendaire ou mieux (≈ 12 % de mythiques). Pièces uniquement, jamais gratuit ; lot de 5 possible.
     { id: 'prestige', title: { fr: 'Prestige', nl: 'Prestige' }, kicker: { fr: 'Édition prestige', nl: 'Prestige-editie' }, big: 'L+', price: 400, was: 600, // promo (prix normal : was)
@@ -608,6 +608,8 @@
   };
   // Nom en grosses lettres : plus petit quand un mot est long (« Hertogenwald ») ou le nom entier (trois lignes sinon)
   const nameSize = name => { const w = Math.max(...name.split(/\s+/).map(x => x.length)); return w > 12 || name.length > 26 ? ' is-xlong' : w > 9 || name.length > 18 ? ' is-long' : ''; };
+  // Image introuvable (Wikimedia indisponible ou limité) : un paysage dessiné à la place de la zone vide
+  const NO_IMG = "this.parentNode.classList.add('no-img');this.remove()";
   function landHTML(c, { count, finish, variants, imgW }) {
     const photo = photoOf(c, finish), name = nm(c), prov = c.stats?.[1]?.[1] || '';
     const top = R[c.rarity].rank >= R.legendaire.rank;
@@ -618,7 +620,7 @@
       <article class="card is-land r-${c.rarity} cat-${c.cat} fam-${c.family || 'gris'} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
         ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
         <div class="card-in">
-          <div class="card-photo"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, Math.round(imgW * 1.6))}" alt="" loading="lazy" decoding="async">` : ''}</div>
+          <div class="card-photo${photo ? '' : ' no-img'}"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, Math.round(imgW * 1.6))}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
           <p class="pc-hello">${souvenirOf(c.name)}</p>
           <h3 class="pc-name${nameSize(name)}">${esc(name)}</h3>
           <div class="pc-stamp"><div>${STAMP_SVG}<b>${STAMP_VAL[c.rarity]}</b><i>${esc(rl(c.rarity))}</i></div></div>
@@ -649,11 +651,11 @@
         ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
         <div class="card-in">
           <div class="wk-top"><span class="wk-mark"><i></i><i></i></span><b>${L() === 'nl' ? 'Wandeling' : 'Balade'}</b>${finTag}<span class="no">${String(c.no).padStart(4, '0')}</span></div>
-          <div class="card-photo">${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async">` : ''}</div>
+          <div class="card-photo${photo ? '' : ' no-img'}">${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
           <div class="wk-km">${c.walk?.km ?? ''}<small>KM</small></div>
           <div class="card-band"><h3>${esc(nm(c))}</h3><p class="sub">${esc(window.I18N.subtitle(c))}</p></div>
           <div class="wk-prof">${walkProfile(c.id)}</div>
-          <dl class="card-stats">${st.slice(0, 2).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd>${esc(tv(v))}</dd></div>`).join('')}
+          <dl class="card-stats">${st.slice(0, 2).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd${ddLen(v)}>${esc(tv(v))}</dd></div>`).join('')}
             <div><dt>${esc(window.I18N.statKey('Niveau'))}</dt><dd><span class="wk-lvl" title="${esc(tv(st[2]?.[1] || ''))}">${[1, 2, 3].map(i => `<i${i <= lvl ? ' class="on"' : ''}></i>`).join('')}</span></dd></div></dl>
           ${dots}
         </div>
@@ -670,6 +672,8 @@
       <circle cx="${x}" cy="${y}" r="12" class="wm-halo"/><circle cx="${x}" cy="${y}" r="5.5" class="wm-dot"/></svg>
       <p><span>${esc(w.start)}<br><small>${la.toFixed(4).replace('.', ',')}° N · ${lo.toFixed(4).replace('.', ',')}° E</small></span><a href="${osm}" target="_blank" rel="noopener">${t('walkOsm')}</a></p></div>`;
   }
+  // Valeur longue dans la barre des statistiques : police plus petite plutôt que coupée (« Les Enga… »)
+  const ddLen = v => { const n = String(tv(v)).length; return n > 12 ? ' class="is-xlong"' : n > 9 ? ' class="is-long"' : ''; };
   function cardHTML(c, { count = 0, finish = 'normal', variants = null, imgW = 500 } = {}) {
     if (c.landscape) return landHTML(c, { count, finish, variants, imgW });
     if (c.walk) return walkHTML(c, { count, finish, variants, imgW });
@@ -706,7 +710,7 @@
             <p class="sub">${esc(window.I18N.subtitle(c))}</p>
             ${c.meta ? `<p class="meta">${esc(window.I18N.meta(c))}</p>` : ''}
           </div>
-          <dl class="card-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          <dl class="card-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd${ddLen(v)}>${esc(tv(v))}</dd></div>`).join('')}</dl>
           ${dots}
         </div>
       </article>`;
@@ -1908,16 +1912,24 @@
     if ($('#view-ach').classList.contains('is-active')) { renderAch(); markAchSeen(); }
   }
   function markAchSeen() { state.achSeen = Date.now(); save(); renderAchDot(); }
+  // Plus de deux succès d'un coup : une seule notification qui les regroupe (avant, elles s'enchaînaient toutes les
+  // 3 s et cachaient le haut de l'écran pendant longtemps). Une touche sur la notification passe à la suivante.
+  let achTimer = 0;
   function showNextAch() {
-    const a = achQueue.shift();
+    clearTimeout(achTimer);
     const el = $('#ach-toast');
-    if (!a) { achShowing = false; el.classList.remove('is-on'); return; }
+    if (!achQueue.length) { achShowing = false; el.classList.remove('is-on'); return; }
     achShowing = true;
-    el.innerHTML = `<span class="medal">${achIcon(a.icon)}</span><span class="ach-toast-text"><small>${t('achUnlocked')}</small><b>${esc(a.title[L()])}</b><span>${esc(a.desc[L()])}</span></span><em>+${fmt(a.reward)}</em>`;
+    const group = achQueue.length > 2 ? achQueue.splice(0) : [achQueue.shift()], a = group[0];
+    const names = group.slice(1, 4).map(x => x.title[L()]).join(' · ') + (group.length > 4 ? ` · +${group.length - 4}` : '');
+    el.innerHTML = group.length > 1
+      ? `<span class="medal">${achIcon('medal')}</span><span class="ach-toast-text"><small>${t('achMany', group.length)}</small><b>${esc(a.title[L()])}</b><span>${esc(names)}</span></span><em>+${fmt(group.reduce((n, x) => n + x.reward, 0))}</em>`
+      : `<span class="medal">${achIcon(a.icon)}</span><span class="ach-toast-text"><small>${t('achUnlocked')}</small><b>${esc(a.title[L()])}</b><span>${esc(a.desc[L()])}</span></span><em>+${fmt(a.reward)}</em>`;
     el.classList.remove('is-on'); void el.offsetWidth; el.classList.add('is-on');
     SFX.achievement();
-    setTimeout(showNextAch, 3200);
+    achTimer = setTimeout(showNextAch, 2800);
   }
+  $('#ach-toast').addEventListener('click', showNextAch);
   const achIcon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">${window.ACH_ICONS[name] || window.ACH_ICONS.star}</svg>`;
   // Succès débloqués depuis la dernière visite de l'onglet (state.achSeen) : point sur l'onglet et étiquette « nouveau »
   const isUnseen = a => state.ach[a.id] > (state.achSeen || 0);
@@ -1970,8 +1982,9 @@
   function ownedOddsLine(c, finish, rows) {
     const src = state.origin?.[keyOf(c.id, finish)];
     if (src && !packById(src)) return `<p class="best">${t('gotFromOther', t('origin_' + src))}</p>`;
-    const withFin = rows.filter(r => r.fins.some(f => f.id === finish));
-    const row = (src && withFin.find(r => r.pack.id === src)) || withFin.sort((a, b) => b.fins.find(f => f.id === finish).p - a.fins.find(f => f.id === finish).p)[0];
+    const withFin = rows.filter(r => r.fins.some(f => f.id === finish)), onSale = new Set(shopPacks().map(p => p.id));
+    const byFin = withFin.sort((a, b) => b.fins.find(f => f.id === finish).p - a.fins.find(f => f.id === finish).p);
+    const row = (src && withFin.find(r => r.pack.id === src)) || byFin.find(r => onSale.has(r.pack.id)) || byFin[0];
     if (!row) return '';
     const p = row.fins.find(f => f.id === finish).p, std = row.fins.find(f => f.id === 'normal').p;
     const rarer = finish !== 'normal' && std > p ? ' ' + t('rarerThan', fmt(Math.round(std / p))) : '';
@@ -1988,12 +2001,12 @@
     return `<details class="card-odds" open><summary>${t('cardOddsH')}</summary>
       ${finish ? ownedOddsLine(c, finish, rows) : `<p class="best">${t('cardOddsBest', pct2(best.p), esc(pl(best.pack, 'title')) + (best.pack.event && !onSale.has(best.pack.id) ? ' ' + evDates(best.pack) : ''), oneIn(best.p))}</p>`}
       <p class="hint">${t('cardOddsNote')}</p>
-      <table><thead><tr><th>${t('cardOddsPack')}</th><th>${t('cardOddsAny')}</th>${cols.map(f => `<th${cur(f)}><span class="fin-dot d-${f}"></span>${fl(f)}</th>`).join('')}</tr></thead>
+      <div class="odds-scroll"><table><thead><tr><th>${t('cardOddsPack')}</th><th>${t('cardOddsAny')}</th>${cols.map(f => `<th${cur(f)}><span class="fin-dot d-${f}"></span>${fl(f)}</th>`).join('')}</tr></thead>
       <tbody>${rows.map(r => {
         const ev = r.fins.find(f => F[f.id].pack);
         const cell = (x, f) => `<td title="${oneIn(x)}"${cur(f)}>${pct2(x)}</td>`;
-        return `<tr><td>${esc(pl(r.pack, 'title'))}${r.pack.event ? ` <small>${evDates(r.pack)}</small>` : ''}${ev ? `<br><small><span class="fin-dot d-${ev.id}"></span>${fl(ev.id)} ${pct2(ev.p)}</small>` : ''}</td>
-          <td title="${oneIn(r.p)}"><b>${pct2(r.p)}</b></td>${cols.map(f => cell(r.fins.find(x => x.id === f).p, f)).join('')}</tr>`; }).join('')}</tbody></table></details>`;
+        return `<tr><td>${esc(pl(r.pack, 'title'))}${r.pack.event ? ` <small>${eventWindow(r.pack).map(dm).join('–')}</small>` : ''}${ev ? `<br><small><span class="fin-dot d-${ev.id}"></span>${fl(ev.id)} ${pct2(ev.p)}</small>` : ''}</td>
+          <td title="${oneIn(r.p)}"><b>${pct2(r.p)}</b></td>${cols.map(f => cell(r.fins.find(x => x.id === f).p, f)).join('')}</tr>`; }).join('')}</tbody></table></div></details>`;
   }
   function openDetail(id, finish = 'normal') {
     const c = BY_ID.get(id);
