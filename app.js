@@ -841,7 +841,9 @@
       pool.forEach(r => { out[mapTo(R[r.id].rank)] += rarityWeight(r, top) / tot; });
       return out;
     };
-    const lr = R[pack.last || 'rare'].rank, a = slot(0), b = slot(lr, lastTop(lr));
+    // Nouveautés : pas de 5ᵉ carte garantie (les cartes manquantes suivent les taux ordinaires) ; avant, le tableau
+    // annonçait « rare ou mieux » en 5ᵉ position (tools/check-odds.mjs mesurait 53 % de communes)
+    const lr = R[pack.last || 'rare'].rank, a = slot(0), b = pack.missing ? a : slot(lr, lastTop(lr));
     return RARITIES.map((r, i) => ({ id: r.id, p: a[i], last: b[i] }));
   }
 

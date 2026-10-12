@@ -639,6 +639,9 @@ async function regressions() {
       });
       check(r.fuse === 0, 'éditions limitées proposées à la fusion : ' + r.fuse);
       check(r.pity === 10, 'le paquet Nouveautés a fait bouger la garantie : ' + r.pity);
+      // Taux affichés du paquet Nouveautés : pas de 5ᵉ carte « rare ou mieux » (il n'y en a pas)
+      const odds = await page.evaluate(() => window.RDL.packOdds(window.RDL.PACKS.find(p => p.id === 'nouveautes')).every(o => Math.abs(o.p - o.last) < 1e-12));
+      check(odds, 'taux de la 5ᵉ carte du paquet Nouveautés');
     });
     await step('fiche : meilleure chance dans un paquet en vente', async () => {
       const r = await page.evaluate(() => {
