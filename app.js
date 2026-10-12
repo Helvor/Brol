@@ -407,6 +407,8 @@
   // ---------- Utilitaires ----------
   const $ = s => document.querySelector(s);
   const $$ = s => [...document.querySelectorAll(s)];
+  // Recherche : sans majuscules ni accents (« liege » trouve Liège)
+  const norm = s => String(s ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   // Adresse directe de l'image (data/images.js) : miniature sur thumb.wikimedia.org à une largeur standard
   // (Wikimedia refuse les autres), ou l'original s'il est plus petit. Special:FilePath en dernier recours :
@@ -1066,9 +1068,10 @@
     if (legends >= 2) st.doubleLeg = 1;
     if (new Date().getHours() < 5) st.night = 1;
     // Garantie anti-malchance : le compteur repart à zéro dès qu'une légendaire ou mieux sort
-    const pityTriggered = forceLegend && legends > 0;
+    // Nouveautés : hors garantie (une légendaire au plus, choisie parmi les cartes manquantes), le compteur ne bouge pas
+    const pityTriggered = !pack.missing && forceLegend && legends > 0;
     if (pityTriggered) st.pityHits++;
-    state.pity = legends ? 0 : state.pity + 1;
+    if (!pack.missing) state.pity = legends ? 0 : state.pity + 1;
     return { revealed, newCount, newVer, bonus, pityTriggered };
   }
 
@@ -1318,10 +1321,10 @@
     let dupes = 0, specials = 0;
     for (const [key, n] of Object.entries(state.owned)) { dupes += Math.max(0, n - 1); if (key.includes('|') && n) specials++; }
     $('#binder-summary').textContent = t('binderSummary', counts.all[0], fmt(counts.all[1]), specials, state.packs, dupes) + ' · ' +
-      (counts.all[0] / counts.all[1] >= LATE_AT ? t('lateOn', String(LATE_MULT).replace('.', ',')) : t('lateOff', Math.round(LATE_AT * 100), String(LATE_MULT).replace('.', ',')));
+      (albumShare() >= LATE_AT ? t('lateOn', String(LATE_MULT).replace('.', ',')) : t('lateOff', Math.round(LATE_AT * 100), String(LATE_MULT).replace('.', ',')));
     $('#sell-all').disabled = dupes === 0;
 
-    const q = filters.q.trim().toLowerCase();
+    const q = norm(filters.q.trim());
     const list = CARDS.filter(c =>
       (!filters.series || filters.series.members.includes(c.id)) &&
       (filters.cat === 'all' || (filters.cat === 'live' ? c.current && c.cat === 'politique' : c.cat === filters.cat)) &&
@@ -1329,7 +1332,7 @@
       (filters.pack === 'all' || packMembers(filters.pack).has(c.id)) &&
       (!filters.owned || totalOf(c.id)) &&
       (!filters.special || finishesOwned(c.id).some(f => f !== 'normal')) &&
-      (!q || [c.name, c.nl?.name, c.subtitle, c.party, c.meta].some(s => (s || '').toLowerCase().includes(q))));
+      (!q || [c.name, c.nl?.name, c.subtitle, c.party, c.meta].some(s => norm(s).includes(q))));
 
     if (filters.series) list.sort((a, b) => !totalOf(a.id) - !totalOf(b.id)); // série : cartes obtenues d'abord
     $('#series-banner').hidden = !filters.series;
@@ -1486,7 +1489,9 @@
     const own = cat === 'edition' ? [] : CARDS.filter(c => c.rarity === rarity && c.cat === cat);
     return own.length ? own : CARDS.filter(c => c.rarity === rarity && c.cat !== 'edition');
   };
-  const fuseStock = (rarity, cat) => CARDS.filter(c => c.rarity === rarity && (!cat || c.cat === cat) && countOf(c.id, 'normal') > 1)
+  // Éditions limitées exclues : introuvables hors de leur paquet (une fois par an pour les événements), elles
+  // valent plus à la revente que la carte qu'elles donneraient
+  const fuseStock = (rarity, cat) => CARDS.filter(c => c.rarity === rarity && c.cat !== 'edition' && (!cat || c.cat === cat) && countOf(c.id, 'normal') > 1)
     .map(c => ({ c, extra: countOf(c.id, 'normal') - 1 }));
   const fuseAvailable = (rarity, cat) => fuseStock(rarity, cat).reduce((a, x) => a + x.extra, 0);
   // Doublons par catégorie pour une rareté, et nombre de fusions possibles (chacune dans une seule catégorie)
@@ -1501,6 +1506,7 @@
     const got = gotKind(card.id, finish), key = keyOf(card.id, finish);
     state.owned[key] = (state.owned[key] || 0) + 1;
     if (src) noteOrigin(key, src);
+    if (got === 'card') mission('new'); // missions et défi « nouvelles cartes » : fusion et carte du jour comptent aussi
     return { card, finish, got, isNew: got === 'card' };
   }
   function fuseRarity(rarity, only = null) {
@@ -1547,7 +1553,7 @@
   let fuseCat = null; // catégorie choisie dans la fenêtre (null : toutes, chaque fusion restant dans une catégorie)
   function renderFuse(results = null) {
     // Catégories qui ont des doublons standard, dans l'ordre de l'album
-    const cats = [...new Set(CARDS.filter(c => countOf(c.id, 'normal') > 1).map(c => c.cat))].sort((a, b) => CAT_RANK[a] - CAT_RANK[b]);
+    const cats = [...new Set(CARDS.filter(c => c.cat !== 'edition' && countOf(c.id, 'normal') > 1).map(c => c.cat))].sort((a, b) => CAT_RANK[a] - CAT_RANK[b]);
     if (fuseCat && !cats.includes(fuseCat)) fuseCat = null;
     const extraIn = cat => CARDS.filter(c => c.cat === cat).reduce((a, c) => a + Math.max(0, countOf(c.id, 'normal') - 1), 0);
     const chips = cats.length > 1 ? `<div class="chips fuse-cats">${[null, ...cats].map(k => `<button class="chip${fuseCat === k ? ' is-active' : ''}" data-fuse-cat="${k ?? ''}">${k ? `${esc(cl(k))} <small>${extraIn(k)}</small>` : t('fuseAll')}</button>`).join('')}</div>` : '';
@@ -1972,16 +1978,19 @@
   function oddsTable(c, finish = null) {
     const rows = cardOdds(c);
     if (!rows.length) return '';
-    const cols = BASE_FINISHES.map(f => f.id), best = rows[0];
+    // Meilleure chance : d'abord un paquet en vente aujourd'hui ; un paquet d'événement hors période est signalé
+    const onSale = new Set(shopPacks().map(p => p.id)), best = rows.find(r => onSale.has(r.pack.id)) || rows[0];
+    const evDates = p => { const [a, b] = eventWindow(p); return t('cardOddsEvent', fmtDay(a), fmtDay(b)); };
+    const cols = BASE_FINISHES.map(f => f.id);
     const cur = f => f === finish ? ' class="is-cur"' : '';
     return `<details class="card-odds" open><summary>${t('cardOddsH')}</summary>
-      ${finish ? ownedOddsLine(c, finish, rows) : `<p class="best">${t('cardOddsBest', pct2(best.p), esc(pl(best.pack, 'title')), oneIn(best.p))}</p>`}
+      ${finish ? ownedOddsLine(c, finish, rows) : `<p class="best">${t('cardOddsBest', pct2(best.p), esc(pl(best.pack, 'title')) + (best.pack.event && !onSale.has(best.pack.id) ? ' ' + evDates(best.pack) : ''), oneIn(best.p))}</p>`}
       <p class="hint">${t('cardOddsNote')}</p>
       <table><thead><tr><th>${t('cardOddsPack')}</th><th>${t('cardOddsAny')}</th>${cols.map(f => `<th${cur(f)}><span class="fin-dot d-${f}"></span>${fl(f)}</th>`).join('')}</tr></thead>
       <tbody>${rows.map(r => {
         const ev = r.fins.find(f => F[f.id].pack);
         const cell = (x, f) => `<td title="${oneIn(x)}"${cur(f)}>${pct2(x)}</td>`;
-        return `<tr><td>${esc(pl(r.pack, 'title'))}${r.pack.event ? ` <small>${t('cardOddsEvent')}</small>` : ''}${ev ? `<br><small><span class="fin-dot d-${ev.id}"></span>${fl(ev.id)} ${pct2(ev.p)}</small>` : ''}</td>
+        return `<tr><td>${esc(pl(r.pack, 'title'))}${r.pack.event ? ` <small>${evDates(r.pack)}</small>` : ''}${ev ? `<br><small><span class="fin-dot d-${ev.id}"></span>${fl(ev.id)} ${pct2(ev.p)}</small>` : ''}</td>
           <td title="${oneIn(r.p)}"><b>${pct2(r.p)}</b></td>${cols.map(f => cell(r.fins.find(x => x.id === f).p, f)).join('')}</tr>`; }).join('')}</tbody></table></details>`;
   }
   function openDetail(id, finish = 'normal') {
@@ -2142,7 +2151,7 @@
   // Interface partagée avec les mini-jeux (games.js)
   window.RDL = {
     CARDS, BY_ID, get state() { return state; }, save, renderWallet, checkAchievements, totalOf,
-    esc, imgUrl, focusOf, fmt, toast, bugReport, SFX, catLabel: cl, rarityLabel: rl,
+    esc, norm, imgUrl, focusOf, fmt, toast, bugReport, SFX, catLabel: cl, rarityLabel: rl,
     // pour les échanges (trade.js)
     cardHTML, countOf, keyOf, FINISHES, finishesFor, cardOdds, finishLabel: fl, rarityRank: id => R[id].rank, show, openDetail,
     // pour la simulation de l'économie (tools/simulate.mjs) et les tests

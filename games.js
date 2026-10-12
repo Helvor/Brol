@@ -140,6 +140,8 @@
     API.save(); API.renderWallet();
     return give;
   }
+  // Partie jouée (mission « mini-jeux différents », succès Ludothèque) : comptée à la fin d'une partie, ou à la
+  // première proposition du Belgle, plus à la simple ouverture du jeu
   function played(id) { G().played[id] = true; API.save(); API.mission?.('games', 1, id); }
   const done = () => { API.save(); API.checkAchievements(); };
 
@@ -210,7 +212,6 @@
   let F = null;
 
   function startFormation() {
-    played('formation');
     const owned = CARDS.filter(c => c.cat === 'politique' && PARTY_OF[c.party] && API.totalOf(c.id));
     let deck = owned.map(c => ({ c, guest: false }));
     const guests = [];
@@ -318,11 +319,12 @@
       g.played++; g.won++;
       if (!g.best || F.days < g.best) g.best = F.days;
       if (both) g.both = 1;
+      played('formation');
       SFX.fanfare(true);
       setTimeout(() => reward(Math.max(100, 900 - F.days) + (both ? 200 : 0)), 600);
       done();
     } else if (F.days > 600) {
-      F.over = 'lose'; g.played++; SFX.error(); done();
+      F.over = 'lose'; g.played++; played('formation'); SFX.error(); done();
     }
   }
   function renderFormation() {
@@ -377,7 +379,6 @@
     return s ? { year: +s[1], kind: s[0] } : null;
   };
   function startBelgle() {
-    played('belgle');
     const g = G().belgle;
     const day = todayKey();
     if (g.day !== day) { g.day = day; g.guesses = []; g.done = false; g.todayWon = false; API.save(); }
@@ -396,10 +397,10 @@
   // la carte du jour l'emporte si elle en fait partie (avant, la première carte du jeu gagnait toujours : certains
   // jours étaient impossibles à trouver)
   function resolveGuess(text, target) {
-    const q = String(text).trim().toLowerCase();
+    const N = API.norm, q = N(String(text).trim()); // sans accents : « liege » vaut « Liège »
     if (!q) return null;
-    const exact = guessLabels().filter(x => x.label.toLowerCase() === q).map(x => x.c);
-    const named = exact.length ? exact : CARDS.filter(c => nm(c).toLowerCase() === q || c.name.toLowerCase() === q);
+    const exact = guessLabels().filter(x => N(x.label) === q).map(x => x.c);
+    const named = exact.length ? exact : CARDS.filter(c => N(nm(c)) === q || N(c.name) === q);
     return named.find(c => c.id === target?.id) || named[0] || null;
   }
   function belgleGuess(name) {
@@ -409,6 +410,7 @@
     const card = resolveGuess(name, target);
     if (!card) { SFX.error(); toast(T('b_unknown')); return; }
     g.guesses.push(card.id);
+    played('belgle');
     if (card.id === target.id) {
       g.done = true; g.todayWon = true; g.won++;
       if (g.guesses.length === 1) g.first = 1;
@@ -477,7 +479,6 @@
   }).filter(Boolean).filter(x => x.c.img || x.c.cat === 'evenement').filter(x => x.c.cat !== 'politique' || ['rare', 'epique', 'legendaire', 'mythique'].includes(x.c.rarity));
   let C = null;
   function startChrono() {
-    played('chrono');
     // Varier les catégories et éviter deux fois la même année
     const used = new Set();
     const deck = shuffle(CHRONO_POOL.slice()).filter(x => !used.has(x.year) && used.add(x.year));
@@ -492,14 +493,19 @@
       C.line.splice(i, 0, C.cur); C.streak++; SFX.reveal(Math.min(5, 2 + Math.floor(C.streak / 3)));
       if (C.streak % 5 === 0) reward(30);
       C.cur = C.deck.pop();
-      if (!C.cur) C.over = true;
+      if (!C.cur) endChrono(); // toutes les cartes placées : fin de partie, avec record et récompense
     } else {
-      C.over = true; C.wrongAt = C.cur; SFX.error();
-      const g = G().chrono; if (C.streak > g.best) g.best = C.streak;
-      reward(C.streak * 8);
-      done();
+      C.wrongAt = C.cur; SFX.error();
+      endChrono();
     }
     renderChrono();
+  }
+  function endChrono() {
+    C.over = true;
+    const g = G().chrono; if (C.streak > g.best) g.best = C.streak;
+    reward(C.streak * 8);
+    played('chrono');
+    done();
   }
   const chronoTile = (x, reveal) => `<div class="ctile${x.c.cat === 'evenement' ? ' is-event' : ''}">
       ${x.c.img ? `<span class="ctile-img" style="background-image:url('${imgUrl(x.c.img, 200)}')${bgPos(x.c.img)}"></span>` : `<span class="ctile-img ctile-ev">${esc(String(x.year))}</span>`}
@@ -553,7 +559,6 @@
   }
   let TR = null;
   function startTour() {
-    played('tour');
     const communes = shuffle(TOUR_POOL.filter(c => c.cat === 'commune')).slice(0, 5);
     const others = shuffle(TOUR_POOL.filter(c => c.cat !== 'commune')).slice(0, 5);
     TR = { rounds: shuffle(communes.concat(others)), i: 0, total: 0, guess: null, scores: [] };
@@ -579,6 +584,7 @@
     if (TR.i >= TR.rounds.length) {
       const g = G().tour; if (TR.total > g.best) g.best = TR.total;
       if (TR.total > 7000) SFX.fanfare(TR.total > 9000);
+      played('tour');
       reward(Math.round(TR.total / 25));
       done();
     }
@@ -628,7 +634,6 @@
     return b;
   }
   function startPom(mode) {
-    played('pom');
     const g = G().pom;
     mode = POM_MODES.includes(mode) ? mode : POM_MODES.includes(g.mode) ? g.mode : POM_MODES[0];
     g.mode = mode;
@@ -648,6 +653,7 @@
     } else {
       P.over = true; SFX.error();
       const g = G().pom; if (P.streak > g.best) g.best = P.streak;
+      played('pom');
       setTimeout(() => { reward(P.streak * 8); done(); if (isActive('pom')) renderPom(); }, 900);
     }
   }
@@ -705,7 +711,6 @@
   }
   let Q = null;
   function startQui() {
-    played('qui');
     const rounds = shuffle(QUI_POOL.slice()).slice(0, 5).map(c => {
       const same = QUI_POOL.filter(x => x.cat === c.cat && x.id !== c.id);
       const decoys = shuffle(same.length >= 3 ? same : QUI_POOL.filter(x => x.id !== c.id)).slice(0, 3);
@@ -736,6 +741,7 @@
     if (Q.i >= Q.rounds.length) {
       const g = G().qui; g.played++; if (Q.total > g.best) g.best = Q.total;
       if (Q.total >= 400) SFX.fanfare(Q.total >= 450);
+      played('qui');
       reward(Math.round(Q.total / 2));
       done();
     }
@@ -780,7 +786,6 @@
   const PARTI_POOL = CARDS.filter(c => ['politique', 'bourgmestre'].includes(c.cat) && c.img && CURRENT_PARTIES[c.party] && (c.current || c.rarity !== 'commune'));
   let LP = null;
   function startParti() {
-    played('parti');
     const rounds = shuffle(PARTI_POOL.slice()).slice(0, 10).map(c => {
       const right = CURRENT_PARTIES[c.party];
       const sameGroup = shuffle(PARTIES.filter(p => p !== right && (p.group === right.group || p.group === 'bi' || right.group === 'bi')));
@@ -804,6 +809,7 @@
       if (LP.i >= LP.rounds.length) {
         const g = G().parti; if (LP.score > g.best) g.best = LP.score; if (LP.score === 10) g.perfect = 1;
         if (LP.score >= 8) SFX.fanfare(LP.score === 10);
+        played('parti');
         reward(LP.score * 15 + (LP.score === 10 ? 100 : 0));
         done();
       }

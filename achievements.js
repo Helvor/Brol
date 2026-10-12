@@ -99,7 +99,7 @@
 
     tiers('weekly', 'eco', 'star', [1, 4, 12], [{ fr: 'Défi relevé', nl: 'Uitdaging aangegaan' }, { fr: 'Un mois sans faillir', nl: 'Een maand volgehouden' }, { fr: 'Saison complète', nl: 'Volledig seizoen' }],
       () => st().weekly || 0, { fr: n => `Réussir ${n} défi${n > 1 ? 's' : ''} de la semaine.`, nl: n => `${n} weekuitdaging${n > 1 ? 'en' : ''} halen.` }, [300, 1200, 4000]);
-    tiers('missions', 'eco', 'clock', [1, 10, 50], [{ fr: 'Au rapport', nl: 'Present' }, { fr: 'Fidèle au poste', nl: 'Trouw op post' }, { fr: 'Agent de terrain', nl: 'Veldagent' }],
+    tiers('missions', 'eco', 'clock', [1, 10, 50], [{ fr: 'Au rapport', nl: 'Present' }, { fr: 'Toujours présent', nl: 'Altijd paraat' }, { fr: 'Agent de terrain', nl: 'Veldagent' }],
       () => st().missions || 0, { fr: n => `Réclamer ${n} mission${n > 1 ? 's' : ''} du jour.`, nl: n => `${n} dagopdracht${n > 1 ? 'en' : ''} innen.` }, [150, 600, 2000]);
 
     // ----- Éditions limitées et versions d'événement -----
@@ -179,7 +179,7 @@
 
     // ----- Échanges -----
     tiers('trades', 'trade', 'swap', [1, 10, 50],
-      [{ fr: 'Poignée de main', nl: 'Handdruk' }, { fr: 'Marchand', nl: 'Handelaar' }, { fr: 'Roi du marché aux puces', nl: 'Koning van de vlooienmarkt' }],
+      [{ fr: 'Poignée de main', nl: 'Handdruk' }, { fr: 'Troqueur', nl: 'Ruilhandelaar' }, { fr: 'Roi du marché aux puces', nl: 'Koning van de vlooienmarkt' }],
       () => st().trades, { fr: n => `Réaliser ${n} échange${n > 1 ? 's' : ''}.`, nl: n => `${n} ruil${n > 1 ? 'en' : ''} afronden.` }, [100, 400, 1500]);
     add({ id: 'trade-gift', group: 'trade', icon: 'gift', target: 1, reward: 150, value: () => st().tradeGift,
       title: { fr: 'Saint-Nicolas', nl: 'Sinterklaas' }, desc: { fr: 'Offrir des cartes sans rien demander en retour.', nl: 'Kaarten weggeven zonder iets terug te vragen.' } });

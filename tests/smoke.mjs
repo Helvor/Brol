@@ -597,6 +597,62 @@ async function regressions() {
       });
       check(!r.length, 'versions perdues dans un échange : ' + r.join(', '));
     });
+    await step('album : recherche sans accents, bonus de revente calculé sur tout l’album', async () => {
+      await page.click('.tab[data-view="binder"]');
+      const n = async q => { await page.fill('#search', q); return page.locator('#grid .cell').count(); };
+      const a = await n('liege'), b = await n('Liège');
+      check(a > 3 && a === b, `« liege » : ${a} cartes, « Liège » : ${b}`);
+      await page.fill('#search', '');
+      // Toutes les cartes Histoire, presque rien ailleurs : le bonus ×1,5 n'est pas actif
+      await page.evaluate(() => { const R = window.RDL; R.state.owned = {}; R.CARDS.filter(c => c.cat === 'histoire').forEach(c => R.state.owned[c.id] = 1); R.save(); });
+      await page.selectOption('#f-pack', 'histoire');
+      const txt = await page.textContent('#binder-summary');
+      await page.selectOption('#f-pack', 'all');
+      check(await page.evaluate(() => window.RDL.resaleMult()) === 1 && !/\(album à 80/.test(txt), 'résumé de l’album : ' + txt);
+    });
+    await step('missions : mini-jeux comptés en fin de partie, nouvelles cartes hors paquets', async () => {
+      const games = () => page.evaluate(() => [...window.RDL.missionsToday().games]);
+      const before = await games();
+      await page.click('.tab[data-view="games"]');
+      await page.click('.game-tile[data-game="pom"]');
+      check((await games()).length === before.length, 'mini-jeu compté dès son ouverture');
+      await page.evaluate(() => document.querySelector('#p-more').click());
+      // Une ou deux réponses suffisent à perdre (au pire, on enchaîne)
+      await page.waitForFunction(() => { const b = document.querySelector('#p-less'); if (b && !document.querySelector('.pom-card.is-ok, .pom-card.is-ko')) b.click(); return !!document.querySelector('#p-again'); }, null, { timeout: 60000, polling: 300 });
+      check((await games()).includes('pom'), 'partie de Plus ou moins terminée mais pas comptée');
+      const r = await page.evaluate(() => {
+        const R = window.RDL, m = R.missionsToday(), n0 = m.prog.new || 0;
+        R.state.daily = { last: null, streak: 0 }; R.state.owned = {};
+        const d = R.claimDaily();
+        return { got: d.got, gain: (R.missionsToday().prog.new || 0) - n0 };
+      });
+      check(r.got === 'card' && r.gain === 1, 'carte du jour non comptée comme nouvelle carte : ' + JSON.stringify(r));
+    });
+    await step('fusion sans éditions limitées, Nouveautés hors garantie anti-malchance', async () => {
+      const r = await page.evaluate(() => {
+        const R = window.RDL, ed = R.CARDS.find(c => c.cat === 'edition' && c.rarity === 'epique');
+        R.state.owned = { [ed.id]: 8 };
+        const fuse = R.fuseAvailable('epique', null);
+        R.state.pity = 10; R.state.coins = 1000; R.state.perDay = null;
+        R.buyPacks(R.PACKS.find(p => p.id === 'nouveautes'), 1);
+        return { fuse, pity: R.state.pity };
+      });
+      check(r.fuse === 0, 'éditions limitées proposées à la fusion : ' + r.fuse);
+      check(r.pity === 10, 'le paquet Nouveautés a fait bouger la garantie : ' + r.pity);
+    });
+    await step('fiche : meilleure chance dans un paquet en vente', async () => {
+      const r = await page.evaluate(() => {
+        const R = window.RDL, c = R.CARDS.find(x => x.cat === 'politique' && x.rarity === 'mythique');
+        for (const k of Object.keys(R.state.owned)) if (k.split('|')[0] === c.id) delete R.state.owned[k];
+        const onSale = R.activeEvents().map(p => p.id);
+        const best = R.cardOdds(c).find(x => !x.pack.event || onSale.includes(x.pack.id));
+        R.openDetail(c.id);
+        const line = document.querySelector('#detail-body .card-odds .best').textContent;
+        document.querySelector('#detail-close').click();
+        return { line, title: window.I18N.lang === 'nl' ? best.pack.title.nl : best.pack.title.fr };
+      });
+      check(r.line.includes(r.title), 'meilleure chance : ' + JSON.stringify(r));
+    });
   } finally { await ctx.close(); }
 }
 
