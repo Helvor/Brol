@@ -542,7 +542,7 @@ async function features() {
 // Bugs corrigés : chacun a son test pour ne pas revenir
 async function regressions() {
   console.log('corrections');
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 } });
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 }, serviceWorkers: 'block' }); // images bloquées pour de bon
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
@@ -669,6 +669,37 @@ async function regressions() {
         return { line, title: window.I18N.lang === 'nl' ? best.pack.title.nl : best.pack.title.fr };
       });
       check(r.line.includes(r.title), 'meilleure chance : ' + JSON.stringify(r));
+    });
+    await step('affichage : succès regroupés, Formation, Chronologie, Belgle, image de remplacement', async () => {
+      // Plusieurs succès d'un coup : une seule notification, qui se ferme d'une touche
+      const toast = await page.evaluate(() => {
+        const R = window.RDL, el = document.querySelector('#ach-toast');
+        for (let i = 0; i < 50 && el.classList.contains('is-on'); i++) el.click(); // file d'attente vidée
+        R.CARDS.slice(0, 120).forEach(c => R.state.owned[c.id] ||= 1);
+        R.state.ach = {}; R.checkAchievements();
+        return el.textContent;
+      });
+      check(/\d+ succès débloqués/.test(toast), 'succès non regroupés : ' + toast.slice(0, 80));
+      await page.click('#ach-toast');
+      check(await page.evaluate(() => !document.querySelector('#ach-toast').classList.contains('is-on')), 'la notification ne se ferme pas d’une touche');
+      // Formation : la main avant les partis
+      await page.click('.tab[data-view="games"]');
+      await page.click('.game-tile[data-game="formation"]');
+      check(await page.evaluate(() => !!(document.querySelector('.hand').compareDocumentPosition(document.querySelector('.parties')) & Node.DOCUMENT_POSITION_FOLLOWING)), 'la main est sous les partis');
+      await page.click('.game-back');
+      await page.click('.game-tile[data-game="chrono"]');
+      const serie = await page.textContent('.game-extra .gstat small');
+      check(!/:\s*$/.test(serie), 'en-tête de Chronologie : ' + serie);
+      await page.click('.game-back');
+      await page.click('.game-tile[data-game="belgle"]');
+      const day = await page.textContent('.game-extra .gstat b');
+      check(!/^\d{4}-\d\d-\d\d$/.test(day.trim()), 'date du Belgle : ' + day);
+      // Images bloquées dans ce test : une carte Paysage affiche le paysage de remplacement
+      await page.evaluate(() => { const R = window.RDL; R.CARDS.filter(c => c.cat === 'paysage').slice(0, 2).forEach(c => R.state.owned[c.id] = 1); R.save(); });
+      await page.click('.tab[data-view="binder"]');
+      await page.selectOption('#f-pack', 'paysages');
+      await page.waitForSelector('#grid .card.is-land .card-photo.no-img', { timeout: 5000 });
+      await page.selectOption('#f-pack', 'all');
     });
   } finally { await ctx.close(); }
 }

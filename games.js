@@ -20,7 +20,7 @@
       earned: n => `+${n} pièces`,
       // Formation
       f_name: 'Formation de gouvernement', f_desc: 'Forme une coalition de 76 sièges avec tes cartes politiques. Le record à battre : 541 jours.',
-      f_rules: 'Joue une carte pour faire avancer la négociation avec son parti. Quand un parti est convaincu, il entre dans la coalition, mais certains partis refusent de gouverner ensemble. Il faut 76 sièges sur 150, avec au moins un parti de chaque groupe linguistique. Au-delà de 600 jours, c’est l’échec.',
+      f_rulesH: 'Règles du jeu', f_rules: 'Joue une carte pour faire avancer la négociation avec son parti. Quand un parti est convaincu, il entre dans la coalition, mais certains partis refusent de gouverner ensemble. Il faut 76 sièges sur 150, avec au moins un parti de chaque groupe linguistique. Au-delà de 600 jours, c’est l’échec.',
       f_days: 'Jours', f_seats: 'Sièges', f_hand: 'Ta main', f_reshuffle: 'Nouvelle main (+10 jours)', f_in: 'Dans la coalition', f_refuse: 'Refuse',
       f_need: n => `${n} pts`, f_guest: 'Invité', f_deck: (o, g) => `Paquet : ${o} cartes de ta collection${g ? ` + ${g} invités` : ''}. Les cartes rares pèsent plus lourd.`,
       f_win: d => `Gouvernement formé en ${d} jours !`, f_lose: 'Affaires courantes : 600 jours sans accord.',
@@ -69,7 +69,7 @@
       back: '← Spellen', play: 'Spelen', again: 'Opnieuw', best: 'Record', today: 'Vandaag', capReached: 'Daglimiet bereikt',
       earned: n => `+${n} munten`,
       f_name: 'Regeringsvorming', f_desc: 'Vorm een coalitie van 76 zetels met je politieke kaarten. Het record om te kloppen: 541 dagen.',
-      f_rules: 'Speel een kaart om de onderhandeling met haar partij te laten vorderen. Is een partij overtuigd, dan treedt ze toe tot de coalitie, maar sommige partijen weigeren samen te regeren. Je hebt 76 van de 150 zetels nodig, met minstens één partij uit elke taalgroep. Na 600 dagen is het mislukt.',
+      f_rulesH: 'Spelregels', f_rules: 'Speel een kaart om de onderhandeling met haar partij te laten vorderen. Is een partij overtuigd, dan treedt ze toe tot de coalitie, maar sommige partijen weigeren samen te regeren. Je hebt 76 van de 150 zetels nodig, met minstens één partij uit elke taalgroep. Na 600 dagen is het mislukt.',
       f_days: 'Dagen', f_seats: 'Zetels', f_hand: 'Je hand', f_reshuffle: 'Nieuwe hand (+10 dagen)', f_in: 'In de coalitie', f_refuse: 'Weigert',
       f_need: n => `${n} ptn`, f_guest: 'Gast', f_deck: (o, g) => `Stapel: ${o} kaarten uit je verzameling${g ? ` + ${g} gasten` : ''}. Zeldzame kaarten wegen zwaarder.`,
       f_win: d => `Regering gevormd in ${d} dagen!`, f_lose: 'Lopende zaken: 600 dagen zonder akkoord.',
@@ -327,14 +327,15 @@
       F.over = 'lose'; g.played++; played('formation'); SFX.error(); done();
     }
   }
+  let rulesOpen = null;
   function renderFormation() {
     const co = coalition();
     const seats = seatsOf(co);
     const grp = p => p.group === 'bi' ? T('f_bi') : T('f_' + p.group);
-    area().innerHTML = header('f_name', `<span class="gstat"><small>${T('f_days')}</small><b class="${F.days > 541 ? 'bad' : ''}">${F.days}</b></span><span class="gstat"><small>${T('f_seats')}</small><b>${seats}/76</b></span>`) + `
-      <p class="game-rules">${T('f_rules')}</p>
-      <div class="hemi"><div class="hemi-bar">${co.map(p => `<span style="flex:${p.seats};background:var(--p-${p.fam})" title="${p.name}"></span>`).join('')}<span style="flex:${Math.max(0, 150 - seats)}" class="hemi-rest"></span></div><i class="hemi-mark"></i></div>
-      <div class="parties">${PARTIES.map(p => {
+    // Ordre pensé pour le téléphone : la main juste sous la jauge des sièges (avant, il fallait descendre sous les
+    // règles et les douze partis à chaque tour), les dernières nouvelles, puis les partis. Règles repliables.
+    rulesOpen ??= !matchMedia('(max-width: 760px)').matches; // gardé d'une partie à l'autre
+    const parties = `<div class="parties">${PARTIES.map(p => {
         const st = F.parties[p.id];
         const pct = Math.min(100, st.pts / need(p) * 100);
         return `<div class="party-tile is-${st.status}${p.cordon ? ' is-cordon' : ''}" style="--fam: var(--p-${p.fam})">
@@ -342,7 +343,10 @@
           <small>${grp(p)}${st.status === 'in' ? ` · ${T('f_in')}` : st.status === 'refuse' ? ` · ${T('f_refuse')}` : p.cordon ? ' · cordon' : ` · ${st.pts}/${T('f_need', need(p))}`}</small>
           <div class="bar"><span style="width:${st.status === 'in' ? 100 : pct}%"></span></div>
         </div>`;
-      }).join('')}</div>
+      }).join('')}</div>`;
+    area().innerHTML = header('f_name', `<span class="gstat"><small>${T('f_days')}</small><b class="${F.days > 541 ? 'bad' : ''}">${F.days}</b></span><span class="gstat"><small>${T('f_seats')}</small><b>${seats}/76</b></span>`) + `
+      <details class="game-rules-box"${rulesOpen ? ' open' : ''}><summary>${T('f_rulesH')}</summary><p class="game-rules">${T('f_rules')}</p></details>
+      <div class="hemi"><div class="hemi-bar">${co.map(p => `<span style="flex:${p.seats};background:var(--p-${p.fam})" title="${p.name}"></span>`).join('')}<span style="flex:${Math.max(0, 150 - seats)}" class="hemi-rest"></span></div><i class="hemi-mark"></i></div>
       ${F.over ? `<div class="game-result ${F.over}"><b>${F.over === 'win' ? T('f_win', F.days) : T('f_lose')}</b>${F.over === 'win' && F.both ? `<span>${T('f_both')}</span>` : ''}<button class="btn btn-gold" id="f-again">${T('again')}</button></div>` : `
       <div class="hand-head"><h3>${T('f_hand')}</h3><button class="btn btn-line" id="f-reshuffle">${T('f_reshuffle')}</button></div>
       <div class="hand">${F.hand.map((x, i) => {
@@ -356,7 +360,9 @@
         </button>`;
       }).join('')}</div>
       <p class="muted small">${T('f_deck', F.ownedCount, F.guestCount)}</p>`}
-      <ul class="game-log">${F.log.slice(0, 8).map(l => `<li class="${l.good ? 'good' : l.bad ? 'bad' : ''}">${esc(l.t)}</li>`).join('')}</ul>`;
+      <ul class="game-log">${F.log.slice(0, 4).map(l => `<li class="${l.good ? 'good' : l.bad ? 'bad' : ''}">${esc(l.t)}</li>`).join('')}</ul>
+      ${parties}`;
+    area().querySelector('.game-rules-box').addEventListener('toggle', e => { rulesOpen = e.target.open; });
     area().querySelectorAll('.hand .mini').forEach(b => b.addEventListener('click', () => playCard(+b.dataset.i)));
     $('#f-reshuffle')?.addEventListener('click', reshuffle);
     $('#f-again')?.addEventListener('click', startFormation);
@@ -448,7 +454,11 @@
     ];
     const shown = g.done ? hints.length : Math.min(wrong + 1, hints.length);
     const squares = g.guesses.map(id => id === c.id ? '🟩' : '🟥').join('') + '⬜'.repeat(Math.max(0, 6 - g.guesses.length));
-    area().innerHTML = header('b_name', `<span class="gstat"><small>${T('today')}</small><b>${g.day}</b></span><span class="gstat"><small>🔥</small><b>${g.streak}</b></span>`) + `
+    // Série affichée : remise à zéro quand le dernier Belgle trouvé date d'avant-hier ou plus
+    const [y0, m0, d0] = g.day.split('-').map(Number), yesterday = dayKey(new Date(y0, m0 - 1, d0 - 1));
+    const streak = g.last === g.day || g.last === yesterday ? g.streak : 0;
+    const dayLabel = new Date(y0, m0 - 1, d0).toLocaleDateString(L() === 'nl' ? 'nl-BE' : 'fr-BE', { day: 'numeric', month: 'long' });
+    area().innerHTML = header('b_name', `<span class="gstat"><small>${T('today')}</small><b>${esc(dayLabel)}</b></span><span class="gstat"><small>🔥</small><b>${streak}</b></span>`) + `
       <div class="belgle">
         <div class="belgle-photo"><img src="${imgUrl(c.img, 500)}" alt="" style="object-position:${API.focusOf?.(c.img) || 'center 20%'}; filter: blur(${blur}px) ${g.done ? '' : 'grayscale(.3)'}"></div>
         <div class="belgle-side">
@@ -457,12 +467,14 @@
           <div class="belgle-squares">${squares}</div>
           <ol class="belgle-guesses">${g.guesses.map(id => `<li class="${id === c.id ? 'good' : 'bad'}">${esc(nm(API.BY_ID.get(id)))}</li>`).join('')}</ol>
           ${g.done ? `<div class="game-result ${g.todayWon ? 'win' : 'lose'}"><b>${g.todayWon ? T('b_win', g.guesses.length) : T('b_lose')}</b><span class="belgle-answer">${esc(nm(c))}</span>
-              <button class="btn btn-gold" id="b-share">${T('b_share')}</button><small>${T('b_next')} · ${T('b_streak', g.streak)}</small></div>`
-          : `<form class="belgle-form" autocomplete="off"><input id="b-input" list="b-list" placeholder="${T('b_ph')}" autofocus><button class="btn">${T('b_guess')}</button></form>
+              <button class="btn btn-gold" id="b-share">${T('b_share')}</button><small>${T('b_next')} · ${T('b_streak', streak)}</small></div>`
+          : `<form class="belgle-form" autocomplete="off"><input id="b-input" list="b-list" placeholder="${T('b_ph')}"><button class="btn">${T('b_guess')}</button></form>
              <datalist id="b-list">${[...new Set(guessLabels().map(x => x.label))].sort((a, b) => a.localeCompare(b)).map(n => `<option value="${esc(n)}">`).join('')}</datalist>`}
         </div>
       </div>`;
     area().querySelector('.belgle-form')?.addEventListener('submit', e => { e.preventDefault(); belgleGuess($('#b-input').value); });
+    // Champ prêt à taper sur ordinateur ; sur téléphone, le clavier ne s'ouvre pas tout seul par-dessus la photo
+    if (matchMedia('(hover: hover) and (pointer: fine)').matches) $('#b-input')?.focus({ preventScroll: true });
     $('#b-share')?.addEventListener('click', () => {
       const txt = `Belgle ${g.day} · ${g.todayWon ? g.guesses.length : 'X'}/6\n${squares}\n${location.origin}`;
       navigator.clipboard?.writeText(txt).then(() => toast(T('b_copied')), () => toast(txt));
@@ -512,7 +524,7 @@
       <b>${esc(nm(x.c))}</b><small>${TX[L()].c_kind[x.kind] || ''}</small>
       ${reveal ? `<span class="ctile-year">${x.year}</span>` : '<span class="ctile-year">?</span>'}</div>`;
   function renderChrono() {
-    area().innerHTML = header('c_name', `<span class="gstat"><small>${T('p_streak', '').replace(/\s*$/, '')}</small><b>${C.streak}</b></span><span class="gstat"><small>${T('best')}</small><b>${G().chrono.best}</b></span>`) + `
+    area().innerHTML = header('c_name', `<span class="gstat"><small>${T('p_streak', '').replace(/\s*:?\s*$/, '')}</small><b>${C.streak}</b></span><span class="gstat"><small>${T('best')}</small><b>${G().chrono.best}</b></span>`) + `
       ${C.over ? `<div class="game-result lose"><b>${T('c_over', C.streak)}</b>${C.wrongAt ? `<span>${esc(nm(C.wrongAt.c))} : ${C.wrongAt.year}</span>` : ''}<button class="btn btn-gold" id="c-again">${T('again')}</button></div>`
         : `<div class="chrono-current"><p>${T('c_place')}</p>${chronoTile(C.cur, false)}</div>`}
       <div class="timeline">${C.line.map((x, i) => `${C.over ? '' : `<button class="gap" data-i="${i}">${T('c_here')}</button>`}${chronoTile(x, true)}`).join('')}${C.over ? '' : `<button class="gap" data-i="${C.line.length}">${T('c_here')}</button>`}</div>`;
