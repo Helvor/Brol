@@ -1733,7 +1733,8 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 /* ===== Paysages : cartes horizontales « carte postale » (Souvenir de…) ===== */
 /* Cadre .land : à plat dans l'album (.cell.is-wide, sur deux colonnes) et dans la fiche ; ailleurs (ouverture,
    fusion, échanges, séries) la carte est couchée d'un quart de tour dans une case verticale de même taille */
-.land { position: relative; width: 100%; aspect-ratio: 63 / 88; }
+/* Conteneur : les cqw posés sur la carte elle-même (anneau des Plein cadre) se calculent sur ce cadre, pas sur l'écran */
+.land { position: relative; width: 100%; aspect-ratio: 63 / 88; container-type: inline-size; }
 .land > .card.is-land { position: absolute; left: 50%; top: 50%; width: 139.683%; translate: -50% -50%; rotate: -90deg; }
 .cell.is-wide, .detail-card .cell.is-wide { grid-column: span 2; }
 .cell.is-wide .land, .detail-card .land { aspect-ratio: 88 / 63; }
@@ -1745,7 +1746,9 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 @media (max-width: 1100px) { .grid.has-wide { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 760px) { .grid .cell.is-wide { grid-column: 1 / -1; } }
 
-.card.is-land { --acc: #8a8a8a; --stamp: #6f7a86; --line: transparent; aspect-ratio: 88 / 63; padding: 0; border-radius: 1.6cqw; background: #fff; color: #2b2620; }
+/* Coins en pourcentages de la carte elle-même (1,6 % de la largeur) : en cqw, ils se calculaient sur l'écran à
+   l'ouverture d'un paquet (aucun conteneur autour), trop arrondis pour la photo qui dépassait aux coins */
+.card.is-land { --acc: #8a8a8a; --stamp: #6f7a86; --line: transparent; aspect-ratio: 88 / 63; padding: 0; border-radius: 1.6% / 2.24%; background: #fff; color: #2b2620; }
 .card.is-land.r-peu-commune { --acc: #2f7d4a; --stamp: #3f8a5a; --line: #3f8a5a; } .card.is-land.r-rare { --acc: #2e5fc0; --stamp: #2e5fc0; --line: #2e5fc0; }
 .card.is-land.r-epique { --acc: #6b3db8; --stamp: #7a4ac8; --line: #7a4ac8; }
 .card.is-land.r-legendaire { --acc: #b8860b; --stamp: #c9971c; background: linear-gradient(135deg, #7a5a12, #f7dc84 22%, #a87b1e 45%, #fff1b8 65%, #8a6516); }
