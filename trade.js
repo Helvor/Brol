@@ -110,6 +110,9 @@
   const addCard = (it, n) => { const k = API.keyOf(it.id, it.fin), s = API.state; s.owned[k] = (s.owned[k] || 0) + n; if (s.owned[k] <= 0) delete s.owned[k];
     if (n > 0) { s.origin ||= {}; s.origin[k] ||= 'trade'; } }; // provenance (fiche détail)
 
+  // Cartes absentes de l'album parmi celles qu'on reçoit : elles comptent pour les missions « nouvelles cartes »
+  const newCards = list => new Set(list.filter(it => !API.totalOf(it.id)).map(it => it.id)).size;
+
   // ---------- Format des liens ----------
   // Offre :   1o.<id>.<donne>.<demande>        éléments « Q123 » ou « Q123~h » séparés par des virgules
   // Réponse : 1r.<id>.<empreinte de l'offre>
@@ -288,10 +291,10 @@
   // Avec « seulement celles qui me manquent » et sans texte : les cartes manquantes, des plus rares aux plus courantes.
   function renderResults() {
     const C = composing;
-    const q = C.q.trim().toLowerCase();
+    const q = API.norm(C.q.trim());
     const box = $('#t-results');
     if (q.length < 2 && !C.missing) { box.innerHTML = `<p class="t-empty">${T('search_more')}</p>`; return; }
-    let list = CARDS.filter(c => (!C.missing || !API.totalOf(c.id)) && (q.length < 2 || [c.name, c.nl?.name].some(s => (s || '').toLowerCase().includes(q))));
+    let list = CARDS.filter(c => (!C.missing || !API.totalOf(c.id)) && (q.length < 2 || [c.name, c.nl?.name].some(s => API.norm(s).includes(q))));
     if (q.length < 2) list = list.sort((a, b) => API.rarityRank(b.rarity) - API.rarityRank(a.rarity));
     const total = list.length;
     list = list.slice(0, 30);
@@ -403,8 +406,10 @@
     $('#t-decline').onclick = () => { SFX.tick(); render(); };
     $('#t-accept').onclick = () => {
       if (TS().done[o.id] || !o.want.every(ok)) return;
+      const fresh = newCards(o.give);
       for (const it of o.want) addCard(it, -1);
       for (const it of o.give) addCard(it, 1);
+      API.mission('new', fresh);
       const reply = replyCode(o.id, o.code);
       TS().done[o.id] = { at: Date.now(), reply };
       countTrade(o.give, o.want, o.want.length === 0);
@@ -424,7 +429,9 @@
       return message(T('title'), d?.cancelled ? T('was_cancelled') : d ? T('already_done') : T('unknown'));
     }
     if (hash(offerCode(r.id, p.give, p.want)) !== r.h) return message(T('title'), T('invalid'));
+    const fresh = newCards(p.want);
     for (const it of p.want) addCard(it, 1);
+    API.mission('new', fresh);
     delete tr.pending[r.id];
     tr.done[r.id] = { at: Date.now() };
     countTrade(p.want, p.give, p.want.length === 0);
