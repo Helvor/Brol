@@ -525,12 +525,88 @@ async function features() {
   } finally { await ctx.close(); }
 }
 
+// Bugs corrigés : chacun a son test pour ne pas revenir
+async function regressions() {
+  console.log('corrections');
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 } });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  page.on('dialog', d => d.accept());
+  await page.route(url => !url.href.startsWith(URL), r => r.abort());
+  const step = async (label, fn) => {
+    try { await fn(); check(!errors.length, 'erreur JavaScript : ' + errors.join(' | ')); console.log(`  ✓ ${label}`); }
+    catch (e) {
+      mkdirSync(OUT, { recursive: true });
+      await page.screenshot({ path: OUT + 'corrections.png' }).catch(() => {});
+      throw new Error(`[corrections] ${label} : ${e.message.split('\n')[0]}`);
+    }
+  };
+  try {
+    await page.goto(URL);
+    await page.waitForSelector('.pack-card');
+    await step('ouverture au clavier : un seul paquet acheté, boutons de la scène utilisables', async () => {
+      const packs = () => page.evaluate(() => window.RDL.state.stats.packs);
+      const before = await packs();
+      await page.focus('.pack-card[data-pack="belgique"] .pack-visual');
+      await page.keyboard.press('Enter');
+      await page.waitForSelector('#stage:not([hidden])');
+      await page.keyboard.press('Enter'); // déchire le paquet
+      await page.waitForSelector('#reveal .slot', { timeout: 5000 });
+      for (let i = 0; i < 5; i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
+      await page.waitForSelector('#stage-close:not([hidden])', { timeout: 5000 });
+      check(await packs() === before + 1, `Entrée a acheté ${await packs() - before} paquets`);
+      await page.focus('#stage-close');
+      await page.keyboard.press('Enter');
+      check(await page.evaluate(() => document.querySelector('#stage').hidden), 'Entrée sur « Fermer » ne ferme pas la scène');
+      check(await page.evaluate(() => !document.querySelector('main').inert), 'la page reste inactive après la fermeture');
+    });
+    await step('Formation : la main ne se vide pas', async () => {
+      await page.click('.tab[data-view="games"]');
+      await page.click('.game-tile[data-game="formation"]');
+      const sizes = await page.evaluate(() => {
+        const out = [];
+        for (let k = 0; k < 60 && !document.querySelector('.game-result'); k++) {
+          const cards = document.querySelectorAll('.hand .mini');
+          out.push(cards.length);
+          cards[0]?.click();
+        }
+        return out;
+      });
+      check(sizes.every(n => n >= 5), 'main de Formation : ' + sizes.join(','));
+    });
+    await step('Belgle : chaque carte du jour peut être trouvée', async () => {
+      const bad = await page.evaluate(() => {
+        const G = window.GAMES_UI, nm = c => window.I18N.name(c);
+        return G.belglePool.filter(c => G.resolveGuess(nm(c), c) !== c || G.resolveGuess(c.name, c) !== c).map(c => c.name);
+      });
+      check(!bad.length, 'cartes du Belgle introuvables : ' + bad.slice(0, 5).join(', '));
+      const r = await page.evaluate(() => {
+        const G = window.GAMES_UI, C = window.RDL.CARDS, balade = C.find(c => c.cat === 'balade' && c.name === 'Hallerbos'), paysage = C.find(c => c.cat === 'paysage' && c.name === 'Hallerbos');
+        return { other: G.resolveGuess('Hallerbos', balade) === balade, label: G.resolveGuess('Hallerbos (Paysages)', balade) === paysage };
+      });
+      check(r.other && r.label, 'homonymes du Belgle : ' + JSON.stringify(r));
+    });
+    await step('échanges : chaque version garde la sienne', async () => {
+      const r = await page.evaluate(() => {
+        const R = window.RDL, T = window.TRADE_UI, c = R.CARDS.find(x => x.rarity === 'rare');
+        return R.FINISHES.filter(f => {
+          const p = T.parse(T.offerCode('abcd12', [{ id: c.id, fin: f.id }], []));
+          return !(f.id in T.FIN_CODE) || p?.give[0]?.fin !== f.id;
+        }).map(f => f.id);
+      });
+      check(!r.length, 'versions perdues dans un échange : ' + r.join(', '));
+    });
+  } finally { await ctx.close(); }
+}
+
 try {
   await waitForServer();
   await run('ordinateur', { viewport: { width: 1366, height: 860 } });
   await run('mobile', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await trade();
   await features();
+  await regressions();
   console.log('✓ site : tout fonctionne');
 } catch (e) {
   failed = true;

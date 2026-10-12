@@ -12,7 +12,9 @@
   const $ = s => document.querySelector(s);
   const area = () => $('#trade-area');
   const MAX = 5;
-  const FIN_CODE = { normal: '', holo: 'h', plein: 'p', or: 'o', noir: 'n', rouge: 'r', confetti: 'c', pave: 'k', iris: 'i', lion: 'l', tricolore: 't', coq: 'w' };
+  // Une lettre par version. Toute nouvelle version (FINISHES dans app.js) doit avoir la sienne, sinon elle part en
+  // Standard dans les échanges (c'était le cas de Coquelicot) : tests/smoke.mjs le vérifie
+  const FIN_CODE = { normal: '', holo: 'h', plein: 'p', or: 'o', noir: 'n', rouge: 'r', confetti: 'c', pave: 'k', iris: 'i', lion: 'l', tricolore: 't', coq: 'w', coquelicot: 'q' };
   const CODE_FIN = Object.fromEntries(Object.entries(FIN_CODE).filter(([, c]) => c).map(([f, c]) => [c, f]));
 
   // ---------- Textes ----------
@@ -513,6 +515,6 @@
     composing = { give: side === 'give' ? [it] : [], want: side === 'want' ? [it] : [], q: side === 'want' ? BY_ID.get(it.id).name : '', missing: false, tab: side };
     API.show('trade'); renderCompose();
   }
-  window.TRADE_UI = { render, handle, parse, start };
+  window.TRADE_UI = { render, handle, parse, start, offerCode, FIN_CODE }; // les deux derniers pour les tests
   fromHash();
 })();

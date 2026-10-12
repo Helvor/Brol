@@ -78,7 +78,11 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
 - [x] **Export/import de la sauvegarde** (liens en bas de page) : télécharger sa partie dans un fichier et la réimporter. Ça protège d'un cache effacé et permet de passer d'un appareil ou d'une adresse à l'autre en attendant les comptes. Le format servira aussi à migrer les parties vers le serveur en phase 5.
 - [x] **Partager une carte** : générer une image (PNG) d'une carte, avec sa version spéciale, pour la partager par message ou sur les réseaux (Web Share API sur mobile, téléchargement sinon). Garder le crédit de l'image sur le visuel.
 - [x] **Mode daltonien et accessibilité** : distinguer les raretés autrement que par la couleur (forme de la gemme, motif), navigation complète au clavier, contrastes vérifiés dans les deux thèmes.
-- [ ] **Équilibrage de Formation de gouvernement** après quelques parties (durée, difficulté, gains).
+- [x] **Équilibrage de Formation de gouvernement** (octobre 2026) : les cartes jouées vont dans une défausse remélangée
+  quand la pioche est vide (avant, la main se vidait après une vingtaine de tours et la partie était perdue) ; les
+  invités d'un débutant sont répartis selon les sièges des partis (au hasard, ses mains étaient pleines de cartes de
+  partis déjà entrés). Mesuré avec `tools/sim-formation.mjs` (300 parties) : débutant 4 % → 57 % de victoires,
+  collectionneur 100 % (médiane 190 jours, 24 % sous 150 jours).
 
 ## Phase 3 — Identité et mobile
 

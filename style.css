@@ -180,6 +180,7 @@ a { color: inherit; }
   padding: 40px 20px 140px;
   animation: fade-in .3s ease;
 }
+.stage:focus { outline: none; } /* focus posé par le script à l'ouverture */
 @keyframes fade-in { from { opacity: 0; } }
 .stage-rays {
   position: fixed; left: 50%; top: 45%; width: 160vmax; height: 160vmax; translate: -50% -50%;

@@ -215,19 +215,29 @@
     let deck = owned.map(c => ({ c, guest: false }));
     const guests = [];
     if (deck.length < 25) {
+      // Invités répartis selon les sièges des partis (au hasard, la plupart venaient de partis vite entrés dans la
+      // coalition et la main se remplissait de cartes inutiles)
       const pool = shuffle(CARDS.filter(c => c.cat === 'politique' && PARTY_OF[c.party] && !API.totalOf(c.id)));
-      for (const c of pool.slice(0, 25 - deck.length)) guests.push({ c, guest: true });
+      const have = {};
+      for (const x of deck) have[PARTY_OF[x.c.party]] = (have[PARTY_OF[x.c.party]] || 0) + 1;
+      for (const p of PARTIES.filter(q => !q.cordon)) { // 130 sièges sans le Vlaams Belang
+        const n = Math.max(1, Math.round(25 * p.seats / 130)) - (have[p.id] || 0);
+        for (const c of pool.filter(c => PARTY_OF[c.party] === p.id).slice(0, Math.max(0, n))) guests.push({ c, guest: true });
+      }
+      const taken = new Set(guests.map(x => x.c.id));
+      for (const c of pool.filter(c => !taken.has(c.id)).slice(0, Math.max(0, 25 - deck.length - guests.length))) guests.push({ c, guest: true });
       deck = deck.concat(guests);
     }
     F = {
-      deck: shuffle(deck), hand: [], days: 0, log: [], over: false,
+      deck: shuffle(deck), hand: [], discard: [], days: 0, log: [], over: false,
       parties: Object.fromEntries(PARTIES.map(p => [p.id, { pts: 0, status: 'open' }])),
       ownedCount: owned.length, guestCount: guests.length, hasKing: CARDS.some(c => c.cat === 'monarchie' && API.totalOf(c.id)),
     };
     for (let i = 0; i < 5; i++) drawF();
     renderFormation();
   }
-  function drawF() { if (!F.deck.length) F.deck = shuffle(F.hand.splice(0)); const x = F.deck.pop(); if (x) F.hand.push(x); }
+  // Pioche vide : on remélange les cartes déjà jouées (avant, la main repartait dans la pioche et se vidait)
+  function drawF() { if (!F.deck.length) F.deck = shuffle(F.discard.splice(0)); const x = F.deck.pop(); if (x) F.hand.push(x); }
   const influence = x => Math.max(1, RANK[x.c.rarity] + 1 + (x.c.current ? 1 : 0) - (x.guest ? 1 : 0));
   const coalition = () => PARTIES.filter(p => F.parties[p.id].status === 'in');
   const seatsOf = list => list.reduce((s, p) => s + p.seats, 0);
@@ -236,6 +246,7 @@
   function playCard(i) {
     if (F.over) return;
     const x = F.hand.splice(i, 1)[0];
+    F.discard.push(x);
     const pid = PARTY_OF[x.c.party];
     const p = PARTIES.find(q => q.id === pid);
     const st = F.parties[pid];
@@ -245,23 +256,25 @@
       F.days += 30; F.log.unshift({ t: T('f_cordon'), bad: true }); SFX.error();
     } else if (st.status === 'open') {
       st.pts += influence(x);
-      if (st.pts >= need(p)) {
-        st.status = 'in';
-        F.log.unshift({ t: T('f_joined', p.name), good: true });
-        SFX.reveal(3);
-        for (const [a, b] of INCOMPATIBLE) {
-          const other = a === pid ? b : b === pid ? a : null;
-          if (other && F.parties[other].status === 'open') {
-            F.parties[other].status = 'refuse';
-            F.log.unshift({ t: T('f_lock', PARTIES.find(q => q.id === other).name, p.name), bad: true });
-          }
-        }
-      }
+      if (st.pts >= need(p)) joinF(p);
     }
     if (Math.random() < 0.35) eventF();
     drawF();
     checkF();
     renderFormation();
+  }
+  // Un parti convaincu entre dans la coalition ; ceux qui refusent de gouverner avec lui se retirent
+  function joinF(p) {
+    F.parties[p.id].status = 'in';
+    F.log.unshift({ t: T('f_joined', p.name), good: true });
+    SFX.reveal(3);
+    for (const [a, b] of INCOMPATIBLE) {
+      const other = a === p.id ? b : b === p.id ? a : null;
+      if (other && F.parties[other].status === 'open') {
+        F.parties[other].status = 'refuse';
+        F.log.unshift({ t: T('f_lock', PARTIES.find(q => q.id === other).name, p.name), bad: true });
+      }
+    }
   }
   function eventF() {
     const open = PARTIES.filter(p => F.parties[p.id].status === 'open' && !p.cordon);
@@ -280,10 +293,10 @@
       const p = (progress.length ? progress : open).sort((a, b) => F.parties[b.id].pts - F.parties[a.id].pts)[0];
       if (F.hasKing && p) { F.parties[p.id].pts += 3; msg = E.roi(p.name); } else msg = E.roi0;
     } else return;
-    // Un parti peut franchir son seuil grâce à un événement
-    for (const p of PARTIES) if (F.parties[p.id].status === 'open' && !p.cordon && F.parties[p.id].pts >= need(p)) F.parties[p.id].status = 'in';
     F.log.unshift({ t: msg, bad, ev: true });
     bad ? SFX.error() : SFX.shimmer();
+    // Un parti peut franchir son seuil grâce à un événement : mêmes règles qu'avec une carte (refus compris)
+    for (const p of PARTIES) if (F.parties[p.id].status === 'open' && !p.cordon && F.parties[p.id].pts >= need(p)) joinF(p);
   }
   function reshuffle() {
     if (F.over) return;
@@ -370,11 +383,30 @@
     if (g.day !== day) { g.day = day; g.guesses = []; g.done = false; g.todayWon = false; API.save(); }
     renderBelgle();
   }
+  // Noms proposés : une carte qui porte le même nom qu'une autre (Hallerbos le paysage et Hallerbos la balade,
+  // Chimay la bière et Chimay la commune) est précisée par sa catégorie, puis par sa description si besoin
+  function guessLabels() {
+    const count = (list, f) => list.reduce((m, c) => m.set(f(c), (m.get(f(c)) || 0) + 1), new Map());
+    const byName = count(CARDS, c => nm(c).toLowerCase());
+    const withCat = c => byName.get(nm(c).toLowerCase()) > 1 ? `${nm(c)} (${window.RDL.catLabel(c.cat)})` : nm(c);
+    const byCat = count(CARDS, c => withCat(c).toLowerCase());
+    return CARDS.map(c => ({ c, label: byCat.get(withCat(c).toLowerCase()) > 1 ? `${withCat(c)} – ${window.I18N.subtitle(c)}` : withCat(c) }));
+  }
+  // Carte désignée par le texte tapé : nom précis de la liste, ou nom seul. Quand plusieurs cartes portent ce nom,
+  // la carte du jour l'emporte si elle en fait partie (avant, la première carte du jeu gagnait toujours : certains
+  // jours étaient impossibles à trouver)
+  function resolveGuess(text, target) {
+    const q = String(text).trim().toLowerCase();
+    if (!q) return null;
+    const exact = guessLabels().filter(x => x.label.toLowerCase() === q).map(x => x.c);
+    const named = exact.length ? exact : CARDS.filter(c => nm(c).toLowerCase() === q || c.name.toLowerCase() === q);
+    return named.find(c => c.id === target?.id) || named[0] || null;
+  }
   function belgleGuess(name) {
     const g = G().belgle;
     if (g.done) return;
     const target = dailyCard(g.day);
-    const card = CARDS.find(c => nm(c).toLowerCase() === name.trim().toLowerCase() || c.name.toLowerCase() === name.trim().toLowerCase());
+    const card = resolveGuess(name, target);
     if (!card) { SFX.error(); toast(T('b_unknown')); return; }
     g.guesses.push(card.id);
     if (card.id === target.id) {
@@ -425,7 +457,7 @@
           ${g.done ? `<div class="game-result ${g.todayWon ? 'win' : 'lose'}"><b>${g.todayWon ? T('b_win', g.guesses.length) : T('b_lose')}</b><span class="belgle-answer">${esc(nm(c))}</span>
               <button class="btn btn-gold" id="b-share">${T('b_share')}</button><small>${T('b_next')} · ${T('b_streak', g.streak)}</small></div>`
           : `<form class="belgle-form" autocomplete="off"><input id="b-input" list="b-list" placeholder="${T('b_ph')}" autofocus><button class="btn">${T('b_guess')}</button></form>
-             <datalist id="b-list">${[...new Set(CARDS.map(nm))].sort().map(n => `<option value="${esc(n)}">`).join('')}</datalist>`}
+             <datalist id="b-list">${[...new Set(guessLabels().map(x => x.label))].sort((a, b) => a.localeCompare(b)).map(n => `<option value="${esc(n)}">`).join('')}</datalist>`}
         </div>
       </div>`;
     area().querySelector('.belgle-form')?.addEventListener('submit', e => { e.preventDefault(); belgleGuess($('#b-input').value); });
@@ -804,5 +836,5 @@
   }
 
   const START = { formation: startFormation, belgle: startBelgle, chrono: startChrono, tour: startTour, pom: startPom, qui: startQui, parti: startParti };
-  window.GAMES_UI = { renderMenu, TX };
+  window.GAMES_UI = { renderMenu, TX, belglePool: BELGLE_POOL, resolveGuess }; // les deux derniers pour les tests
 })();
