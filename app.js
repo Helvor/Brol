@@ -1011,6 +1011,7 @@
 
 
   $('#packs').addEventListener('keydown', e => {
+    if (!stage.hidden) return; // scène ouverte : Entrée retourne une carte, elle ne rachète pas un paquet
     if (e.target.classList?.contains('pack-visual') && pressKey(e)) { e.preventDefault(); e.target.click(); }
   });
   $('#packs').addEventListener('click', e => {
@@ -1024,6 +1025,7 @@
 
   // ---------- Ouverture ----------
   const stage = $('#stage');
+  const BEHIND_STAGE = () => $$('body > .topbar, body > main, body > .foot');
   let current = null;
 
   // Achat et tirage, sans interface : utilisé par l'ouverture, le lot ×10 et la simulation (tools/simulate.mjs).
@@ -1117,6 +1119,10 @@
     const hot = F[best.finish].pack ? F[best.finish].color : best.card.cat === 'edition' ? packById(best.card.pack).metal[1] : best.finish === 'or' ? '#f6d478' : R[best.card.rarity].rank >= R.epique.rank ? `var(--r-${best.card.rarity})` : best.finish !== 'normal' ? '#9fe8ff' : '#ffffff';
 
     stage.hidden = false;
+    // La page derrière la scène devient inactive (ni clic, ni focus, ni touche) et le focus passe sur la scène :
+    // avant, il restait sur le paquet de la boutique et chaque Entrée rachetait un paquet
+    for (const el of BEHIND_STAGE()) el.inert = true;
+    stage.focus({ preventScroll: true });
     stage.classList.remove('is-hot');
     stage.classList.toggle('is-bulk', n > 1);
     stage.style.setProperty('--hot', hot);
@@ -1302,6 +1308,7 @@
   }
   function closeStage() {
     stage.hidden = true;
+    for (const el of BEHIND_STAGE()) el.inert = false;
     document.body.style.overflow = '';
     current = null;
     renderShop();
@@ -1312,7 +1319,8 @@
 
   document.addEventListener('keydown', e => {
     if (stage.hidden || $('#detail').open) return;
-    if (e.key === ' ' || e.key === 'Enter') {
+    // Sur un bouton de la scène (Rouvrir, Fermer…), Entrée et Espace gardent leur effet normal
+    if ((e.key === ' ' || e.key === 'Enter') && !e.target.closest?.('button, a')) {
       e.preventDefault();
       const sp = $('#stage-pack');
       if (!sp.hidden) sp.click();
