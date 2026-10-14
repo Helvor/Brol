@@ -701,7 +701,93 @@
         </div>
       </article>`;
   }
+  // Petit générateur pseudo-aléatoire tiré de l'identifiant : le même dessin pour une carte, à chaque affichage
+  const seeded = id => { let x = [...id].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 233280, 7); return () => (x = (x * 9301 + 49297) % 233280) / 233280; };
+  const finTagOf = finish => finish !== 'normal' ? `<span class="fin-tag">${fl(finish)}</span>` : '';
+  const dotsOf = variants => variants && variants.length > 1
+    ? `<span class="var-dots" title="${t('versionsOwned')}">${variants.filter(v => v !== 'normal').map(v => `<i class="d-${v}"></i>`).join('')}</span>` : '';
+  // Cours d'eau : « Atlas » (style.css, .card.cat-riviere), carte horizontale de géographe : bordure graduée,
+  // nom en italique bleu comme sur les cartes, tracé du cours d'eau (décoratif), échelle proportionnelle à la longueur
+  function riverTrace(id) {
+    const rnd = seeded(id); let y = 22 + rnd() * 8, d = `M4 ${y.toFixed(1)}`;
+    for (let x = 4; x < 92; x += 11) { const ny = 8 + rnd() * 26; d += ` C${x + 4} ${y.toFixed(1)} ${x + 7} ${ny.toFixed(1)} ${x + 11} ${ny.toFixed(1)}`; y = ny; }
+    return `<svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path d="${d}" class="rv-bed"/><path d="${d}" class="rv-line"/>
+      <circle cx="4" cy="${d.split(' ')[1]}" r="2" class="rv-src"/><path d="M93 ${(y - 4).toFixed(1)}L99 ${y.toFixed(1)}L93 ${(y + 4).toFixed(1)}Z" class="rv-mouth"/></svg>`;
+  }
+  const ROSE = '<svg viewBox="-20 -20 40 40" aria-hidden="true"><circle r="13" class="rs-ring"/><path d="M0-19L3.5-3.5L0 0L-3.5-3.5Z" class="rs-n"/><path d="M0 19L3.5 3.5L0 0L-3.5 3.5Z M19 0L3.5 3.5L0 0L3.5-3.5Z M-19 0L-3.5 3.5L0 0L-3.5-3.5Z" class="rs-o"/><text y="-21" class="rs-t">N</text></svg>';
+  function riverHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c), km = c.river?.km || 0;
+    // Échelle : 1 km à 1 000 km sur une barre de 4 à 10 segments (logarithmique, sinon la Meuse écrase tout)
+    const seg = Math.max(4, Math.min(10, Math.round(4 + Math.log10(Math.max(km, 1)) * 2)));
+    return `<div class="land">
+      <article class="card is-land r-${c.rarity} cat-${c.cat} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="card-photo${photo ? '' : ' no-img'}"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, Math.round(imgW * 1.6))}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
+          <div class="rv-rose">${ROSE}</div>
+          <div class="rv-panel">
+            <div class="card-top"><span class="rv-kind">${esc(tv(c.river?.kind || ''))}</span><span class="no">${String(c.no).padStart(4, '0')}</span>${finTagOf(finish)}</div>
+            <h3 class="rv-name${name.length > 16 ? ' is-xlong' : name.length > 10 ? ' is-long' : ''}">${esc(name)}</h3>
+            <p class="sub">${esc(window.I18N.subtitle(c))}</p>
+            <div class="rv-trace">${riverTrace(c.id)}</div>
+            <dl class="rv-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd>${esc(tv(v))}</dd></div>`).join('')}</dl>
+            <div class="rv-scale"><span>0</span><i style="--seg:${seg}"></i><span>${km ? `${km.toLocaleString(L() === 'nl' ? 'nl-BE' : 'fr-BE')} km` : ''}</span></div>
+          </div>
+          ${dotsOf(variants)}
+        </div>
+      </article></div>`;
+  }
+  // Moulins : « Sac de farine » (style.css, .card.cat-moulin) : toile de jute, médaillon imprimé à l'encre,
+  // nom au pochoir, qualité de la farine selon la rareté
+  const FLOUR = { fr: { commune: 'Farine bise', 'peu-commune': 'Farine de froment', rare: 'Fleur de farine', epique: 'Farine extra', legendaire: 'Qualité supérieure', mythique: 'Farine impériale' },
+    nl: { commune: 'Grof meel', 'peu-commune': 'Tarwebloem', rare: 'Bloem', epique: 'Extra bloem', legendaire: 'Superieure kwaliteit', mythique: 'Keizerlijke bloem' } };
+  const MILL_ICON = { vent: '<svg viewBox="-12 -12 24 24" aria-hidden="true"><g class="mi-s"><path d="M0 0L-2-11h4Z"/><path d="M0 0L11-2v4Z"/><path d="M0 0L2 11h-4Z"/><path d="M0 0L-11 2v-4Z"/></g><circle r="1.8"/></svg>',
+    eau: '<svg viewBox="-12 -12 24 24" aria-hidden="true"><circle r="9" class="mi-w"/><circle r="2.2"/><g class="mi-w">' + [0, 45, 90, 135].map(a => `<path d="M0-11V11" transform="rotate(${a})"/>`).join('') + '</g></svg>' };
+  function millHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c), type = c.mill?.type === 'eau' ? 'eau' : 'vent', k = ++uid;
+    const arch = L() === 'nl' ? (type === 'eau' ? 'Watermolen' : 'Windmolen') : (type === 'eau' ? 'Moulin à eau' : 'Moulin à vent');
+    return `
+      <article class="card r-${c.rarity} cat-${c.cat} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="ml-hem"></div>
+          <svg class="ml-arch" viewBox="0 0 100 30" aria-hidden="true"><path id="ma${k}" d="M2 29Q50 -5 98 29" fill="none"/><text><textPath href="#ma${k}" startOffset="50%" text-anchor="middle">${esc(arch.toUpperCase())}</textPath></text></svg>
+          <div class="card-photo${photo ? '' : ' no-img'}"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
+          <span class="ml-icon">${MILL_ICON[type]}</span>
+          <div class="card-top"><span class="no">N° ${String(c.no).padStart(4, '0')}</span>${finTagOf(finish)}</div>
+          <div class="card-band"><h3${name.length > 18 ? ' class="is-xlong"' : name.length > 12 ? ' class="is-long"' : ''}>${esc(name)}</h3>
+            <p class="ml-grade">${esc(FLOUR[L()][c.rarity])}</p><p class="sub">${esc(window.I18N.subtitle(c))}</p></div>
+          <dl class="card-stats">${statsOf(c).map(([k2, v]) => `<div><dt>${esc(window.I18N.statKey(k2))}</dt><dd${ddLen(v)}>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          ${dotsOf(variants)}
+        </div>
+      </article>`;
+  }
+  // Arsenal : « Plan d'armurier » (style.css, .card.cat-arme) : calque bleu quadrillé, figure cotée, cartouche du
+  // plan avec les caractéristiques et poinçon du banc d'épreuves de Liège (perron) à la couleur de la rareté
+  const PERRON = '<svg viewBox="0 0 40 52" aria-hidden="true"><ellipse cx="20" cy="26" rx="18" ry="24" class="pr-o"/><ellipse cx="20" cy="26" rx="14.5" ry="20.5" class="pr-i"/>'
+    + '<path d="M20 9l3 4h-6z M18.5 13h3v20h-3z M14 33h12v3H14z M12 36h16v3H12z M10 39h20v3H10z" class="pr-p"/></svg>';
+  function armHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c), st = statsOf(c);
+    return `
+      <article class="card r-${c.rarity} cat-${c.cat} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="ar-head"><span>${L() === 'nl' ? 'Plaat' : 'Planche'} ${String(c.no).padStart(4, '0')}</span>${finTagOf(finish)}<span class="ar-fig">FIG. 1</span></div>
+          <div class="card-photo${photo ? '' : ' no-img'}"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
+          <i class="ar-dim ar-dim-h"></i><i class="ar-dim ar-dim-v"></i>
+          <div class="ar-block">
+            <div class="ar-title"><h3${name.length > 16 ? ' class="is-xlong"' : name.length > 11 ? ' class="is-long"' : ''}>${esc(name)}</h3><p class="sub">${esc(window.I18N.subtitle(c))}</p></div>
+            <div class="ar-proof">${PERRON}<small>${esc(rl(c.rarity))}</small></div>
+            <dl class="ar-stats">${st.map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd${ddLen(v)}>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          </div>
+          ${dotsOf(variants)}
+        </div>
+      </article>`;
+  }
   function cardHTML(c, { count = 0, finish = 'normal', variants = null, imgW = 500 } = {}) {
+    if (c.cat === 'riviere') return riverHTML(c, { count, finish, variants, imgW });
+    if (c.cat === 'moulin') return millHTML(c, { count, finish, variants, imgW });
+    if (c.cat === 'arme') return armHTML(c, { count, finish, variants, imgW });
     if (c.cat === 'voiture') return carHTML(c, { count, finish, variants, imgW });
     if (c.landscape) return landHTML(c, { count, finish, variants, imgW });
     if (c.walk) return walkHTML(c, { count, finish, variants, imgW });

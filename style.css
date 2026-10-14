@@ -297,11 +297,11 @@ a { color: inherit; }
 .card.r-mythique    { --rc: var(--r-mythique); }
 /* Lueur rouge sur toutes les mythiques ; cadre et bandeau rubis sur la version standard (les autres versions gardent les leurs) */
 .card.r-mythique:not(.cat-edition) { box-shadow: 0 0 0 1px #7a0018, 0 0 22px -4px rgba(255, 40, 80, .7), 0 14px 30px -12px rgba(0, 0, 0, .6); }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture) {
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture):not(.cat-moulin):not(.cat-arme) {
   --frame: conic-gradient(from 20deg at 50% 50%, #5a0012, #ff2d55, #9a0020, #ff6b81, #6a0016, #ff2d55, #4a000e, #ff8fa0, #5a0012); }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture) .card-band { background: linear-gradient(180deg, #8a0020, #4a000e); color: #fff; }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture) .card-stats { background: #22000a; }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture) .card-stats dd { color: #ffb3c0; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture):not(.cat-moulin):not(.cat-arme) .card-band { background: linear-gradient(180deg, #8a0020, #4a000e); color: #fff; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture):not(.cat-moulin):not(.cat-arme) .card-stats { background: #22000a; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture):not(.cat-moulin):not(.cat-arme) .card-stats dd { color: #ffb3c0; }
 
 /* Édition limitée : cadre aux métaux de son paquet (--ed-frame, --band et --band-ink posés par app.js), double filet, sceau du paquet */
 .card.cat-edition { --frame: var(--ed-frame); background-size: 200% 200%; animation: gold 6s ease-in-out infinite alternate; }
@@ -1992,3 +1992,203 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
 .card.cat-voiture .card-stats dd.is-long { font-size: 3.4cqw; }
 .card.cat-voiture .card-stats dd.is-xlong { font-size: 2.9cqw; }
 .card.cat-voiture .card-stats dd.is-xxlong { font-size: 3cqw; line-height: 1.1; white-space: normal; }
+
+/* ===== Cours d'eau : « Atlas » (carte horizontale de géographe : bordure graduée, courbes de niveau, nom en italique
+   bleu, tracé du cours d'eau, rose des vents, échelle proportionnelle à la longueur) ===== */
+.card.is-land.cat-riviere { --paper: #f1ead6; --ink-m: #22303f; --water: #1d5aa6; }
+.card.is-land.cat-riviere .card-in { background:
+    repeating-radial-gradient(circle at 18% 86%, transparent 0 2.6cqw, rgba(29, 90, 166, .09) 2.6cqw 2.85cqw),
+    linear-gradient(rgba(34, 48, 63, .05) .15cqw, transparent .15cqw) 0 0 / 100% 12cqw,
+    linear-gradient(90deg, rgba(34, 48, 63, .05) .15cqw, transparent .15cqw) 0 0 / 12cqw 100%,
+    var(--paper); }
+/* Bordure graduée (blanc / couleur de la rareté) et filet intérieur, comme le cadre d'une carte d'état-major */
+.card.is-land.cat-riviere .card-in::before { display: block; content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; animation: none; mix-blend-mode: normal; opacity: 1;
+  background: repeating-linear-gradient(90deg, var(--acc) 0 4cqw, #fbf8ef 4cqw 8cqw) top / 100% 1.1cqw no-repeat,
+    repeating-linear-gradient(90deg, var(--acc) 0 4cqw, #fbf8ef 4cqw 8cqw) bottom / 100% 1.1cqw no-repeat,
+    repeating-linear-gradient(180deg, var(--acc) 0 4cqw, #fbf8ef 4cqw 8cqw) left / 1.1cqw 100% no-repeat,
+    repeating-linear-gradient(180deg, var(--acc) 0 4cqw, #fbf8ef 4cqw 8cqw) right / 1.1cqw 100% no-repeat; }
+.card.is-land.cat-riviere .card-in::after { display: block; content: ""; position: absolute; inset: 1.1cqw; z-index: 1; pointer-events: none; border: .25cqw solid var(--ink-m); background: none; animation: none; mix-blend-mode: normal; opacity: 1; }
+.card.is-land.cat-riviere .card-photo { inset: 3cqw 3cqw 3cqw 40cqw; z-index: 2; border: .3cqw solid var(--ink-m); }
+.card.is-land.cat-riviere .card-photo::before, .card.is-land.cat-riviere .card-photo::after { display: none; }
+.card.is-land.cat-riviere .card-photo img { filter: saturate(1.1) contrast(1.03); }
+.card.is-land.cat-riviere .rv-rose { position: absolute; right: 4.6cqw; top: 4.6cqw; width: 11cqw; z-index: 4; filter: drop-shadow(0 .3cqw .5cqw rgba(0, 0, 0, .5)); }
+.card.is-land.cat-riviere .rv-rose svg { display: block; overflow: visible; }
+.card.is-land.cat-riviere .rs-ring { fill: none; stroke: #fff; stroke-width: 1; opacity: .8; }
+.card.is-land.cat-riviere .rs-n { fill: var(--acc); stroke: #fff; stroke-width: .8; } .card.is-land.cat-riviere .rs-o { fill: #fff; opacity: .9; }
+.card.is-land.cat-riviere .rs-t { font: 700 6px/1 var(--display); fill: #fff; text-anchor: middle; }
+.card.is-land.cat-riviere .rv-panel { position: absolute; left: 3.2cqw; top: 3.2cqw; bottom: 3.2cqw; width: 34.4cqw; display: flex; flex-direction: column; gap: 1cqw; padding: 1.2cqw 1.2cqw 1cqw; color: var(--ink-m); }
+.card.is-land.cat-riviere .card-top { position: static; display: flex; align-items: center; gap: 1cqw; }
+.card.is-land.cat-riviere .rv-kind { font: 600 1.9cqw/1 var(--display); letter-spacing: .22em; text-transform: uppercase; color: #7a6f58; }
+.card.is-land.cat-riviere .card-top .no { margin-left: auto; background: none; color: var(--ink-m); padding: 0; font-size: 1.9cqw; }
+.card.is-land.cat-riviere .card-top .fin-tag { font-size: 1.6cqw; padding: .4cqw .8cqw; }
+.card.is-land.cat-riviere .rv-name { margin: .6cqw 0 0; font: italic 700 7.4cqw/.95 "EB Garamond", Georgia, serif; color: var(--water); letter-spacing: .01em;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-bottom: .1em; }
+.card.is-land.cat-riviere .rv-name.is-long { font-size: 6cqw; } .card.is-land.cat-riviere .rv-name.is-xlong { font-size: 4.8cqw; }
+.card.is-land.cat-riviere.r-legendaire .rv-name, .card.is-land.cat-riviere.r-mythique .rv-name { letter-spacing: .12em; text-transform: uppercase; font-size: 6.2cqw; }
+.card.is-land.cat-riviere .sub { margin: 0; font: 500 2.2cqw/1.2 var(--text); color: #5a5140; }
+.card.is-land.cat-riviere .rv-trace { height: 8.4cqw; border-top: .2cqw solid rgba(34, 48, 63, .25); border-bottom: .2cqw solid rgba(34, 48, 63, .25); }
+.card.is-land.cat-riviere .rv-trace svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.card.is-land.cat-riviere .rv-bed { fill: none; stroke: rgba(29, 90, 166, .18); stroke-width: 5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.card.is-land.cat-riviere .rv-line { fill: none; stroke: var(--water); stroke-width: 1.6; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.card.is-land.cat-riviere .rv-src { fill: #fff; stroke: var(--water); stroke-width: 1; vector-effect: non-scaling-stroke; } .card.is-land.cat-riviere .rv-mouth { fill: var(--water); }
+.card.is-land.cat-riviere .rv-stats { margin: 0; display: grid; gap: .5cqw; }
+.card.is-land.cat-riviere .rv-stats div { display: flex; align-items: baseline; gap: 1cqw; }
+.card.is-land.cat-riviere .rv-stats div::before { content: ""; order: 1; flex: 1; border-bottom: .25cqw dotted rgba(34, 48, 63, .35); }
+.card.is-land.cat-riviere .rv-stats dt { font: 600 1.8cqw/1 var(--display); letter-spacing: .1em; text-transform: uppercase; color: #7a6f58; white-space: nowrap; }
+.card.is-land.cat-riviere .rv-stats dd { order: 2; margin: 0; font: 700 2.4cqw/1 var(--display); color: var(--ink-m); white-space: nowrap; max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
+.card.is-land.cat-riviere .rv-scale { margin-top: auto; display: flex; align-items: center; gap: 1cqw; font: 600 1.8cqw/1 var(--mono); color: var(--ink-m); }
+.card.is-land.cat-riviere .rv-scale i { flex: 1; height: 1.3cqw; border: .2cqw solid var(--ink-m);
+  background: repeating-linear-gradient(90deg, var(--acc) 0 calc(100% / var(--seg)), #fbf8ef calc(100% / var(--seg)) calc(200% / var(--seg))); }
+.card.is-land.cat-riviere .var-dots { right: 4.4cqw; bottom: 4.4cqw; }
+/* Holo « nacre » : papier irisé, cadre chromé, reflet qui glisse sur la photo, nom et échelle holographiques */
+.card.is-land.cat-riviere.fin-holo { --paper: #f3f1fb; }
+.card.is-land.cat-riviere.fin-holo .card-in { background: repeating-radial-gradient(circle at 18% 86%, transparent 0 2.6cqw, rgba(150, 110, 255, .12) 2.6cqw 2.85cqw),
+    linear-gradient(135deg, #f6efff, #e5fbff 40%, #fff3e3 70%, #f1e9ff); }
+.card.is-land.cat-riviere.fin-holo .card-photo::after { display: block; content: ""; position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: .4;
+  background: linear-gradient(115deg, transparent 20%, #ff7ad9 32%, #ffd36b 40%, #7dffb2 48%, #6bd7ff 56%, #b38bff 64%, transparent 76%) 0 0 / 250% 100%; animation: pc-foil 5s ease-in-out infinite alternate; }
+.card.is-land.cat-riviere.fin-holo .rv-name { background: linear-gradient(90deg, #6a3df0, #1d8fd6, #12a57a, #c0399a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.card.is-land.cat-riviere.fin-holo .rv-scale i, .card.is-land.cat-riviere.fin-holo .rs-n { background: conic-gradient(from 30deg, #ff7ad9, #ffd36b, #7dffb2, #6bd7ff, #b38bff, #ff7ad9); fill: #b38bff; }
+@media (prefers-reduced-motion: reduce) { .card.is-land.cat-riviere.fin-holo .card-photo::after { animation: none; } }
+/* Dorée « atlas ancien » : papier jauni, encre sépia, rose et graduations dorées */
+.card.is-land.cat-riviere.fin-or { --paper: #ead7a6; --ink-m: #4a3410; --water: #7a5410; --acc: #b8891f; }
+.card.is-land.cat-riviere.fin-or .card-photo img { filter: sepia(.45) saturate(1.2) contrast(1.05); }
+.card.is-land.cat-riviere.fin-or .rv-name { background: linear-gradient(180deg, #8a6516, #c9971c 50%, #5a3f08); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.card.is-land.cat-riviere.fin-or .rs-n { fill: #f7dc84; }
+/* Plein cadre : la photo sur toute la carte, la légende dans un cartouche de papier */
+.card.is-land.cat-riviere.fin-plein .card-photo { inset: 0; border: 0; }
+.card.is-land.cat-riviere.fin-plein .card-in::before, .card.is-land.cat-riviere.fin-plein .card-in::after { display: none; }
+.card.is-land.cat-riviere.fin-plein .rv-panel { left: 2.4cqw; top: auto; bottom: 2.4cqw; width: 36cqw; padding: 1.6cqw; background: rgba(241, 234, 214, .93); border: .25cqw solid var(--ink-m); box-shadow: 0 .8cqw 2cqw rgba(0, 0, 0, .35); }
+.card.is-land.cat-riviere.fin-plein .rv-trace { display: none; }
+
+/* ===== Moulins : « Sac de farine » (toile de jute, médaillon imprimé, nom au pochoir, qualité de farine selon la rareté) ===== */
+.card.cat-moulin { --ink: #3b3a36; --jute: #e9dec2; }
+.card.cat-moulin.r-peu-commune { --ink: #2f6b3f; } .card.cat-moulin.r-rare { --ink: #224f9c; } .card.cat-moulin.r-epique { --ink: #5b2f98; }
+.card.cat-moulin.r-legendaire { --ink: #8f6208; } .card.cat-moulin.r-mythique { --ink: #b0122a; }
+.card.cat-moulin .card-in { color: var(--ink); background:
+    repeating-linear-gradient(0deg, rgba(110, 80, 30, .09) 0 .35cqw, transparent .35cqw .9cqw),
+    repeating-linear-gradient(90deg, rgba(110, 80, 30, .09) 0 .35cqw, transparent .35cqw .9cqw),
+    radial-gradient(ellipse at 50% 38%, #f3ead3, #d8c69c 92%); }
+.card.cat-moulin.r-epique .card-in::after, .card.cat-moulin.r-legendaire .card-in::after { opacity: .2; }
+/* Ourlet cousu et deux rayures de sac à la couleur de l'encre */
+.card.cat-moulin .ml-hem { position: absolute; left: 0; right: 0; top: 0; height: 12cqw; z-index: 1;
+  background: linear-gradient(var(--ink), var(--ink)) 0 6.6cqw / 100% 1.5cqw no-repeat, linear-gradient(var(--ink), var(--ink)) 0 9.4cqw / 100% 1.5cqw no-repeat;
+  border-top: 3.6cqw solid rgba(110, 80, 30, .14); opacity: .85; }
+.card.cat-moulin .ml-hem::after { content: ""; position: absolute; left: 0; right: 0; top: 1.2cqw; border-top: .4cqw dashed rgba(70, 50, 20, .55); }
+.card.cat-moulin .ml-arch { position: absolute; left: 6cqw; right: 6cqw; top: 12.6cqw; z-index: 2; overflow: visible; }
+.card.cat-moulin .ml-arch text { font: 700 8.6px/1 "Stardos Stencil", "Arial Black", sans-serif; letter-spacing: 1.6px; fill: var(--ink); }
+.card.cat-moulin .card-photo { inset: 31cqw auto auto 50%; width: 56cqw; height: 56cqw; translate: -50% 0; border-radius: 50%; overflow: hidden; z-index: 2;
+  box-shadow: 0 0 0 1cqw var(--jute), 0 0 0 1.7cqw var(--ink), 0 0 0 2.6cqw var(--jute), 0 0 0 3cqw var(--ink); }
+.card.cat-moulin .card-photo img { object-position: var(--pos, 50% 45%); filter: saturate(.85) sepia(.15) contrast(1.05); }
+.card.cat-moulin .ml-icon { position: absolute; left: 64cqw; top: 74cqw; z-index: 3; width: 13cqw; height: 13cqw; border-radius: 50%; display: grid; place-items: center;
+  background: var(--ink); box-shadow: 0 0 0 .8cqw var(--jute); }
+.card.cat-moulin .ml-icon svg { width: 72%; fill: var(--jute); } .card.cat-moulin .ml-icon .mi-w { fill: none; stroke: var(--jute); stroke-width: 2; }
+.card.cat-moulin .card-top { top: .3cqw; left: 4cqw; right: 4cqw; z-index: 3; justify-content: flex-end; }
+.card.cat-moulin .card-top .no { order: 2; background: none; padding: 0; color: rgba(70, 50, 20, .7); font: 700 3.2cqw/1 var(--mono); }
+.card.cat-moulin .card-top .fin-tag { font-size: 3cqw; }
+.card.cat-moulin .card-band, .card.cat-moulin .card-stats { z-index: 3; }
+.card.cat-moulin .card-band { left: 4cqw; right: 4cqw; top: 93cqw; bottom: auto; padding: 0; background: none; clip-path: none; text-align: center; color: var(--ink); }
+.card.cat-moulin .card-band::before, .card.cat-moulin .card-band::after { display: none; }
+.card.cat-moulin .card-band h3 { font: 700 8.6cqw/1 "Stardos Stencil", "Arial Black", sans-serif; letter-spacing: .03em; color: var(--ink); -webkit-line-clamp: 1; white-space: nowrap; display: block; text-overflow: ellipsis; }
+.card.cat-moulin .card-band h3.is-long { font-size: 6.6cqw; } .card.cat-moulin .card-band h3.is-xlong { font-size: 5.2cqw; }
+.card.cat-moulin .ml-grade { display: inline-block; margin: 1.6cqw 0 0; padding: .7cqw 3cqw; background: var(--ink); color: var(--jute); rotate: -2deg;
+  font: 700 3.2cqw/1 var(--display); letter-spacing: .18em; text-transform: uppercase; }
+.card.cat-moulin .card-band .sub { margin: 1.6cqw 0 0; font: 500 3.4cqw/1.2 var(--text); color: #5b4a2c; opacity: 1; }
+.card.cat-moulin .card-stats { left: 3.4cqw; right: 3.4cqw; bottom: 3cqw; height: 15cqw; padding: 0; gap: 1.6cqw; background: none; }
+.card.cat-moulin .card-stats div { padding: 1.4cqw 1.6cqw; border: .45cqw solid var(--ink); border-radius: .8cqw; text-align: center; }
+.card.cat-moulin .card-stats div + div { border-left: .45cqw solid var(--ink); }
+.card.cat-moulin .card-stats dt { color: #7a6440; font-size: 2.6cqw; } .card.cat-moulin .card-stats dd { color: var(--ink); font: 700 3.8cqw/1.1 var(--display); }
+.card.cat-moulin .var-dots { bottom: 20cqw; }
+/* Mythique : rubis autour du sac, encre rouge */
+.card.cat-moulin.r-mythique.fin-normal .card-band { background: none; color: var(--ink); } .card.cat-moulin.r-mythique.fin-normal .card-stats { background: none; }
+.card.cat-moulin.r-mythique.fin-normal .card-stats dd { color: var(--ink); }
+/* Holo : encre irisée */
+.card.cat-moulin.fin-holo .card-band h3, .card.cat-moulin.fin-holo .ml-arch text { background: none; fill: #7a5cd6; }
+.card.cat-moulin.fin-holo .card-band h3 { background: linear-gradient(90deg, #c0399a, #6a3df0, #1d8fd6, #12a57a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.card.cat-moulin.fin-holo .ml-grade, .card.cat-moulin.fin-holo .ml-icon { background: conic-gradient(from 30deg, #ff7ad9, #ffd36b, #7dffb2, #6bd7ff, #b38bff, #ff7ad9); color: #2a1d3a; }
+.card.cat-moulin.fin-holo .card-photo { box-shadow: 0 0 0 1cqw var(--jute), 0 0 0 1.7cqw #b38bff, 0 0 0 2.6cqw var(--jute), 0 0 0 3cqw #6bd7ff; }
+/* Dorée « sac de prestige » : toile claire, encre or */
+.card.cat-moulin.fin-or { --ink: #8a6516; }
+.card.cat-moulin.fin-or .card-in { background: repeating-linear-gradient(0deg, rgba(150, 110, 20, .08) 0 .35cqw, transparent .35cqw .9cqw),
+    repeating-linear-gradient(90deg, rgba(150, 110, 20, .08) 0 .35cqw, transparent .35cqw .9cqw), radial-gradient(ellipse at 50% 38%, #fff8e2, #ecd9a2 92%); }
+.card.cat-moulin.fin-or .card-band { background: none; color: var(--ink); } .card.cat-moulin.fin-or .card-stats { background: none; border: 0; }
+.card.cat-moulin.fin-or .card-band h3 { background: linear-gradient(180deg, #6e4f0c, #a87b1e 50%, #4a3410); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.card.cat-moulin.fin-or .card-stats dd { color: #6e4f0c; }
+/* Plein cadre : la photo imprimée sur toute la toile, textes en blanc */
+.card.cat-moulin.fin-plein .card-photo { inset: 0; width: auto; height: auto; translate: none; border-radius: 0; box-shadow: none; }
+.card.cat-moulin.fin-plein .card-photo::after { content: ""; position: absolute; inset: 0; background:
+    repeating-linear-gradient(0deg, rgba(110, 80, 30, .12) 0 .35cqw, transparent .35cqw .9cqw), repeating-linear-gradient(90deg, rgba(110, 80, 30, .12) 0 .35cqw, transparent .35cqw .9cqw),
+    linear-gradient(180deg, rgba(0, 0, 0, .35), transparent 30%, transparent 50%, rgba(0, 0, 0, .8)); }
+.card.cat-moulin.fin-plein .ml-arch text { fill: #fff; } .card.cat-moulin.fin-plein .ml-hem { opacity: .6; }
+.card.cat-moulin.fin-plein .card-band { top: 88cqw; background: none; color: #fff; } .card.cat-moulin.fin-plein .card-band h3 { color: #fff; }
+.card.cat-moulin.fin-plein .card-band .sub { color: #eee; } .card.cat-moulin.fin-plein .card-stats { background: none; }
+.card.cat-moulin.fin-plein .card-stats div { border-color: rgba(255, 255, 255, .8); background: rgba(0, 0, 0, .35); }
+.card.cat-moulin.fin-plein .card-stats dt { color: #ddd; } .card.cat-moulin.fin-plein .card-stats dd { color: #fff; }
+.card.cat-moulin.fin-plein .ml-icon { top: 4cqw; left: 4cqw; width: 11cqw; height: 11cqw; }
+
+/* ===== Arsenal : « Plan d'armurier » (calque bleu quadrillé, figure cotée, cartouche du plan, poinçon du banc d'épreuves) ===== */
+.card.cat-arme { --bp: #123d73; --line-w: rgba(235, 244, 255, .85); --proof: #cfd8e6; }
+.card.cat-arme.r-peu-commune { --proof: #6fe0a0; } .card.cat-arme.r-rare { --proof: #7fb2ff; } .card.cat-arme.r-epique { --proof: #c39bff; }
+.card.cat-arme.r-legendaire { --proof: #ffd36b; } .card.cat-arme.r-mythique { --proof: #ff5a6e; }
+.card.cat-arme .card-in { color: #eaf3ff; box-shadow: inset 0 0 0 .3cqw var(--line-w); background:
+    linear-gradient(rgba(255, 255, 255, .16) .2cqw, transparent .2cqw) 0 0 / 100% 15cqw, linear-gradient(90deg, rgba(255, 255, 255, .16) .2cqw, transparent .2cqw) 0 0 / 15cqw 100%,
+    linear-gradient(rgba(255, 255, 255, .06) .12cqw, transparent .12cqw) 0 0 / 100% 3cqw, linear-gradient(90deg, rgba(255, 255, 255, .06) .12cqw, transparent .12cqw) 0 0 / 3cqw 100%,
+    radial-gradient(ellipse at 50% 30%, #1a4f8f, var(--bp) 75%); }
+.card.cat-arme .ar-head { position: absolute; left: 4cqw; right: 4cqw; top: 2.6cqw; z-index: 3; display: flex; align-items: center; gap: 2cqw; padding-bottom: 1.4cqw;
+  border-bottom: .3cqw solid var(--line-w); font: 600 3cqw/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.card.cat-arme .ar-head .ar-fig { margin-left: auto; opacity: .75; } .card.cat-arme .ar-head .fin-tag { font-size: 2.8cqw; }
+.card.cat-arme .card-photo { inset: 13cqw 6cqw auto 9cqw; height: 66cqw; z-index: 2; background: #dce7f4; border: .35cqw solid var(--line-w); }
+/* Tirage « cyanotype » : la photo en niveaux de gris imprimée sur papier bleuté */
+.card.cat-arme .card-photo img { object-fit: contain; object-position: var(--pos, 50% 50%); filter: grayscale(1) contrast(1.25) brightness(1.06); mix-blend-mode: multiply; }
+.card.cat-arme .card-photo::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(rgba(18, 61, 115, .22), rgba(18, 61, 115, .22)); mix-blend-mode: multiply; }
+/* Cotes : flèches et traits de rappel autour de la figure */
+.card.cat-arme .ar-dim { position: absolute; z-index: 2; border-color: var(--line-w); border-style: solid; border-width: 0; }
+.card.cat-arme .ar-dim-h { left: 9cqw; right: 6cqw; top: 81.6cqw; border-top-width: .25cqw; }
+.card.cat-arme .ar-dim-v { left: 5.4cqw; top: 13cqw; height: 66cqw; border-left-width: .25cqw; }
+.card.cat-arme .ar-dim::before, .card.cat-arme .ar-dim::after { content: ""; position: absolute; border: 1cqw solid transparent; }
+.card.cat-arme .ar-dim-h::before { left: 0; top: -1.1cqw; border-left: 2cqw solid var(--line-w); border-right: 0; }
+.card.cat-arme .ar-dim-h::after { right: 0; top: -1.1cqw; border-right: 2cqw solid var(--line-w); border-left: 0; }
+.card.cat-arme .ar-dim-v::before { top: 0; left: -1.1cqw; border-top: 2cqw solid var(--line-w); border-bottom: 0; }
+.card.cat-arme .ar-dim-v::after { bottom: 0; left: -1.1cqw; border-bottom: 2cqw solid var(--line-w); border-top: 0; }
+/* Cartouche du plan : titre, poinçon, caractéristiques */
+.card.cat-arme .ar-block { position: absolute; left: 4cqw; right: 4cqw; bottom: 3cqw; top: 86cqw; z-index: 3; display: grid; grid-template-columns: 1fr 23cqw; grid-template-rows: 1fr auto;
+  border: .35cqw solid var(--line-w); background: rgba(10, 40, 80, .55); }
+.card.cat-arme .ar-title { padding: 2.2cqw 3cqw; border-right: .3cqw solid var(--line-w); min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.card.cat-arme .ar-title h3 { margin: 0; font: 800 8.6cqw/.95 var(--display); text-transform: uppercase; letter-spacing: .01em; color: #fff;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-bottom: .08em; }
+.card.cat-arme .ar-title h3.is-long { font-size: 7cqw; } .card.cat-arme .ar-title h3.is-xlong { font-size: 5.6cqw; }
+.card.cat-arme .ar-title .sub { margin: 1cqw 0 0; font: 500 3.2cqw/1.2 var(--text); color: #b9cfea; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card.cat-arme .ar-proof { display: grid; place-items: center; align-content: center; gap: .8cqw; padding: 1.6cqw; }
+.card.cat-arme .ar-proof svg { width: 12cqw; } .card.cat-arme .ar-proof small { font: 700 2.3cqw/1 var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--proof); text-align: center; }
+.card.cat-arme .pr-o { fill: none; stroke: var(--proof); stroke-width: 2.4; } .card.cat-arme .pr-i { fill: none; stroke: var(--proof); stroke-width: 1; }
+.card.cat-arme .pr-p { fill: var(--proof); }
+.card.cat-arme .ar-stats { grid-column: 1 / -1; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); border-top: .3cqw solid var(--line-w); }
+.card.cat-arme .ar-stats div { min-width: 0; padding: 1.6cqw 2.2cqw; } .card.cat-arme .ar-stats div + div { border-left: .3cqw solid var(--line-w); }
+.card.cat-arme .ar-stats dt { font: 600 2.4cqw/1 var(--display); letter-spacing: .12em; text-transform: uppercase; color: #9fb8d8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card.cat-arme .ar-stats dd { margin: .8cqw 0 0; font: 600 3.8cqw/1.1 var(--mono); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card.cat-arme .ar-stats dd.is-long { font-size: 3.2cqw; } .card.cat-arme .ar-stats dd.is-xlong { font-size: 2.7cqw; } .card.cat-arme .ar-stats dd.is-xxlong { font-size: 2.6cqw; white-space: normal; }
+.card.cat-arme .var-dots { bottom: 22cqw; }
+/* Holo : quadrillage et poinçon irisés */
+.card.cat-arme.fin-holo { --proof: #fff; }
+.card.cat-arme.fin-holo .card-in { background:
+    linear-gradient(rgba(255, 255, 255, .2) .2cqw, transparent .2cqw) 0 0 / 100% 15cqw, linear-gradient(90deg, rgba(255, 255, 255, .2) .2cqw, transparent .2cqw) 0 0 / 15cqw 100%,
+    linear-gradient(135deg, #1b3f8f, #3b2c8f 35%, #0f6a8f 65%, #2a3f9a); }
+.card.cat-arme.fin-holo .ar-proof svg { filter: drop-shadow(0 0 1.2cqw #b38bff); } .card.cat-arme.fin-holo .pr-p { fill: #ffd36b; }
+.card.cat-arme.fin-holo .ar-title h3 { background: linear-gradient(90deg, #ffd1f1, #fff, #b8f3ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* Dorée « plaque de laiton gravée » */
+.card.cat-arme.fin-or { --line-w: rgba(60, 40, 8, .75); --proof: #5a3f08; }
+.card.cat-arme.fin-or .card-in { color: #3a2a08; background: linear-gradient(rgba(60, 40, 8, .12) .2cqw, transparent .2cqw) 0 0 / 100% 15cqw,
+    linear-gradient(90deg, rgba(60, 40, 8, .12) .2cqw, transparent .2cqw) 0 0 / 15cqw 100%, linear-gradient(135deg, #b8891f, #f7dc84 30%, #c9971c 55%, #fff1b8 75%, #a87b1e); }
+.card.cat-arme.fin-or .ar-block { background: rgba(255, 246, 210, .35); } .card.cat-arme.fin-or .ar-title h3, .card.cat-arme.fin-or .ar-stats dd { color: #2a1e05; }
+.card.cat-arme.fin-or .ar-title .sub, .card.cat-arme.fin-or .ar-stats dt { color: #5a4416; }
+.card.cat-arme.fin-or .card-photo img { filter: grayscale(1) sepia(.6) contrast(1.2); } .card.cat-arme.fin-or .card-photo::after { background: rgba(184, 137, 31, .25); }
+/* Plein cadre : la vraie photo en couleur sur toute la carte, quadrillage du calque par-dessus */
+.card.cat-arme.fin-plein .card-photo { inset: 0; height: auto; border: 0; background: #0b2a50; }
+.card.cat-arme.fin-plein .card-photo img { object-fit: cover; filter: none; mix-blend-mode: normal; }
+.card.cat-arme.fin-plein .card-photo::after { mix-blend-mode: normal; background: linear-gradient(rgba(255, 255, 255, .14) .2cqw, transparent .2cqw) 0 0 / 100% 15cqw,
+    linear-gradient(90deg, rgba(255, 255, 255, .14) .2cqw, transparent .2cqw) 0 0 / 15cqw 100%, linear-gradient(180deg, rgba(8, 30, 60, .5), transparent 25%, transparent 50%, rgba(8, 30, 60, .9)); }
+.card.cat-arme.fin-plein .ar-dim { display: none; } .card.cat-arme.fin-plein .ar-block { background: rgba(8, 30, 60, .72); }
+/* Moulins et Arsenal mythiques : cadre rubis (sans le bandeau rubis des cartes classiques) */
+.card.cat-moulin.r-mythique.fin-normal, .card.cat-arme.r-mythique.fin-normal {
+  --frame: conic-gradient(from 20deg at 50% 50%, #5a0012, #ff2d55, #9a0020, #ff6b81, #6a0016, #ff2d55, #4a000e, #ff8fa0, #5a0012); }
+.card.cat-moulin.fin-plein .card-top .no { color: #fff; }
+.card.cat-moulin.fin-or .ml-arch text { fill: #7a5a12; } .card.cat-moulin.fin-or .card-band .sub { color: #5a4416; }
