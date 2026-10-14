@@ -82,6 +82,9 @@
     { id: 'paysage',      fr: 'Paysages',      nl: 'Landschappen' },
     { id: 'balade',       fr: 'Balades',       nl: 'Wandelingen' },
     { id: 'voiture',      fr: 'Voitures',      nl: 'Auto’s' },
+    { id: 'riviere',      fr: 'Cours d’eau',   nl: 'Waterlopen' },
+    { id: 'moulin',       fr: 'Moulins',       nl: 'Molens' },
+    { id: 'arme',         fr: 'Arsenal',       nl: 'Arsenaal' },
     { id: 'evenement',    fr: 'Événements',    nl: 'Gebeurtenissen' },
     { id: 'edition',      fr: 'Éditions limitées', nl: 'Beperkte edities' },
   ];
@@ -132,6 +135,15 @@
     { id: 'balades', title: { fr: 'Balades', nl: 'Wandelingen' }, kicker: { fr: 'Édition randonnée', nl: 'Wandeleditie' }, big: 'GR', price: 80,
       desc: { fr: '60 belles balades de Belgique, avec leur point de départ sur la carte.', nl: '60 mooie wandelingen in België, met hun vertrekpunt op de kaart.' },
       body: ['#1f241b', '#4a5a36'], metal: ['#f3efe4', '#e0483a', '#8a2a20'], cats: ['balade'] },
+    { id: 'eau', title: { fr: 'Au fil de l’eau', nl: 'Langs het water' }, kicker: { fr: 'Édition atlas', nl: 'Atlaseditie' }, big: '≈', price: 80,
+      desc: { fr: 'Fleuves, rivières, ruisseaux et canaux, en cartes d’atlas.', nl: 'Stromen, rivieren, beken en kanalen, als atlaskaarten.' },
+      body: ['#0d2236', '#1f4f7a'], metal: ['#eef6ff', '#8cc4f2', '#2f6aa0'], cats: ['riviere'] },
+    { id: 'moulins', title: { fr: 'Moulins', nl: 'Molens' }, kicker: { fr: 'Édition meunerie', nl: 'Maalderij-editie' }, big: 'M', price: 80,
+      desc: { fr: 'Moulins à vent et à eau des trois Régions.', nl: 'Wind- en watermolens uit de drie Gewesten.' },
+      body: ['#2a2014', '#5e4a2a'], metal: ['#fbf1d8', '#e2c48a', '#8a6a34'], cats: ['moulin'] },
+    { id: 'arsenal', title: { fr: 'Arsenal', nl: 'Arsenaal' }, kicker: { fr: 'Édition armurerie', nl: 'Wapenmakerseditie' }, big: 'FN', price: 80,
+      desc: { fr: 'L’armurerie liégeoise, la FN de Herstal et les armes du Moyen Âge.', nl: 'De Luikse wapensmeden, FN Herstal en wapens uit de middeleeuwen.' },
+      body: ['#0b1f3d', '#1a4a85'], metal: ['#eaf3ff', '#a9c8ee', '#4a6f9e'], cats: ['arme'] },
     // Banque nationale : la catégorie Monnaie et banque, plus les gouverneurs et ministres déjà présents en Politique
     { id: 'bnb', title: { fr: 'Banque nationale', nl: 'Nationale Bank' }, kicker: { fr: 'Édition monétaire', nl: 'Munteditie' }, big: '€ ƒ', price: 80,
       desc: { fr: 'Gouverneurs, francs, euros, or et grandes institutions.', nl: 'Gouverneurs, franken, euro’s, goud en grote instellingen.' },
@@ -352,6 +364,12 @@
       match: c => c.cat === 'paysage' && c.stats?.[0]?.[1] === 'Grotte' },
     { id: 'digue', title: { fr: 'Sur la digue', nl: 'Op de zeedijk' }, desc: { fr: 'Les statues de BD de Middelkerke.', nl: 'De stripbeelden van Middelkerke.' }, reward: 500,
       match: c => c.cat === 'bd' && /Middelkerke$/.test(c.meta || '') },
+    { id: 'canaux', title: { fr: 'Canaux', nl: 'Kanalen' }, desc: { fr: 'Les canaux, de Willebroek au canal Albert.', nl: 'De kanalen, van Willebroek tot het Albertkanaal.' }, reward: 500,
+      match: c => c.cat === 'riviere' && c.river?.kind === 'Canal' },
+    { id: 'moulins-eau', title: { fr: 'Roues à aubes', nl: 'Waterraderen' }, desc: { fr: 'Les moulins à eau.', nl: 'De watermolens.' }, reward: 500,
+      match: c => c.cat === 'moulin' && c.mill?.type === 'eau' },
+    { id: 'browning', title: { fr: 'Signé Browning', nl: 'Getekend Browning' }, desc: { fr: 'John Browning et ses créations fabriquées à Herstal.', nl: 'John Browning en zijn ontwerpen gemaakt in Herstal.' }, reward: 500,
+      match: c => c.cat === 'arme' && /Browning/.test(c.name) },
     ...ALL_PACKS.filter(p => p.special).map(p => ({ id: 'ed-' + p.id, edition: p.id,
       title: { fr: `Édition ${p.title.fr}`, nl: `Editie ${p.title.nl}` },
       desc: { fr: `Les cartes exclusives du paquet ${p.title.fr}.`, nl: `De exclusieve kaarten van het pakje ${p.title.nl}.` },
@@ -536,6 +554,18 @@
       <path d="M0 330L60 260L110 300L170 220L230 290L300 240V412H0Z" fill="${p.metal[1]}" opacity=".14"/>
       <path d="M0 370L80 320L150 350L220 300L300 340V412H0Z" fill="${p.metal[0]}" opacity=".1"/>
       <g transform="translate(218 92) rotate(8)" opacity=".35"><rect x="-26" y="-32" width="52" height="64" fill="none" stroke="${p.metal[0]}" stroke-width="3" stroke-dasharray="3 4"/></g>`,
+    // Méandres et courbes de niveau d'une carte d'atlas
+    eau: (k, p) => `<g fill="none" stroke="${p.metal[1]}" opacity=".22">${[0, 1, 2, 3, 4].map(i => `<ellipse cx="70" cy="330" rx="${40 + i * 26}" ry="${26 + i * 17}" stroke-width="1.4"/>`).join('')}</g>
+      <path d="M-10 104C60 84 90 128 150 118S240 84 310 100" fill="none" stroke="${p.metal[0]}" stroke-width="7" opacity=".28" stroke-linecap="round"/>
+      <path d="M-10 104C60 84 90 128 150 118S240 84 310 100" fill="none" stroke="${p.metal[1]}" stroke-width="2.5" opacity=".6" stroke-linecap="round"/>`,
+    // Ailes de moulin et trame de toile de jute
+    moulins: (k, p) => `<defs><pattern id="jt${k}" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 3H6M3 0V6" stroke="${p.metal[1]}" stroke-width=".8" opacity=".14"/></pattern></defs>
+      <rect x="0" y="18" width="300" height="394" fill="url(#jt${k})"/>
+      <g transform="translate(232 120) rotate(18)" fill="${p.metal[1]}" opacity=".2">${[0, 90, 180, 270].map(a => `<path d="M-6 0L-11 -86H11L6 0Z" transform="rotate(${a})"/>`).join('')}<circle r="10"/></g>`,
+    // Quadrillage de plan et figure cotée
+    arsenal: (k, p) => `<defs><pattern id="bp${k}" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M15 0H0V15" fill="none" stroke="${p.metal[1]}" stroke-width=".6" opacity=".22"/></pattern></defs>
+      <rect x="0" y="18" width="300" height="394" fill="url(#bp${k})"/>
+      <g stroke="${p.metal[0]}" fill="none" opacity=".32"><path d="M30 104H270M30 98V110M270 98V110" stroke-width="1.6"/><circle cx="150" cy="330" r="40" stroke-dasharray="4 5"/><path d="M100 330H200M150 280V380"/></g>`,
     // Trame de points et bulles de BD
     bulles: (k, p) => `<defs><pattern id="bd${k}" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="6" cy="6" r="2.2" fill="${p.metal[1]}" opacity=".2"/></pattern></defs>
       <rect x="0" y="18" width="300" height="394" fill="url(#bd${k})"/>
@@ -701,7 +731,96 @@
         </div>
       </article>`;
   }
+  // Petit générateur pseudo-aléatoire tiré de l'identifiant : le même dessin pour une carte, à chaque affichage
+  const seeded = id => { let x = [...id].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 233280, 7); return () => (x = (x * 9301 + 49297) % 233280) / 233280; };
+  const finTagOf = finish => finish !== 'normal' ? `<span class="fin-tag">${fl(finish)}</span>` : '';
+  const dotsOf = variants => variants && variants.length > 1
+    ? `<span class="var-dots" title="${t('versionsOwned')}">${variants.filter(v => v !== 'normal').map(v => `<i class="d-${v}"></i>`).join('')}</span>` : '';
+  // Cours d'eau : « Atlas » (style.css, .card.cat-riviere), carte horizontale de géographe : bordure graduée,
+  // nom en italique bleu comme sur les cartes, tracé du cours d'eau (décoratif), échelle proportionnelle à la longueur
+  function riverTrace(id) {
+    const rnd = seeded(id); let y = 22 + rnd() * 8, d = `M4 ${y.toFixed(1)}`;
+    for (let x = 4; x < 92; x += 11) { const ny = 8 + rnd() * 26; d += ` C${x + 4} ${y.toFixed(1)} ${x + 7} ${ny.toFixed(1)} ${x + 11} ${ny.toFixed(1)}`; y = ny; }
+    return `<svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path d="${d}" class="rv-bed"/><path d="${d}" class="rv-line"/>
+      <circle cx="4" cy="${d.split(' ')[1]}" r="2" class="rv-src"/><path d="M93 ${(y - 4).toFixed(1)}L99 ${y.toFixed(1)}L93 ${(y + 4).toFixed(1)}Z" class="rv-mouth"/></svg>`;
+  }
+  const ROSE = '<svg viewBox="-20 -20 40 40" aria-hidden="true"><circle r="13" class="rs-ring"/><path d="M0-19L3.5-3.5L0 0L-3.5-3.5Z" class="rs-n"/><path d="M0 19L3.5 3.5L0 0L-3.5 3.5Z M19 0L3.5 3.5L0 0L3.5-3.5Z M-19 0L-3.5 3.5L0 0L-3.5-3.5Z" class="rs-o"/><text y="-21" class="rs-t">N</text></svg>';
+  // Taille du nom selon le mot le plus long et la longueur totale (majuscules espacées des légendaires et mythiques)
+  const rvSize = (name, caps) => { const w = Math.max(...name.split(/[\s-]+/).map(x => x.length)) * (caps ? 1.45 : 1), n = name.length * (caps ? 1.3 : 1);
+    return w > 13 || n > 18 ? ' is-xlong' : w > 9 || n > 12 ? ' is-long' : ''; };
+  function riverHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c), km = c.river?.km || 0;
+    // Échelle : 1 km à 1 000 km sur une barre de 4 à 10 segments (logarithmique, sinon la Meuse écrase tout)
+    const seg = Math.max(4, Math.min(10, Math.round(4 + Math.log10(Math.max(km, 1)) * 2)));
+    return `<div class="land">
+      <article class="card is-land r-${c.rarity} cat-${c.cat} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="card-photo${photo ? '' : ' no-img'}"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, Math.round(imgW * 1.6))}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
+          <div class="rv-rose">${ROSE}</div>
+          <div class="rv-panel">
+            <div class="card-top"><span class="rv-kind">${esc(tv(c.river?.kind || ''))}</span><span class="no">${String(c.no).padStart(4, '0')}</span>${finTagOf(finish)}</div>
+            <h3 class="rv-name${rvSize(name, R[c.rarity].rank >= R.legendaire.rank)}">${esc(name).replace(/-/g, '-<wbr>')}</h3>
+            <p class="sub">${esc(window.I18N.subtitle(c))}</p>
+            <div class="rv-trace">${riverTrace(c.id)}</div>
+            <dl class="rv-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd>${esc(tv(v))}</dd></div>`).join('')}</dl>
+            <div class="rv-scale"><span>0</span><i style="--seg:${seg}"></i><span>${km ? `${km.toLocaleString(L() === 'nl' ? 'nl-BE' : 'fr-BE')} km` : ''}</span></div>
+          </div>
+          ${dotsOf(variants)}
+        </div>
+      </article></div>`;
+  }
+  // Moulins : « Sac de farine » (style.css, .card.cat-moulin) : toile de jute, médaillon imprimé à l'encre,
+  // nom au pochoir, qualité de la farine selon la rareté
+  const FLOUR = { fr: { commune: 'Farine bise', 'peu-commune': 'Farine de froment', rare: 'Fleur de farine', epique: 'Farine extra', legendaire: 'Qualité supérieure', mythique: 'Farine impériale' },
+    nl: { commune: 'Grof meel', 'peu-commune': 'Tarwebloem', rare: 'Bloem', epique: 'Extra bloem', legendaire: 'Superieure kwaliteit', mythique: 'Keizerlijke bloem' } };
+  const MILL_ICON = { vent: '<svg viewBox="-12 -12 24 24" aria-hidden="true"><g class="mi-s"><path d="M0 0L-2-11h4Z"/><path d="M0 0L11-2v4Z"/><path d="M0 0L2 11h-4Z"/><path d="M0 0L-11 2v-4Z"/></g><circle r="1.8"/></svg>',
+    eau: '<svg viewBox="-12 -12 24 24" aria-hidden="true"><circle r="9" class="mi-w"/><circle r="2.2"/><g class="mi-w">' + [0, 45, 90, 135].map(a => `<path d="M0-11V11" transform="rotate(${a})"/>`).join('') + '</g></svg>' };
+  function millHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c), type = c.mill?.type === 'eau' ? 'eau' : 'vent', k = ++uid;
+    const arch = L() === 'nl' ? (type === 'eau' ? 'Watermolen' : 'Windmolen') : (type === 'eau' ? 'Moulin à eau' : 'Moulin à vent');
+    return `
+      <article class="card r-${c.rarity} cat-${c.cat} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="ml-hem"></div>
+          <svg class="ml-arch" viewBox="0 0 100 30" aria-hidden="true"><path id="ma${k}" d="M2 29Q50 -5 98 29" fill="none"/><text><textPath href="#ma${k}" startOffset="50%" text-anchor="middle">${esc(arch.toUpperCase())}</textPath></text></svg>
+          <div class="card-photo${photo ? '' : ' no-img'}"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
+          <span class="ml-icon">${MILL_ICON[type]}</span>
+          <div class="card-top"><span class="no">N° ${String(c.no).padStart(4, '0')}</span>${finTagOf(finish)}</div>
+          <div class="card-band"><h3${name.length > 18 ? ' class="is-xlong"' : name.length > 12 ? ' class="is-long"' : ''}>${esc(name)}</h3>
+            <p class="ml-grade">${esc(FLOUR[L()][c.rarity])}</p><p class="sub">${esc(window.I18N.subtitle(c))}</p></div>
+          <dl class="card-stats">${statsOf(c).map(([k2, v]) => `<div><dt>${esc(window.I18N.statKey(k2))}</dt><dd${ddLen(v)}>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          ${dotsOf(variants)}
+        </div>
+      </article>`;
+  }
+  // Arsenal : « Plan d'armurier » (style.css, .card.cat-arme) : calque bleu quadrillé, figure cotée, cartouche du
+  // plan avec les caractéristiques et poinçon du banc d'épreuves de Liège (perron) à la couleur de la rareté
+  const PERRON = '<svg viewBox="0 0 40 52" aria-hidden="true"><ellipse cx="20" cy="26" rx="18" ry="24" class="pr-o"/><ellipse cx="20" cy="26" rx="14.5" ry="20.5" class="pr-i"/>'
+    + '<path d="M20 9l3 4h-6z M18.5 13h3v20h-3z M14 33h12v3H14z M12 36h16v3H12z M10 39h20v3H10z" class="pr-p"/></svg>';
+  function armHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c), st = statsOf(c);
+    return `
+      <article class="card r-${c.rarity} cat-${c.cat} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="ar-head"><span>${L() === 'nl' ? 'Plaat' : 'Planche'} ${String(c.no).padStart(4, '0')}</span>${finTagOf(finish)}<span class="ar-fig">FIG. 1</span></div>
+          <div class="card-photo${photo ? '' : ' no-img'}"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
+          <i class="ar-dim ar-dim-h"></i><i class="ar-dim ar-dim-v"></i>
+          <div class="ar-block">
+            <div class="ar-title"><h3${name.length > 16 ? ' class="is-xlong"' : name.length > 11 ? ' class="is-long"' : ''}>${esc(name)}</h3><p class="sub">${esc(window.I18N.subtitle(c))}</p></div>
+            <div class="ar-proof">${PERRON}<small>${esc(rl(c.rarity))}</small></div>
+            <dl class="ar-stats">${st.map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd${ddLen(v)}>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          </div>
+          ${dotsOf(variants)}
+        </div>
+      </article>`;
+  }
   function cardHTML(c, { count = 0, finish = 'normal', variants = null, imgW = 500 } = {}) {
+    if (c.cat === 'riviere') return riverHTML(c, { count, finish, variants, imgW });
+    if (c.cat === 'moulin') return millHTML(c, { count, finish, variants, imgW });
+    if (c.cat === 'arme') return armHTML(c, { count, finish, variants, imgW });
     if (c.cat === 'voiture') return carHTML(c, { count, finish, variants, imgW });
     if (c.landscape) return landHTML(c, { count, finish, variants, imgW });
     if (c.walk) return walkHTML(c, { count, finish, variants, imgW });
@@ -759,7 +878,8 @@
   // Chaque catégorie contient toutes les raretés (réparties par notoriété), donc les taux affichés sont justes.
   // Nouvelle catégorie : à rareté égale, ses cartes sortent trois fois plus souvent jusqu'à la date indiquée, pour
   // qu'elles ne se noient pas parmi les 1 500 cartes du paquet Belgique. Les taux par rareté ne changent pas.
-  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30', histoire: '2027-05-31', bd: '2027-06-30', paysage: '2027-07-31', balade: '2027-08-31', voiture: '2027-09-30' }, FEATURED_WEIGHT = 3;
+  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30', histoire: '2027-05-31', bd: '2027-06-30', paysage: '2027-07-31', balade: '2027-08-31', voiture: '2027-09-30',
+    riviere: '2027-10-31', moulin: '2027-11-30', arme: '2027-12-31' }, FEATURED_WEIGHT = 3;
   const featuredCats = () => { const d = ymd(now()); return new Set(Object.keys(FEATURED).filter(cat => d <= FEATURED[cat])); };
   function pickCard(list) {
     const feat = featuredCats(), w = c => feat.has(c.cat) ? FEATURED_WEIGHT : 1;
