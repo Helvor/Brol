@@ -10,14 +10,14 @@ en français) ; l'interface existe en FR et NL.
 - `data/cards.js` est **généré** par `tools/build-cards.mjs` (Wikidata, Wikipédia, Commons ; cache `tools/.cache.json`).
   Ne pas l'éditer à la main : modifier le générateur et relancer `node tools/build-cards.mjs`. Pour ajouter une
   catégorie sans tout régénérer (Wikipédia et Commons limitent souvent les requêtes, le cache n'est pas versionné) :
-  `node tools/build-cards.mjs --ajout=animal` (ou `militaire`, `aviation`, `rail`, `exploration`, `finance`, `histoire`, `bd`, `paysage`, `balade`, `voiture` ; Wikidata seul ;
+  `node tools/build-cards.mjs --ajout=animal` (ou `militaire`, `aviation`, `rail`, `exploration`, `finance`, `histoire`, `bd`, `paysage`, `balade`, `voiture`, `riviere`, `moulin`, `arme` ; Wikidata seul ;
   nouvelle catégorie : l'ajouter à `AJOUTS` dans le générateur). Photo fausse : `PHOTO_FIX` puis
   `node tools/build-cards.mjs --photos`.
 - `data/images.js` (adresses directes des images, `tools/build-images.mjs`, lancé par build-cards) et `data/focus.js`
   (cadrage sur le visage, `python3 tools/build-focus.py [--hors-ligne]`, demande opencv-python-headless).
 - Cadrage : `node tools/planche.mjs <catégorie> [dossier] [version]` rend toutes les cartes d'une catégorie avec le vrai
   jeu (planches PNG à relire) et signale les photos non chargées ou trop petites. Corriger avec `MANUAL` dans
-  `tools/build-focus.py` (photos) ou `PAYSAGE_POS` / `VOITURE_POS` dans le générateur.
+  `tools/build-focus.py` (photos) ou `PAYSAGE_POS` / `VOITURE_POS` / `RIVIERE_POS` / `MOULIN_POS` / `ARME_POS` dans le générateur.
 - Sauvegarde du joueur : localStorage `rue-de-la-loi:v1` (`state.owned` : clé `id` ou `id|finish`).
 
 ## Règles de travail
@@ -30,7 +30,7 @@ en français) ; l'interface existe en FR et NL.
 - Wikimedia limite fortement les requêtes : espacer les appels, garder les caches.
 
 ## En cours / suite
-Phase 6 (nouveaux paquets), paquets Banque nationale, Histoire, Bulles (BD, design « Pop ») Paysages (cartes horizontales `landscape`, carte postale) Balades (fiche de rando, point de départ sur la carte) et Voitures belges (« Showroom ») terminés. Commons inaccessible : passer par WDQS
+Phase 6 (nouveaux paquets), paquets Banque nationale, Histoire, Bulles (BD, design « Pop ») Paysages (cartes horizontales `landscape`, carte postale) Balades (fiche de rando, point de départ sur la carte) Voitures belges (« Showroom »), Au fil de l'eau (« Atlas », horizontales), Moulins (« Sac de farine ») et Arsenal (« Plan d'armurier ») terminés. Autres idées de paquets : `PROPOSITIONS-PAQUETS.md`. Commons inaccessible : passer par WDQS
 (`SERVICE wikibase:mwapi` vers commons.wikimedia.org) pour chercher des fichiers. Restent dans `ROADMAP.md` : photos de Lansens et
 Van Dorpe (pas d'autre photo libre), collègues de l'utilisateur pour le paquet BNB (photos locales, avec accord), équilibrage de Formation de gouvernement, mise à jour automatique des données, phase 5
 (comptes en ligne). Viser 50 cartes au moins par paquet thématique ; listes à faire valider avant de générer. Nouvelle catégorie : l'ajouter à `FEATURED`

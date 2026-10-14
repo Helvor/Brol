@@ -4,7 +4,7 @@ Analyse des demandes reçues + idées. Données vérifiées sur Wikidata / Commo
 ✔ = élément Wikidata avec photo P18 · ✘ = élément sans photo (à chercher sur Commons) · « liens » = nombre de
 Wikipédias (approximation de la notoriété, utilisée pour la rareté).
 
-Rien n'est généré : listes à valider avant de toucher au générateur.
+**Lancés (octobre 2026)** : Au fil de l'eau (cours d'eau), Moulins et Arsenal. Les autres idées restent à valider.
 
 ---
 

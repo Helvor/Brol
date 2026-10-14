@@ -826,6 +826,224 @@ function buildVoitures() {
     stats: [first, ['Type', kind], ['Ville', city]],
   }));
 }
+// ---------- Cours d'eau : fleuves, rivières, ruisseaux et canaux (paquet « Au fil de l'eau ») ----------
+// Cartes manuelles, horizontales, design « Atlas » (style.css, .card.cat-riviere). Longueurs et embouchures :
+// Wikidata (P2043, P403) ; photos de Commons relues à l'œil (prises en Belgique). Cadrage : RIVIERE_POS.
+// [id, nom, nom NL, image, km, genre, [stat], [stat], description, description NL, rareté]
+const RIVIERES = [
+  ["riv-meuse", "Meuse", "Maas", "Dinant Meuse R01.jpg", 950, "Fleuve", ["Se jette dans", "Mer du Nord"], ["Bassin", "Meuse"], "Le grand fleuve de Dinant, Namur et Liège", "De grote stroom van Dinant, Namen en Luik", "mythique"],
+  ["riv-escaut", "Escaut", "Schelde", "Tournai JPG05.jpg", 355, "Fleuve", ["Se jette dans", "Mer du Nord"], ["Bassin", "Escaut"], "Le fleuve de Tournai, Gand et Anvers", "De stroom van Doornik, Gent en Antwerpen", "mythique"],
+  ["riv-semois", "Semois", "Semois", "Chassepierre - Vi02 JPG.jpg", 210, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "Méandres ardennais de Bouillon à Vresse", "Ardense meanders van Bouillon tot Vresse", "mythique"],
+  ["riv-ourthe", "Ourthe", "Ourthe", "Durbuy - L'Ourthe et le château.jpg", 165, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "Kayaks, rochers et la plus petite ville du monde", "Kajaks, rotsen en het kleinste stadje ter wereld", "mythique"],
+  ["riv-lesse", "Lesse", "Lesse", "Han-sur-Lesse Riv2JPG.jpg", 89, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "Elle se perd sous terre dans les grottes de Han", "Ze verdwijnt onder de grond in de grotten van Han", "mythique"],
+  ["riv-yser", "Yser", "IJzer", "Roesbrugge - Roesbrugge and Yser.jpg", 78, "Fleuve", ["Se jette dans", "Mer du Nord"], ["Bassin", "Yser"], "Le front de 1914, inondé pour arrêter l’ennemi", "Het front van 1914, onder water gezet om de vijand te stoppen", "mythique"],
+  ["riv-sambre", "Sambre", "Samber", "SamberMerbesleChâteau.jpg", 190, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "De Charleroi à Namur, la rivière du Pays noir", "Van Charleroi tot Namen, de rivier van het Zwarte Land", "legendaire"],
+  ["riv-lys", "Lys", "Leie", "Comines-Warneton JPG05a.jpg", 202, "Rivière", ["Se jette dans", "Escaut"], ["Bassin", "Escaut"], "La « rivière d’or » du lin, jusqu’à Gand", "De “gouden rivier” van het vlas, tot in Gent", "legendaire"],
+  ["riv-ambleve", "Amblève", "Amblève", "20110525 remouchamps25.jpg", 93, "Rivière", ["Se jette dans", "Ourthe"], ["Bassin", "Meuse"], "La cascade de Coo et les grottes de Remouchamps", "De waterval van Coo en de grotten van Remouchamps", "legendaire"],
+  ["riv-senne", "Senne", "Zenne", "Rebecq JPG05.jpg", 103, "Rivière", ["Se jette dans", "Dyle"], ["Bassin", "Escaut"], "La rivière voûtée qui coule sous Bruxelles", "De overwelfde rivier die onder Brussel stroomt", "legendaire"],
+  ["riv-dyle", "Dyle", "Dijle", "Dijlemechelen.jpg", 86, "Rivière", ["Se jette dans", "Rupel"], ["Bassin", "Escaut"], "De Wavre à Louvain et Malines", "Van Waver tot Leuven en Mechelen", "legendaire"],
+  ["riv-vesdre", "Vesdre", "Vesder", "Limbourg JPG03.jpg", 71, "Rivière", ["Se jette dans", "Ourthe"], ["Bassin", "Meuse"], "Eupen, Verviers et la laine, et la crue de 2021", "Eupen, Verviers en de wol, en de overstroming van 2021", "legendaire"],
+  ["riv-albert", "Canal Albert", "Albertkanaal", "Hasselt - Albertkanaal.jpg", 130, "Canal", ["Relie", "Liège – Anvers"], ["Ouvert", 1939], "Le grand canal de Liège au port d’Anvers", "Het grote kanaal van Luik naar de haven van Antwerpen", "legendaire"],
+  ["riv-centre", "Canal du Centre", "Centrumkanaal", "0 Thieu - L’ ascenseur hydrauliques n° 4.JPG", 24, "Canal", ["Ascenseurs", "4"], ["Ouvert", 1917], "Ses ascenseurs à bateaux, au patrimoine de l’UNESCO", "Zijn scheepsliften, UNESCO-werelderfgoed", "legendaire"],
+  ["riv-dendre", "Dendre", "Dender", "Dender1.jpg", 65, "Rivière", ["Se jette dans", "Escaut"], ["Bassin", "Escaut"], "Ath, Grammont, Alost et Termonde", "Aat, Geraardsbergen, Aalst en Dendermonde", "epique"],
+  ["riv-rupel", "Rupel", "Rupel", "Boom aan de Rupel.JPG", 12, "Rivière", ["Se jette dans", "Escaut"], ["Bassin", "Escaut"], "Courte et large, au pays des briqueteries", "Kort en breed, in het land van de steenbakkerijen", "epique"],
+  ["riv-demer", "Démer", "Demer", "Demer1.JPG", 95, "Rivière", ["Se jette dans", "Dyle"], ["Bassin", "Escaut"], "Hasselt, Diest et Aarschot", "Hasselt, Diest en Aarschot", "epique"],
+  ["riv-nethe", "Nèthe", "Nete", "Hoogbrug Lier.jpg", 14, "Rivière", ["Se jette dans", "Rupel"], ["Bassin", "Escaut"], "Lierre, là où les deux Nèthes se rejoignent", "Lier, waar de twee Netes samenkomen", "epique"],
+  ["riv-haine", "Haine", "Hene", "030131 Mons (24).JPG", 72, "Rivière", ["Se jette dans", "Escaut"], ["Bassin", "Escaut"], "Elle a donné son nom au Hainaut", "Ze gaf haar naam aan Henegouwen", "epique"],
+  ["riv-geer", "Geer", "Jeker", "Jeker3.JPG", 54, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "De la Hesbaye à Tongres et Maastricht", "Van Haspengouw tot Tongeren en Maastricht", "epique"],
+  ["riv-gueule", "Gueule", "Geul", "Geul river valley in Plombières, Belgium 100 0278.jpg", 56, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "La Calamine, Plombières et les Trois Frontières", "Kelmis, Blieberg en het Drielandenpunt", "epique"],
+  ["riv-viroin", "Viroin", "Viroin", "Viroin1.JPG", 22, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "La rivière de l’Entre-Sambre-et-Meuse", "De rivier van Entre-Sambre-et-Meuse", "epique"],
+  ["riv-warche", "Warche", "Warche", "Warche-Tal 1.jpg", 41, "Rivière", ["Se jette dans", "Amblève"], ["Bassin", "Meuse"], "Barrages de Bütgenbach et de Robertville, puis Malmedy", "Stuwdammen van Bütgenbach en Robertville, dan Malmedy", "epique"],
+  ["riv-our", "Our", "Our", "Our in Ouren Gemeinde Burg-Reuland Deutschsprachige Gemeinschaft 2014-05-06 17-57.jpg", 96, "Rivière", ["Se jette dans", "Sûre"], ["Bassin", "Rhin"], "La frontière avec l’Allemagne et le Luxembourg", "De grens met Duitsland en Luxemburg", "epique"],
+  ["riv-eaurouge", "Eau Rouge", "Eau Rouge", "JunctionOfEauRougeAndAmbleve.jpg", 15, "Ruisseau", ["Se jette dans", "Amblève"], ["Bassin", "Meuse"], "Le ruisseau qui a donné son nom au virage de Spa", "De beek die haar naam gaf aan de bocht van Spa", "epique"],
+  ["riv-hoegne", "Hoëgne", "Hoëgne", "Polleurvenn, Polleurbach.jpg", 30, "Rivière", ["Se jette dans", "Vesdre"], ["Bassin", "Meuse"], "Torrent des Fagnes et son sentier de caillebotis", "Bergstroom van de Venen met zijn vlonderpad", "epique"],
+  ["riv-chbxl", "Canal Charleroi-Bruxelles", "Kanaal Charleroi-Brussel", "Brussels Charleroi channel Lembeek Berendries.JPG", 74, "Canal", ["Relie", "Charleroi – Bruxelles"], ["Ouvert", 1832], "Le canal du plan incliné de Ronquières", "Het kanaal van het hellend vlak van Ronquières", "epique"],
+  ["riv-zeekanaal", "Canal de Willebroek", "Zeekanaal Brussel-Schelde", "Canal de Bruxelles depuis le pont Suzan Daniel..jpg", 28, "Canal", ["Relie", "Bruxelles – Escaut"], ["Ouvert", 1561], "Le plus ancien canal navigable du pays", "Het oudste bevaarbare kanaal van het land", "epique"],
+  ["riv-bocq", "Bocq", "Bocq", "0 Spontin 050409 (6).JPG", 45, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "Son eau abreuve Bruxelles, son train à vapeur roule l’été", "Zijn water voorziet Brussel, zijn stoomtrein rijdt in de zomer", "rare"],
+  ["riv-hoyoux", "Hoyoux", "Hoyoux", "Modave Rv1aJPG.jpg", 28, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "Sous le château de Modave, jusqu’à Huy", "Onder het kasteel van Modave, tot in Hoei", "rare"],
+  ["riv-mehaigne", "Mehaigne", "Mehaigne", "Fallais Rv1aJPG.jpg", 59, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "La rivière de la Hesbaye, au pied de Fallais", "De rivier van Haspengouw, aan de voet van Fallais", "rare"],
+  ["riv-salm", "Salm", "Salm", "Vielsalm 050710 (14).jpg", 34, "Rivière", ["Se jette dans", "Amblève"], ["Bassin", "Meuse"], "Vielsalm, Trois-Ponts et la pierre à rasoir", "Vielsalm, Trois-Ponts en de scheersteen", "rare"],
+  ["riv-woluwe", "Woluwe", "Woluwe", "Riviere Woluwe 2006-03-18.jpeg", 11, "Ruisseau", ["Se jette dans", "Senne"], ["Bassin", "Escaut"], "La vallée verte de l’est de Bruxelles", "De groene vallei in het oosten van Brussel", "rare"],
+  ["riv-molignee", "Molignée", "Molignée", "Haut-le-Wastia Rv2aJPG.jpg", 22, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "La vallée des abbayes et de la draisine", "De vallei van de abdijen en de draisine", "rare"],
+  ["riv-lomme", "Lomme", "Lomme", "Rochefort, Éprave (104).jpg", 46, "Rivière", ["Se jette dans", "Lesse"], ["Bassin", "Meuse"], "Rochefort, Éprave et ses rochers", "Rochefort, Éprave en zijn rotsen", "rare"],
+  ["riv-eaublanche", "Eau Blanche", "Eau Blanche", "Virelles 050608 (10).jpg", 42, "Rivière", ["Se jette dans", "Viroin"], ["Bassin", "Meuse"], "Chimay et le lac de Virelles", "Chimay en het meer van Virelles", "rare"],
+  ["riv-hermeton", "Hermeton", "Hermeton", "Hermeton à Sart-en-Fagne.jpg", 32, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "Une des rivières les plus sauvages de Wallonie", "Een van de wildste rivieren van Wallonië", "rare"],
+  ["riv-damme", "Canal de Damme", "Damse Vaart", "Damme - Damse vaart.jpg", 14, "Canal", ["Relie", "Bruges – Sluis"], ["Bassin", "Escaut"], "Peupliers et moulins de Bruges à Damme", "Populieren en molens van Brugge tot Damme", "rare"],
+  ["riv-terneuzen", "Canal Gand-Terneuzen", "Kanaal Gent-Terneuzen", "Gent - Kanaal Gent-Terneuzen 1.jpg", 32, "Canal", ["Relie", "Gand – Terneuzen"], ["Ouvert", 1827], "Le port de Gand relié à la mer", "De Gentse haven verbonden met de zee", "rare"],
+  ["riv-mandel", "Mandel", "Mandel", "Mandel in Roeselare.jpg", 40, "Rivière", ["Se jette dans", "Lys"], ["Bassin", "Escaut"], "La rivière de Roulers", "De rivier van Roeselare", "rare"],
+  ["riv-berwinne", "Berwinne", "Berwijn", "Berwinne à Visé.jpg", 30, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "Le pays de Herve et l’abbaye de Val-Dieu", "Het Land van Herve en de abdij van Val-Dieu", "rare"],
+  ["riv-voer", "Voer", "Voer", "Gravenvoeren-1.jpg", 12, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "La rivière qui a donné son nom aux Fourons", "De rivier die haar naam gaf aan Voeren", "rare"],
+  ["riv-ggette", "Grande Gette", "Grote Gete", "Tienen Grote Gete.jpg", 51, "Rivière", ["Se jette dans", "Gette"], ["Bassin", "Escaut"], "Jodoigne et Tirlemont", "Geldenaken en Tienen", "peu-commune"],
+  ["riv-pnethe", "Petite Nèthe", "Kleine Nete", "Kasterlee - Kleine Nete.jpg", 44, "Rivière", ["Se jette dans", "Nèthe"], ["Bassin", "Escaut"], "Méandres de Campine à Kasterlee", "Kempense meanders in Kasterlee", "peu-commune"],
+  ["riv-gnethe", "Grande Nèthe", "Grote Nete", "Grote Nete.jpg", 44, "Rivière", ["Se jette dans", "Nèthe"], ["Bassin", "Escaut"], "Marais et réserves naturelles de Campine", "Moerassen en natuurreservaten in de Kempen", "peu-commune"],
+  ["riv-ijse", "IJse", "IJse", "Ijse en dijle.jpg", 20, "Rivière", ["Se jette dans", "Dyle"], ["Bassin", "Escaut"], "De la forêt de Soignes à Neerijse", "Van het Zoniënwoud tot Neerijse", "peu-commune"],
+  ["riv-lasne", "Lasne", "Laan", "Terlanen Lane C.jpg", 26, "Rivière", ["Se jette dans", "Dyle"], ["Bassin", "Escaut"], "Du Brabant wallon à Terlanen", "Van Waals-Brabant tot Terlanen", "peu-commune"],
+  ["riv-orneau", "Orneau", "Orneau", "Mazy, l'Orneau1.jpg", 68, "Rivière", ["Se jette dans", "Sambre"], ["Bassin", "Meuse"], "Gembloux et la vallée des carrières", "Gembloux en de vallei van de groeven", "peu-commune"],
+  ["riv-zwalm", "Zwalm", "Zwalm", "Zwalm Munkzwalm Rekegemstraat Middenloop Zwalm - 221339 - onroerenderfgoed.jpg", 14, "Rivière", ["Se jette dans", "Escaut"], ["Bassin", "Escaut"], "Moulins à eau des Ardennes flamandes", "Watermolens in de Vlaamse Ardennen", "peu-commune"],
+  ["riv-ostende", "Canal Bruges-Ostende", "Kanaal Brugge-Oostende", "Varsenare Nieuwege R02.jpg", 21, "Canal", ["Relie", "Bruges – Ostende"], ["Bassin", "Yser"], "Bruges reliée à la mer depuis le XVIIᵉ siècle", "Brugge sinds de 17de eeuw verbonden met de zee", "peu-commune"],
+  ["riv-thyle", "Thyle", "Thyle", "Thyle in Court Saint Etienne.jpg", 16, "Rivière", ["Se jette dans", "Dyle"], ["Bassin", "Escaut"], "Elle coule au pied de l’abbaye de Villers", "Ze stroomt aan de voet van de abdij van Villers", "peu-commune"],
+  ["riv-eaudheure", "Eau d’Heure", "Eau d’Heure", "Eau D'Heure à Ham-sur-Heure.JPG", 47, "Rivière", ["Se jette dans", "Sambre"], ["Bassin", "Meuse"], "La rivière des grands lacs de barrage", "De rivier van de grote stuwmeren", "peu-commune"],
+  ["riv-gette", "Gette", "Gete", "Gete.jpg", 12, "Rivière", ["Se jette dans", "Démer"], ["Bassin", "Escaut"], "Elle rejoint le Démer près de Halen", "Ze vloeit bij Halen in de Demer", "commune"],
+  ["riv-pgette", "Petite Gette", "Kleine Gete", "Kleine-Gete.jpg", 41, "Rivière", ["Se jette dans", "Gette"], ["Bassin", "Escaut"], "Hesbaye et vergers autour de Landen", "Haspengouw en boomgaarden rond Landen", "commune"],
+  ["riv-helle", "Helle", "Helle", "Helle.jpg", 25, "Ruisseau", ["Se jette dans", "Vesdre"], ["Bassin", "Meuse"], "Ruisseau des Fagnes, vers le lac d’Eupen", "Beek van de Venen, naar het meer van Eupen", "commune"],
+  ["riv-chefna", "Chefna", "Chefna", "Bridge on the Chefna River.jpg", 5, "Ruisseau", ["Se jette dans", "Amblève"], ["Bassin", "Meuse"], "Petit affluent de l’Amblève près d’Aywaille", "Kleine zijrivier van de Amblève bij Aywaille", "commune"],
+  ["riv-samson", "Samson", "Samson", "Le samson juste avant son embouchure.jpg", 16, "Ruisseau", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "Gesves et Faulx-les-Tombes", "Gesves en Faulx-les-Tombes", "commune"],
+  ["riv-sennette", "Sennette", "Sennette", "Écaussinnes-d’Enghien Riv1aJPG.jpg", 47, "Rivière", ["Se jette dans", "Senne"], ["Bassin", "Escaut"], "Les Écaussinnes et Ronquières", "Écaussinnes en Ronquières", "commune"],
+  ["riv-neblon", "Néblon", "Néblon", "20120806 hamoir22.JPG", 23, "Ruisseau", ["Se jette dans", "Ourthe"], ["Bassin", "Meuse"], "Hamoir et le Condroz liégeois", "Hamoir en de Luikse Condroz", "commune"],
+  ["riv-houille", "Houille", "Houille", "Vencimont JPG02.jpg", 25, "Rivière", ["Se jette dans", "Meuse"], ["Bassin", "Meuse"], "Gedinne et Vencimont, jusqu’à Givet", "Gedinne en Vencimont, tot Givet", "commune"],
+  ["riv-schipdonk", "Canal de Schipdonk", "Schipdonkkanaal", "Schipdonkkanaal.jpg", 56, "Canal", ["Relie", "Deinze – Zeebruges"], ["Bassin", "Escaut"], "Il soulage la Lys de ses crues jusqu’à la mer", "Het voert het hoogwater van de Leie af naar zee", "commune"],
+  ["riv-ton", "Ton", "Ton", "Lamorteau le Ton rue du Regnier.JPG", 32, "Rivière", ["Se jette dans", "Chiers"], ["Bassin", "Meuse"], "La Gaume, tout au sud du pays", "De Gaume, helemaal in het zuiden van het land", "commune"],
+];
+// Cadrage de la photo (object-position, puis zoom éventuel), relu sur les planches
+const RIVIERE_POS = {};
+function buildRivieres() {
+  return RIVIERES.map(([id, name, nlName, img, km, kind, s2, s3, sub, subNl, rarity]) => ({
+    id, cat: 'riviere', name, img, rarity, manual: true, family: 'riviere', landscape: true, river: { km, kind },
+    ...(RIVIERE_POS[id] && { pos: RIVIERE_POS[id] }),
+    subtitle: sub, nl: { name: nlName, subtitle: subNl },
+    meta: [kind, `${km.toLocaleString('fr-BE')} km`].join(' · '),
+    stats: [['Longueur', `${km.toLocaleString('fr-BE')} km`], s2, s3],
+  }));
+}
+// ---------- Moulins : moulins à vent et à eau des trois Régions (paquet « Moulins ») ----------
+// Cartes manuelles, design « Sac de farine » (style.css, .card.cat-moulin). Types : Wikidata (molendatabase) ;
+// photos de Commons relues à l'œil. [id, nom, nom NL, image, vent|eau, commune, province, type, description,
+// description NL, rareté]
+const MOULINS = [
+  ["mou-sintjanshuis", "Sint-Janshuismolen", "Sint-Janshuismolen", "Sint-Janshuismolen Brugge.jpg", "vent", "Bruges", "Flandre-Occidentale", "Sur pivot", "Il tourne encore sur les remparts de Bruges", "Hij draait nog altijd op de Brugse vesten", "mythique"],
+  ["mou-catsauvage", "Moulin du Cat Sauvage", "Moulin du Cat Sauvage", "Ellezelles JPG02.jpg", "vent", "Ellezelles", "Hainaut", "Sur pivot", "Au pays des sorcières d’Ellezelles", "In het heksenland van Elzele", "mythique"],
+  ["mou-lindekemale", "Moulin de Lindekemale", "Lindekemalemolen", "Moulin Lindekemale (DSCF3284).jpg", "eau", "Woluwe-Saint-Lambert", "Bruxelles", "À eau", "Un moulin à eau du XIIᵉ siècle sur la Woluwe", "Een watermolen uit de 12de eeuw aan de Woluwe", "mythique"],
+  ["mou-marquise", "Moulin de la Marquise", "Moulin de la Marquise", "Moulbaix MV1bJPG.jpg", "vent", "Ath", "Hainaut", "Sur pivot", "Le moulin sur pivot de Moulbaix, près d’Ath", "De standerdmolen van Moulbaix, bij Aat", "mythique"],
+  ["mou-villers", "Moulin de l’abbaye de Villers", "Abdijmolen van Villers", "Belgique - Villers-la-Ville - Moulin abbatial - 01.JPG", "eau", "Villers-la-Ville", "Brabant wallon", "À eau", "Le moulin des moines cisterciens, au bord de la Thyle", "De molen van de cisterciënzers, aan de Thyle", "mythique"],
+  ["mou-evere", "Moulin d’Evere", "Molen van Evere", "MBMA-Moulin Molen Evere.jpg", "vent", "Evere", "Bruxelles", "Tour", "Le dernier moulin à vent de Bruxelles, devenu musée", "De laatste windmolen van Brussel, nu een museum", "mythique"],
+  ["mou-koelewei", "Koeleweimolen", "Koeleweimolen", "Brugge Koeleweimolen R01.jpg", "vent", "Bruges", "Flandre-Occidentale", "Sur pivot", "Son voisin sur les remparts, ouvert aux visiteurs", "Zijn buur op de vesten, open voor bezoekers", "legendaire"],
+  ["mou-bonnechiere", "Moulin de Bonne-Chière", "Bonne-Chièremolen", "Bonne Chiere 1.jpg", "vent", "Bruges", "Flandre-Occidentale", "Sur pivot", "Le troisième moulin des remparts de Bruges", "De derde molen op de Brugse vesten", "legendaire"],
+  ["mou-faber", "Moulin Faber", "Moulin Faber", "Hotton JPG08.jpg", "eau", "Hotton", "Luxembourg", "À eau", "Au cœur de Hotton, sur l’Ourthe", "In het hart van Hotton, aan de Ourthe", "legendaire"],
+  ["mou-ostiches", "Blanc-Moulin d’Ostiches", "Witte Molen van Ostiches", "Ostiches MV1aJPG.JPG", "vent", "Ath", "Hainaut", "Sur butte", "Le moulin blanc des collines d’Ath", "De witte molen in de heuvels van Aat", "legendaire"],
+  ["mou-curtius", "Moulin de Curtius", "Molen van Curtius", "Chaudfontaine - Curtius Powder Mill.jpg", "eau", "Chaudfontaine", "Liège", "À poudre", "L’ancien moulin à poudre des Curtius, sur la Vesdre", "De vroegere kruitmolen van de Curtius, aan de Vesder", "legendaire"],
+  ["mou-nekkersgat", "Moulin du Nekkersgat", "Nekkersgatmolen", "Photo MoulinNeckersgat.jpg", "eau", "Uccle", "Bruxelles", "À eau", "Un moulin à eau de 1663 en pleine ville", "Een watermolen uit 1663 midden in de stad", "legendaire"],
+  ["mou-lijster", "Lijstermolen", "Lijstermolen", "Westouter - Rodeberg - Lijstermolen.jpg", "vent", "Heuvelland", "Flandre-Occidentale", "Sur pivot", "Au sommet du Rodeberg, dans les monts de Flandre", "Op de top van de Rodeberg, in de Vlaamse heuvels", "legendaire"],
+  ["mou-froyennes", "Moulin de Froyennes", "Molen van Froyennes", "0 Froyennes - Le moulin à eau (1).JPG", "eau", "Tournai", "Hainaut", "À eau", "Un moulin banal du XIIIᵉ siècle", "Een banmolen uit de 13de eeuw", "legendaire"],
+  ["mou-zorgvliet", "Zorgvlietmolen", "Zorgvlietmolen", "Zorgvlietmolen 1.JPG", "vent", "Kinrooi", "Limbourg", "Sur butte", "Le moulin de Molenbeersel, près de la Meuse", "De molen van Molenbeersel, bij de Maas", "epique"],
+  ["mou-buyses", "Buysesmolen", "Buysesmolen", "Buysesmolen met zeil Sint-Antelinks.JPG", "vent", "Herzele", "Flandre-Orientale", "Sur pivot", "Toiles tendues à Sint-Antelinks", "Zeilen gespannen in Sint-Antelinks", "epique"],
+  ["mou-altenbroek", "Moulin d’Altembrouck", "Molen van Altenbroek", "Gravenvoeren-Molen van Altenbroek5.JPG", "eau", "Fourons", "Limbourg", "À eau", "Près du château d’Altembrouck, sur la Voer", "Bij het kasteel van Altenbroek, aan de Voer", "epique"],
+  ["mou-huisekouter", "Huisekoutermolen", "Huisekoutermolen", "Huisekoutermolen 13-04-2009 17-14-23.JPG", "vent", "Kruisem", "Flandre-Orientale", "Sur pivot", "Seul sur le plateau de Huise", "Alleen op de kouter van Huise", "epique"],
+  ["mou-rysselende", "Rysselendemolen", "Rysselendemolen", "Rysselendemolen1.jpg", "vent", "Ardooie", "Flandre-Occidentale", "Sur butte", "Un moulin sur butte de 1855", "Een beltmolen uit 1855", "epique"],
+  ["mou-pede", "Moulin de Pede", "Watermolen van Pede", "CIWatermolen Pede.jpg", "eau", "Dilbeek", "Brabant flamand", "À eau", "Un moulin du Pajottenland cher à Bruegel", "Een molen in het Pajottenland van Bruegel", "epique"],
+  ["mou-preetjes", "Preetjes Molen", "Preetjes Molen", "Preetjes Molen te Heule.jpg", "vent", "Courtrai", "Flandre-Occidentale", "Sur pivot", "Un moulin qui broyait aussi le lin, à Heule", "Een molen die ook vlas braakte, in Heule", "epique"],
+  ["mou-wittemolen", "Witte Molen", "Witte Molen", "Witte Molen-2021-1.jpg", "vent", "Saint-Nicolas", "Flandre-Orientale", "À vent", "Le moulin blanc de Saint-Nicolas, au pays de Waes", "De witte molen van Sint-Niklaas, in het Waasland", "epique"],
+  ["mou-poelberg", "Poelbergmolen", "Poelbergmolen", "Poelbergmolen in mei 2017.jpg", "vent", "Tielt", "Flandre-Occidentale", "À vent", "Sur la colline de Tielt", "Op de heuvel van Tielt", "epique"],
+  ["mou-volmolen", "Moulin à foulon de Louvain", "Volmolen van Leuven", "Volmolen, Tervuursevest, Leuven - Mapillary (QYlo2hZVvstmi1aPLCp80w).jpg", "eau", "Louvain", "Brabant flamand", "Foulon", "La grande écluse des remparts, sur la Dyle", "De Grote Spui van de vesten, op de Dijle", "epique"],
+  ["mou-genville", "Moulin de Genville", "Molen van Genville", "Belgique - Jodoigne - Moulin de Genville - 03.jpg", "eau", "Jodoigne", "Brabant wallon", "À eau", "Un grand moulin sur la Gette, à Jodoigne", "Een grote molen aan de Gete, in Geldenaken", "epique"],
+  ["mou-barbissart", "Moulin de Barbissart", "Molen van Barbissart", "Picturesque landscape with Moulin de Barbissart, Pecq, 2026.jpg", "vent", "Pecq", "Hainaut", "Tour", "Moulin en pierre de 1817, dans la plaine de l’Escaut", "Stenen molen van 1817, in de Scheldevlakte", "epique"],
+  ["mou-hoeke", "Hoekemolen", "Hoekemolen", "Molen van Hoeke.JPG", "vent", "Damme", "Flandre-Occidentale", "À vent", "Au bord du canal, entre Damme et la Hollande", "Aan de vaart, tussen Damme en Nederland", "epique"],
+  ["mou-defrenne", "Moulin Defrenne", "Molen Defrenne", "Grand-Leez (16).JPG", "vent", "Gembloux", "Namur", "À vent", "Un moulin de Hesbaye à Grand-Leez", "Een Haspengouwse molen in Grand-Leez", "epique"],
+  ["mou-scherpenberg", "Scherpenbergmolen", "Scherpenbergmolen", "A Westmalle, Scherpenbergmolen beltmolen 05W.JPG", "vent", "Malle", "Anvers", "Sur butte", "À Westmalle, le village de la trappiste", "In Westmalle, het dorp van de trappist", "rare"],
+  ["mou-stalijzer", "Stalijzermolen", "Stalijzermolen", "Leisele - Stalijzermolen.jpg", "vent", "Alveringem", "Flandre-Occidentale", "Sur pivot", "Un moulin sur pivot de 1804 dans la plaine de l’Yser", "Een standerdmolen van 1804 in de IJzervlakte", "rare"],
+  ["mou-schelle", "Schellemolen", "Schellemolen", "Damme Schellemolen 01.jpg", "vent", "Damme", "Flandre-Occidentale", "Sur butte", "À l’entrée de Damme, le long du canal", "Aan de ingang van Damme, langs de vaart", "rare"],
+  ["mou-hotond", "Hotondmolen", "Hotondmolen", "Zulzeke - Hotondmolen 1.jpg", "vent", "Kluisbergen", "Flandre-Orientale", "Tour", "Au sommet du Mont de l’Enclus", "Op de top van de Kluisberg", "rare"],
+  ["mou-napoleon", "Grote Napoleon", "Grote Napoleon", "Hamme - De Grote Napoleon 1.jpg", "vent", "Hamme", "Flandre-Orientale", "Sur butte", "Le grand moulin au nom d’empereur", "De grote molen met een keizersnaam", "rare"],
+  ["mou-napoleonhamont", "Napoleonsmolen", "Napoleonsmolen", "Hamont Napoleonsmolen 2006.JPG", "vent", "Hamont-Achel", "Limbourg", "À galerie", "Moulin à galerie au bord des Pays-Bas", "Stellingmolen aan de Nederlandse grens", "rare"],
+  ["mou-slagmolen", "Slagmolen", "Slagmolen", "Slagmolengenk2 1-03-2007 16-59-43 1-03-2007 16-59-43.jpg", "eau", "Genk", "Limbourg", "À eau", "Un moulin à eau du XVIᵉ siècle à Genk", "Een watermolen uit de 16de eeuw in Genk", "rare"],
+  ["mou-sintanneke", "Moulin de Sint-Anneke", "Molen van Sint-Anneke", "A Linkeroever, Sint-Anneke, Standerdmolen (04)aW.JPG", "vent", "Anvers", "Anvers", "Sur pivot", "Face à la ville, sur la rive gauche de l’Escaut", "Tegenover de stad, op Linkeroever", "rare"],
+  ["mou-eprave", "Vieux Moulin d’Éprave", "Oude molen van Éprave", "Vieuxmoulineprave 01.jpg", "eau", "Rochefort", "Namur", "À eau", "Au bord de la Lomme, sous les rochers d’Éprave", "Aan de Lomme, onder de rotsen van Éprave", "rare"],
+  ["mou-othee", "Moulin d’Othée", "Molen van Othée", "Moulin d'Othée.jpg", "vent", "Awans", "Liège", "À vent", "Un moulin de Hesbaye liégeoise", "Een molen in het Luikse Haspengouw", "rare"],
+  ["mou-tordoir", "Moulin du Tordoir", "Molen van Tordoir", "Wodecq Moulin du Tordoir 1101.jpg", "eau", "Ellezelles", "Hainaut", "À huile", "Le moulin à huile de Wodecq", "De oliemolen van Wodecq", "rare"],
+  ["mou-soete", "Moulin Soete", "Soetemolen", "MOULIN SOETE.jpg", "vent", "Comines-Warneton", "Hainaut", "À vent", "Un moulin de 1855 à Comines-Warneton", "Een molen van 1855 in Komen-Waasten", "rare"],
+  ["mou-valdieu", "Moulin de Val-Dieu", "Molen van Val-Dieu", "Moulin de l'abbaye du Val-Dieu 01.jpg", "eau", "Aubel", "Liège", "À eau", "Le moulin de l’abbaye du pays de Herve", "De molen van de abdij in het Land van Herve", "rare"],
+  ["mou-hollogne", "Moulin de Hollogne-sur-Geer", "Molen van Hollogne-sur-Geer", "Watermolen Hollogne-sur-Geer - panoramio.jpg", "eau", "Geer", "Liège", "À eau", "Le moulin du château, sur le Geer", "De kasteelmolen, aan de Jeker", "rare"],
+  ["mou-siska", "Molen Siska", "Molen Siska", "Molen \" Siska \", Zevenkote, Knokke (Knokke-Heist).jpg", "vent", "Knokke-Heist", "Flandre-Occidentale", "Tour", "Le moulin de la côte, à Knokke", "De molen aan de kust, in Knokke", "peu-commune"],
+  ["mou-doel", "Moulin de Doel", "Scheldemolen", "DoelMolen.jpg", "vent", "Beveren", "Flandre-Orientale", "Tour", "Sur la digue du village fantôme de Doel", "Op de dijk van het spookdorp Doel", "peu-commune"],
+  ["mou-keeses", "Keeses Molen", "Keeses Molen", "A Kasterlee, Keeses Molen, standerdmolen 12W.JPG", "vent", "Kasterlee", "Anvers", "Sur pivot", "Un moulin sur pivot de Campine", "Een Kempense standerdmolen", "peu-commune"],
+  ["mou-engsbergen", "Engsbergse Molen", "Engsbergse Molen", "Engsbergse Molen 02.jpg", "vent", "Tessenderlo", "Limbourg", "À vent", "Un moulin de Tessenderlo, en Campine", "Een molen van Tessenderlo, in de Kempen", "peu-commune"],
+  ["mou-zwalm", "Zwalmmolen", "Zwalmmolen", "Zwalmmolen - Zwalm - België (17 03 2011).jpg", "eau", "Zwalm", "Flandre-Orientale", "À eau", "Roue à aubes à Munkzwalm", "Waterrad in Munkzwalm", "peu-commune"],
+  ["mou-kruiseke", "Moulin de Kruiseke", "Kruisekemolen", "Kruisekemolen klein.jpg", "vent", "Wervik", "Flandre-Occidentale", "Sur pivot", "Un moulin sur pivot près de la Lys", "Een standerdmolen bij de Leie", "peu-commune"],
+  ["mou-thimougies", "Moulin de Thimougies", "Molen van Thimougies", "Moulin thimougies.jpg", "vent", "Tournai", "Hainaut", "À vent", "Dans la campagne tournaisienne", "Op het platteland van Doornik", "peu-commune"],
+  ["mou-tombrouck", "Moulin de Tombrouck", "Tombroekmolen", "Tombrouck - ancien moulin - 01.jpg", "vent", "Mouscron", "Hainaut", "À vent", "Le vieux moulin de Mouscron", "De oude molen van Moeskroen", "peu-commune"],
+  ["mou-crockaert", "Moulin Crockaert", "Crockaertmolen", "Moulin Crockaert.jpg", "eau", "Uccle", "Bruxelles", "À eau", "Un ancien moulin à eau d’Uccle", "Een oude watermolen in Ukkel", "peu-commune"],
+  ["mou-lampach", "Lampachsmillen", "Lampachsmillen", "Lampachsmillen 2.JPG", "eau", "Arlon", "Luxembourg", "À eau", "Un moulin du pays d’Arlon", "Een molen in het Land van Aarlen", "peu-commune"],
+  ["mou-bakkers", "Bakkersmolen", "Bakkersmolen", "A Essen, Bakkersmolen 06aW.JPG", "vent", "Essen", "Anvers", "À galerie", "Le moulin du boulanger, à Wildert", "De molen van de bakker, in Wildert", "commune"],
+  ["mou-latem", "Moulin de Laethem", "Latemse molen", "Latemse windmolen.JPG", "vent", "Laethem-Saint-Martin", "Flandre-Orientale", "Sur pivot", "Le village des peintres, au bord de la Lys", "Het schildersdorp aan de Leie", "commune"],
+  ["mou-oelegem", "Molen van Oelegem", "Molen van Oelegem", "A Oelegem, Molen van Oelegem, beltmolen 04W.JPG", "vent", "Ranst", "Anvers", "Sur butte", "Un moulin sur butte près d’Anvers", "Een beltmolen bij Antwerpen", "commune"],
+  ["mou-stermolen", "Stermolen", "Stermolen", "Stermolen Eksel 2013 voorzijde.JPG", "vent", "Hechtel-Eksel", "Limbourg", "À vent", "Un moulin de 1901 à Eksel", "Een molen van 1901 in Eksel", "commune"],
+  ["mou-vinke", "Vinkemolen", "Vinkemolen", "Vinkemolen Sint-Denijs-Boekel 10-04-2009 17-17-48.JPG", "vent", "Zwalm", "Flandre-Orientale", "Sur pivot", "Dans les Ardennes flamandes", "In de Vlaamse Ardennen", "commune"],
+  ["mou-wullepit", "Wullepitmolen", "Wullepitmolen", "Wullepitmolen.jpg", "vent", "Kortemark", "Flandre-Occidentale", "Sur pivot", "Un moulin sur pivot à Zarren", "Een standerdmolen in Zarren", "commune"],
+  ["mou-soulme", "Moulin de Soulme", "Molen van Soulme", "Moulin soulme1.JPG", "eau", "Doische", "Namur", "À eau", "Dans l’un des plus beaux villages de Wallonie", "In een van de mooiste dorpen van Wallonië", "commune"],
+  ["mou-ruwet", "Moulin Ruwet", "Molen Ruwet", "Feneur Millen.jpg", "eau", "Dalhem", "Liège", "À eau", "Un moulin du village de Feneur", "Een molen in het dorp Feneur", "commune"],
+  ["mou-terrijst", "Molen Ter Rijst", "Molen Ter Rijst", "Molen Ter Rijst met zeil Herzele.JPG", "vent", "Herzele", "Flandre-Orientale", "À vent", "Ailes entoilées dans les collines de Herzele", "Bezeilde wieken in de heuvels van Herzele", "commune"],
+  ["mou-loverix", "Moulin Loverix", "Molen Loverix", "Emael molen Loverix 8-06-2021 15-55-05.jpg", "eau", "Bassenge", "Liège", "À eau", "Un moulin du Geer à Eben-Emael", "Een molen aan de Jeker in Eben-Emael", "commune"],
+];
+const MOULIN_POS = {
+  'mou-barbissart': '58% 55%;--zoom:2.4', // le moulin, petit dans le paysage
+};
+function buildMoulins() {
+  return MOULINS.map(([id, name, nlName, img, type, commune, prov, kind, sub, subNl, rarity]) => ({
+    id, cat: 'moulin', name, img, rarity, manual: true, family: 'moulin', mill: { type },
+    ...(MOULIN_POS[id] && { pos: MOULIN_POS[id] }),
+    subtitle: sub, nl: { name: nlName, subtitle: subNl },
+    meta: [type === 'eau' ? 'Moulin à eau' : 'Moulin à vent', commune].join(' · '),
+    stats: [['Commune', commune], ['Province', prov], ['Type', kind]],
+  }));
+}
+// ---------- Arsenal : armurerie liégeoise, FN Herstal et armes du Moyen Âge (paquet « Arsenal ») ----------
+// Cartes manuelles, design « Plan d'armurier » (style.css, .card.cat-arme). Textes neutres : histoire industrielle
+// et technique, sans glorification. Photos de Commons relues à l'œil (arme seule, fond neutre de préférence).
+// [id, nom, nom NL, image, [stat], [stat], [stat], description, description NL, rareté]
+const ARMES = [
+  ["arm-fn", "FN Herstal", "FN Herstal", "Herstal - Entrée FN.jpg", ["Fondée", 1889], ["Siège", "Herstal"], ["Type", "Armurier"], "La Fabrique nationale, née pour produire le Mauser belge", "De Fabrique Nationale, opgericht om het Belgische Mausergeweer te maken", "mythique"],
+  ["arm-browning", "John Moses Browning", "John Moses Browning", "JOHN M. BROWNING.jpg", ["Naissance", 1855], ["Décès", 1926], ["Lieu", "Herstal"], "L’inventeur américain, mort à Herstal en 1926", "De Amerikaanse uitvinder, in 1926 overleden in Herstal", "mythique"],
+  ["arm-fal", "FN FAL", "FN FAL", "FN FAL compilation.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "7,62 mm"], ["Année", 1953], "Le fusil d’assaut de plus de 90 armées", "Het aanvalsgeweer van meer dan 90 legers", "mythique"],
+  ["arm-gp", "Browning GP", "Browning GP", "FN Hi Power.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "9 mm"], ["Année", 1935], "Le dernier pistolet dessiné par Browning, achevé par Saive", "Het laatste pistool van Browning, afgewerkt door Saive", "mythique"],
+  ["arm-monsmeg", "Mons Meg", "Mons Meg", "MonsMeg.JPG", ["Lieu", "Mons"], ["Calibre", "510 mm"], ["Année", 1449], "Bombarde forgée à Mons, offerte au roi d’Écosse", "Bombarde gesmeed in Bergen, geschonken aan de Schotse koning", "mythique"],
+  ["arm-goedendag", "Goedendag", "Goedendag", "Goedendags in het museum Kortrijk 1302 9-01-2010 14-20-13.JPG", ["Origine", "Flandre"], ["Type", "Arme d’hast"], ["Année", 1302], "Le « bonjour » des milices flamandes aux Éperons d’or", "De “goedendag” van de Vlaamse milities bij de Guldensporenslag", "mythique"],
+  ["arm-nagant", "Nagant M1895", "Nagant M1895", "Nagant Revolver.jpg", ["Fabricant", "Nagant"], ["Calibre", "7,62 mm"], ["Année", 1895], "Le revolver des frères Nagant, adopté par l’armée russe", "De revolver van de gebroeders Nagant, door het Russische leger aangenomen", "legendaire"],
+  ["arm-p90", "FN P90", "FN P90", "FN P90 Standard Submachine Gun Right Side.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "5,7 mm"], ["Année", 1990], "Arme compacte au chargeur posé sur le dessus", "Compact wapen met het magazijn bovenop", "legendaire"],
+  ["arm-minimi", "FN Minimi", "FN Minimi", "M249 FN MINIMI DA-SC-85-11586 c1.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "5,56 mm"], ["Année", 1974], "Mitrailleuse légère adoptée dans le monde entier", "Licht machinegeweer dat wereldwijd werd aangenomen", "legendaire"],
+  ["arm-mag", "FN MAG", "FN MAG", "Ksp 58, AM.067743, 01.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "7,62 mm"], ["Année", 1958], "Mitrailleuse conçue par Ernest Vervier à Herstal", "Machinegeweer ontworpen door Ernest Vervier in Herstal", "legendaire"],
+  ["arm-dullegriet", "Dulle Griet", "Dulle Griet", "Ghent cannon.jpg", ["Lieu", "Gand"], ["Calibre", "640 mm"], ["Époque", "XVᵉ s."], "L’énorme bombarde rouge, près du marché du Vendredi", "Het enorme rode kanon, bij de Vrijdagmarkt", "legendaire"],
+  ["arm-m1910", "Browning M1910", "Browning M1910", "Browning 1910 (6971783833).jpg", ["Fabricant", "FN Herstal"], ["Calibre", "7,65 mm"], ["Année", 1910], "Le pistolet de l’attentat de Sarajevo en 1914", "Het pistool van de aanslag in Sarajevo in 1914", "legendaire"],
+  ["arm-curtius", "Grand Curtius", "Grand Curtius", "Palais Curtius vu du pont Saint-Léonard, Liège - crop.jpg", ["Ouverture", 2009], ["Ville", "Liège"], ["Type", "Musée"], "Le musée d’Armes de Liège, au bord de la Meuse", "Het wapenmuseum van Luik, aan de Maas", "legendaire"],
+  ["arm-auto5", "Browning Auto-5", "Browning Auto-5", "Browning Auto 5.JPG", ["Fabricant", "FN Herstal"], ["Calibre", "Calibre 12"], ["Année", 1902], "Le premier fusil de chasse semi-automatique", "Het eerste halfautomatische jachtgeweer", "legendaire"],
+  ["arm-scar", "FN SCAR", "FN SCAR", "ScarSandiaPix.png", ["Fabricant", "FN Herstal"], ["Calibre", "5,56 mm"], ["Année", 2004], "Fusil modulaire choisi par les forces spéciales", "Modulair geweer gekozen door speciale eenheden", "epique"],
+  ["arm-f2000", "FN F2000", "FN F2000", "FN F2000S.JPG", ["Fabricant", "FN Herstal"], ["Calibre", "5,56 mm"], ["Année", 2001], "Fusil compact au design futuriste", "Compact geweer met een futuristisch ontwerp", "epique"],
+  ["arm-fiveseven", "FN Five-seveN", "FN Five-seveN", "FN Five Seven (cropped).jpg", ["Fabricant", "FN Herstal"], ["Calibre", "5,7 mm"], ["Année", 1998], "Le pistolet de la même munition que le P90", "Het pistool met dezelfde munitie als de P90", "epique"],
+  ["arm-m1900", "Browning M1900", "Browning M1900", "Browning 1900 (6971783631).jpg", ["Fabricant", "FN Herstal"], ["Calibre", "7,65 mm"], ["Année", 1900], "Le premier pistolet de la FN, un succès mondial", "Het eerste pistool van FN, een wereldsucces", "epique"],
+  ["arm-montigny", "Mitrailleuse Montigny", "Mitrailleuse Montigny", "Montigny Mitrailleuse.jpg", ["Fabricant", "Montigny"], ["Canons", 37], ["Année", 1863], "La « mitrailleuse » à 37 canons d’un armurier bruxellois", "De “mitrailleuse” met 37 lopen van een Brusselse wapensmid", "epique"],
+  ["arm-mauser89", "Mauser belge 1889", "Belgische Mauser 1889", "Gewehr m1889 Mauser Belgien noBG.png", ["Fabricant", "FN Herstal"], ["Calibre", "7,65 mm"], ["Année", 1889], "Le fusil de l’armée belge, première commande de la FN", "Het geweer van het Belgische leger, eerste bestelling van FN", "epique"],
+  ["arm-safn", "SAFN 1949", "SAFN 1949", "FN49left.jpg", ["Fabricant", "FN Herstal"], ["Concepteur", "Saive"], ["Année", 1949], "Fusil semi-automatique de Dieudonné Saive", "Halfautomatisch geweer van Dieudonné Saive", "epique"],
+  ["arm-comblain", "Fusil Comblain", "Comblaingeweer", "Comblain rifle 1882.png", ["Concepteur", "Comblain"], ["Calibre", "11 mm"], ["Année", 1870], "Fusil liégeois de la Garde civique et du Chili", "Luiks geweer van de Burgerwacht en van Chili", "epique"],
+  ["arm-bayard", "Bergmann-Bayard", "Bergmann-Bayard", "Bergmann-Bayard 9mm Largo S-n 8734 L DSC8589.jpg", ["Fabricant", "Pieper"], ["Calibre", "9 mm"], ["Année", 1910], "Pistolet produit à Herstal pour le Danemark", "Pistool gemaakt in Herstal voor Denemarken", "epique"],
+  ["arm-t13", "Chasseur de chars T-13", "Tankjager T-13", "A T-13 B2 tank destroyer of the Belgian armed forces.jpg", ["Pays", "Belgique"], ["Canon", "47 mm"], ["Année", 1935], "Le blindé léger de l’armée belge de 1940", "Het lichte pantservoertuig van het Belgische leger in 1940", "epique"],
+  ["arm-fnc", "FN FNC", "FN FNC", "FNC IMG 1527.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "5,56 mm"], ["Année", 1979], "Le fusil d’assaut de l’armée belge depuis 1989", "Het aanvalsgeweer van het Belgische leger sinds 1989", "rare"],
+  ["arm-m1903", "Browning M1903", "Browning M1903", "Tula State Museum of Weapons (79-8).jpg", ["Fabricant", "FN Herstal"], ["Calibre", "9 mm"], ["Année", 1903], "Pistolet de Browning pour la Suède et la Russie", "Pistool van Browning voor Zweden en Rusland", "rare"],
+  ["arm-m1906", "FN Modèle 1906", "FN Model 1906", "FN BROWNING 1906 01.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "6,35 mm"], ["Année", 1906], "Le petit pistolet de poche le plus copié", "Het meest nagemaakte zakpistool", "rare"],
+  ["arm-baby", "Baby Browning", "Baby Browning", "Baby Browning.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "6,35 mm"], ["Année", 1931], "Un pistolet de poche de la taille d’une main", "Een zakpistool zo groot als een hand", "rare"],
+  ["arm-superposed", "Browning Superposed", "Browning Superposed", "Fusil BROWNING B25.JPG", ["Fabricant", "FN Herstal"], ["Calibre", "Calibre 12"], ["Année", 1931], "Fusil de chasse à canons superposés, le « B25 »", "Jachtgeweer met boven elkaar liggende lopen, de “B25”", "rare"],
+  ["arm-albini", "Fusil Albini-Braendlin", "Albini-Braendlingeweer", "Albinimechanism.png", ["Concepteur", "Albini"], ["Calibre", "11 mm"], ["Année", 1867], "Le fusil de l’armée belge de 1867", "Het geweer van het Belgische leger van 1867", "rare"],
+  ["arm-bayard08", "Pieper Bayard 1908", "Pieper Bayard 1908", "Bayard 1908 .380 71025 R DSC 4179.jpg", ["Fabricant", "Pieper"], ["Calibre", "7,65 mm"], ["Année", 1908], "Pistolet de poche de la maison Pieper de Herstal", "Zakpistool van het huis Pieper uit Herstal", "rare"],
+  ["arm-fn303", "FN 303", "FN 303", "FN 303.JPEG", ["Fabricant", "FN Herstal"], ["Calibre", "17,3 mm"], ["Année", 2003], "Lanceur à air comprimé de maintien de l’ordre", "Werper op perslucht voor ordehandhaving", "rare"],
+  ["arm-m1922", "Browning M1922", "Browning M1922", "Browning 1922 .32 6304b L DSC 3323.JPG", ["Fabricant", "FN Herstal"], ["Calibre", "7,65 mm"], ["Année", 1922], "La version allongée du M1910 pour les armées", "De verlengde versie van de M1910 voor legers", "rare"],
+  ["arm-bda", "Browning BDA", "Browning BDA", "Bda9.JPG", ["Fabricant", "FN Herstal"], ["Calibre", "9 mm"], ["Année", 1983], "Le GP modernisé, à double action", "De gemoderniseerde GP, met dubbele actie", "rare"],
+  ["arm-fnp", "FN FNP", "FN FNP", "11290600091.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "9 mm"], ["Année", 2006], "Pistolet à carcasse en polymère", "Pistool met een kunststof frame", "peu-commune"],
+  ["arm-evolys", "FN Evolys", "FN Evolys", "FN EVOLYS with bipod left.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "7,62 mm"], ["Année", 2021], "Mitrailleuse ultralégère de la nouvelle génération", "Ultralicht machinegeweer van de nieuwe generatie", "peu-commune"],
+  ["arm-spr", "FN SPR", "FN SPR", "FN Special Purpose Rifle.JPG", ["Fabricant", "FN Herstal"], ["Calibre", "7,62 mm"], ["Année", 2004], "Fusil de précision à verrou", "Precisiegeweer met grendel", "peu-commune"],
+  ["arm-57", "Cartouche 5,7 × 28 mm", "Patroon 5,7 × 28 mm", "57lineup.jpg", ["Fabricant", "FN Herstal"], ["Type", "Cartouche"], ["Année", 1990], "La petite munition conçue pour le P90", "De kleine munitie ontworpen voor de P90", "peu-commune"],
+  ["arm-765", "Cartouche 7,65 Browning", "Patroon 7,65 Browning", "32 ACP - FMJ - SB - 1.jpg", ["Concepteur", "Browning"], ["Type", "Cartouche"], ["Année", 1899], "La munition du premier pistolet de la FN", "De munitie van het eerste pistool van FN", "peu-commune"],
+  ["arm-9long", "Cartouche 9 mm Browning long", "Patroon 9 mm Browning long", "9mm long cartridge.jpg", ["Concepteur", "Browning"], ["Type", "Cartouche"], ["Année", 1903], "La munition du Browning M1903", "De munitie van de Browning M1903", "commune"],
+  ["arm-fnx", "FN FNX", "FN FNX", "FNX-40 field strip.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "9 mm"], ["Année", 2009], "Pistolet de service, ici démonté pièce par pièce", "Dienstpistool, hier uit elkaar gehaald", "commune"],
+  ["arm-trombone", "FN Trombone", "FN Trombone", "FN Trombone.jpg", ["Fabricant", "FN Herstal"], ["Calibre", ".22"], ["Année", 1922], "Petite carabine à pompe des stands de tir", "Kleine pompkarabijn van de schietkramen", "commune"],
+  ["arm-hp2018", "FN High Power", "FN High Power", "FN HIPER.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "9 mm"], ["Année", 2018], "Le retour du célèbre pistolet, redessiné", "De terugkeer van het beroemde pistool, hertekend", "commune"],
+];
+const ARME_POS = {};
+function buildArmes() {
+  return ARMES.map(([id, name, nlName, img, s1, s2, s3, sub, subNl, rarity]) => ({
+    id, cat: 'arme', name, img, rarity, manual: true, family: 'arme',
+    ...(ARME_POS[id] && { pos: ARME_POS[id] }),
+    subtitle: sub, nl: { name: nlName, subtitle: subNl },
+    meta: [s1[1], s3[1]].join(' · '),
+    stats: [s1, s2, s3],
+  }));
+}
 function buildManual(cat, list) {
   return list.map(([id, name, nlName, img, kind, y, sub, subNl, extra, rarity]) => ({
     id, cat, name, img, rarity, manual: true, family: cat, artwork: true, // rareté hors quotas (voir rarityByQuota)
@@ -892,7 +1110,8 @@ const AJOUTS = {
   finance: { build: async () => [...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES)], editions: [] },
   histoire: { build: async () => buildHistoire(), editions: [] }, bd: { build: async () => buildBulles(), editions: [] },
   paysage: { build: async () => buildPaysages(), editions: [] }, balade: { build: async () => buildBalades(), editions: [] },
-  voiture: { build: async () => buildVoitures(), editions: [] },
+  voiture: { build: async () => buildVoitures(), editions: [] }, riviere: { build: async () => buildRivieres(), editions: [] },
+  moulin: { build: async () => buildMoulins(), editions: [] }, arme: { build: async () => buildArmes(), editions: [] },
 };
 const AJOUT = (process.argv.find(a => a.startsWith('--ajout=')) || '').slice(8);
 if (AJOUT) {
@@ -1574,7 +1793,7 @@ for (const f of sciRows) {
 console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
 
 for (const c of [...await buildMilitaires(resolveTitles), ...await buildAnimaux(resolveTitles),
-  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES), ...buildHistoire(), ...buildBulles(), ...buildPaysages(), ...buildBalades(), ...buildVoitures()]) { delete c.links; cards.push(c); }
+  ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES), ...buildHistoire(), ...buildBulles(), ...buildPaysages(), ...buildBalades(), ...buildVoitures(), ...buildRivieres(), ...buildMoulins(), ...buildArmes()]) { delete c.links; cards.push(c); }
 
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [

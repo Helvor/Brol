@@ -53,6 +53,21 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   carrossiers, usines (Forest, Gand, Genk), circuits, motos et camions. Design « Showroom » (fond noir, filet
   chromé, emblème émaillé de la rareté). Moins de 50 cartes : la plupart des marques anciennes n'ont pas de photo
   libre utilisable (Edran, Ranger, Opel Anvers, Jeecy-Vea…). Cadrage relu avec `tools/planche.mjs` (`VOITURE_POS`).
+- [x] **Paquet « Au fil de l'eau »** (octobre 2026) : 62 cours d'eau (`RIVIERES` dans le générateur, catégorie
+  `riviere`) : fleuves, rivières, ruisseaux et canaux, longueurs et embouchures de Wikidata. Cartes horizontales,
+  design « Atlas » (bordure graduée de la couleur de la rareté, nom en italique bleu, tracé décoratif, rose des
+  vents, échelle proportionnelle à la longueur). Mythiques : Meuse, Escaut, Semois, Ourthe, Lesse, Yser. Série
+  « Canaux ». Photos prises en Belgique (Meuse à Dinant, Gueule à Plombières, Our à Ouren…). Mis en avant jusqu'au
+  31 octobre 2027.
+- [x] **Paquet « Moulins »** (octobre 2026) : 62 moulins à vent et à eau des trois Régions (`MOULINS`, catégorie
+  `moulin`), types de la base des moulins (sur pivot, sur butte, à galerie, tour). Design « Sac de farine » (toile
+  de jute, médaillon imprimé, nom au pochoir, rareté = qualité de la farine, de « Farine bise » à « Farine
+  impériale »). Série « Roues à aubes ». Mis en avant jusqu'au 30 novembre 2027.
+- [x] **Paquet « Arsenal »** (octobre 2026) : 43 cartes (`ARMES`, catégorie `arme`) : FN Herstal et ses modèles, John
+  Browning, Nagant, Pieper, Comblain, Mons Meg, Dulle Griet, goedendag, Grand Curtius. Textes neutres (histoire
+  industrielle et technique). Design « Plan d'armurier » (calque bleu quadrillé, figure cotée en cyanotype,
+  cartouche du plan, poinçon du banc d'épreuves de Liège). Série « Signé Browning ». Moins de 50 cartes : les
+  inventeurs liégeois (Saive, Nagant, Pieper) n'ont pas de portrait libre. Mis en avant jusqu'au 31 décembre 2027.
 - [x] **Paquet « Balades »** (octobre 2026) : 60 balades (`BALADES` dans le générateur, catégorie `balade`), design
   « fiche de randonnée » (balisage, pastille des kilomètres, profil de dénivelé décoratif, niveau 1 à 3 ; liseré de
   rareté dessiné à l'intérieur de la carte). La fiche montre le point de départ sur la carte des provinces

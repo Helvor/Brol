@@ -452,10 +452,236 @@
     ctx.strokeStyle = gradient(ctx, x, y, w, h, ring); ctx.lineWidth = .5 * u; rr(ctx, x + 1.6 * u, y + 1.6 * u, w - 3.2 * u, h - 3.2 * u, 3 * u); ctx.stroke();
   }
 
+  // Cours d'eau : « Atlas » (voir style.css, .card.cat-riviere), carte horizontale
+  const GARAMOND = '"EB Garamond", Georgia, serif', STENCIL = '"Stardos Stencil", "Arial Black", sans-serif';
+  const seeded = id => { let v = [...id].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 233280, 7); return () => (v = (v * 9301 + 49297) % 233280) / 233280; };
+  function atlas(ctx, c, photo, x, y, w, h, finish) {
+    const u = w / 100, acc = LAND_ACC[c.rarity] || LAND_ACC.commune, gold = finish === 'or', holo = finish === 'holo', full = finish === 'plein';
+    const ink = gold ? '#4a3410' : '#22303f', water = gold ? '#7a5410' : '#1d5aa6', paper = gold ? '#ead7a6' : '#f1ead6', grad = gold ? '#b8891f' : acc;
+    ctx.fillStyle = holo ? gradient(ctx, x, y, w, h, ['#f6efff', '#e5fbff', '#fff3e3', '#f1e9ff']) : paper; ctx.fillRect(x, y, w, h);
+    // Courbes de niveau et quadrillage
+    ctx.save(); ctx.strokeStyle = holo ? 'rgba(150,110,255,.14)' : 'rgba(29,90,166,.09)'; ctx.lineWidth = .25 * u;
+    for (let i = 1; i < 24; i++) { ctx.beginPath(); ctx.arc(x + .18 * w, y + .86 * h, i * 2.85 * u, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.strokeStyle = 'rgba(34,48,63,.05)'; ctx.lineWidth = .15 * u;
+    for (let gx = x; gx < x + w; gx += 12 * u) { ctx.beginPath(); ctx.moveTo(gx, y); ctx.lineTo(gx, y + h); ctx.stroke(); }
+    for (let gy = y; gy < y + h; gy += 12 * u) { ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x + w, gy); ctx.stroke(); }
+    ctx.restore();
+    // Photo
+    const px = full ? x : x + 40 * u, py = full ? y : y + 3 * u, pw = full ? w : w - 43 * u, ph = full ? h : h - 6 * u;
+    if (photo) {
+      const m = /^(\d+)%\s+(\d+)%/.exec(c.pos || '') || [];
+      ctx.save(); ctx.beginPath(); ctx.rect(px, py, pw, ph); ctx.clip();
+      ctx.filter = gold ? 'sepia(.45) saturate(1.2) contrast(1.05)' : 'saturate(1.1) contrast(1.03)';
+      cover(ctx, photo, px, py, pw, ph, (+m[2] || 50) / 100, false, (+m[1] || 50) / 100); ctx.restore();
+    }
+    if (holo) { ctx.save(); ctx.globalCompositeOperation = 'color-dodge'; ctx.globalAlpha = .4; ctx.fillStyle = gradient(ctx, px, py, pw, ph, ['#00000000', ...IRIS, '#00000000'], 115); ctx.fillRect(px, py, pw, ph); ctx.restore(); }
+    if (!full) {
+      ctx.strokeStyle = ink; ctx.lineWidth = .3 * u; ctx.strokeRect(px, py, pw, ph);
+      // Bordure graduée et filet intérieur
+      const t = 1.1 * u, seg = 4 * u;
+      for (let gx = x, n = 0; gx < x + w; gx += seg, n++) { ctx.fillStyle = n % 2 ? '#fbf8ef' : holo ? IRIS[n % 5] : grad; ctx.fillRect(gx, y, seg, t); ctx.fillRect(gx, y + h - t, seg, t); }
+      for (let gy = y, n = 0; gy < y + h; gy += seg, n++) { ctx.fillStyle = n % 2 ? '#fbf8ef' : holo ? IRIS[n % 5] : grad; ctx.fillRect(x, gy, t, seg); ctx.fillRect(x + w - t, gy, t, seg); }
+      ctx.strokeStyle = ink; ctx.lineWidth = .25 * u; ctx.strokeRect(x + t, y + t, w - 2 * t, h - 2 * t);
+    }
+    // Rose des vents
+    const rx = x + w - 10.1 * u, ry = y + 10.1 * u, rs = u * .275;
+    ctx.save(); ctx.translate(rx, ry); ctx.scale(rs, rs); ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 6;
+    ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.9)';
+    for (const a of [90, 180, 270]) { ctx.save(); ctx.rotate(a * Math.PI / 180); ctx.beginPath(); ctx.moveTo(0, -19); ctx.lineTo(3.5, -3.5); ctx.lineTo(0, 0); ctx.lineTo(-3.5, -3.5); ctx.closePath(); ctx.fill(); ctx.restore(); }
+    ctx.fillStyle = holo ? '#b38bff' : gold ? '#f7dc84' : acc; ctx.beginPath(); ctx.moveTo(0, -19); ctx.lineTo(3.5, -3.5); ctx.lineTo(0, 0); ctx.lineTo(-3.5, -3.5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = `700 6px ${DISPLAY}`; ctx.textAlign = 'center'; ctx.fillText('N', 0, -21); ctx.restore();
+    // Légende : panneau de gauche (cartouche de papier en Plein cadre)
+    let lx = x + 4.4 * u, ly = y + 4.4 * u; const lw = 32 * u;
+    if (full) {
+      const bh = 40 * u; lx = x + 4 * u; ly = y + h - 2.4 * u - bh + 1.6 * u;
+      ctx.fillStyle = 'rgba(241,234,214,.93)'; ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 2 * u; ctx.fillRect(x + 2.4 * u, y + h - 2.4 * u - bh, 36 * u, bh); ctx.shadowColor = 'transparent';
+      ctx.strokeStyle = ink; ctx.lineWidth = .25 * u; ctx.strokeRect(x + 2.4 * u, y + h - 2.4 * u - bh, 36 * u, bh);
+    }
+    ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    ctx.fillStyle = '#7a6f58'; ctx.font = `600 ${1.9 * u}px ${DISPLAY}`; ctx.letterSpacing = `${.4 * u}px`;
+    ctx.fillText(String(window.I18N.tv(c.river?.kind || '')).toUpperCase(), lx, ly + 1.8 * u); ctx.letterSpacing = '0px';
+    ctx.textAlign = 'right'; ctx.fillStyle = ink; ctx.font = `600 ${1.9 * u}px ${MONO}`; ctx.fillText(String(c.no).padStart(4, '0'), lx + lw, ly + 1.8 * u); ctx.textAlign = 'left';
+    const top = c.rarity === 'legendaire' || c.rarity === 'mythique', name = top ? window.I18N.name(c).toUpperCase() : window.I18N.name(c);
+    let fs = (top ? 6.2 : 7.4) * u, lines;
+    for (; ; fs -= .2 * u) { ctx.font = `italic 700 ${fs}px ${GARAMOND}`; ctx.letterSpacing = top ? `${fs * .12}px` : '0px'; lines = wrap(ctx, name, lw, 2); if (fs < 3.6 * u || lines.every(l => ctx.measureText(l).width <= lw)) break; }
+    ctx.fillStyle = holo ? gradient(ctx, lx, ly, lw, 10 * u, ['#6a3df0', '#1d8fd6', '#12a57a', '#c0399a'], 0) : water;
+    let ty = ly + 3 * u + fs * .85; for (const l of lines) { ctx.fillText(l, lx, ty); ty += fs * .95; } ctx.letterSpacing = '0px';
+    ctx.font = `500 ${2.2 * u}px ${TEXT}`; ctx.fillStyle = '#5a5140';
+    for (const l of wrap(ctx, window.I18N.subtitle(c) || '', lw, 2)) { ty += .2 * u; ctx.fillText(l, lx, ty); ty += 2.6 * u; }
+    // Tracé du cours d'eau (décoratif)
+    if (!full) {
+      const tx = lx, tyy = ty + .6 * u, tw = lw, th = 8.4 * u, rnd = seeded(c.id);
+      ctx.strokeStyle = 'rgba(34,48,63,.25)'; ctx.lineWidth = .2 * u; ctx.beginPath(); ctx.moveTo(tx, tyy); ctx.lineTo(tx + tw, tyy); ctx.moveTo(tx, tyy + th); ctx.lineTo(tx + tw, tyy + th); ctx.stroke();
+      let yy = 22 + rnd() * 8; const sx = v => tx + v / 100 * tw, sy = v => tyy + v / 40 * th, y0 = yy;
+      ctx.beginPath(); ctx.moveTo(sx(4), sy(yy));
+      for (let v = 4; v < 92; v += 11) { const ny = 8 + rnd() * 26; ctx.bezierCurveTo(sx(v + 4), sy(yy), sx(v + 7), sy(ny), sx(v + 11), sy(ny)); yy = ny; }
+      ctx.strokeStyle = 'rgba(29,90,166,.18)'; ctx.lineWidth = 1.2 * u; ctx.lineCap = 'round'; ctx.stroke();
+      ctx.strokeStyle = water; ctx.lineWidth = .4 * u; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(sx(4), sy(y0), .5 * u, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = water; ctx.beginPath(); ctx.moveTo(sx(93), sy(yy - 4)); ctx.lineTo(sx(99), sy(yy)); ctx.lineTo(sx(93), sy(yy + 4)); ctx.closePath(); ctx.fill();
+      ty = tyy + th + 1.2 * u;
+    }
+    // Statistiques avec points de conduite
+    const st = (API.statsOf ? API.statsOf(c) : c.stats).slice(0, 3);
+    for (const [k, v] of st) {
+      ty += 2.4 * u;
+      ctx.fillStyle = '#7a6f58'; ctx.font = `600 ${1.8 * u}px ${DISPLAY}`; ctx.letterSpacing = `${.18 * u}px`; const key = window.I18N.statKey(k).toUpperCase(); ctx.fillText(key, lx, ty); const kw = ctx.measureText(key).width; ctx.letterSpacing = '0px';
+      ctx.fillStyle = ink; ctx.font = `700 ${2.4 * u}px ${DISPLAY}`; ctx.textAlign = 'right'; const val = clip(ctx, String(window.I18N.tv(v)), lw * .6); ctx.fillText(val, lx + lw, ty); ctx.textAlign = 'left';
+      const vw = ctx.measureText(val).width; ctx.strokeStyle = 'rgba(34,48,63,.35)'; ctx.lineWidth = .25 * u; ctx.setLineDash([.3 * u, .6 * u]);
+      ctx.beginPath(); ctx.moveTo(lx + kw + u, ty); ctx.lineTo(lx + lw - vw - u, ty); ctx.stroke(); ctx.setLineDash([]);
+    }
+    // Échelle proportionnelle à la longueur
+    const km = c.river?.km || 0, segs = Math.max(4, Math.min(10, Math.round(4 + Math.log10(Math.max(km, 1)) * 2)));
+    const sy2 = full ? ty + 2.6 * u : y + h - 4.4 * u - 1.4 * u, label = km ? `${km.toLocaleString(window.I18N.lang === 'nl' ? 'nl-BE' : 'fr-BE')} km` : '';
+    ctx.font = `600 ${1.8 * u}px ${MONO}`; ctx.fillStyle = ink; ctx.fillText('0', lx, sy2 + 1.2 * u);
+    const lab = ctx.measureText(label).width, bx = lx + 2.4 * u, bw = lw - 2.4 * u - lab - u;
+    ctx.textAlign = 'right'; ctx.fillText(label, lx + lw, sy2 + 1.2 * u); ctx.textAlign = 'left';
+    for (let n = 0; n < segs; n++) { ctx.fillStyle = n % 2 ? '#fbf8ef' : holo ? IRIS[n % 5] : grad; ctx.fillRect(bx + n * bw / segs, sy2 - .2 * u, bw / segs, 1.3 * u); }
+    ctx.strokeStyle = ink; ctx.lineWidth = .2 * u; ctx.strokeRect(bx, sy2 - .2 * u, bw, 1.3 * u);
+  }
+
+  // Moulins : « Sac de farine » (voir style.css, .card.cat-moulin)
+  const MILL_INK = { commune: '#3b3a36', 'peu-commune': '#2f6b3f', rare: '#224f9c', epique: '#5b2f98', legendaire: '#8f6208', mythique: '#b0122a' };
+  const FLOUR = { fr: { commune: 'Farine bise', 'peu-commune': 'Farine de froment', rare: 'Fleur de farine', epique: 'Farine extra', legendaire: 'Qualité supérieure', mythique: 'Farine impériale' },
+    nl: { commune: 'Grof meel', 'peu-commune': 'Tarwebloem', rare: 'Bloem', epique: 'Extra bloem', legendaire: 'Superieure kwaliteit', mythique: 'Keizerlijke bloem' } };
+  function sack(ctx, c, photo, x, y, w, h, finish) {
+    const u = w / 95, gold = finish === 'or', holo = finish === 'holo', full = finish === 'plein', nl = window.I18N.lang === 'nl';
+    const ink = gold ? '#8a6516' : holo ? '#7a5cd6' : MILL_INK[c.rarity] || MILL_INK.commune, jute = '#e9dec2';
+    const bg = ctx.createRadialGradient(x + w / 2, y + h * .38, 10, x + w / 2, y + h * .38, h * .7);
+    bg.addColorStop(0, gold ? '#fff8e2' : '#f3ead3'); bg.addColorStop(1, gold ? '#ecd9a2' : '#d8c69c'); ctx.fillStyle = bg; ctx.fillRect(x, y, w, h);
+    const weave = () => { ctx.fillStyle = gold ? 'rgba(150,110,20,.08)' : 'rgba(110,80,30,.09)'; for (let v = 0; v < w; v += .9 * u) ctx.fillRect(x + v, y, .35 * u, h); for (let v = 0; v < h; v += .9 * u) ctx.fillRect(x, y + v, w, .35 * u); };
+    weave();
+    const cx = x + w / 2, cy = y + 59 * u, r = 28 * u, type = c.mill?.type === 'eau' ? 'eau' : 'vent';
+    if (full && photo) {
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); cover(ctx, photo, x, y, w, h, .45); ctx.restore(); weave();
+      const g = ctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, 'rgba(0,0,0,.35)'); g.addColorStop(.3, 'rgba(0,0,0,0)'); g.addColorStop(.5, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.8)'); ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+    }
+    // Ourlet cousu et rayures
+    ctx.fillStyle = 'rgba(110,80,30,.14)'; ctx.fillRect(x, y, w, 3.6 * u);
+    ctx.strokeStyle = 'rgba(70,50,20,.55)'; ctx.lineWidth = .4 * u; ctx.setLineDash([1.2 * u, .8 * u]); ctx.beginPath(); ctx.moveTo(x, y + 1.2 * u); ctx.lineTo(x + w, y + 1.2 * u); ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha = full ? .6 : .85; ctx.fillStyle = ink; ctx.fillRect(x, y + 6.6 * u, w, 1.5 * u); ctx.fillRect(x, y + 9.4 * u, w, 1.5 * u); ctx.globalAlpha = 1;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillStyle = full ? '#fff' : 'rgba(70,50,20,.7)'; ctx.font = `700 ${3 * u}px ${MONO}`; ctx.fillText('N° ' + String(c.no).padStart(4, '0'), x + w - 4 * u, y + 2 * u);
+    // « MOULIN À VENT » en arc
+    const arch = (nl ? (type === 'eau' ? 'Watermolen' : 'Windmolen') : (type === 'eau' ? 'Moulin à eau' : 'Moulin à vent')).toUpperCase();
+    const R = 63 * u, acy = y + 22.5 * u + R; ctx.font = `700 ${7.1 * u}px ${STENCIL}`; ctx.fillStyle = full ? '#fff' : gold ? '#7a5a12' : ink; ctx.textAlign = 'center';
+    const sp = 1.3 * u, widths = [...arch].map(ch => ctx.measureText(ch).width + sp), total = widths.reduce((a, b) => a + b, 0) - sp;
+    let ang = -total / 2 / R;
+    [...arch].forEach((ch, n) => { const a = ang + (widths[n] - sp) / 2 / R; ctx.save(); ctx.translate(cx + Math.sin(a) * R, acy - Math.cos(a) * R); ctx.rotate(a); ctx.fillText(ch, 0, 0); ctx.restore(); ang += widths[n] / R; });
+    // Médaillon
+    if (!full) {
+      const rings = holo ? [[3, '#6bd7ff'], [2.6, jute], [1.7, '#b38bff'], [1, jute]] : [[3, ink], [2.6, jute], [1.7, ink], [1, jute]];
+      for (const [d, col] of rings) { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(cx, cy, r + d * u, 0, Math.PI * 2); ctx.fill(); }
+      if (photo) {
+        const m = /^(\d+)%\s+(\d+)%(?:;--zoom:([\d.]+))?/.exec(c.pos || '') || [], fx = (+m[1] || 50) / 100, fy = (+m[2] || 45) / 100, z = +m[3] || 1;
+        ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip(); ctx.filter = 'saturate(.85) sepia(.15) contrast(1.05)';
+        cover(ctx, photo, cx - r - 2 * r * (z - 1) * fx, cy - r - 2 * r * (z - 1) * fy, 2 * r * z, 2 * r * z, fy, false, fx); ctx.restore();
+      }
+    }
+    // Pictogramme : ailes ou roue
+    const ix2 = full ? x + 9.5 * u : x + 64 * u + 6.5 * u, iy2 = full ? y + 9.5 * u + 4 * u : y + 74 * u + 6.5 * u, ir = (full ? 5.5 : 6.5) * u;
+    ctx.fillStyle = jute; ctx.beginPath(); ctx.arc(ix2, iy2, ir + .8 * u, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = holo ? gradient(ctx, ix2 - ir, iy2 - ir, 2 * ir, 2 * ir, IRIS) : ink; ctx.beginPath(); ctx.arc(ix2, iy2, ir, 0, Math.PI * 2); ctx.fill();
+    ctx.save(); ctx.translate(ix2, iy2); ctx.scale(ir / 16.6, ir / 16.6); ctx.fillStyle = jute; ctx.strokeStyle = jute; ctx.lineWidth = 2;
+    if (type === 'eau') { ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.stroke(); for (const a of [0, 45, 90, 135]) { ctx.save(); ctx.rotate(a * Math.PI / 180); ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(0, 11); ctx.stroke(); ctx.restore(); } }
+    else for (const a of [0, 90, 180, 270]) { ctx.save(); ctx.rotate(a * Math.PI / 180); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-2, -11); ctx.lineTo(2, -11); ctx.closePath(); ctx.fill(); ctx.restore(); }
+    ctx.beginPath(); ctx.arc(0, 0, 2, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    // Nom au pochoir, qualité, description
+    const name = window.I18N.name(c).toUpperCase(), ny = y + (full ? 88 : 93) * u;
+    let fs = 8.6 * u; for (; fs > 4 * u; fs -= .2 * u) { ctx.font = `700 ${fs}px ${STENCIL}`; ctx.letterSpacing = `${fs * .03}px`; if (ctx.measureText(name).width <= w - 8 * u) break; }
+    ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'center';
+    ctx.fillStyle = full ? '#fff' : holo ? gradient(ctx, x, ny, w, fs, ['#c0399a', '#6a3df0', '#1d8fd6', '#12a57a'], 0) : gold ? gradient(ctx, x, ny, w, fs, ['#6e4f0c', '#a87b1e', '#4a3410'], 90) : ink;
+    ctx.fillText(name, cx, ny + fs * .85); ctx.letterSpacing = '0px';
+    const grade = FLOUR[nl ? 'nl' : 'fr'][c.rarity].toUpperCase(); ctx.font = `700 ${3.2 * u}px ${DISPLAY}`; ctx.letterSpacing = `${.55 * u}px`;
+    const gw = ctx.measureText(grade).width + 6 * u, gy = ny + fs + 1.6 * u;
+    ctx.save(); ctx.translate(cx, gy + 2.3 * u); ctx.rotate(-2 * Math.PI / 180); ctx.fillStyle = holo ? gradient(ctx, -gw / 2, -2.3 * u, gw, 4.6 * u, IRIS, 0) : gold ? '#8a6516' : ink; ctx.fillRect(-gw / 2, -2.3 * u, gw, 4.6 * u);
+    ctx.fillStyle = holo ? '#2a1d3a' : jute; ctx.textBaseline = 'middle'; ctx.fillText(grade, 0, .2 * u); ctx.restore(); ctx.letterSpacing = '0px';
+    ctx.textBaseline = 'alphabetic'; ctx.font = `500 ${3.4 * u}px ${TEXT}`; ctx.fillStyle = full ? '#eee' : gold ? '#5a4416' : '#5b4a2c';
+    ctx.fillText(clip(ctx, window.I18N.subtitle(c) || '', w - 8 * u), cx, gy + 9.4 * u);
+    // Cases tamponnées
+    const st = (API.statsOf ? API.statsOf(c) : c.stats).slice(0, 3), gap = 1.6 * u, bw = (w - 6.8 * u - 2 * gap) / 3, bh = 15 * u, by = y + h - 3 * u - bh;
+    st.forEach(([k, v], n) => {
+      const bx = x + 3.4 * u + n * (bw + gap);
+      if (full) { ctx.fillStyle = 'rgba(0,0,0,.35)'; rr(ctx, bx, by, bw, bh, .8 * u); ctx.fill(); }
+      ctx.strokeStyle = full ? 'rgba(255,255,255,.8)' : ink; ctx.lineWidth = .45 * u; rr(ctx, bx, by, bw, bh, .8 * u); ctx.stroke();
+      ctx.fillStyle = full ? '#ddd' : '#7a6440'; ctx.font = `600 ${2.6 * u}px ${DISPLAY}`; ctx.letterSpacing = `${.2 * u}px`; ctx.fillText(clip(ctx, window.I18N.statKey(k).toUpperCase(), bw - 2 * u), bx + bw / 2, by + 5 * u); ctx.letterSpacing = '0px';
+      ctx.fillStyle = full ? '#fff' : gold ? '#6e4f0c' : ink; ctx.font = `700 ${3.8 * u}px ${DISPLAY}`; ctx.fillText(clip(ctx, String(window.I18N.tv(v)), bw - 2 * u), bx + bw / 2, by + 11 * u);
+    });
+    ctx.textAlign = 'left';
+  }
+
+  // Arsenal : « Plan d'armurier » (voir style.css, .card.cat-arme)
+  const PROOF = { commune: '#cfd8e6', 'peu-commune': '#6fe0a0', rare: '#7fb2ff', epique: '#c39bff', legendaire: '#ffd36b', mythique: '#ff5a6e' };
+  function blueprint(ctx, c, photo, x, y, w, h, finish) {
+    const u = w / 95, gold = finish === 'or', holo = finish === 'holo', full = finish === 'plein';
+    const line = gold ? 'rgba(60,40,8,.75)' : 'rgba(235,244,255,.85)', proof = gold ? '#5a3f08' : holo ? '#fff' : PROOF[c.rarity] || PROOF.commune, text = gold ? '#2a1e05' : '#fff', soft = gold ? '#5a4416' : '#9fb8d8';
+    if (gold) ctx.fillStyle = gradient(ctx, x, y, w, h, ['#b8891f', '#f7dc84', '#c9971c', '#fff1b8', '#a87b1e']);
+    else if (holo) ctx.fillStyle = gradient(ctx, x, y, w, h, ['#1b3f8f', '#3b2c8f', '#0f6a8f', '#2a3f9a']);
+    else { const g = ctx.createRadialGradient(x + w / 2, y + h * .3, 10, x + w / 2, y + h * .3, h * .75); g.addColorStop(0, '#1a4f8f'); g.addColorStop(1, '#123d73'); ctx.fillStyle = g; }
+    ctx.fillRect(x, y, w, h);
+    const grid = (step, a) => { ctx.fillStyle = gold ? `rgba(60,40,8,${a * .75})` : `rgba(255,255,255,${a})`; for (let v = 0; v < w; v += step) ctx.fillRect(x + v, y, Math.max(1, .15 * u), h); for (let v = 0; v < h; v += step) ctx.fillRect(x, y + v, w, Math.max(1, .15 * u)); };
+    grid(3 * u, .06); grid(15 * u, .16);
+    // Figure
+    const px = full ? x : x + 9 * u, py = full ? y : y + 13 * u, pw = full ? w : w - 15 * u, ph = full ? h : 66 * u;
+    if (!full) { ctx.fillStyle = '#dce7f4'; ctx.fillRect(px, py, pw, ph); }
+    if (photo) {
+      ctx.save(); ctx.beginPath(); ctx.rect(px, py, pw, ph); ctx.clip();
+      if (full) cover(ctx, photo, px, py, pw, ph, .5);
+      else { ctx.filter = gold ? 'grayscale(1) sepia(.6) contrast(1.2)' : 'grayscale(1) contrast(1.25) brightness(1.06)'; ctx.globalCompositeOperation = 'multiply'; cover(ctx, photo, px, py, pw, ph, .5, true); }
+      ctx.restore();
+    }
+    if (!full) { ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = gold ? 'rgba(184,137,31,.25)' : 'rgba(18,61,115,.22)'; ctx.fillRect(px, py, pw, ph); ctx.restore();
+      ctx.strokeStyle = line; ctx.lineWidth = .35 * u; ctx.strokeRect(px, py, pw, ph);
+      // Cotes
+      const arrow = (ax, ay, dx, dy) => { ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax + dx * 2 * u - dy * u, ay + dy * 2 * u - dx * u); ctx.lineTo(ax + dx * 2 * u + dy * u, ay + dy * 2 * u + dx * u); ctx.closePath(); ctx.fill(); };
+      ctx.fillStyle = line; ctx.fillRect(px, y + 81.6 * u, pw, .25 * u); arrow(px, y + 81.7 * u, 1, 0); arrow(px + pw, y + 81.7 * u, -1, 0);
+      ctx.fillRect(x + 5.4 * u, py, .25 * u, ph); arrow(x + 5.5 * u, py, 0, 1); arrow(x + 5.5 * u, py + ph, 0, -1);
+    } else {
+      grid(15 * u, .14); const g = ctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, 'rgba(8,30,60,.5)'); g.addColorStop(.25, 'rgba(8,30,60,0)'); g.addColorStop(.5, 'rgba(8,30,60,0)'); g.addColorStop(1, 'rgba(8,30,60,.9)'); ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+    }
+    // En-tête de la planche
+    ctx.fillStyle = line; ctx.fillRect(x + 4 * u, y + 7.4 * u, w - 8 * u, .3 * u);
+    ctx.fillStyle = text; ctx.font = `600 ${3 * u}px ${MONO}`; ctx.letterSpacing = `${.24 * u}px`; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(`${window.I18N.lang === 'nl' ? 'PLAAT' : 'PLANCHE'} ${String(c.no).padStart(4, '0')}`, x + 4 * u, y + 5.6 * u);
+    ctx.textAlign = 'right'; ctx.globalAlpha = .75; ctx.fillText('FIG. 1', x + w - 4 * u, y + 5.6 * u); ctx.globalAlpha = 1; ctx.textAlign = 'left'; ctx.letterSpacing = '0px';
+    // Cartouche
+    const bx = x + 4 * u, by = y + 86 * u, bw = w - 8 * u, bh = h - 89 * u, sh = 13 * u, cw = 23 * u;
+    ctx.fillStyle = gold ? 'rgba(255,246,210,.35)' : full ? 'rgba(8,30,60,.72)' : 'rgba(10,40,80,.55)'; ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = line; ctx.lineWidth = .35 * u; ctx.strokeRect(bx, by, bw, bh);
+    ctx.lineWidth = .3 * u; ctx.beginPath(); ctx.moveTo(bx + bw - cw, by); ctx.lineTo(bx + bw - cw, by + bh - sh); ctx.moveTo(bx, by + bh - sh); ctx.lineTo(bx + bw, by + bh - sh); ctx.stroke();
+    const name = window.I18N.name(c).toUpperCase(), tw = bw - cw - 6 * u;
+    let fs = 8.6 * u, lines; for (; ; fs -= .2 * u) { ctx.font = `800 ${fs}px ${DISPLAY}`; lines = wrap(ctx, name, tw, 2); if (fs < 4.5 * u || lines.every(l => ctx.measureText(l).width <= tw)) break; }
+    ctx.font = `500 ${3.2 * u}px ${TEXT}`; const sub = wrap(ctx, window.I18N.subtitle(c) || '', tw, 2);
+    const blockH = lines.length * fs * .95 + sub.length * 4 * u + u; let ty = by + (bh - sh - blockH) / 2 + fs * .8;
+    ctx.font = `800 ${fs}px ${DISPLAY}`; ctx.fillStyle = holo ? gradient(ctx, bx, by, tw, fs, ['#ffd1f1', '#ffffff', '#b8f3ff'], 0) : text;
+    for (const l of lines) { ctx.fillText(l, bx + 3 * u, ty); ty += fs * .95; }
+    ctx.font = `500 ${3.2 * u}px ${TEXT}`; ctx.fillStyle = gold ? '#5a4416' : '#b9cfea'; ty += .4 * u;
+    for (const l of sub) { ctx.fillText(l, bx + 3 * u, ty); ty += 4 * u; }
+    // Poinçon du banc d'épreuves (perron dans un ovale)
+    const ox = bx + bw - cw / 2, oy = by + (bh - sh) / 2 - 2.4 * u, s = 12 * u / 40;
+    ctx.save(); ctx.translate(ox - 20 * s, oy - 26 * s); ctx.scale(s, s); if (holo) { ctx.shadowColor = '#b38bff'; ctx.shadowBlur = 10; }
+    ctx.strokeStyle = proof; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.ellipse(20, 26, 18, 24, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(20, 26, 14.5, 20.5, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = holo ? '#ffd36b' : proof; ctx.beginPath(); ctx.moveTo(20, 9); ctx.lineTo(23, 13); ctx.lineTo(17, 13); ctx.closePath(); ctx.fill();
+    ctx.fillRect(18.5, 13, 3, 20); ctx.fillRect(14, 33, 12, 3); ctx.fillRect(12, 36, 16, 3); ctx.fillRect(10, 39, 20, 3); ctx.restore();
+    ctx.fillStyle = proof; ctx.font = `700 ${2.3 * u}px ${DISPLAY}`; ctx.letterSpacing = `${.23 * u}px`; ctx.textAlign = 'center';
+    ctx.fillText(API.rarityLabel(c.rarity).toUpperCase(), ox, oy + 11 * u); ctx.textAlign = 'left'; ctx.letterSpacing = '0px';
+    // Caractéristiques
+    const st = (API.statsOf ? API.statsOf(c) : c.stats).slice(0, 3), colW = bw / 3, sy = by + bh - sh;
+    st.forEach(([k, v], n) => {
+      const sx = bx + n * colW;
+      if (n) { ctx.fillStyle = line; ctx.fillRect(sx, sy, .3 * u, sh); }
+      ctx.fillStyle = soft; ctx.font = `600 ${2.4 * u}px ${DISPLAY}`; ctx.letterSpacing = `${.28 * u}px`; ctx.fillText(clip(ctx, window.I18N.statKey(k).toUpperCase(), colW - 4 * u), sx + 2.2 * u, sy + 4.4 * u); ctx.letterSpacing = '0px';
+      ctx.fillStyle = text; ctx.font = `600 ${3.8 * u}px ${MONO}`; ctx.fillText(clip(ctx, String(window.I18N.tv(v)), colW - 4 * u), sx + 2.2 * u, sy + 10 * u);
+    });
+  }
+
   async function render(c, finish) {
     if (c.landscape) try { await Promise.all([document.fonts?.load(`40px ${LOBSTER}`), document.fonts?.load(`40px ${SLAB}`), document.fonts?.load(`20px ${ELITE}`)]); } catch (_) { /* police de secours */ }
     if (c.cat === 'histoire') try { await document.fonts?.load(`40px ${TYPE}`); } catch (_) { /* police de secours */ }
     if (c.cat === 'bd') try { await Promise.all([document.fonts?.load(`40px ${POP}`), document.fonts?.load(`700 24px ${COMIC}`)]); } catch (_) { /* police de secours */ }
+    if (c.cat === 'riviere') try { await document.fonts?.load(`italic 700 40px ${GARAMOND}`); } catch (_) { /* police de secours */ }
+    if (c.cat === 'moulin') try { await document.fonts?.load(`700 40px ${STENCIL}`); } catch (_) { /* police de secours */ }
     await document.fonts?.ready;
     const L = window.I18N.lang, ed = c.cat === 'edition' && API.packById(c.pack);
     const fin = API.FINISHES.find(f => f.id === finish) || API.FINISHES[0];
@@ -498,7 +724,10 @@
     ctx.fill(); ctx.restore();
     const ix = x + pad, iy = y + pad, iw = cw - pad * 2, ih = ch - pad * 2;
     ctx.save(); rr(ctx, ix, iy, iw, ih, land ? 10 : 18); ctx.clip();
-    if (land) postcard(ctx, c, photo, ix, iy, iw, ih, finish, cw / 100);
+    if (c.cat === 'riviere') atlas(ctx, c, photo, ix, iy, iw, ih, finish);
+    else if (land) postcard(ctx, c, photo, ix, iy, iw, ih, finish, cw / 100);
+    else if (c.cat === 'moulin') sack(ctx, c, photo, ix, iy, iw, ih, finish);
+    else if (c.cat === 'arme') blueprint(ctx, c, photo, ix, iy, iw, ih, finish);
     else if (c.walk) walkCard(ctx, c, photo, ix, iy, iw, ih, finish);
     else if (c.cat === 'voiture') showroom(ctx, c, photo, ix, iy, iw, ih, finish);
     else if (arch) archives(ctx, c, photo, ix, iy, iw, ih, finish);
@@ -577,14 +806,15 @@
     }
     ctx.restore();
     // Paysage : version et rareté sous la carte ; autres cartes : numéro, version et rareté en haut de la carte
-    if (land || c.walk || c.cat === 'voiture') {
+    const ownTag = land || c.walk || ['voiture', 'moulin', 'arme'].includes(c.cat);
+    if (ownTag) {
       const tag = (finish !== 'normal' ? API.finishLabel(finish) + ' · ' : '') + API.rarityLabel(c.rarity);
       ctx.font = `800 26px ${DISPLAY}`; const tw = ctx.measureText(tag.toUpperCase()).width + 32;
       ctx.fillStyle = glow; rr(ctx, (W - tw) / 2, y + ch + 40, tw, 44, 8); ctx.fill();
       ctx.fillStyle = '#111'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillText(tag.toUpperCase(), W / 2, y + ch + 63); ctx.textAlign = 'left';
     }
     ctx.save(); rr(ctx, ix, iy, iw, ih, 18); ctx.clip();
-    if (!land && !c.walk && c.cat !== 'voiture') {
+    if (!ownTag) {
     ctx.fillStyle = 'rgba(10,10,12,.7)'; rr(ctx, ix + 20, iy + 20, 104, 40, 8); ctx.fill();
     ctx.fillStyle = '#f1eee6'; ctx.font = `600 24px ${MONO}`; ctx.fillText(String(c.no).padStart(4, '0'), ix + 34, iy + 49);
     const tag = (finish !== 'normal' ? API.finishLabel(finish) + ' · ' : '') + API.rarityLabel(c.rarity);
