@@ -206,6 +206,9 @@
     'Gembloux': 'Gembloers', 'Mouscron': 'Moeskroen', 'Comines-Warneton': 'Komen-Waasten', 'Wervik': 'Wervik',
     'Laethem-Saint-Martin': 'Sint-Martens-Latem', 'Bassenge': 'Bitsingen', 'Ardooie': 'Ardooie',
     'Armurier': 'Wapenfabrikant', 'Arme d’hast': 'Stokwapen', 'Cartouche': 'Patroon', 'Calibre 12': 'Kaliber 12', 'XVᵉ s.': '15de eeuw',
+    // Compléments (pilotes, histoire, terroir)
+    'Course': 'Race', 'Virage': 'Bocht', 'Rallye': 'Rally', 'Saint-Vith': 'Sankt Vith', 'Milan': 'Milaan', 'Tongres': 'Tongeren', 'Ypres': 'Ieper',
+    'Révolution': 'Revolutie', 'Assemblée': 'Vergadering', 'Traité': 'Verdrag', 'Londres': 'Londen', 'Brune': 'Bruin',
     // Bulles (fresques BD)
     'Fresque': 'Muurschildering', 'Statue': 'Standbeeld', 'Digue de mer': 'Zeedijk', 'Gare de Hoeilaart': 'Station Hoeilaart',
     'Auderghem': 'Oudergem', 'Louvain-la-Neuve': 'Louvain-la-Neuve', 'Marolles': 'Marollen', 'Galerie Horta': 'Hortagalerij',
@@ -218,7 +221,7 @@
     'Artiste': 'Kunstenaar', 'Genre': 'Genre', 'Formation': 'Opgericht', 'Création': 'Opgericht', 'UNESCO': 'UNESCO', 'Jours': 'Dagen',
     'Élections': 'Verkiezingen', 'Gouvernement': 'Regering', 'Avant': 'Voor', 'Après': 'Na', 'Communes': 'Gemeenten', 'Régions': 'Gewesten',
     'Communautés': 'Gemeensch.', 'Loi': 'Wet', '1er scrutin': '1e stemming', 'Niveau': 'Niveau', 'Consultation': 'Raadpleging',
-    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status', 'Conflit': 'Conflict', 'Rôle': 'Rol', 'Poids': 'Gewicht', 'Taille': 'Lengte', 'Envergure': 'Spanwijdte', 'Premier vol': 'Eerste vlucht', 'Constructeur': 'Bouwer', 'Siège': 'Zetel', 'Lieu': 'Plaats', 'Fondé': 'Opgericht', 'Durée': 'Duur', 'Altitude': 'Hoogte', 'Hauteur': 'Hoogte', 'Commune': 'Gemeente', 'Auteur': 'Auteur', 'Ouverture': 'Geopend', 'Taux': 'Koers', 'Rang': 'Rang', 'Fondée': 'Opgericht', 'Victoires': 'Overwinningen', 'Longueur': 'Lengte', 'Exploitant': 'Uitbater', 'Vitesse': 'Snelheid', 'Navire': 'Schip', 'Port': 'Haven', 'Nommé': 'Benoemd', 'Fin': 'Einde', 'Billets': 'Biljetten', 'Pays': 'Landen', 'Tonnes': 'Ton', 'Métal': 'Metaal', 'Valeur': 'Waarde', 'Effigie': 'Beeltenis', 'Origine': 'Herkomst', 'Habitat': 'Leefgebied', 'Province': 'Provincie',
+    'Abdication': 'Troonsafstand', 'Successeur': 'Opvolger', 'Statut': 'Status', 'Conflit': 'Conflict', 'Rôle': 'Rol', 'Poids': 'Gewicht', 'Taille': 'Lengte', 'Envergure': 'Spanwijdte', 'Premier vol': 'Eerste vlucht', 'Constructeur': 'Bouwer', 'Siège': 'Zetel', 'Lieu': 'Plaats', 'Fondé': 'Opgericht', 'Durée': 'Duur', 'Altitude': 'Hoogte', 'Hauteur': 'Hoogte', 'Commune': 'Gemeente', 'Auteur': 'Auteur', 'Ouverture': 'Geopend', 'Taux': 'Koers', 'Rang': 'Rang', 'Fondée': 'Opgericht', 'Victoires': 'Overwinningen', 'Longueur': 'Lengte', 'Exploitant': 'Uitbater', 'Vitesse': 'Snelheid', 'Navire': 'Schip', 'Port': 'Haven', 'Nommé': 'Benoemd', 'Fin': 'Einde', 'Billets': 'Biljetten', 'Pays': 'Landen', 'Tonnes': 'Ton', 'Métal': 'Metaal', 'Valeur': 'Waarde', 'Effigie': 'Beeltenis', 'Origine': 'Herkomst', 'Habitat': 'Leefgebied', 'Province': 'Provincie', 'Pente': 'Helling',
     'Se jette dans': 'Mondt uit in', 'Bassin': 'Stroomgebied', 'Relie': 'Verbindt', 'Ouvert': 'Geopend', 'Ascenseurs': 'Liften', 'Fabricant': 'Fabrikant',
     'Calibre': 'Kaliber', 'Concepteur': 'Ontwerper', 'Canons': 'Lopen', 'Canon': 'Kanon', 'Époque': 'Tijdperk',
   };

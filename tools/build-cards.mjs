@@ -525,6 +525,13 @@ const HISTOIRE = [
   ['hist-buizingen-2010', 'Accident de Buizingen', 'Treinramp van Buizingen', 'Monument Hommage Buizingen 12Fev2011.jpg', 'Catastrophe', 2010, 'Deux trains se percutent un matin de neige', 'Twee treinen botsen op een besneeuwde ochtend', ['Lieu', 'Hal'], 'peu-commune'],
   ['hist-attentats-2016', 'Attentats du 22 mars', 'Aanslagen van 22 maart', 'Gewond maar steeds overeind tegenover het onbegrijpelijke.jpg', 'Attentats', 2016, 'Zaventem et Maelbeek : le mémorial « Blessés mais toujours debout »', 'Zaventem en Maalbeek: het monument “Gewond maar steeds overeind”', ['Lieu', 'Bruxelles'], 'legendaire'],
   ['hist-inondations-2021', 'Inondations de 2021', 'Overstromingen van 2021', 'Han-so-Eure grossès aiwes måjhon gåraedje.jpg', 'Catastrophe', 2021, 'Des pluies record noient la Wallonie en juillet : 39 morts', 'Recordregen zet Wallonië in juli onder water: 39 doden', ['Lieu', 'Wallonie'], 'rare'],
+  // Naissance de la Belgique (octobre 2026, pour atteindre 50 cartes)
+  ['hist-revolution', 'Révolution belge', 'Belgische Revolutie', 'Gustave Wappers - Episode of the September Days 1830, on the Grand Place of Brussels - Google Art Project.jpg', 'Révolution', 1830, 'Les Journées de septembre chassent les troupes hollandaises', 'De Septemberdagen verjagen de Nederlandse troepen', ['Lieu', 'Bruxelles'], 'legendaire', { art: true }],
+  ['hist-waterloo', 'Bataille de Waterloo', 'Slag bij Waterloo', 'Battle of Waterloo 1815.PNG', 'Bataille', 1815, 'La défaite de Napoléon au sud de Bruxelles', 'De nederlaag van Napoleon ten zuiden van Brussel', ['Lieu', 'Waterloo'], 'legendaire', { art: true }],
+  ['hist-congres', 'Congrès national', 'Nationaal Congres', 'Constitution de la Belgique de 1831 (page 1 crop).jpg', 'Assemblée', 1830, 'Les élus qui écrivent la Constitution de 1831', 'De verkozenen die de Grondwet van 1831 schrijven', ['Lieu', 'Bruxelles'], 'epique', { art: true }],
+  ['hist-butte', 'Butte du Lion', 'Leeuw van Waterloo', 'Belgique - Butte du Lion - 04.jpg', 'Monument', 1826, 'Le lion de 28 tonnes qui veille sur le champ de bataille', 'De leeuw van 28 ton die over het slagveld waakt', ['Hauteur', '41 m'], 'epique'],
+  ['hist-brabanconne', 'Révolution brabançonne', 'Brabantse Omwenteling', 'Bataille von Falmagne Zwischen den K.K. österreich. Truppen, u. den belgischen Creutzfahrern am 28 Sep. 1790 - gezeichnet v. Heinrich von der Beeck in Achen 1790 (cropped).jpg', 'Révolution', 1789, 'Les États belgiques unis, brève république contre l’Autriche', 'De Verenigde Nederlandse Staten, korte republiek tegen Oostenrijk', ['Lieu', 'Bruxelles'], 'rare', { art: true }],
+  ['hist-xxiv', 'Traité des XXIV articles', 'Verdrag van Londen', 'Scheidingsverdrag met België Nl-HaNA 2.05.02 110G 04.jpg', 'Traité', 1839, 'Les Pays-Bas reconnaissent enfin la Belgique', 'Nederland erkent eindelijk België', ['Lieu', 'Londres'], 'rare', { art: true }],
 ];
 function buildHistoire() {
   return HISTOIRE.map(([id, name, nlName, img, kind, y, sub, subNl, extra, rarity, opt = {}]) => ({
@@ -812,11 +819,25 @@ const VOITURES = [
   ["car-mahy", "Mahymobiles", "Mahymobiles", "Mahymobiles 32.jpg", ["Ouverture", 1991], "Musée", "Leuze-en-Hainaut", "Des centaines de voitures de la collection Mahy", "Honderden wagens van de collectie Mahy", "peu-commune"],
   ["car-supervan", "Ford Supervan 3", "Ford Supervan 3", "1994 Ford Supervan 3 3.5.jpg", ["Année", 1994], "Utilitaire", "Genk", "Une camionnette Transit à moteur de course", "Een Transit-bestelwagen met racemotor", "commune"],
   ["car-mol", "MOL", "MOL", "MOL waterkanon b.jpg", ["Fondé", 1944], "Camions", "Hooglede", "Camions et engins spéciaux flamands", "Vlaamse vrachtwagens en speciale voertuigen", "commune"],
+  // Pilotes, courses et circuits (octobre 2026, pour atteindre 50 cartes)
+  ["car-gendebien", "Olivier Gendebien", "Olivier Gendebien", "Olivier Gendebien, 1960s.jpg", ["Naissance", 1924], "Pilote", "Bruxelles", "Quatre victoires aux 24 Heures du Mans", "Vier overwinningen in de 24 uur van Le Mans", "legendaire"],
+  ["car-neuville", "Thierry Neuville", "Thierry Neuville", "2014 Rallye Deutschland by 2eight 8SC0443.jpg", ["Naissance", 1988], "Pilote", "Saint-Vith", "Champion du monde des rallyes en 2024", "Wereldkampioen rally in 2024", "legendaire"],
+  ["car-gpbelgique", "Grand Prix de Belgique", "Grote Prijs van België", "Spa 2008 start smoke.jpg", ["Création", 1925], "Course", "Stavelot", "Le Grand Prix de Formule 1 de Spa-Francorchamps", "De Grote Prijs Formule 1 van Spa-Francorchamps", "legendaire"],
+  ["car-frere", "Paul Frère", "Paul Frère", "2003-04-26 Paul Frère Cfs.JPG", ["Naissance", 1917], "Pilote", "Le Havre", "Pilote et journaliste, vainqueur au Mans en 1960", "Piloot en journalist, winnaar in Le Mans in 1960", "epique"],
+  ["car-24hspa", "24 Heures de Spa", "24 uur van Spa", "Three cars at the 1929 24 Hours of Spa.jpg", ["Création", 1924], "Course", "Stavelot", "La grande course d’endurance des Ardennes", "De grote uithoudingsrace in de Ardennen", "epique"],
+  ["car-raidillon", "Raidillon de l’Eau Rouge", "Raidillon van Eau Rouge", "24H Series 2023 Spa Misc.jpg", ["Pente", "18 %"], "Virage", "Stavelot", "Le virage le plus célèbre du sport automobile", "De bekendste bocht van de autosport", "epique"],
+  ["car-bianchi", "Lucien Bianchi", "Lucien Bianchi", "BianciLucien 19680802.jpg", ["Naissance", 1934], "Pilote", "Milan", "Vainqueur des 24 Heures du Mans 1968", "Winnaar van de 24 uur van Le Mans 1968", "rare"],
+  ["car-loix", "Freddy Loix", "Freddy Loix", "Loix.jpg", ["Naissance", 1970], "Pilote", "Tongres", "Le roi du rallye d’Ypres", "De koning van de rally van Ieper", "rare"],
+  ["car-gachot", "Bertrand Gachot", "Bertrand Gachot", "Bertrand Gachot - 1991 US GP.jpg", ["Naissance", 1962], "Pilote", "Luxembourg", "Pilote de F1, vainqueur au Mans en 1991", "F1-piloot, winnaar in Le Mans in 1991", "rare"],
+  ["car-ypres", "Rallye d’Ypres", "Rally van Ieper", "Citroën DS3 R3 (30744972000).jpg", ["Création", 1965], "Rallye", "Ypres", "Le rallye des petites routes de Flandre", "De rally over de smalle Vlaamse wegen", "rare"],
+  ["car-vandepoele", "Eric van de Poele", "Eric van de Poele", "Eric van de Poele 2008.jpg", ["Naissance", 1961], "Pilote", "Verviers", "Triple vainqueur des 24 Heures de Spa", "Drievoudig winnaar van de 24 uur van Spa", "peu-commune"],
+  ["car-vanthoor", "Laurens Vanthoor", "Laurens Vanthoor", "Laurens Vanthoor (portrait, 2024).jpg", ["Naissance", 1991], "Pilote", "Hasselt", "Pilote d’usine en endurance", "Fabriekspiloot in het endurance", "peu-commune"],
+  ["car-mettet", "Circuit de Mettet", "Circuit van Mettet", "WRX Belgium 2016 001.JPG", ["Discipline", "Rallycross"], "Circuit", "Mettet", "Le circuit Jules Tacheny, étape du rallycross mondial", "Het circuit Jules Tacheny, etappe van het WK rallycross", "peu-commune"],
 ];
 // Cadrage de la photo dans la carte verticale (object-position, puis zoom éventuel), relu sur les planches
 const VOITURE_POS = {
   'car-minerva': '22% 60%', 'car-imperia': '25% 55%', 'car-fn': '40% 60%', 'car-jamais': '45% 75%', 'car-pieper': '50% 100%',
-  'car-mol': '30% 80%', 'car-volvogent': '35% 55%',
+  'car-mol': '30% 80%', 'car-volvogent': '35% 55%', 'car-gendebien': '50% 0%', 'car-frere': '45% 0%',
 };
 function buildVoitures() {
   return VOITURES.map(([id, name, nlName, img, first, kind, city, sub, subNl, rarity]) => ({
@@ -1033,6 +1054,15 @@ const ARMES = [
   ["arm-fnx", "FN FNX", "FN FNX", "FNX-40 field strip.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "9 mm"], ["Année", 2009], "Pistolet de service, ici démonté pièce par pièce", "Dienstpistool, hier uit elkaar gehaald", "commune"],
   ["arm-trombone", "FN Trombone", "FN Trombone", "FN Trombone.jpg", ["Fabricant", "FN Herstal"], ["Calibre", ".22"], ["Année", 1922], "Petite carabine à pompe des stands de tir", "Kleine pompkarabijn van de schietkramen", "commune"],
   ["arm-hp2018", "FN High Power", "FN High Power", "FN HIPER.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "9 mm"], ["Année", 2018], "Le retour du célèbre pistolet, redessiné", "De terugkeer van het beroemde pistool, hertekend", "commune"],
+  // Compléments (octobre 2026, pour atteindre 50 cartes)
+  ["arm-eperons", "Bataille des Éperons d’or", "Guldensporenslag", "Goedendag on chest of Kortrijk.jpg", ["Lieu", "Courtrai"], ["Type", "Bataille"], ["Année", 1302], "Les milices flamandes battent la chevalerie française", "De Vlaamse milities verslaan de Franse ridders", "legendaire"],
+  ["arm-kortrijk1302", "Kortrijk 1302", "Kortrijk 1302", "Dormitorium.jpg", ["Ville", "Courtrai"], ["Type", "Musée"], ["Année", 1302], "Le musée de la bataille des Éperons d’or", "Het museum van de Guldensporenslag", "rare"],
+  ["arm-m240", "M240", "M240", "PEO M240B Profile.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "7,62 mm"], ["Année", 1977], "La FN MAG adoptée par l’armée américaine", "De FN MAG aangenomen door het Amerikaanse leger", "rare"],
+  ["arm-m249", "M249", "M249", "PEO M249 Para ACOG.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "5,56 mm"], ["Année", 1984], "La Minimi adoptée par l’armée américaine", "De Minimi aangenomen door het Amerikaanse leger", "rare"],
+  ["arm-mk48", "Mk 48", "Mk 48", "Mk 48 PEO Soldier.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "7,62 mm"], ["Année", 2003], "Version allégée de la Minimi en 7,62 mm", "Lichte versie van de Minimi in 7,62 mm", "peu-commune"],
+  ["arm-fn509", "FN 509", "FN 509", "FN 509.jpg", ["Fabricant", "FN Herstal"], ["Calibre", "9 mm"], ["Année", 2017], "Pistolet de service de la nouvelle génération", "Dienstpistool van de nieuwe generatie", "peu-commune"],
+  ["arm-635", "Cartouche 6,35 Browning", "Patroon 6,35 Browning", ".25 ACP.jpg", ["Concepteur", "Browning"], ["Type", "Cartouche"], ["Année", 1905], "La munition du petit FN Modèle 1906", "De munitie van het kleine FN Model 1906", "commune"],
+  ["arm-380", "Cartouche 9 mm court", "Patroon 9 mm kort", "380 ACP - FMJ - SB - 2.jpg", ["Concepteur", "Browning"], ["Type", "Cartouche"], ["Année", 1908], "Une munition de Browning pour les pistolets de poche", "Een munitie van Browning voor zakpistolen", "commune"],
 ];
 const ARME_POS = {};
 function buildArmes() {
@@ -1079,6 +1109,38 @@ async function buildRoute(cat, list) {
   async function resolve(entries) { return (AJOUT ? resolveTitlesSparql : resolveTitles)(entries); }
 }
 
+// ---------- Compléments : cartes ajoutées à des catégories générées (octobre 2026, paquets à 50 cartes au moins) ----------
+// Sciences, Gastronomie et Bières sont construites par la génération complète (Wikipédia). Ces cartes s'y ajoutent sans
+// toucher aux autres : rareté choisie à la main, photo Wikidata (P18) relue à l'œil. Ajout seul : --ajout=complements.
+const sci = (id, name, nlName, img, b, d, field, links, sub, subNl, known, knownNl, rarity) => ({
+  id, cat: 'science', name, img, rarity, family: 'science', known: [known], nl: { name: nlName, known: [knownNl], subtitle: subNl }, subtitle: sub,
+  meta: field + ` · ${b}${d ? '–' + d : ''}`, stats: [['Naissance', b], d ? ['Décès', d] : ['Domaine', field.split(' & ')[0]], ['Wikipédias', links]],
+});
+const COMPLEMENTS = [
+  sci('Q232916', 'Abraham Ortelius', 'Abraham Ortelius', 'Abraham Ortelius by Peter Paul Rubens.jpg', 1527, 1598, 'Mathématiques', 66, 'Géographe et cartographe anversois', 'Antwerps geograaf en cartograaf', 'Le premier atlas moderne (Theatrum Orbis Terrarum, 1570)', 'De eerste moderne atlas (Theatrum Orbis Terrarum, 1570)', 'epique'),
+  sci('Q379993', 'Joseph Plateau', 'Joseph Plateau', 'Joseph Plateau - clean.jpg', 1801, 1883, 'Physique & astronomie', 50, 'Physicien gantois', 'Gents natuurkundige', 'Le phénakistiscope, ancêtre du cinéma (1832)', 'De fenakistiscoop, voorloper van de film (1832)', 'epique'),
+  sci('Q151833', 'Robert Brout', 'Robert Brout', 'Robert Brout.jpg', 1928, 2011, 'Physique & astronomie', 25, 'Physicien de l’ULB', 'Natuurkundige van de ULB', 'Le mécanisme de Brout-Englert-Higgs (1964)', 'Het Brout-Englert-Higgsmechanisme (1964)', 'rare'),
+  sci('Q451005', 'Ovide Decroly', 'Ovide Decroly', 'Ovide Decroly (1871-1932).jpg', 1871, 1932, 'Médecine & biologie', 25, 'Médecin, psychologue et pédagogue', 'Arts, psycholoog en pedagoog', 'La pédagogie Decroly, l’école par les centres d’intérêt', 'De Decroly-pedagogie, school vanuit interessecentra', 'rare'),
+  sci('Q714232', 'Louis Dollo', 'Louis Dollo', 'Louis Dollo 2.JPG', 1857, 1931, 'Médecine & biologie', 21, 'Paléontologue', 'Paleontoloog', 'Les iguanodons de Bernissart remontés debout', 'De iguanodons van Bernissart rechtop gemonteerd', 'rare'),
+  sci('Q982518', 'Charles-Jean de La Vallée Poussin', 'Charles-Jean de La Vallée Poussin', 'De La Vallée Poussin.jpg', 1866, 1962, 'Mathématiques', 24, 'Mathématicien de Louvain', 'Wiskundige uit Leuven', 'Le théorème des nombres premiers (1896)', 'De priemgetalstelling (1896)', 'rare'),
+  sci('Q558384', 'Théophile de Donder', 'Théophile De Donder', 'Théophile Ernest de Donder.jpg', 1872, 1957, 'Physique & astronomie', 24, 'Physicien de l’ULB', 'Natuurkundige van de ULB', 'L’affinité chimique, base de la thermodynamique moderne', 'De chemische affiniteit, basis van de moderne thermodynamica', 'peu-commune'),
+  sci('Q560706', 'Jean Stas', 'Jean Stas', 'Stas Jean Servais young.jpg', 1813, 1891, 'Physique & astronomie', 22, 'Chimiste louvaniste', 'Leuvens scheikundige', 'Des masses atomiques mesurées avec une précision inédite', 'Atoommassa’s gemeten met ongeziene precisie', 'peu-commune'),
+  sci('Q1386589', 'Pierre-Joseph Van Beneden', 'Pierre-Joseph Van Beneden', 'P.-J. van Beneden, PA00170.jpg', 1809, 1894, 'Médecine & biologie', 20, 'Zoologiste de Louvain', 'Zoöloog uit Leuven', 'Le cycle de vie des vers parasites', 'De levenscyclus van parasitaire wormen', 'peu-commune'),
+  sci('Q519775', 'André Dumont', 'André Dumont', 'André Dumont.jpg', 1809, 1857, 'Physique & astronomie', 16, 'Géologue liégeois', 'Luiks geoloog', 'La première carte géologique de la Belgique', 'De eerste geologische kaart van België', 'peu-commune'),
+  sci('Q2551409', 'Isala Van Diest', 'Isala Van Diest', 'Isala Van Diest (1842-1916).jpg', 1842, 1916, 'Médecine & biologie', 15, 'Médecin', 'Arts', 'La première femme médecin de Belgique (1884)', 'De eerste vrouwelijke arts van België (1884)', 'peu-commune'),
+  sci('Q768943', 'Jean-Charles Houzeau', 'Jean-Charles Houzeau', 'PSM V38 D448 Jean Charles Houzeau.jpg', 1820, 1888, 'Physique & astronomie', 14, 'Astronome voyageur', 'Reizend astronoom', 'Directeur de l’Observatoire royal de Belgique', 'Directeur van de Koninklijke Sterrenwacht van België', 'commune'),
+  sci('Q1682107', 'Jan Palfijn', 'Jan Palfijn', 'Palfijn.JPG', 1650, 1730, 'Médecine & biologie', 13, 'Chirurgien et anatomiste', 'Chirurg en anatoom', 'Le forceps de l’accouchement', 'De verlostang', 'commune'),
+  sci('Q2099801', 'Lieven Bauwens', 'Lieven Bauwens', 'Portrait de Liévin Bauwens.jpg', 1769, 1822, 'Inventions', 8, 'Industriel gantois', 'Gents industrieel', 'La mule-jenny sortie en secret d’Angleterre', 'De mule-jenny in het geheim uit Engeland gehaald', 'commune'),
+  sci('Q2178187', 'Désiré Collen', 'Désiré Collen', 'DésiréCollen-memoires.jpg', 1943, null, 'Médecine & biologie', 8, 'Médecin et chercheur louvaniste', 'Leuvens arts en onderzoeker', 'Le t-PA, médicament contre l’infarctus et l’AVC', 'Het t-PA, geneesmiddel tegen hartinfarct en beroerte', 'commune'),
+  sci('Q2599852', 'Gustave Magnel', 'Gustaaf Magnel', 'Portret van Gustaaf Magnel (1889-1955), hoogleraar aan de Faculteit Toegepaste Wetenschappen te Gent.jpg', 1889, 1955, 'Inventions', 5, 'Ingénieur gantois', 'Gents ingenieur', 'Le béton précontraint (pont de Walnut Lane, 1950)', 'Voorgespannen beton (Walnut Lane-brug, 1950)', 'commune'),
+  { id: 'Q152536', cat: 'gastronomie', name: 'Croustillons', img: 'Oliebollen.jpg', rarity: 'epique', family: 'gastro', subtitle: 'Douceur', nl: { name: 'Smoutebollen' }, meta: 'Spécialité · Belgique', stats: [['Type', 'Sucré'], ['Région', 'Belgique'], ['Wikipédias', 28]] },
+  { id: 'Q2386515', cat: 'gastronomie', name: 'Lacquemant', img: 'Laquemant.jpg', rarity: 'commune', family: 'wallonie', subtitle: 'Douceur', nl: { name: 'Lacquemant' }, meta: 'Spécialité · Wallonie', stats: [['Type', 'Sucré'], ['Région', 'Wallonie'], ['Wikipédias', 3]] },
+  { id: 'Q1341618', cat: 'biere', name: 'Leffe', img: 'LeffeBlond.jpg', rarity: 'epique', family: 'biere', subtitle: 'Abbaye', nl: { name: 'Leffe' }, meta: 'Wallonie · 1240', stats: [['Type', 'Abbaye'], ['Région', 'Wallonie'], ['Wikipédias', 24]] },
+  { id: 'Q1975036', cat: 'biere', name: 'Maredsous', img: 'Maredsous blond bier.jpg', rarity: 'rare', family: 'biere', subtitle: 'Abbaye', nl: { name: 'Maredsous' }, meta: 'Wallonie · 1963', stats: [['Type', 'Abbaye'], ['Région', 'Wallonie'], ['Wikipédias', 10]] },
+  { id: 'Q1017471', cat: 'biere', name: 'Bush', img: 'Bush beer.jpg', rarity: 'peu-commune', family: 'biere', subtitle: 'Ambrée', nl: { name: 'Bush' }, meta: 'Wallonie · 1933', stats: [['Type', 'Ambrée'], ['Région', 'Wallonie'], ['Wikipédias', 6]] },
+  { id: 'Q2123888', cat: 'biere', name: 'Gouden Carolus', img: 'Goudencarolusclassic.jpg', rarity: 'commune', family: 'biere', subtitle: 'Brune', nl: { name: 'Gouden Carolus' }, meta: 'Flandre · Malines', stats: [['Type', 'Brune'], ['Région', 'Flandre'], ['Wikipédias', 2]] },
+];
+const buildComplements = () => COMPLEMENTS.filter(c => !cards.some(x => x.id === c.id)).map(c => ({ ...c, manual: true })); // rareté hors quotas
 // ---------- Corrections de photos, relues à l'œil ----------
 // Photo trouvée automatiquement (Wikipédia, Commons) mais fausse ou mauvaise : remplacée par un autre fichier libre.
 // Appliqué à la fin d'une génération complète, ou seul avec : node tools/build-cards.mjs --photos
@@ -1112,6 +1174,7 @@ const AJOUTS = {
   paysage: { build: async () => buildPaysages(), editions: [] }, balade: { build: async () => buildBalades(), editions: [] },
   voiture: { build: async () => buildVoitures(), editions: [] }, riviere: { build: async () => buildRivieres(), editions: [] },
   moulin: { build: async () => buildMoulins(), editions: [] }, arme: { build: async () => buildArmes(), editions: [] },
+  complements: { build: async () => buildComplements(), editions: [], ids: new Set(COMPLEMENTS.map(c => c.id)) },
 };
 const AJOUT = (process.argv.find(a => a.startsWith('--ajout=')) || '').slice(8);
 if (AJOUT) {
@@ -1120,7 +1183,7 @@ if (AJOUT) {
   globalThis.window = {};
   (0, eval)(readFileSync(new URL('../data/cards.js', import.meta.url), 'utf8'));
   const edPacks = new Set(job.editions.map(e => e[1]));
-  const keep = window.CARDS.filter(c => c.cat !== AJOUT && !(c.cat === 'edition' && edPacks.has(c.pack)));
+  const keep = window.CARDS.filter(c => (job.ids ? !job.ids.has(c.id) : c.cat !== AJOUT) && !(c.cat === 'edition' && edPacks.has(c.pack)));
   cards.splice(0, cards.length, ...keep);
   const added = await job.build(resolveTitlesSparql);
   rarityByQuota(added, c => c.links);
@@ -1794,6 +1857,7 @@ console.log(`Sciences : ${cards.filter(c => c.cat === 'science').length}`);
 
 for (const c of [...await buildMilitaires(resolveTitles), ...await buildAnimaux(resolveTitles),
   ...await buildRoute('aviation', AVIATION), ...await buildRoute('rail', RAIL), ...await buildRoute('exploration', EXPLORATION), ...await buildRoute('finance', FINANCE), ...buildManual('finance', MONNAIES), ...buildHistoire(), ...buildBulles(), ...buildPaysages(), ...buildBalades(), ...buildVoitures(), ...buildRivieres(), ...buildMoulins(), ...buildArmes()]) { delete c.links; cards.push(c); }
+cards.push(...buildComplements()); // après Sciences, Gastronomie et Bières (génération complète)
 
 // ---------- Œuvres d'art (domaine public ou liberté de panorama) ----------
 const ARTWORKS = [
@@ -1883,7 +1947,7 @@ const regionFamily = e => ({ Flandre: 'flandre', Wallonie: 'wallonie', Bruxelles
 await curated('biere', [
   ['Orval (bière)', 'Trappiste', 'Wallonie'], ['Chimay (bière)', 'Trappiste', 'Wallonie'], ['Westmalle (bière)', 'Trappiste', 'Flandre'],
   ['Rochefort (bière)', 'Trappiste', 'Wallonie'], ['Westvleteren (bière)', 'Trappiste', 'Flandre', 'mythique'], ['Achel (bière)', 'Trappiste', 'Flandre'],
-  ['Duvel', 'Blonde forte', 'Flandre'], ['Leffe', 'Abbaye', 'Wallonie'], ['Hoegaarden (bière)', 'Blanche', 'Flandre'],
+  ['Duvel', 'Blonde forte', 'Flandre'], ['Hoegaarden (bière)', 'Blanche', 'Flandre'],
   ['Stella Artois', 'Pils', 'Flandre'], ['Jupiler', 'Pils', 'Wallonie'], ['Kwak (bière)', 'Ambrée', 'Flandre'],
   ['Delirium Tremens (bière)', 'Blonde forte', 'Flandre'], ['La Chouffe', 'Blonde', 'Wallonie'], ['Kriek', 'Lambic', 'Bruxelles'],
   ['Gueuze', 'Lambic', 'Bruxelles'], ['Lambic', 'Lambic', 'Bruxelles'], ['Tripel Karmeliet', 'Triple', 'Flandre'],
