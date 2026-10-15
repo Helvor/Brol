@@ -297,11 +297,11 @@ a { color: inherit; }
 .card.r-mythique    { --rc: var(--r-mythique); }
 /* Lueur rouge sur toutes les mythiques ; cadre et bandeau rubis sur la version standard (les autres versions gardent les leurs) */
 .card.r-mythique:not(.cat-edition) { box-shadow: 0 0 0 1px #7a0018, 0 0 22px -4px rgba(255, 40, 80, .7), 0 14px 30px -12px rgba(0, 0, 0, .6); }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture):not(.cat-moulin):not(.cat-arme) {
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture):not(.cat-moulin):not(.cat-arme):not(.cat-industrie):not(.cat-marine):not(.cat-presse) {
   --frame: conic-gradient(from 20deg at 50% 50%, #5a0012, #ff2d55, #9a0020, #ff6b81, #6a0016, #ff2d55, #4a000e, #ff8fa0, #5a0012); }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture):not(.cat-moulin):not(.cat-arme) .card-band { background: linear-gradient(180deg, #8a0020, #4a000e); color: #fff; }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture):not(.cat-moulin):not(.cat-arme) .card-stats { background: #22000a; }
-.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture):not(.cat-moulin):not(.cat-arme) .card-stats dd { color: #ffb3c0; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture):not(.cat-moulin):not(.cat-arme):not(.cat-industrie):not(.cat-marine):not(.cat-presse) .card-band { background: linear-gradient(180deg, #8a0020, #4a000e); color: #fff; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture):not(.cat-moulin):not(.cat-arme):not(.cat-industrie):not(.cat-marine):not(.cat-presse) .card-stats { background: #22000a; }
+.card.r-mythique.fin-normal:not(.cat-edition):not(.cat-histoire):not(.cat-bd):not(.cat-balade):not(.cat-voiture):not(.cat-moulin):not(.cat-arme):not(.cat-industrie):not(.cat-marine):not(.cat-presse) .card-stats dd { color: #ffb3c0; }
 
 /* Édition limitée : cadre aux métaux de son paquet (--ed-frame, --band et --band-ink posés par app.js), double filet, sceau du paquet */
 .card.cat-edition { --frame: var(--ed-frame); background-size: 200% 200%; animation: gold 6s ease-in-out infinite alternate; }
@@ -2190,7 +2190,128 @@ button, .slot, .pack-visual, .card { touch-action: manipulation; -webkit-tap-hig
     linear-gradient(90deg, rgba(255, 255, 255, .14) .2cqw, transparent .2cqw) 0 0 / 15cqw 100%, linear-gradient(180deg, rgba(8, 30, 60, .5), transparent 25%, transparent 50%, rgba(8, 30, 60, .9)); }
 .card.cat-arme.fin-plein .ar-dim { display: none; } .card.cat-arme.fin-plein .ar-block { background: rgba(8, 30, 60, .72); }
 /* Moulins et Arsenal mythiques : cadre rubis (sans le bandeau rubis des cartes classiques) */
-.card.cat-moulin.r-mythique.fin-normal, .card.cat-arme.r-mythique.fin-normal {
+.card.cat-moulin.r-mythique.fin-normal, .card.cat-arme.r-mythique.fin-normal, .card.cat-industrie.r-mythique.fin-normal, .card.cat-marine.r-mythique.fin-normal, .card.cat-presse.r-mythique.fin-normal {
   --frame: conic-gradient(from 20deg at 50% 50%, #5a0012, #ff2d55, #9a0020, #ff6b81, #6a0016, #ff2d55, #4a000e, #ff8fa0, #5a0012); }
 .card.cat-moulin.fin-plein .card-top .no { color: #fff; }
 .card.cat-moulin.fin-or .ml-arch text { fill: #7a5a12; } .card.cat-moulin.fin-or .card-band .sub { color: #5a4416; }
+
+/* ===== Pays noir : « Lampisterie » (charbon, photo sous la lampe, jeton de lampe, plaque rivetée, bande de sécurité) ===== */
+.card.cat-industrie { --tk: #8e9298; }
+.card.cat-industrie.r-peu-commune { --tk: #4f9a73; } .card.cat-industrie.r-rare { --tk: #4f7fd0; } .card.cat-industrie.r-epique { --tk: #8a5bd0; }
+.card.cat-industrie.r-legendaire { --tk: #d9a52c; } .card.cat-industrie.r-mythique { --tk: #d4483c; }
+.card.cat-industrie .card-in { background: radial-gradient(circle, rgba(255, 255, 255, .05) .25cqw, transparent .35cqw) 0 0 / 1.6cqw 1.6cqw,
+    radial-gradient(ellipse at 50% 0%, #2c2d31, #0e0e10 72%); }
+.card.cat-industrie .card-photo { inset: 3cqw 3cqw auto; height: 80cqw; border-radius: 1.6cqw; overflow: hidden; box-shadow: 0 0 0 .4cqw #3a3b40; }
+.card.cat-industrie .card-photo img { object-position: var(--pos, 50% 45%); filter: sepia(.35) contrast(1.12) saturate(.8) brightness(.95); }
+/* Lumière jaune de la lampe au centre, la nuit de la galerie sur les bords */
+.card.cat-industrie .card-photo::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 70% 60% at 50% 42%, rgba(255, 196, 110, .22), transparent 55%, rgba(0, 0, 0, .7)); mix-blend-mode: normal; }
+.card.cat-industrie .mn-token { position: absolute; right: 5cqw; top: 72cqw; z-index: 3; width: 17cqw; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; align-content: center;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--tk) 35%, #fff), var(--tk) 55%, color-mix(in srgb, var(--tk) 50%, #000));
+  box-shadow: inset 0 0 0 .5cqw color-mix(in srgb, var(--tk) 60%, #000), 0 1cqw 2cqw rgba(0, 0, 0, .6); color: color-mix(in srgb, var(--tk) 30%, #000); }
+.card.cat-industrie .mn-token::before { content: ""; position: absolute; top: 1.6cqw; left: 50%; width: 2.6cqw; height: 2.6cqw; translate: -50% 0; border-radius: 50%; background: #0e0e10; box-shadow: inset 0 .3cqw .4cqw rgba(0, 0, 0, .8); }
+.card.cat-industrie .mn-token b { margin-top: 2.6cqw; font: 700 3.6cqw/1 var(--mono); text-shadow: 0 .15cqw 0 rgba(255, 255, 255, .35); }
+.card.cat-industrie .mn-token small { font: 700 1.7cqw/1.1 var(--display); letter-spacing: .08em; text-transform: uppercase; margin-top: .4cqw; }
+.card.cat-industrie .card-top { top: 5cqw; left: 5cqw; right: 5cqw; }
+.card.cat-industrie .card-band { left: 5cqw; right: 24cqw; top: 87cqw; bottom: auto; padding: 0; background: none; clip-path: none; color: #f2efe8; }
+.card.cat-industrie .card-band::before, .card.cat-industrie .card-band::after { display: none; }
+.card.cat-industrie .card-band h3 { font: 800 9cqw/.95 var(--display); text-transform: uppercase; letter-spacing: .01em; color: #f2efe8; text-shadow: 0 .4cqw 1cqw rgba(0, 0, 0, .8); }
+.card.cat-industrie .card-band h3.is-long { font-size: 7.4cqw; } .card.cat-industrie .card-band h3.is-xlong { font-size: 6cqw; }
+.card.cat-industrie .card-band .sub { margin-top: 1.6cqw; font-size: 3.5cqw; color: #b9b3a6; opacity: 1; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+/* Plaque d'acier rivetée et bande de sécurité jaune et noire */
+.card.cat-industrie .card-stats { left: 3cqw; right: 3cqw; bottom: 3cqw; height: 17cqw; border-radius: 1cqw; padding: 2.8cqw 3.6cqw;
+  background: radial-gradient(circle, #c9ccd2 .5cqw, #2d2f34 .62cqw, transparent .8cqw) 1cqw 1cqw / 2cqw 2cqw no-repeat, radial-gradient(circle, #c9ccd2 .5cqw, #2d2f34 .62cqw, transparent .8cqw) calc(100% - 1cqw) 1cqw / 2cqw 2cqw no-repeat, radial-gradient(circle, #c9ccd2 .5cqw, #2d2f34 .62cqw, transparent .8cqw) 1cqw calc(100% - 1cqw) / 2cqw 2cqw no-repeat, radial-gradient(circle, #c9ccd2 .5cqw, #2d2f34 .62cqw, transparent .8cqw) calc(100% - 1cqw) calc(100% - 1cqw) / 2cqw 2cqw no-repeat,
+    linear-gradient(180deg, #5d6066, #33353a 55%, #26282c); box-shadow: inset 0 .3cqw 0 rgba(255, 255, 255, .15); }
+.card.cat-industrie .card-stats::before { content: ""; position: absolute; left: 0; right: 0; top: -3cqw; height: 1.6cqw; border-radius: .4cqw;
+  background: repeating-linear-gradient(-45deg, #f2c400 0 1.8cqw, #141414 1.8cqw 3.6cqw); }
+.card.cat-industrie .card-stats div + div { border-left-color: rgba(255, 255, 255, .15); }
+.card.cat-industrie .card-stats dt { color: #c3c7cf; } .card.cat-industrie .card-stats dd { color: #fff; }
+.card.cat-industrie .var-dots { bottom: 24cqw; }
+.card.cat-industrie.fin-holo .mn-token { background: conic-gradient(from 30deg, #ff7ad9, #ffd36b, #7dffb2, #6bd7ff, #b38bff, #ff7ad9); color: #1a1a1a; }
+.card.cat-industrie.fin-holo .card-photo::before { content: ""; position: absolute; inset: 0; z-index: 1; mix-blend-mode: color-dodge; opacity: .3;
+  background: linear-gradient(115deg, transparent 25%, #ff7ad9 35%, #ffd36b 43%, #7dffb2 51%, #6bd7ff 59%, #b38bff 67%, transparent 77%); }
+.card.cat-industrie.fin-or { --tk: #d9a52c; }
+.card.cat-industrie.fin-or .card-band { background: none; } .card.cat-industrie.fin-or .card-band h3 { color: #f6d478; }
+.card.cat-industrie.fin-or .card-stats { background: radial-gradient(circle, #fff1b8 .5cqw, #5a3f08 .62cqw, transparent .8cqw) 1cqw 1cqw / 2cqw 2cqw no-repeat, radial-gradient(circle, #fff1b8 .5cqw, #5a3f08 .62cqw, transparent .8cqw) calc(100% - 1cqw) 1cqw / 2cqw 2cqw no-repeat, radial-gradient(circle, #fff1b8 .5cqw, #5a3f08 .62cqw, transparent .8cqw) 1cqw calc(100% - 1cqw) / 2cqw 2cqw no-repeat, radial-gradient(circle, #fff1b8 .5cqw, #5a3f08 .62cqw, transparent .8cqw) calc(100% - 1cqw) calc(100% - 1cqw) / 2cqw 2cqw no-repeat,
+    linear-gradient(180deg, #c9971c, #8a6516 55%, #6e4f0c); border: 0; }
+.card.cat-industrie.fin-or .card-stats dd { color: #fff6d8; }
+.card.cat-industrie.fin-plein .card-photo { inset: 0; height: auto; border-radius: 0; box-shadow: none; }
+.card.cat-industrie.fin-plein .card-photo::after { background: linear-gradient(180deg, rgba(0, 0, 0, .2), transparent 30%, rgba(0, 0, 0, .55) 58%, rgba(0, 0, 0, .9)); }
+.card.cat-industrie.fin-plein .card-band { background: none; }
+
+/* ===== Port et marine : « Affiche de paquebot » (affiche Art déco, flamme à étoile, bandes de coque) ===== */
+.card.cat-marine { --flag: #8a8a8a; --navy: #14213d; --cream: #efe6cf; }
+.card.cat-marine.r-peu-commune { --flag: #2f7d4a; } .card.cat-marine.r-rare { --flag: #2e5fc0; } .card.cat-marine.r-epique { --flag: #6b3db8; }
+.card.cat-marine.r-legendaire { --flag: #c9971c; } .card.cat-marine.r-mythique { --flag: #c8102e; }
+.card.cat-marine .card-in { background: radial-gradient(ellipse at 50% 100%, #f6efdc, var(--cream)); }
+.card.cat-marine .card-photo { inset: 0 0 auto; height: 88cqw; clip-path: polygon(0 0, 100% 0, 100% 86%, 0 100%); background: var(--navy); }
+.card.cat-marine .card-photo img { object-position: var(--pos, 50% 50%); filter: saturate(1.2) contrast(1.1); }
+.card.cat-marine .card-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20, 33, 61, .35), transparent 30%); }
+.card.cat-marine .mr-stripes { position: absolute; left: -6%; right: -6%; top: 79cqw; height: 16cqw; z-index: 2; pointer-events: none; }
+.card.cat-marine .mr-stripes i { position: absolute; left: 0; right: 0; height: 2.6cqw; rotate: -6.6deg; transform-origin: left; }
+.card.cat-marine .mr-stripes i:first-child { top: 9cqw; background: var(--flag); } .card.cat-marine .mr-stripes i:last-child { top: 13cqw; background: var(--navy); }
+.card.cat-marine .mr-pennant { position: absolute; right: 0; top: 5cqw; z-index: 3; width: 24cqw; filter: drop-shadow(0 .6cqw .8cqw rgba(0, 0, 0, .4)); }
+.card.cat-marine .mr-pennant path:first-child { fill: var(--flag); } .card.cat-marine .mr-star { fill: #fff; }
+.card.cat-marine .card-top { top: 4cqw; left: 4cqw; right: 30cqw; }
+.card.cat-marine .card-top .no { background: var(--cream); color: var(--navy); font-size: 3.2cqw; }
+.card.cat-marine .card-band { left: 5cqw; right: 5cqw; top: 96cqw; bottom: auto; padding: 0; background: none; clip-path: none; color: var(--navy); }
+.card.cat-marine .card-band::before, .card.cat-marine .card-band::after { display: none; }
+.card.cat-marine .mr-kick { margin: 0 0 1cqw; font: 700 2.8cqw/1 var(--display); letter-spacing: .3em; text-transform: uppercase; color: var(--flag); }
+.card.cat-marine .card-band h3 { font: 400 8.4cqw/1 "Limelight", Georgia, serif; text-transform: uppercase; letter-spacing: .03em; color: var(--navy); }
+.card.cat-marine .card-band h3.is-long { font-size: 6.8cqw; } .card.cat-marine .card-band h3.is-xlong { font-size: 5.4cqw; }
+.card.cat-marine .card-band .sub { margin-top: 1.4cqw; font: italic 500 3.5cqw/1.2 "Playfair Display", Georgia, serif; color: #3b3b45; opacity: 1; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.card.cat-marine .card-stats { height: 16cqw; background: var(--navy); border-top: .8cqw solid var(--flag); }
+.card.cat-marine .card-stats dt { color: #9fb3d1; } .card.cat-marine .card-stats dd { font-family: var(--display); font-size: 4.6cqw; color: #f4ecd8; }
+.card.cat-marine .var-dots { bottom: 19cqw; }
+.card.cat-marine.fin-holo { --cream: #f3f1fb; }
+.card.cat-marine.fin-holo .mr-pennant path:first-child, .card.cat-marine.fin-holo .mr-stripes i:first-child { fill: #b38bff; background: linear-gradient(90deg, #ff7ad9, #ffd36b, #7dffb2, #6bd7ff, #b38bff); }
+.card.cat-marine.fin-holo .card-band h3 { background: linear-gradient(90deg, #6a3df0, #1d8fd6, #12a57a, #c0399a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.card.cat-marine.fin-or { --navy: #0d0b06; --cream: #f6e7b4; --flag: #c9971c; }
+.card.cat-marine.fin-or .card-band { background: none; } .card.cat-marine.fin-or .card-stats { background: #0d0b06; } .card.cat-marine.fin-or .card-stats dd { color: #f6d478; }
+.card.cat-marine.fin-plein .card-photo { height: auto; inset: 0; clip-path: none; }
+.card.cat-marine.fin-plein .card-photo::after { background: linear-gradient(180deg, rgba(20, 33, 61, .3), transparent 30%, transparent 50%, rgba(10, 16, 30, .92) 80%); }
+.card.cat-marine.fin-plein .card-band { background: none; color: #f4ecd8; } .card.cat-marine.fin-plein .card-band h3 { color: #f4ecd8; } .card.cat-marine.fin-plein .card-band .sub { color: #dcd3bd; }
+.card.cat-marine.fin-plein .mr-stripes { display: none; }
+
+/* ===== Presse et imprimerie : « Une de journal » (titre gothique, édition et prix selon la rareté, photo tramée) ===== */
+.card.cat-presse { --acc: #555; --ink-n: #1a1a1a; --paper-n: #f2ede1; }
+.card.cat-presse.r-peu-commune { --acc: #2f7d4a; } .card.cat-presse.r-rare { --acc: #2e5fc0; } .card.cat-presse.r-epique { --acc: #6b3db8; }
+.card.cat-presse.r-legendaire { --acc: #a87b1e; } .card.cat-presse.r-mythique { --acc: #c8102e; }
+.card.cat-presse .card-in { color: var(--ink-n); background: radial-gradient(circle, rgba(60, 50, 30, .05) .2cqw, transparent .3cqw) 0 0 / 1.1cqw 1.1cqw, linear-gradient(180deg, #f6f2e8, var(--paper-n)); }
+.card.cat-presse .nw-mast { position: absolute; left: 0; right: 0; top: 2.4cqw; text-align: center; font: 400 11cqw/1 "UnifrakturMaguntia", "Old English Text MT", serif; color: var(--ink-n); }
+.card.cat-presse .nw-line { position: absolute; left: 4cqw; right: 4cqw; top: 16.5cqw; display: flex; justify-content: space-between; align-items: center; padding: .8cqw 0;
+  border-top: .5cqw solid var(--ink-n); border-bottom: .2cqw solid var(--ink-n); font: 600 2.5cqw/1 var(--display); letter-spacing: .08em; text-transform: uppercase; }
+.card.cat-presse .nw-ed { color: var(--acc); font-weight: 800; }
+.card.cat-presse.r-legendaire .nw-ed, .card.cat-presse.r-mythique .nw-ed { padding: .5cqw 1.6cqw; background: var(--acc); color: #fff; }
+.card.cat-presse .nw-head { position: absolute; left: 4cqw; right: 4cqw; top: 22.4cqw; margin: 0; font: 900 8.4cqw/1.1 "Playfair Display", Georgia, serif; letter-spacing: -.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card.cat-presse .nw-head.is-long { font-size: 6.4cqw; } .card.cat-presse .nw-head.is-xlong { font-size: 4.8cqw; }
+.card.cat-presse .card-photo { inset: 34cqw 4cqw auto; height: 64cqw; border: .25cqw solid var(--ink-n); background: #ddd6c6; }
+.card.cat-presse .card-photo img { object-position: var(--pos, 50% 30%); filter: grayscale(1) contrast(1.3) brightness(1.05); }
+/* Trame de points de l'impression en similigravure */
+.card.cat-presse .card-photo::after { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; opacity: .45;
+  background: radial-gradient(circle, rgba(0, 0, 0, .55) 28%, transparent 34%) 0 0 / 1.1cqw 1.1cqw; }
+.card.cat-presse .card-top { top: 36cqw; left: 6cqw; right: 6cqw; }
+.card.cat-presse > .card-in > .sub { position: absolute; left: 4cqw; right: 4cqw; top: 100cqw; margin: 0; font: italic 500 3.6cqw/1.25 "Playfair Display", Georgia, serif; color: #2b2b2b;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.card.cat-presse .card-stats { left: 4cqw; right: 4cqw; bottom: 3cqw; height: 15cqw; padding: 2cqw 0 0; background: none; border-top: 1cqw double var(--ink-n); }
+.card.cat-presse .card-stats div + div { border-left: .2cqw solid rgba(0, 0, 0, .3); }
+.card.cat-presse .card-stats dt { color: #5a5550; } .card.cat-presse .card-stats dd { font: 800 4.2cqw/1.1 "Playfair Display", Georgia, serif; color: var(--ink-n); }
+.card.cat-presse .var-dots { bottom: 20cqw; }
+.card.cat-presse.fin-holo { --paper-n: #f1ecfb; }
+.card.cat-presse.fin-holo .nw-mast, .card.cat-presse.fin-holo .nw-head { background: linear-gradient(90deg, #6a3df0, #1d8fd6, #12a57a, #c0399a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.card.cat-presse.fin-or { --paper-n: #f1dc9c; --ink-n: #3a2a08; }
+.card.cat-presse.fin-or .nw-mast { color: #8a6516; } .card.cat-presse.fin-or .card-stats { background: none; border-top-color: #3a2a08; } .card.cat-presse.fin-or .card-stats dd { color: #3a2a08; }
+.card.cat-presse.fin-or .card-photo img { filter: grayscale(1) sepia(.7) contrast(1.2); }
+.card.cat-presse.fin-plein .card-photo { inset: 0; height: auto; border: 0; }
+.card.cat-presse.fin-plein .card-photo img { filter: grayscale(1) contrast(1.15); }
+.card.cat-presse.fin-plein .card-photo::after { opacity: .3; }
+.card.cat-presse.fin-plein .nw-mast, .card.cat-presse.fin-plein .nw-line, .card.cat-presse.fin-plein .nw-head { z-index: 2; }
+.card.cat-presse.fin-plein .card-in::before { display: block; content: ""; position: absolute; inset: 0 0 auto; height: 46cqw; z-index: 1; background: linear-gradient(180deg, var(--paper-n) 80%, transparent); animation: none; mix-blend-mode: normal; opacity: 1; }
+.card.cat-presse.fin-plein > .card-in > .sub, .card.cat-presse.fin-plein .card-stats { z-index: 2; background: rgba(242, 237, 225, .94); padding-left: 2cqw; padding-right: 2cqw; }
+/* Trois colonnes d'article (lignes grises) entre le chapeau et « En bref » */
+.card.cat-presse .card-stats::before { content: ""; position: absolute; left: 0; right: 0; bottom: calc(100% + 2.4cqw); height: 10cqw; pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgba(0, 0, 0, .16) 0 .55cqw, transparent .55cqw 1.7cqw) left / 31% 100% no-repeat,
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, .16) 0 .55cqw, transparent .55cqw 1.7cqw) center / 31% 100% no-repeat,
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, .16) 0 .55cqw, transparent .55cqw 1.7cqw) right / 31% 100% no-repeat; }
+.card.cat-presse.fin-plein .card-stats::before { display: none; }

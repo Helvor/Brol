@@ -85,6 +85,9 @@
     { id: 'riviere',      fr: 'Cours d’eau',   nl: 'Waterlopen' },
     { id: 'moulin',       fr: 'Moulins',       nl: 'Molens' },
     { id: 'arme',         fr: 'Arsenal',       nl: 'Arsenaal' },
+    { id: 'industrie',    fr: 'Pays noir',     nl: 'Zwarte Land' },
+    { id: 'marine',       fr: 'Port et marine', nl: 'Haven en marine' },
+    { id: 'presse',       fr: 'Presse',        nl: 'Pers' },
     { id: 'evenement',    fr: 'Événements',    nl: 'Gebeurtenissen' },
     { id: 'edition',      fr: 'Éditions limitées', nl: 'Beperkte edities' },
   ];
@@ -817,10 +820,71 @@
         </div>
       </article>`;
   }
+  // Pays noir : « Lampisterie » (style.css, .card.cat-industrie) : charbon, photo sous la lampe de mineur, jeton de
+  // lampe (numéro de la carte) dans le métal de la rareté, plaque d'acier rivetée et bande de sécurité
+  function mineHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c);
+    return `
+      <article class="card r-${c.rarity} cat-${c.cat} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="card-photo${photo ? '' : ' no-img'}"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
+          <div class="mn-token"><b>${String(c.no).padStart(4, '0')}</b><small>${esc(rl(c.rarity))}</small></div>
+          <div class="card-top">${finTagOf(finish)}</div>
+          <div class="card-band"><h3${name.length > 18 ? ' class="is-xlong"' : name.length > 12 ? ' class="is-long"' : ''}>${esc(name)}</h3><p class="sub">${esc(window.I18N.subtitle(c))}</p></div>
+          <dl class="card-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd${ddLen(v)}>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          ${dotsOf(variants)}
+        </div>
+      </article>`;
+  }
+  // Port & marine : « Affiche de paquebot » (style.css, .card.cat-marine) : affiche Art déco des lignes d'Anvers,
+  // flamme à étoile de la couleur de la rareté, bandes obliques de coque, nom en lettres Art déco
+  const STAR5 = 'M30 6l2.9 8.9h9.4l-7.6 5.5 2.9 8.9-7.6-5.5-7.6 5.5 2.9-8.9-7.6-5.5h9.4z';
+  function linerHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c);
+    return `
+      <article class="card r-${c.rarity} cat-${c.cat} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="card-photo${photo ? '' : ' no-img'}"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
+          <div class="mr-stripes"><i></i><i></i></div>
+          <svg class="mr-pennant" viewBox="0 0 64 36" aria-hidden="true"><path d="M0 0H64L50 18L64 36H0Z"/><path class="mr-star" d="${STAR5}" transform="translate(-4 0)"/></svg>
+          <div class="card-top"><span class="no">${String(c.no).padStart(4, '0')}</span>${finTagOf(finish)}</div>
+          <div class="card-band"><p class="mr-kick">${esc(tv(c.stats?.[1]?.[1] || ''))}</p><h3${name.length > 16 ? ' class="is-xlong"' : name.length > 11 ? ' class="is-long"' : ''}>${esc(name)}</h3><p class="sub">${esc(window.I18N.subtitle(c))}</p></div>
+          <dl class="card-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd${ddLen(v)}>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          ${dotsOf(variants)}
+        </div>
+      </article>`;
+  }
+  // Presse & imprimerie : « Une de journal » (style.css, .card.cat-presse) : titre gothique « Le Brol », édition et
+  // prix au numéro selon la rareté, gros titre, photo tramée, chapeau en italique, « En bref » en bas
+  const EDITION = { fr: { commune: 'Édition du matin', 'peu-commune': 'Édition du soir', rare: 'Deuxième édition', epique: 'Édition de nuit', legendaire: 'Dernière heure', mythique: 'Édition spéciale' },
+    nl: { commune: 'Ochtendeditie', 'peu-commune': 'Avondeditie', rare: 'Tweede editie', epique: 'Nachteditie', legendaire: 'Laatste nieuws', mythique: 'Speciale editie' } };
+  const NEWS_PRICE = { commune: '5 c.', 'peu-commune': '10 c.', rare: '15 c.', epique: '25 c.', legendaire: '50 c.', mythique: '1 fr.' };
+  function newsHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c);
+    return `
+      <article class="card r-${c.rarity} cat-${c.cat} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="nw-mast">${L() === 'nl' ? 'De Brol' : 'Le Brol'}</div>
+          <div class="nw-line"><span>N° ${String(c.no).padStart(4, '0')}</span><span class="nw-ed">${esc(EDITION[L()][c.rarity])}</span><span>${NEWS_PRICE[c.rarity]}</span></div>
+          <h3 class="nw-head${name.length > 19 ? ' is-xlong' : name.length > 14 ? ' is-long' : ''}">${esc(name)}</h3>
+          <div class="card-photo${photo ? '' : ' no-img'}"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
+          <div class="card-top">${finTagOf(finish)}</div>
+          <p class="sub">${esc(window.I18N.subtitle(c))}</p>
+          <dl class="card-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd${ddLen(v)}>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          ${dotsOf(variants)}
+        </div>
+      </article>`;
+  }
   function cardHTML(c, { count = 0, finish = 'normal', variants = null, imgW = 500 } = {}) {
     if (c.cat === 'riviere') return riverHTML(c, { count, finish, variants, imgW });
     if (c.cat === 'moulin') return millHTML(c, { count, finish, variants, imgW });
     if (c.cat === 'arme') return armHTML(c, { count, finish, variants, imgW });
+    if (c.cat === 'industrie') return mineHTML(c, { count, finish, variants, imgW });
+    if (c.cat === 'marine') return linerHTML(c, { count, finish, variants, imgW });
+    if (c.cat === 'presse') return newsHTML(c, { count, finish, variants, imgW });
     if (c.cat === 'voiture') return carHTML(c, { count, finish, variants, imgW });
     if (c.landscape) return landHTML(c, { count, finish, variants, imgW });
     if (c.walk) return walkHTML(c, { count, finish, variants, imgW });
