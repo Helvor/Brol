@@ -53,6 +53,11 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   carrossiers, usines (Forest, Gand, Genk), circuits, motos et camions. Design « Showroom » (fond noir, filet
   chromé, emblème émaillé de la rareté). Moins de 50 cartes : la plupart des marques anciennes n'ont pas de photo
   libre utilisable (Edran, Ranger, Opel Anvers, Jeecy-Vea…). Cadrage relu avec `tools/planche.mjs` (`VOITURE_POS`).
+- [x] **Catégorie de la semaine et paquet du jour** (octobre 2026) : la mise en avant ×3 ne vaut plus que pour une
+  catégorie à la fois, qui change chaque lundi (`ROTATION` dans app.js, les plus récentes d'abord) ; avant, 14
+  catégories étaient mises en avant ensemble et faisaient 56 % des tirages du paquet Belgique. Chaque jour, un paquet
+  thématique est à −50 % pour 5 paquets (`DEAL_OFF`, `DEAL_MAX`), le même pour tout le monde, jamais deux jours de
+  suite ; il passe en tête de la boutique.
 - [x] **Paquet « Au fil de l'eau »** (octobre 2026) : 62 cours d'eau (`RIVIERES` dans le générateur, catégorie
   `riviere`) : fleuves, rivières, ruisseaux et canaux, longueurs et embouchures de Wikidata. Cartes horizontales,
   design « Atlas » (bordure graduée de la couleur de la rareté, nom en italique bleu, tracé décoratif, rose des
