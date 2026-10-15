@@ -85,6 +85,9 @@
     { id: 'riviere',      fr: 'Cours d’eau',   nl: 'Waterlopen' },
     { id: 'moulin',       fr: 'Moulins',       nl: 'Molens' },
     { id: 'arme',         fr: 'Arsenal',       nl: 'Arsenaal' },
+    { id: 'industrie',    fr: 'Pays noir',     nl: 'Zwarte Land' },
+    { id: 'marine',       fr: 'Port et marine', nl: 'Haven en marine' },
+    { id: 'presse',       fr: 'Presse',        nl: 'Pers' },
     { id: 'evenement',    fr: 'Événements',    nl: 'Gebeurtenissen' },
     { id: 'edition',      fr: 'Éditions limitées', nl: 'Beperkte edities' },
   ];
@@ -144,6 +147,15 @@
     { id: 'arsenal', title: { fr: 'Arsenal', nl: 'Arsenaal' }, kicker: { fr: 'Édition armurerie', nl: 'Wapenmakerseditie' }, big: 'FN', price: 80,
       desc: { fr: 'L’armurerie liégeoise, la FN de Herstal et les armes du Moyen Âge.', nl: 'De Luikse wapensmeden, FN Herstal en wapens uit de middeleeuwen.' },
       body: ['#0b1f3d', '#1a4a85'], metal: ['#eaf3ff', '#a9c8ee', '#4a6f9e'], cats: ['arme'] },
+    { id: 'paysnoir', title: { fr: 'Pays noir', nl: 'Zwarte Land' }, kicker: { fr: 'Édition lampisterie', nl: 'Lampisterie-editie' }, big: 'PN', price: 80,
+      desc: { fr: 'Charbonnages, terrils, hauts fourneaux, cristal et faïence.', nl: 'Steenkoolmijnen, terrils, hoogovens, kristal en aardewerk.' },
+      body: ['#111113', '#34302b'], metal: ['#ffd34d', '#e8b324', '#8a6a1a'], cats: ['industrie'] },
+    { id: 'marine', title: { fr: 'Port et marine', nl: 'Haven en marine' }, kicker: { fr: 'Édition transatlantique', nl: 'Transatlantische editie' }, big: '★', price: 80,
+      desc: { fr: 'Ports, écluses, paquebots, phares et pêcheurs de la côte.', nl: 'Havens, sluizen, lijnschepen, vuurtorens en vissers van de kust.' },
+      body: ['#0e2340', '#1d3f6e'], metal: ['#f4ecd8', '#e2483a', '#8b1e1a'], cats: ['marine'] },
+    { id: 'presse', title: { fr: 'Presse et imprimerie', nl: 'Pers en drukkerij' }, kicker: { fr: 'Édition spéciale', nl: 'Speciale editie' }, big: '¶', price: 80,
+      desc: { fr: 'Plantin, les premiers journaux, les bibliothèques et les quotidiens.', nl: 'Plantijn, de eerste kranten, de bibliotheken en de dagbladen.' },
+      body: ['#1c1b19', '#45413a'], metal: ['#f3efe6', '#cfc6b2', '#6b665c'], cats: ['presse'] },
     // Banque nationale : la catégorie Monnaie et banque, plus les gouverneurs et ministres déjà présents en Politique
     { id: 'bnb', title: { fr: 'Banque nationale', nl: 'Nationale Bank' }, kicker: { fr: 'Édition monétaire', nl: 'Munteditie' }, big: '€ ƒ', price: 80,
       desc: { fr: 'Gouverneurs, francs, euros, or et grandes institutions.', nl: 'Gouverneurs, franken, euro’s, goud en grote instellingen.' },
@@ -385,6 +397,18 @@
       match: c => c.cat === 'moulin' && c.mill?.type === 'eau' },
     { id: 'browning', title: { fr: 'Signé Browning', nl: 'Getekend Browning' }, desc: { fr: 'John Browning et ses créations fabriquées à Herstal.', nl: 'John Browning en zijn ontwerpen gemaakt in Herstal.' }, reward: 500,
       match: c => c.cat === 'arme' && /Browning/.test(c.name) },
+    { id: 'campine', title: { fr: 'Mines de Campine', nl: 'Kempense mijnen' }, desc: { fr: 'Les charbonnages du Limbourg.', nl: 'De steenkoolmijnen van Limburg.' }, reward: 500,
+      match: c => c.cat === 'industrie' && c.stats?.[1]?.[1] === 'Campine' },
+    { id: 'meunier', title: { fr: 'Atelier Meunier', nl: 'Atelier Meunier' }, desc: { fr: 'Constantin Meunier et ses figures du travail.', nl: 'Constantin Meunier en zijn beelden van de arbeid.' }, reward: 500,
+      match: c => c.cat === 'industrie' && (c.id === 'ind-meunier' || c.stats?.[0]?.[1] === 'Meunier') },
+    { id: 'phares', title: { fr: 'Phares', nl: 'Vuurtorens' }, desc: { fr: 'Les phares de la côte belge.', nl: 'De vuurtorens van de Belgische kust.' }, reward: 500,
+      match: c => c.cat === 'marine' && c.stats?.some(([, v]) => v === 'Phare' || v === 'Bateau-phare') },
+    { id: 'red-star', title: { fr: 'Red Star Line', nl: 'Red Star Line' }, desc: { fr: 'La ligne des émigrants d’Anvers à New York.', nl: 'De lijn van de landverhuizers van Antwerpen naar New York.' }, reward: 500,
+      match: c => c.cat === 'marine' && /Red Star/.test(c.name + ' ' + c.subtitle + ' ' + c.stats.flat().join(' ')) },
+    { id: 'plantin', title: { fr: 'Au Compas d’or', nl: 'In de Gulden Passer' }, desc: { fr: 'Plantin, les Moretus et leur imprimerie.', nl: 'Plantijn, de Moretussen en hun drukkerij.' }, reward: 500,
+      match: c => c.cat === 'presse' && /Plantin|Moretus/.test(c.name + ' ' + c.subtitle + ' ' + c.stats.flat().join(' ')) },
+    { id: 'quotidiens', title: { fr: 'Kiosque', nl: 'Krantenkiosk' }, desc: { fr: 'Les quotidiens belges.', nl: 'De Belgische dagbladen.' }, reward: 500,
+      match: c => c.cat === 'presse' && c.stats?.[2]?.[1] === 'Quotidien' },
     ...ALL_PACKS.filter(p => p.special).map(p => ({ id: 'ed-' + p.id, edition: p.id,
       title: { fr: `Édition ${p.title.fr}`, nl: `Editie ${p.title.nl}` },
       desc: { fr: `Les cartes exclusives du paquet ${p.title.fr}.`, nl: `De exclusieve kaarten van het pakje ${p.title.nl}.` },
@@ -581,6 +605,18 @@
     arsenal: (k, p) => `<defs><pattern id="bp${k}" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M15 0H0V15" fill="none" stroke="${p.metal[1]}" stroke-width=".6" opacity=".22"/></pattern></defs>
       <rect x="0" y="18" width="300" height="394" fill="url(#bp${k})"/>
       <g stroke="${p.metal[0]}" fill="none" opacity=".32"><path d="M30 104H270M30 98V110M270 98V110" stroke-width="1.6"/><circle cx="150" cy="330" r="40" stroke-dasharray="4 5"/><path d="M100 330H200M150 280V380"/></g>`,
+    // Terrils, chevalement et bande de sécurité
+    paysnoir: (k, p) => `<path d="M-20 412L80 292L180 412Z" fill="${p.metal[2]}" opacity=".28"/><path d="M110 412L230 262L350 412Z" fill="${p.metal[2]}" opacity=".18"/>
+      <g stroke="${p.metal[0]}" fill="none" opacity=".35" stroke-width="3"><path d="M244 300L258 236L272 300M249 276H267"/><circle cx="258" cy="236" r="9"/><path d="M258 236L232 300"/></g>
+      <defs><pattern id="hz${k}" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="20" fill="${p.metal[0]}"/></pattern></defs>
+      <rect x="0" y="100" width="300" height="10" fill="url(#hz${k})" opacity=".55"/>`,
+    // Bandes obliques de coque et vagues
+    marine: (k, p) => `<g transform="rotate(-6 150 396)"><rect x="-60" y="388" width="420" height="7" fill="${p.metal[1]}" opacity=".7"/><rect x="-60" y="399" width="420" height="7" fill="${p.metal[0]}" opacity=".35"/></g>
+      <g fill="none" stroke="${p.metal[0]}" stroke-width="2.5" opacity=".18">${[0, 1].map(i => `<path d="M-10 ${290 + i * 12}q15 -8 30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0"/>`).join('')}</g>
+      <path d="M0 96H300" stroke="${p.metal[0]}" stroke-width="2" opacity=".35"/>`,
+    // Colonnes d'une page de journal
+    presse: (k, p) => `<g fill="${p.metal[0]}" opacity=".12">${[0, 1, 2].map(col => Array.from({ length: 3 }, (_, i) => `<rect x="${28 + col * 84}" y="${392 + i * 7}" width="${i === 2 ? 40 : 72}" height="3"/>`).join('')).join('')}</g>
+      <rect x="24" y="96" width="252" height="5" fill="${p.metal[0]}" opacity=".4"/><rect x="24" y="104" width="252" height="1.5" fill="${p.metal[0]}" opacity=".4"/>`,
     // Trame de points et bulles de BD
     bulles: (k, p) => `<defs><pattern id="bd${k}" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="6" cy="6" r="2.2" fill="${p.metal[1]}" opacity=".2"/></pattern></defs>
       <rect x="0" y="18" width="300" height="394" fill="url(#bd${k})"/>
@@ -832,10 +868,71 @@
         </div>
       </article>`;
   }
+  // Pays noir : « Lampisterie » (style.css, .card.cat-industrie) : charbon, photo sous la lampe de mineur, jeton de
+  // lampe (numéro de la carte) dans le métal de la rareté, plaque d'acier rivetée et bande de sécurité
+  function mineHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c);
+    return `
+      <article class="card r-${c.rarity} cat-${c.cat} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="card-photo${photo ? '' : ' no-img'}"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
+          <div class="mn-token"><b>${String(c.no).padStart(4, '0')}</b><small>${esc(rl(c.rarity))}</small></div>
+          <div class="card-top">${finTagOf(finish)}</div>
+          <div class="card-band"><h3${name.length > 18 ? ' class="is-xlong"' : name.length > 12 ? ' class="is-long"' : ''}>${esc(name)}</h3><p class="sub">${esc(window.I18N.subtitle(c))}</p></div>
+          <dl class="card-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd${ddLen(v)}>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          ${dotsOf(variants)}
+        </div>
+      </article>`;
+  }
+  // Port & marine : « Affiche de paquebot » (style.css, .card.cat-marine) : affiche Art déco des lignes d'Anvers,
+  // flamme à étoile de la couleur de la rareté, bandes obliques de coque, nom en lettres Art déco
+  const STAR5 = 'M30 6l2.9 8.9h9.4l-7.6 5.5 2.9 8.9-7.6-5.5-7.6 5.5 2.9-8.9-7.6-5.5h9.4z';
+  function linerHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c);
+    return `
+      <article class="card r-${c.rarity} cat-${c.cat} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="card-photo${photo ? '' : ' no-img'}"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
+          <div class="mr-stripes"><i></i><i></i></div>
+          <svg class="mr-pennant" viewBox="0 0 64 36" aria-hidden="true"><path d="M0 0H64L50 18L64 36H0Z"/><path class="mr-star" d="${STAR5}" transform="translate(-4 0)"/></svg>
+          <div class="card-top"><span class="no">${String(c.no).padStart(4, '0')}</span>${finTagOf(finish)}</div>
+          <div class="card-band"><p class="mr-kick">${esc(tv(c.stats?.[1]?.[1] || ''))}</p><h3${name.length > 16 ? ' class="is-xlong"' : name.length > 11 ? ' class="is-long"' : ''}>${esc(name)}</h3><p class="sub">${esc(window.I18N.subtitle(c))}</p></div>
+          <dl class="card-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd${ddLen(v)}>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          ${dotsOf(variants)}
+        </div>
+      </article>`;
+  }
+  // Presse & imprimerie : « Une de journal » (style.css, .card.cat-presse) : titre gothique « Le Brol », édition et
+  // prix au numéro selon la rareté, gros titre, photo tramée, chapeau en italique, « En bref » en bas
+  const EDITION = { fr: { commune: 'Édition du matin', 'peu-commune': 'Édition du soir', rare: 'Deuxième édition', epique: 'Édition de nuit', legendaire: 'Dernière heure', mythique: 'Édition spéciale' },
+    nl: { commune: 'Ochtendeditie', 'peu-commune': 'Avondeditie', rare: 'Tweede editie', epique: 'Nachteditie', legendaire: 'Laatste nieuws', mythique: 'Speciale editie' } };
+  const NEWS_PRICE = { commune: '5 c.', 'peu-commune': '10 c.', rare: '15 c.', epique: '25 c.', legendaire: '50 c.', mythique: '1 fr.' };
+  function newsHTML(c, { count, finish, variants, imgW }) {
+    const photo = photoOf(c, finish), name = nm(c);
+    return `
+      <article class="card r-${c.rarity} cat-${c.cat} fin-${finish}${F[finish].pack ? ' fin-ev' : ''}" data-id="${esc(c.id)}" data-fin="${finish}">
+        ${count > 1 ? `<span class="count-badge">×${count}</span>` : ''}
+        <div class="card-in">
+          <div class="nw-mast">${L() === 'nl' ? 'De Brol' : 'Le Brol'}</div>
+          <div class="nw-line"><span>N° ${String(c.no).padStart(4, '0')}</span><span class="nw-ed">${esc(EDITION[L()][c.rarity])}</span><span>${NEWS_PRICE[c.rarity]}</span></div>
+          <h3 class="nw-head${name.length > 19 ? ' is-xlong' : name.length > 14 ? ' is-long' : ''}">${esc(name)}</h3>
+          <div class="card-photo${photo ? '' : ' no-img'}"${c.pos ? ` style="--pos:${esc(c.pos)}"` : ''}>${photo ? `<img src="${imgUrl(photo, imgW)}" alt="" loading="lazy" decoding="async" onerror="${NO_IMG}">` : ''}</div>
+          <div class="card-top">${finTagOf(finish)}</div>
+          <p class="sub">${esc(window.I18N.subtitle(c))}</p>
+          <dl class="card-stats">${statsOf(c).map(([k, v]) => `<div><dt>${esc(window.I18N.statKey(k))}</dt><dd${ddLen(v)}>${esc(tv(v))}</dd></div>`).join('')}</dl>
+          ${dotsOf(variants)}
+        </div>
+      </article>`;
+  }
   function cardHTML(c, { count = 0, finish = 'normal', variants = null, imgW = 500 } = {}) {
     if (c.cat === 'riviere') return riverHTML(c, { count, finish, variants, imgW });
     if (c.cat === 'moulin') return millHTML(c, { count, finish, variants, imgW });
     if (c.cat === 'arme') return armHTML(c, { count, finish, variants, imgW });
+    if (c.cat === 'industrie') return mineHTML(c, { count, finish, variants, imgW });
+    if (c.cat === 'marine') return linerHTML(c, { count, finish, variants, imgW });
+    if (c.cat === 'presse') return newsHTML(c, { count, finish, variants, imgW });
     if (c.cat === 'voiture') return carHTML(c, { count, finish, variants, imgW });
     if (c.landscape) return landHTML(c, { count, finish, variants, imgW });
     if (c.walk) return walkHTML(c, { count, finish, variants, imgW });
@@ -896,7 +993,7 @@
   // parmi les 2 000 cartes du paquet Belgique. Les taux par rareté ne changent pas. Avant (octobre 2026) : une date de
   // fin par catégorie, et jusqu'à 14 catégories mises en avant ensemble (56 % des tirages du paquet Belgique).
   // Nouvelle catégorie : l'ajouter en tête de ROTATION.
-  const ROTATION = ['riviere', 'moulin', 'arme', 'voiture', 'balade', 'paysage', 'bd', 'histoire', 'finance', 'militaire', 'animal', 'aviation', 'rail', 'exploration'];
+  const ROTATION = ['industrie', 'marine', 'presse', 'riviere', 'moulin', 'arme', 'voiture', 'balade', 'paysage', 'bd', 'histoire', 'finance', 'militaire', 'animal', 'aviation', 'rail', 'exploration'];
   const ROTATION_START = '2026-10-12', FEATURED_WEIGHT = 3; // un lundi : semaine 0 = ROTATION[0]
   const weekStart = (d = now()) => addDays(d, -((d.getDay() + 6) % 7));
   const weekIndex = (d = now()) => Math.round((weekStart(d) - new Date(ROTATION_START + 'T00:00')) / 6048e5);

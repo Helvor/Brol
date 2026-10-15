@@ -676,12 +676,181 @@
     });
   }
 
+  // Cadrage choisi dans le générateur (c.pos : « 50% 70% »), comme object-position dans style.css
+  const posOf = (c, dx = .5, dy = .5) => { const m = /^(\d+)% (\d+)%/.exec(c.pos || ''); return m ? [m[1] / 100, m[2] / 100] : [dx, dy]; };
+  const statRows = c => (API.statsOf ? API.statsOf(c) : c.stats).slice(0, 3);
+
+  // Pays noir : « Lampisterie » (voir style.css, .card.cat-industrie)
+  const TOKEN = { commune: '#8e9298', 'peu-commune': '#4f9a73', rare: '#4f7fd0', epique: '#8a5bd0', legendaire: '#d9a52c', mythique: '#d4483c' };
+  function lamp(ctx, c, photo, x, y, w, h, finish) {
+    const u = w / 95, gold = finish === 'or', holo = finish === 'holo', full = finish === 'plein', tk = gold ? '#d9a52c' : TOKEN[c.rarity] || TOKEN.commune;
+    const bg = ctx.createRadialGradient(x + w / 2, y, 10, x + w / 2, y, h * .8); bg.addColorStop(0, '#2c2d31'); bg.addColorStop(1, '#0e0e10');
+    ctx.fillStyle = bg; ctx.fillRect(x, y, w, h);
+    const [px0, py0] = posOf(c, .5, .45);
+    const px = full ? x : x + 3 * u, py = full ? y : y + 3 * u, pw = full ? w : w - 6 * u, ph = full ? h : 80 * u;
+    ctx.save(); rr(ctx, px, py, pw, ph, full ? 0 : 1.6 * u); ctx.clip();
+    ctx.fillStyle = '#222'; ctx.fillRect(px, py, pw, ph);
+    if (photo) { if (!full) ctx.filter = 'sepia(.35) contrast(1.12) saturate(.8) brightness(.95)'; cover(ctx, photo, px, py, pw, ph, py0, false, px0); ctx.filter = 'none'; }
+    if (full) { const g = ctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, 'rgba(0,0,0,.2)'); g.addColorStop(.3, 'rgba(0,0,0,0)'); g.addColorStop(.58, 'rgba(0,0,0,.55)'); g.addColorStop(1, 'rgba(0,0,0,.9)'); ctx.fillStyle = g; ctx.fillRect(px, py, pw, ph); }
+    else { const g = ctx.createRadialGradient(px + pw / 2, py + ph * .42, 0, px + pw / 2, py + ph * .42, pw * .75); g.addColorStop(0, 'rgba(255,196,110,.22)'); g.addColorStop(.5, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.7)'); ctx.fillStyle = g; ctx.fillRect(px, py, pw, ph); }
+    if (holo) { ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = gradient(ctx, px, py, pw, ph, ['#ffffff00', '#ff7ad9aa', '#ffd36baa', '#7dffb2aa', '#6bd7ffaa', '#b38bffaa', '#ffffff00'], 115); ctx.fillRect(px, py, pw, ph); }
+    ctx.restore();
+    if (!full) { ctx.strokeStyle = '#3a3b40'; ctx.lineWidth = .4 * u; rr(ctx, px, py, pw, ph, 1.6 * u); ctx.stroke(); }
+    // Jeton de lampe : numéro de la carte dans le métal de la rareté
+    const r = 8.5 * u, cx = x + w - 5 * u - r, cy = y + 72 * u + r;
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 2 * u; ctx.shadowOffsetY = u;
+    const tg = ctx.createRadialGradient(cx - r * .3, cy - r * .4, 0, cx, cy, r);
+    if (holo) IRIS.forEach((col, i) => tg.addColorStop(i / (IRIS.length - 1), col)); else { tg.addColorStop(0, '#ffffffaa'); tg.addColorStop(.25, tk); tg.addColorStop(1, '#00000066'); }
+    ctx.fillStyle = tk; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = tg; ctx.fill(); ctx.restore();
+    ctx.fillStyle = '#0e0e10'; ctx.beginPath(); ctx.arc(cx, cy - r + 2.9 * u, 1.3 * u, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = holo ? '#1a1a1a' : 'rgba(20,16,10,.85)'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.font = `700 ${3.6 * u}px ${MONO}`; ctx.fillText(String(c.no).padStart(4, '0'), cx, cy + 2.2 * u);
+    ctx.font = `700 ${1.7 * u}px ${DISPLAY}`; ctx.letterSpacing = `${.14 * u}px`; ctx.fillText(API.rarityLabel(c.rarity).toUpperCase(), cx, cy + 4.6 * u); ctx.letterSpacing = '0px'; ctx.textAlign = 'left';
+    // Nom et description
+    const tw = w - 29 * u, name = window.I18N.name(c).toUpperCase();
+    let fs = (name.length > 18 ? 6 : name.length > 12 ? 7.4 : 9) * u, lines; for (; ; fs -= .2 * u) { ctx.font = `800 ${fs}px ${DISPLAY}`; lines = wrap(ctx, name, tw, 99); if (fs < 5 * u || (lines.length <= 2 && lines.every(l => ctx.measureText(l).width <= tw))) break; }
+    lines = lines.length > 2 ? wrap(ctx, name, tw, 2) : lines;
+    let ty = y + 87 * u + fs * .82;
+    ctx.fillStyle = gold ? '#f6d478' : '#f2efe8'; ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = u;
+    for (const l of lines) { ctx.fillText(l, x + 5 * u, ty); ty += fs * .95; } ctx.restore();
+    ctx.font = `500 ${3.5 * u}px ${TEXT}`; ctx.fillStyle = full ? '#d6d0c2' : '#b9b3a6'; ty += .8 * u;
+    const limit = y + h - 24.5 * u, room = ty > limit ? 0 : Math.min(2, Math.floor((limit - ty) / (4.4 * u)) + 1); // jamais sur la bande de sécurité
+    for (const l of wrap(ctx, window.I18N.subtitle(c) || '', w - 10 * u, room)) { ctx.fillText(l, x + 5 * u, ty); ty += 4.4 * u; }
+    // Plaque d'acier rivetée et bande de sécurité
+    const bx = x + 3 * u, bw = w - 6 * u, bh = 17 * u, by = y + h - 3 * u - bh;
+    ctx.save(); rr(ctx, bx, by - 3 * u, bw, 1.6 * u, .4 * u); ctx.clip(); ctx.fillStyle = '#141414'; ctx.fillRect(bx, by - 3 * u, bw, 1.6 * u);
+    ctx.fillStyle = '#f2c400'; for (let sx = bx - 4 * u; sx < bx + bw; sx += 5.1 * u) { ctx.beginPath(); ctx.moveTo(sx, by - 1.4 * u); ctx.lineTo(sx + 2.5 * u, by - 1.4 * u); ctx.lineTo(sx + 4.1 * u, by - 3 * u); ctx.lineTo(sx + 1.6 * u, by - 3 * u); ctx.closePath(); ctx.fill(); }
+    ctx.restore();
+    const pg = ctx.createLinearGradient(0, by, 0, by + bh);
+    (gold ? ['#c9971c', '#8a6516', '#6e4f0c'] : ['#5d6066', '#33353a', '#26282c']).forEach((col, i) => pg.addColorStop([0, .55, 1][i], col));
+    ctx.fillStyle = pg; rr(ctx, bx, by, bw, bh, u); ctx.fill();
+    for (const [rx, ry] of [[bx + 2 * u, by + 2 * u], [bx + bw - 2 * u, by + 2 * u], [bx + 2 * u, by + bh - 2 * u], [bx + bw - 2 * u, by + bh - 2 * u]]) {
+      ctx.fillStyle = gold ? '#5a3f08' : '#2d2f34'; ctx.beginPath(); ctx.arc(rx, ry, .65 * u, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = gold ? '#fff1b8' : '#c9ccd2'; ctx.beginPath(); ctx.arc(rx, ry, .5 * u, 0, Math.PI * 2); ctx.fill();
+    }
+    const colW = (bw - 7.2 * u) / 3;
+    statRows(c).forEach(([k, v], n) => {
+      const sx = bx + 3.6 * u + n * colW;
+      if (n) { ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fillRect(sx - 1.2 * u, by + 3 * u, .2 * u, bh - 6 * u); }
+      ctx.fillStyle = gold ? '#fff1b8' : '#c3c7cf'; ctx.font = `600 ${2.4 * u}px ${DISPLAY}`; ctx.letterSpacing = `${.2 * u}px`;
+      ctx.fillText(clip(ctx, window.I18N.statKey(k).toUpperCase(), colW - 2.4 * u), sx, by + 6.6 * u); ctx.letterSpacing = '0px';
+      ctx.fillStyle = gold ? '#fff6d8' : '#fff'; ctx.font = `600 ${3.6 * u}px ${MONO}`; ctx.fillText(clip(ctx, String(window.I18N.tv(v)), colW - 2.4 * u), sx, by + 12.4 * u);
+    });
+  }
+
+  // Port et marine : « Affiche de paquebot » (voir style.css, .card.cat-marine)
+  const LIMELIGHT = '"Limelight", Georgia, serif', PLAYFAIR = '"Playfair Display", Georgia, serif';
+  const FLAG = { commune: '#8a8a8a', 'peu-commune': '#2f7d4a', rare: '#2e5fc0', epique: '#6b3db8', legendaire: '#c9971c', mythique: '#c8102e' };
+  function liner(ctx, c, photo, x, y, w, h, finish) {
+    const u = w / 95, gold = finish === 'or', holo = finish === 'holo', full = finish === 'plein';
+    const navy = gold ? '#0d0b06' : '#14213d', cream = gold ? '#f6e7b4' : holo ? '#f3f1fb' : '#efe6cf', flag = gold ? '#c9971c' : FLAG[c.rarity] || FLAG.commune;
+    const flagFill = holo ? gradient(ctx, x, y, w, 0, IRIS, 0) : flag;
+    ctx.fillStyle = cream; ctx.fillRect(x, y, w, h);
+    const slope = w * Math.tan(6.6 * Math.PI / 180), ph = full ? h : 88 * u, [px0, py0] = posOf(c);
+    ctx.save(); ctx.beginPath();
+    if (full) ctx.rect(x, y, w, h); else { ctx.moveTo(x, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w, y + ph * .86); ctx.lineTo(x, y + ph); ctx.closePath(); }
+    ctx.clip(); ctx.fillStyle = navy; ctx.fillRect(x, y, w, ph);
+    if (photo) { ctx.filter = 'saturate(1.2) contrast(1.1)'; cover(ctx, photo, x, y, w, ph, py0, false, px0); ctx.filter = 'none'; }
+    const g = ctx.createLinearGradient(0, y, 0, y + ph); g.addColorStop(0, 'rgba(20,33,61,.35)'); g.addColorStop(.3, 'rgba(20,33,61,0)');
+    if (full) { g.addColorStop(.5, 'rgba(10,16,30,0)'); g.addColorStop(.8, 'rgba(10,16,30,.92)'); g.addColorStop(1, 'rgba(10,16,30,.95)'); }
+    ctx.fillStyle = g; ctx.fillRect(x, y, w, ph); ctx.restore();
+    // Bandes de coque, parallèles au bas de la photo
+    if (!full) [[9, flagFill], [13, navy]].forEach(([dy, col]) => {
+      const t = y + 79 * u + dy * u; ctx.fillStyle = col; ctx.beginPath();
+      ctx.moveTo(x, t); ctx.lineTo(x + w, t - slope); ctx.lineTo(x + w, t + 2.6 * u - slope); ctx.lineTo(x, t + 2.6 * u); ctx.closePath(); ctx.fill();
+    });
+    // Flamme à étoile
+    const fw = 24 * u, fh = fw * 36 / 64, fx = x + w - fw, fy = y + 5 * u, k = fw / 64;
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = u; ctx.shadowOffsetY = .6 * u; ctx.fillStyle = flagFill;
+    ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + 64 * k, fy); ctx.lineTo(fx + 50 * k, fy + 18 * k); ctx.lineTo(fx + 64 * k, fy + 36 * k); ctx.lineTo(fx, fy + fh); ctx.closePath(); ctx.fill(); ctx.restore();
+    ctx.fillStyle = '#fff'; ctx.beginPath();
+    for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rad = (i % 2 ? 5.6 : 12) * k; ctx.lineTo(fx + 26 * k + rad * Math.cos(a), fy + 18.5 * k + rad * Math.sin(a)); }
+    ctx.closePath(); ctx.fill();
+    // Accroche (2ᵉ caractéristique), nom Art déco et description
+    const ink = full ? '#f4ecd8' : navy, top = full ? y + h - 16 * u - 30 * u : y + 96 * u, tw = w - 10 * u;
+    const st = statRows(c);
+    ctx.textBaseline = 'alphabetic'; ctx.fillStyle = holo ? '#6a3df0' : flag; ctx.font = `700 ${2.8 * u}px ${DISPLAY}`; ctx.letterSpacing = `${.84 * u}px`;
+    ctx.fillText(clip(ctx, String(window.I18N.tv(st[1]?.[1] ?? '')).toUpperCase(), tw), x + 5 * u, top + 2.4 * u); ctx.letterSpacing = '0px';
+    const name = window.I18N.name(c).toUpperCase();
+    let fs = 8.4 * u, lines; for (; ; fs -= .2 * u) { ctx.font = `400 ${fs}px ${LIMELIGHT}`; lines = wrap(ctx, name, tw, 99); if (fs < 4.6 * u || (lines.length <= 2 && lines.every(l => ctx.measureText(l).width <= tw))) break; }
+    lines = lines.length > 2 ? wrap(ctx, name, tw, 2) : lines;
+    let ty = top + 3.4 * u + fs * .85; ctx.fillStyle = holo ? gradient(ctx, x, ty - fs, tw, fs, ['#6a3df0', '#1d8fd6', '#12a57a', '#c0399a'], 0) : ink;
+    for (const l of lines) { ctx.fillText(l, x + 5 * u, ty); ty += fs; }
+    ctx.font = `italic 500 ${3.5 * u}px ${PLAYFAIR}`; ctx.fillStyle = full ? '#dcd3bd' : '#3b3b45'; ty += .4 * u;
+    const limit = y + h - 17.5 * u, room = ty > limit ? 0 : Math.min(2, Math.floor((limit - ty) / (4.3 * u)) + 1); // au-dessus de la bande marine
+    for (const l of wrap(ctx, window.I18N.subtitle(c) || '', tw, room)) { ctx.fillText(l, x + 5 * u, ty); ty += 4.3 * u; }
+    // Caractéristiques sur la bande marine
+    const sh = 16 * u, sy = y + h - sh, colW = (w - 6 * u) / 3;
+    ctx.fillStyle = navy; ctx.fillRect(x, sy, w, sh); ctx.fillStyle = flagFill; ctx.fillRect(x, sy, w, .8 * u);
+    st.forEach(([kk, v], n) => {
+      const sx = x + 3 * u + n * colW;
+      if (n) { ctx.fillStyle = 'rgba(255,255,255,.14)'; ctx.fillRect(sx - 1.2 * u, sy + 3.4 * u, .2 * u, sh - 6 * u); }
+      ctx.fillStyle = '#9fb3d1'; ctx.font = `600 ${2.4 * u}px ${DISPLAY}`; ctx.letterSpacing = `${.2 * u}px`; ctx.fillText(clip(ctx, window.I18N.statKey(kk).toUpperCase(), colW - 2.4 * u), sx, sy + 6.2 * u); ctx.letterSpacing = '0px';
+      ctx.fillStyle = gold ? '#f6d478' : '#f4ecd8'; ctx.font = `700 ${4.4 * u}px ${DISPLAY}`; ctx.fillText(clip(ctx, String(window.I18N.tv(v)), colW - 2.4 * u), sx, sy + 12 * u);
+    });
+  }
+
+  // Presse et imprimerie : « Une de journal » (voir style.css, .card.cat-presse)
+  const FRAKTUR = '"UnifrakturMaguntia", "Old English Text MT", serif';
+  const EDITION = { fr: { commune: 'Édition du matin', 'peu-commune': 'Édition du soir', rare: 'Deuxième édition', epique: 'Édition de nuit', legendaire: 'Dernière heure', mythique: 'Édition spéciale' },
+    nl: { commune: 'Ochtendeditie', 'peu-commune': 'Avondeditie', rare: 'Tweede editie', epique: 'Nachteditie', legendaire: 'Laatste nieuws', mythique: 'Speciale editie' } };
+  const NEWS_PRICE = { commune: '5 c.', 'peu-commune': '10 c.', rare: '15 c.', epique: '25 c.', legendaire: '50 c.', mythique: '1 fr.' };
+  const NEWS_ACC = { commune: '#555', 'peu-commune': '#2f7d4a', rare: '#2e5fc0', epique: '#6b3db8', legendaire: '#a87b1e', mythique: '#c8102e' };
+  function frontPage(ctx, c, photo, x, y, w, h, finish) {
+    const u = w / 95, gold = finish === 'or', holo = finish === 'holo', full = finish === 'plein', L = window.I18N.lang === 'nl' ? 'nl' : 'fr';
+    const ink = gold ? '#3a2a08' : '#1a1a1a', acc = NEWS_ACC[c.rarity] || NEWS_ACC.commune, inkFill = holo ? gradient(ctx, x, y, w, 0, ['#6a3df0', '#1d8fd6', '#12a57a', '#c0399a'], 0) : ink;
+    const pg = ctx.createLinearGradient(0, y, 0, y + h); pg.addColorStop(0, gold ? '#f6e7b4' : '#f6f2e8'); pg.addColorStop(1, gold ? '#f1dc9c' : holo ? '#f1ecfb' : '#f2ede1');
+    ctx.fillStyle = pg; ctx.fillRect(x, y, w, h);
+    // Photo tramée (similigravure)
+    const px = full ? x : x + 4 * u, py = full ? y : y + 34 * u, pw = full ? w : w - 8 * u, ph = full ? h : 64 * u, [px0, py0] = posOf(c, .5, .3);
+    ctx.save(); ctx.beginPath(); ctx.rect(px, py, pw, ph); ctx.clip(); ctx.fillStyle = '#ddd6c6'; ctx.fillRect(px, py, pw, ph);
+    if (photo) { ctx.filter = gold ? 'grayscale(1) sepia(.7) contrast(1.2)' : full ? 'grayscale(1) contrast(1.15)' : 'grayscale(1) contrast(1.3) brightness(1.05)'; cover(ctx, photo, px, py, pw, ph, py0, false, px0); ctx.filter = 'none'; }
+    const dot = document.createElement('canvas'), ds = Math.max(4, Math.round(1.1 * u)); dot.width = dot.height = ds;
+    const dc = dot.getContext('2d'); dc.fillStyle = 'rgba(0,0,0,.55)'; dc.beginPath(); dc.arc(ds / 2, ds / 2, ds * .3, 0, Math.PI * 2); dc.fill();
+    ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = full ? .3 : .45; ctx.fillStyle = ctx.createPattern(dot, 'repeat'); ctx.fillRect(px, py, pw, ph);
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    if (full) { const g = ctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, 'rgba(246,242,232,.97)'); g.addColorStop(.3, 'rgba(246,242,232,.9)'); g.addColorStop(.42, 'rgba(246,242,232,0)'); g.addColorStop(.6, 'rgba(246,242,232,0)'); g.addColorStop(.74, 'rgba(246,242,232,.94)'); g.addColorStop(1, 'rgba(246,242,232,.97)'); ctx.fillStyle = g; ctx.fillRect(x, y, w, h); }
+    ctx.restore();
+    if (!full) { ctx.strokeStyle = ink; ctx.lineWidth = .25 * u; ctx.strokeRect(px, py, pw, ph); }
+    // Titre du journal, ligne d'édition et gros titre
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = gold ? '#8a6516' : inkFill; ctx.font = `400 ${11 * u}px ${FRAKTUR}`;
+    ctx.fillText(L === 'nl' ? 'De Brol' : 'Le Brol', x + w / 2, y + 12.6 * u);
+    const lx = x + 4 * u, lw = w - 8 * u, ly = y + 16.5 * u;
+    ctx.fillStyle = ink; ctx.fillRect(lx, ly, lw, .5 * u); ctx.fillRect(lx, ly + 4.6 * u, lw, .2 * u);
+    ctx.font = `600 ${2.5 * u}px ${DISPLAY}`; ctx.letterSpacing = `${.2 * u}px`;
+    ctx.textAlign = 'left'; ctx.fillText(`N° ${String(c.no).padStart(4, '0')}`, lx, ly + 3.5 * u);
+    ctx.textAlign = 'right'; ctx.fillText(NEWS_PRICE[c.rarity] || '', lx + lw, ly + 3.5 * u);
+    ctx.textAlign = 'center'; ctx.font = `800 ${2.5 * u}px ${DISPLAY}`; const ed = (EDITION[L][c.rarity] || '').toUpperCase();
+    if (['legendaire', 'mythique'].includes(c.rarity)) { const ew = ctx.measureText(ed).width + 3.2 * u; ctx.fillStyle = acc; ctx.fillRect(x + w / 2 - ew / 2, ly + 1 * u, ew, 3.3 * u); ctx.fillStyle = '#fff'; }
+    else ctx.fillStyle = acc;
+    ctx.fillText(ed, x + w / 2, ly + 3.5 * u); ctx.letterSpacing = '0px'; ctx.textAlign = 'left';
+    const name = window.I18N.name(c); let fs = 8.4 * u; for (; fs > 4 * u; fs -= .2 * u) { ctx.font = `900 ${fs}px ${PLAYFAIR}`; if (ctx.measureText(name).width <= lw) break; }
+    ctx.fillStyle = inkFill; ctx.fillText(clip(ctx, name, lw), lx, y + 22.4 * u + fs * .95);
+    // Chapeau en italique et colonnes de texte
+    ctx.font = `italic 500 ${3.6 * u}px ${PLAYFAIR}`; ctx.fillStyle = gold ? '#3a2a08' : '#2b2b2b';
+    const sub = wrap(ctx, window.I18N.subtitle(c) || '', lw, full ? 2 : 3); let ty = full ? y + h - 22 * u - (sub.length - 1) * 4.5 * u : y + 103 * u; // plein cadre : juste au-dessus des caractéristiques
+    for (const l of sub) { ctx.fillText(l, lx, ty); ty += 4.5 * u; }
+    if (!full) { ctx.fillStyle = gold ? 'rgba(58,42,8,.18)' : 'rgba(0,0,0,.12)'; const cw = (lw - 4 * u) / 3;
+      for (let col = 0; col < 3; col++) for (let yy = ty; yy < y + h - 20 * u; yy += 1.6 * u) ctx.fillRect(lx + col * (cw + 2 * u), yy, cw * (yy + 1.6 * u >= y + h - 20 * u ? .6 : 1), .5 * u); }
+    // Caractéristiques sous un double filet
+    const sy = y + h - 18 * u; ctx.fillStyle = ink; ctx.fillRect(lx, sy, lw, .35 * u); ctx.fillRect(lx, sy + .75 * u, lw, .35 * u);
+    const colW = lw / 3;
+    statRows(c).forEach(([k, v], n) => {
+      const sx = lx + n * colW + (n ? 2 * u : 0);
+      if (n) { ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(lx + n * colW, sy + 3 * u, .2 * u, 12 * u); }
+      ctx.fillStyle = '#5a5550'; ctx.font = `600 ${2.4 * u}px ${DISPLAY}`; ctx.letterSpacing = `${.2 * u}px`; ctx.fillText(clip(ctx, window.I18N.statKey(k).toUpperCase(), colW - 3 * u), sx, sy + 6.4 * u); ctx.letterSpacing = '0px';
+      ctx.fillStyle = ink; ctx.font = `800 ${4 * u}px ${PLAYFAIR}`; ctx.fillText(clip(ctx, String(window.I18N.tv(v)), colW - 3 * u), sx, sy + 12.4 * u);
+    });
+  }
+
   async function render(c, finish) {
     if (c.landscape) try { await Promise.all([document.fonts?.load(`40px ${LOBSTER}`), document.fonts?.load(`40px ${SLAB}`), document.fonts?.load(`20px ${ELITE}`)]); } catch (_) { /* police de secours */ }
     if (c.cat === 'histoire') try { await document.fonts?.load(`40px ${TYPE}`); } catch (_) { /* police de secours */ }
     if (c.cat === 'bd') try { await Promise.all([document.fonts?.load(`40px ${POP}`), document.fonts?.load(`700 24px ${COMIC}`)]); } catch (_) { /* police de secours */ }
     if (c.cat === 'riviere') try { await document.fonts?.load(`italic 700 40px ${GARAMOND}`); } catch (_) { /* police de secours */ }
     if (c.cat === 'moulin') try { await document.fonts?.load(`700 40px ${STENCIL}`); } catch (_) { /* police de secours */ }
+    if (c.cat === 'marine') try { await Promise.all([document.fonts?.load(`40px ${LIMELIGHT}`), document.fonts?.load(`italic 500 24px ${PLAYFAIR}`)]); } catch (_) { /* police de secours */ }
+    if (c.cat === 'presse') try { await Promise.all([document.fonts?.load(`40px ${FRAKTUR}`), document.fonts?.load(`900 40px ${PLAYFAIR}`), document.fonts?.load(`italic 500 24px ${PLAYFAIR}`)]); } catch (_) { /* police de secours */ }
     await document.fonts?.ready;
     const L = window.I18N.lang, ed = c.cat === 'edition' && API.packById(c.pack);
     const fin = API.FINISHES.find(f => f.id === finish) || API.FINISHES[0];
@@ -728,6 +897,9 @@
     else if (land) postcard(ctx, c, photo, ix, iy, iw, ih, finish, cw / 100);
     else if (c.cat === 'moulin') sack(ctx, c, photo, ix, iy, iw, ih, finish);
     else if (c.cat === 'arme') blueprint(ctx, c, photo, ix, iy, iw, ih, finish);
+    else if (c.cat === 'industrie') lamp(ctx, c, photo, ix, iy, iw, ih, finish);
+    else if (c.cat === 'marine') liner(ctx, c, photo, ix, iy, iw, ih, finish);
+    else if (c.cat === 'presse') frontPage(ctx, c, photo, ix, iy, iw, ih, finish);
     else if (c.walk) walkCard(ctx, c, photo, ix, iy, iw, ih, finish);
     else if (c.cat === 'voiture') showroom(ctx, c, photo, ix, iy, iw, ih, finish);
     else if (arch) archives(ctx, c, photo, ix, iy, iw, ih, finish);
@@ -806,7 +978,7 @@
     }
     ctx.restore();
     // Paysage : version et rareté sous la carte ; autres cartes : numéro, version et rareté en haut de la carte
-    const ownTag = land || c.walk || ['voiture', 'moulin', 'arme'].includes(c.cat);
+    const ownTag = land || c.walk || ['voiture', 'moulin', 'arme', 'industrie', 'marine', 'presse'].includes(c.cat);
     if (ownTag) {
       const tag = (finish !== 'normal' ? API.finishLabel(finish) + ' · ' : '') + API.rarityLabel(c.rarity);
       ctx.font = `800 26px ${DISPLAY}`; const tw = ctx.measureText(tag.toUpperCase()).width + 32;

@@ -58,6 +58,14 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   catégories étaient mises en avant ensemble et faisaient 56 % des tirages du paquet Belgique. Chaque jour, un paquet
   thématique est à −50 % pour 5 paquets (`DEAL_OFF`, `DEAL_MAX`), le même pour tout le monde, jamais deux jours de
   suite ; il passe en tête de la boutique.
+- [x] **Paquets Pays noir, Port et marine, Presse** (octobre 2026) : 150 cartes à fiches manuelles (`INDUSTRIE`,
+  `MARINE`, `PRESSE` dans le générateur, `buildFiches`). Pays noir : charbonnages du Borinage, du Centre, de Charleroi,
+  de Liège et de Campine, hauts fourneaux, Val-Saint-Lambert, Keramis, Meunier, design « Lampisterie » (jeton de lampe
+  de la rareté, plaque rivetée, bande de sécurité). Port et marine : ports, écluses, Red Star Line, paquebots, marine,
+  phares, pêcheurs à cheval, design « Affiche de paquebot » (flamme à étoile, bandes de coque). Presse : Plantin et les
+  Moretus, premiers imprimeurs et journaux, bibliothèques, quotidiens, design « Une de journal » (titre gothique,
+  édition et prix selon la rareté, photo tramée). Séries Mines de Campine, Atelier Meunier, Phares, Red Star Line,
+  Au Compas d'or, Kiosque. Image de partage pour les trois designs.
 - [x] **Paquets complétés à 50 cartes** (octobre 2026) : Sciences 35 → 51 (Ortelius, Plateau, Brout, Decroly, Dollo,
   La Vallée Poussin…), Voitures 37 → 50 (pilotes : Gendebien, Neuville, Frère, Bianchi… ; Grand Prix de Belgique,
   24 Heures de Spa, Raidillon), Arsenal 43 → 51 (Éperons d'or, Kortrijk 1302, M240, M249, Mk 48…), Histoire 45 → 51
