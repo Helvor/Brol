@@ -10,8 +10,9 @@ en français) ; l'interface existe en FR et NL.
 - `data/cards.js` est **généré** par `tools/build-cards.mjs` (Wikidata, Wikipédia, Commons ; cache `tools/.cache.json`).
   Ne pas l'éditer à la main : modifier le générateur et relancer `node tools/build-cards.mjs`. Pour ajouter une
   catégorie sans tout régénérer (Wikipédia et Commons limitent souvent les requêtes, le cache n'est pas versionné) :
-  `node tools/build-cards.mjs --ajout=animal` (ou `militaire`, `aviation`, `rail`, `exploration`, `finance`, `histoire`, `bd`, `paysage`, `balade`, `voiture`, `riviere`, `moulin`, `arme` ; Wikidata seul ;
-  nouvelle catégorie : l'ajouter à `AJOUTS` dans le générateur). Photo fausse : `PHOTO_FIX` puis
+  `node tools/build-cards.mjs --ajout=animal` (ou `militaire`, `aviation`, `rail`, `exploration`, `finance`, `histoire`, `bd`, `paysage`, `balade`, `voiture`, `riviere`, `moulin`, `arme`, `complements` ; Wikidata seul ;
+  nouvelle catégorie : l'ajouter à `AJOUTS` dans le générateur ; carte de plus dans Sciences, Gastronomie ou Bières :
+  `COMPLEMENTS`). Photo fausse : `PHOTO_FIX` puis
   `node tools/build-cards.mjs --photos`.
 - `data/images.js` (adresses directes des images, `tools/build-images.mjs`, lancé par build-cards) et `data/focus.js`
   (cadrage sur le visage, `python3 tools/build-focus.py [--hors-ligne]`, demande opencv-python-headless).

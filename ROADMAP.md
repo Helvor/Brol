@@ -58,6 +58,12 @@ Ce qui est prévu pour Brol, dans l'ordre envisagé. Chaque étape reste un site
   catégories étaient mises en avant ensemble et faisaient 56 % des tirages du paquet Belgique. Chaque jour, un paquet
   thématique est à −50 % pour 5 paquets (`DEAL_OFF`, `DEAL_MAX`), le même pour tout le monde, jamais deux jours de
   suite ; il passe en tête de la boutique.
+- [x] **Paquets complétés à 50 cartes** (octobre 2026) : Sciences 35 → 51 (Ortelius, Plateau, Brout, Decroly, Dollo,
+  La Vallée Poussin…), Voitures 37 → 50 (pilotes : Gendebien, Neuville, Frère, Bianchi… ; Grand Prix de Belgique,
+  24 Heures de Spa, Raidillon), Arsenal 43 → 51 (Éperons d'or, Kortrijk 1302, M240, M249, Mk 48…), Histoire 45 → 51
+  (Révolution belge, Waterloo, Congrès national, Butte du Lion…), Terroir 48 → 54 (Leffe, Maredsous, Bush, Gouden
+  Carolus, croustillons, lacquemant). Sciences, Gastronomie et Bières étant générées depuis Wikipédia, leurs ajouts
+  passent par `COMPLEMENTS` (`--ajout=complements`, sans toucher aux autres cartes). Aucune carte existante modifiée.
 - [x] **Paquet « Au fil de l'eau »** (octobre 2026) : 62 cours d'eau (`RIVIERES` dans le générateur, catégorie
   `riviere`) : fleuves, rivières, ruisseaux et canaux, longueurs et embouchures de Wikidata. Cartes horizontales,
   design « Atlas » (bordure graduée de la couleur de la rareté, nom en italique bleu, tracé décoratif, rose des
