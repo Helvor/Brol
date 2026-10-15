@@ -251,7 +251,22 @@
   const hasCards = p => p.missing || poolOf(p).length >= PACK_SIZE;
   PACKS.splice(0, PACKS.length, ...PACKS.filter(hasCards));
   // Paquets en vente aujourd'hui : événements en cours d'abord
-  const shopPacks = () => [...activeEvents().filter(hasCards), ...PACKS];
+  // Paquet du jour : chaque jour un paquet thématique à −50 %, pour DEAL_MAX paquets au plus (un lot ou des paquets
+  // seuls), puis au prix normal. Tiré de la date (le même pour tout le monde) ; le pas DEAL_STEP, premier avec le
+  // nombre de paquets, les fait tous passer avant de recommencer et ne donne jamais deux jours de suite le même.
+  const DEAL_OFF = 0.5, DEAL_MAX = 5;
+  const dealPool = () => PACKS.filter(p => !p.special && !p.event && !p.perDay && !p.was && p.id !== 'belgique');
+  const gcd = (a, b) => b ? gcd(b, a % b) : a;
+  const dealPack = (d = now()) => {
+    const pool = dealPool(), n = Math.round(new Date(ymd(d) + 'T00:00') / 864e5), step = [7, 5, 11, 13, 3].find(k => gcd(k, pool.length) === 1) || 1;
+    return pool[((n * step) % pool.length + pool.length) % pool.length];
+  };
+  const dealUsed = () => state.perDay?.day === ymd(now()) ? (state.perDay.n.deal || 0) : 0;
+  const dealLeft = () => Math.max(0, DEAL_MAX - dealUsed());
+  const withDeal = p => p.id === dealPack().id && dealLeft() > 0 ? { ...p, price: Math.round(p.price * (1 - DEAL_OFF)), was: p.price, deal: true } : p;
+  // Lot du paquet du jour : au prix réduit seulement s'il reste assez de paquets à prix réduit
+  const lotPrice = p => p.deal && dealLeft() < bulkOf(p) ? bulkPrice(packById(p.id)) : bulkPrice(p);
+  const shopPacks = () => { const deal = dealPack().id; return [...activeEvents().filter(hasCards), ...PACKS.filter(p => p.id === deal), ...PACKS.filter(p => p.id !== deal)].map(withDeal); };
   const PAGE = 120;
   const STORE_KEY = 'rue-de-la-loi:v1';
 
@@ -940,11 +955,18 @@
   // ---------- Tirage ----------
   // Rareté d'abord (mêmes taux pour tous les paquets), puis une carte au hasard parmi celles du paquet.
   // Chaque catégorie contient toutes les raretés (réparties par notoriété), donc les taux affichés sont justes.
-  // Nouvelle catégorie : à rareté égale, ses cartes sortent trois fois plus souvent jusqu'à la date indiquée, pour
-  // qu'elles ne se noient pas parmi les 1 500 cartes du paquet Belgique. Les taux par rareté ne changent pas.
-  const FEATURED = { militaire: '2027-01-31', animal: '2027-02-28', aviation: '2027-03-31', rail: '2027-03-31', exploration: '2027-03-31', finance: '2027-04-30', histoire: '2027-05-31', bd: '2027-06-30', paysage: '2027-07-31', balade: '2027-08-31', voiture: '2027-09-30',
-    riviere: '2027-10-31', moulin: '2027-11-30', arme: '2027-12-31' }, FEATURED_WEIGHT = 3;
-  const featuredCats = () => { const d = ymd(now()); return new Set(Object.keys(FEATURED).filter(cat => d <= FEATURED[cat])); };
+  // Catégorie de la semaine : une seule catégorie thématique mise en avant, qui change chaque lundi (ROTATION, les plus
+  // récentes d'abord). À rareté égale, ses cartes sortent trois fois plus souvent, pour qu'elles ne se noient pas
+  // parmi les 2 000 cartes du paquet Belgique. Les taux par rareté ne changent pas. Avant (octobre 2026) : une date de
+  // fin par catégorie, et jusqu'à 14 catégories mises en avant ensemble (56 % des tirages du paquet Belgique).
+  // Nouvelle catégorie : l'ajouter en tête de ROTATION.
+  const ROTATION = ['riviere', 'moulin', 'arme', 'voiture', 'balade', 'paysage', 'bd', 'histoire', 'finance', 'militaire', 'animal', 'aviation', 'rail', 'exploration'];
+  const ROTATION_START = '2026-10-12', FEATURED_WEIGHT = 3; // un lundi : semaine 0 = ROTATION[0]
+  const weekStart = (d = now()) => addDays(d, -((d.getDay() + 6) % 7));
+  const weekIndex = (d = now()) => Math.round((weekStart(d) - new Date(ROTATION_START + 'T00:00')) / 6048e5);
+  const featuredCat = (d = now()) => ROTATION[((weekIndex(d) % ROTATION.length) + ROTATION.length) % ROTATION.length];
+  const featuredUntil = (d = now()) => ymd(addDays(weekStart(d), 6));
+  const featuredCats = () => new Set([featuredCat()]);
   function pickCard(list) {
     const feat = featuredCats(), w = c => feat.has(c.cat) ? FEATURED_WEIGHT : 1;
     if (!list.some(c => feat.has(c.cat))) return list[Math.floor(Math.random() * list.length)];
@@ -1098,10 +1120,11 @@
   const pct2 = x => x > 0 ? (x * 100).toLocaleString(L() === 'nl' ? 'nl-BE' : 'fr-BE', { maximumSignificantDigits: 2 }) + ' %' : '—';
 
   // ---------- Boutique ----------
+  const bulkBtn = p => `<button class="btn btn-line buy10"${state.coins < lotPrice(p) ? ' disabled' : ''}>${t('bulk', bulkOf(p))} <span class="price"><span class="coin"></span>${fmt(lotPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`;
   function renderShop() {
     tickFree();
     const ev = nextEvent();
-    $('#event-line').innerHTML = activeEvents().length ? '' : ev ? t('nextEvent', esc(pl(ev.p, 'title')), fmtDay(ev.start)) : '';
+    $('#event-line').innerHTML = [t('weekLine', esc(cl(featuredCat())), FEATURED_WEIGHT, fmtDay(featuredUntil())), activeEvents().length || !ev ? '' : t('nextEvent', esc(pl(ev.p, 'title')), fmtDay(ev.start))].filter(Boolean).join('<br>');
     $('#packs').innerHTML = shopPacks().map(p => {
       const tickets = state.tickets?.[p.id] || 0;
       const prog = p.missing ? null : packProgress(p);
@@ -1110,7 +1133,7 @@
       <div class="pack-card${locked ? ' is-locked' : ''}${prog && prog[0] === prog[1] ? ' is-done' : ''}${p.special ? ' is-special' : ''}${p.event ? ' is-event' : ''}" data-pack="${p.id}">
         ${tickets ? `<span class="ticket-ribbon">${t('ticketBadge', tickets)}</span>` : ''}
         ${p.event ? `<span class="event-ribbon">${t('eventUntil', fmtDay(eventWindow(p)[1]))}</span>` : ''}
-        ${p.was ? `<span class="event-ribbon promo-ribbon">${t('promo', Math.round((1 - p.price / p.was) * 100))}</span>` : ''}
+        ${p.deal ? `<span class="event-ribbon promo-ribbon deal-ribbon">${t('dealRibbon', Math.round(DEAL_OFF * 100))}</span>` : p.was ? `<span class="event-ribbon promo-ribbon">${t('promo', Math.round((1 - p.price / p.was) * 100))}</span>` : ''}
         ${packVisual(p)}${prog && prog[0] === prog[1] ? `<span class="pack-done" title="${t('packDone')}">✓</span>` : ''}
         <div class="pack-info">
           <div><h2>${esc(pl(p, 'title'))}</h2><p>${esc(pl(p, 'desc'))}</p>${prog ? packProgressHTML(prog) : ''}</div>
@@ -1121,7 +1144,7 @@
         <table class="pack-odds" hidden><thead><tr><th></th><th>${t('oddsCards')}</th><th>${t('oddsLast')}</th></tr></thead><tbody>${packOdds(p).filter(o => o.p + o.last > 0).map(o =>
           `<tr><td><span class="gem" style="background:var(--r-${o.id})"></span>${rl(o.id)}</td><td>${pctOdds(o.p)}</td><td>${pctOdds(o.last)}</td></tr>`).join('')}${packOddsExtra(p)}</tbody></table>
         ${p.perDay ? `<span class="pack-note">${!missingAny() ? t('albumFull') : !leftToday(p) ? t('perDay') : (!missingCount() ? t('newVersionsOnly') + ' · ' : missingCount() < PACK_SIZE && CARDS.filter(c => c.cat !== 'edition' && !totalOf(c.id) && isTop(c)).length <= 1 ? t('lastMissing', missingCount()) + ' · ' : '') + t('perDayLeft', leftToday(p), p.perDay)}</span>`
-          : p.event ? `<span class="pack-note">${t('eventNote')}</span>` : `<button class="btn btn-line buy10"${state.coins < bulkPrice(p) ? ' disabled' : ''}>${t('bulk', bulkOf(p))} <span class="price"><span class="coin"></span>${fmt(bulkPrice(p))}</span><small>${t('bulkOff', Math.round((1 - BULK_DISCOUNT) * 100))}</small></button>`}
+          : p.event ? `<span class="pack-note">${t('eventNote')}</span>` : p.deal ? `<span class="pack-note">${t('dealLeft', dealLeft(), DEAL_MAX)}</span>${bulkBtn(p)}` : bulkBtn(p)}
       </div>`;
     }).join('');
     renderFree();
@@ -1183,9 +1206,7 @@
   function featuredRows(p) {
     const cats = new Set(poolOf(p).map(c => c.cat)), feat = [...featuredCats()].filter(cat => cats.has(cat));
     if (!feat.length || [...cats].every(cat => feat.includes(cat))) return '';
-    const byDate = new Map();
-    for (const cat of feat) byDate.set(FEATURED[cat], [...(byDate.get(FEATURED[cat]) || []), cl(cat)]);
-    return [...byDate].map(([d, names]) => `<tr class="odds-x"><td>${names.join(', ')}</td><td colspan="2">${t('oddsFeatured', FEATURED_WEIGHT, fmtDay(d))}</td></tr>`).join('');
+    return `<tr class="odds-x"><td>${feat.map(cl).join(', ')}</td><td colspan="2">${t('oddsFeatured', FEATURED_WEIGHT, fmtDay(featuredUntil()))}</td></tr>`;
   }
 
   function renderFree() {
@@ -1238,6 +1259,7 @@
     buyError = null;
     if (pack.perDay && leftToday(pack) < n) { buyError = 'perDay'; return null; }
     if (pack.missing && !missingAny()) { buyError = 'albumFull'; return null; }
+    if (pack.deal && dealLeft() < n) pack = packById(pack.id); // plus de paquet à prix réduit : prix normal
     let usedFree = false, usedTicket = false;
     const cost = n === 1 ? pack.price : bulkPrice(pack);
     if (n === 1 && state.tickets?.[pack.id] > 0) { state.tickets[pack.id]--; usedTicket = true; }
@@ -1245,6 +1267,10 @@
     else if (state.coins >= cost) state.coins -= cost;
     else return null;
     const packs = Array.from({ length: n }, () => rollPack(pack, usedFree));
+    if (pack.deal && !usedFree && !usedTicket) {
+      if (state.perDay?.day !== ymd(now())) state.perDay = { day: ymd(now()), n: {} };
+      state.perDay.n.deal = (state.perDay.n.deal || 0) + n;
+    }
     if (pack.perDay) {
       if (state.perDay?.day !== ymd(now())) state.perDay = { day: ymd(now()), n: {} };
       state.perDay.n[pack.id] = (state.perDay.n[pack.id] || 0) + n;
@@ -1480,8 +1506,8 @@
     tickFree();
     const again = $('#again');
     again.hidden = false;
-    if (n > 1) { again.textContent = t('again10', n, fmt(bulkPrice(pack))); again.disabled = state.coins < bulkPrice(pack); }
-    else { const free = (state.free && !pack.special) || state.tickets?.[pack.id] > 0; again.textContent = t('again', free ? null : pack.price); again.disabled = (!free && state.coins < pack.price) || !leftToday(pack) || (pack.missing && !missingAny()); }
+    if (n > 1) { again.textContent = t('again10', n, fmt(lotPrice(pack))); again.disabled = state.coins < lotPrice(pack); }
+    else { const free = (state.free && !pack.special) || state.tickets?.[pack.id] > 0, price = pack.deal ? withDeal(packById(pack.id)).price : pack.price; again.textContent = t('again', free ? null : price); again.disabled = (!free && state.coins < price) || !leftToday(pack) || (pack.missing && !missingAny()); }
     $('#to-album').hidden = false;
     $('#stage-close').hidden = false;
     checkAchievements();

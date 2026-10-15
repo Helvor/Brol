@@ -10,8 +10,9 @@ en français) ; l'interface existe en FR et NL.
 - `data/cards.js` est **généré** par `tools/build-cards.mjs` (Wikidata, Wikipédia, Commons ; cache `tools/.cache.json`).
   Ne pas l'éditer à la main : modifier le générateur et relancer `node tools/build-cards.mjs`. Pour ajouter une
   catégorie sans tout régénérer (Wikipédia et Commons limitent souvent les requêtes, le cache n'est pas versionné) :
-  `node tools/build-cards.mjs --ajout=animal` (ou `militaire`, `aviation`, `rail`, `exploration`, `finance`, `histoire`, `bd`, `paysage`, `balade`, `voiture`, `riviere`, `moulin`, `arme` ; Wikidata seul ;
-  nouvelle catégorie : l'ajouter à `AJOUTS` dans le générateur). Photo fausse : `PHOTO_FIX` puis
+  `node tools/build-cards.mjs --ajout=animal` (ou `militaire`, `aviation`, `rail`, `exploration`, `finance`, `histoire`, `bd`, `paysage`, `balade`, `voiture`, `riviere`, `moulin`, `arme`, `complements` ; Wikidata seul ;
+  nouvelle catégorie : l'ajouter à `AJOUTS` dans le générateur ; carte de plus dans Sciences, Gastronomie ou Bières :
+  `COMPLEMENTS`). Photo fausse : `PHOTO_FIX` puis
   `node tools/build-cards.mjs --photos`.
 - `data/images.js` (adresses directes des images, `tools/build-images.mjs`, lancé par build-cards) et `data/focus.js`
   (cadrage sur le visage, `python3 tools/build-focus.py [--hors-ligne]`, demande opencv-python-headless).
@@ -33,8 +34,8 @@ en français) ; l'interface existe en FR et NL.
 Phase 6 (nouveaux paquets), paquets Banque nationale, Histoire, Bulles (BD, design « Pop ») Paysages (cartes horizontales `landscape`, carte postale) Balades (fiche de rando, point de départ sur la carte) Voitures belges (« Showroom »), Au fil de l'eau (« Atlas », horizontales), Moulins (« Sac de farine ») et Arsenal (« Plan d'armurier ») terminés. Autres idées de paquets : `PROPOSITIONS-PAQUETS.md`. Commons inaccessible : passer par WDQS
 (`SERVICE wikibase:mwapi` vers commons.wikimedia.org) pour chercher des fichiers. Restent dans `ROADMAP.md` : photos de Lansens et
 Van Dorpe (pas d'autre photo libre), collègues de l'utilisateur pour le paquet BNB (photos locales, avec accord), équilibrage de Formation de gouvernement, mise à jour automatique des données, phase 5
-(comptes en ligne). Viser 50 cartes au moins par paquet thématique ; listes à faire valider avant de générer. Nouvelle catégorie : l'ajouter à `FEATURED`
-(app.js) pour qu'elle ne se noie pas dans le paquet Belgique.
+(comptes en ligne). Viser 50 cartes au moins par paquet thématique ; listes à faire valider avant de générer. Nouvelle catégorie : l'ajouter en tête de `ROTATION`
+(app.js, catégorie de la semaine ×3) pour qu'elle ne se noie pas dans le paquet Belgique.
 Rareté des communes : score pondéré à partir de `tools/sources/` (Statbel et registres du patrimoine, voir
 `tools/statbel.py`, `tools/patrimoine.mjs`), recalcul seul avec `--communes`. Prochaine étape : même principe pour les
 autres catégories, une à la fois, tableau avant/après validé par l'utilisateur. Hénallux n'a pas de photo (logo absent de
