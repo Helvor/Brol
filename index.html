@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0e11">
+  <title>Brol</title>
+  <meta name="description" content="Brol : jeu gratuit de cartes à collectionner sur la Belgique (politique, culture, sport, communes). Ouvre des paquets, complète ton album, joue aux mini-jeux. Sans publicité, compte facultatif.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Brol">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="-1.3 -0.5 63 63"%3E%3Cg stroke-linejoin="round"%3E%3Crect x="13" y="9" width="30" height="42" rx="4.5" fill="%23111" stroke="%23fff" stroke-width="2.4" transform="rotate%28-18 28 50%29"/%3E%3Crect x="17" y="8" width="30" height="42" rx="4.5" fill="%23f2c400" stroke="%23fff" stroke-width="2.4" transform="rotate%28-4 32 50%29"/%3E%3Crect x="21" y="10" width="30" height="42" rx="4.5" fill="%23e1001e" stroke="%23fff" stroke-width="2.4" transform="rotate%2812 36 52%29"/%3E%3Cpath transform="rotate%2812 36 52%29" d="M30.5 19.5v23M30.5 19.5h6.5a5.6 5.6 0 0 1 0 11.2h-6.5M30.5 30.7h7.4a6 6 0 0 1 0 12h-7.4" fill="none" stroke="%23fff" stroke-width="4.6" stroke-linecap="square"/%3E%3C/g%3E%3C/svg%3E">
+  <script src="theme.js?v=5cd3a8c" data-fete></script>
+  <!-- Polices copiées dans le dépôt (tools/build-fonts.py) : aucune requête vers Google -->
+  <link rel="stylesheet" href="vendor/fonts/fonts.css?v=5cd3a8c">
+  <link rel="stylesheet" href="style.css?v=5cd3a8c">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" data-view="shop">
+      <svg class="logo" viewBox="-1.3 -0.5 63 63" aria-hidden="true"><g stroke-linejoin="round"><rect x="13" y="9" width="30" height="42" rx="4.5" fill="#111" stroke="#fff" stroke-width="2.4" transform="rotate(-18 28 50)"/><rect x="17" y="8" width="30" height="42" rx="4.5" fill="#f2c400" stroke="#fff" stroke-width="2.4" transform="rotate(-4 32 50)"/><rect x="21" y="10" width="30" height="42" rx="4.5" fill="#e1001e" stroke="#fff" stroke-width="2.4" transform="rotate(12 36 52)"/><path transform="rotate(12 36 52)" d="M30.5 19.5v23M30.5 19.5h6.5a5.6 5.6 0 0 1 0 11.2h-6.5M30.5 30.7h7.4a6 6 0 0 1 0 12h-7.4" fill="none" stroke="#fff" stroke-width="4.6" stroke-linecap="square"/></g></svg>
+      <span class="brand-name">Brol</span>
+    </a>
+    <nav class="tabs">
+      <button class="tab is-active" data-view="shop" data-i18n="tab.shop">Paquets</button>
+      <button class="tab" data-view="binder"><span data-i18n="tab.binder">Album</span> <span id="progress-pill" class="tab-count"></span></button>
+      <button class="tab" data-view="series"><span data-i18n="tab.series">Séries</span> <span id="series-dot" class="dot" hidden></span></button>
+      <button class="tab" data-view="trade" data-i18n="tab.trade">Échanges</button>
+      <button class="tab" data-view="games" data-i18n="tab.games">Jeux</button>
+      <button class="tab" data-view="ach" data-i18n="tab.ach">Succès</button>
+    </nav>
+    <div class="topbar-right">
+      <button id="level-pill" class="level-pill" type="button"><svg class="lvl-ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="lvl-track" cx="18" cy="18" r="14"/><circle class="lvl-arc" cx="18" cy="18" r="14" pathLength="100"/></svg><span class="lvl-n">Niv. 1</span></button>
+      <div class="wallet"><span class="coin" aria-hidden="true"></span><span id="coins">0</span></div>
+      <button id="lang-btn" class="icon-btn lang-btn">NL</button>
+      <button id="sound-btn" class="icon-btn" aria-label="Son"></button>
+      <button id="theme-btn" class="icon-btn" aria-label="Thème"></button>
+    </div>
+  </header>
+
+  <main>
+    <section id="view-shop" class="view is-active">
+      <div class="shop-head">
+        <div>
+          <h1 data-i18n="shop.title">Paquets</h1>
+          <p id="event-line" class="event-line"></p>
+          <p id="fete-line" class="fete-line" hidden></p>
+        </div>
+        <div id="showcase" class="showcase"></div>
+        <div class="shop-side">
+          <div id="pot-box" class="pot-box"></div>
+          <div id="missions-box" class="missions-box"><div id="missions-list"></div><div id="daily-box" class="daily-box"></div></div>
+          <div id="weekly-box" class="weekly-box"></div>
+          <div id="free-box" class="free-box"></div>
+        </div>
+      </div>
+      <div id="packs" class="packs"></div>
+    </section>
+
+    <section id="view-binder" class="view">
+      <div class="binder-head">
+        <div>
+          <h1 data-i18n="binder.title">Album</h1>
+          <p class="muted" id="binder-summary"></p>
+        </div>
+        <div class="filters">
+          <input id="search" type="search" data-i18n-ph="search" autocomplete="off">
+          <select id="f-cat"></select>
+          <select id="f-rarity"></select>
+          <select id="f-pack"></select>
+          <label class="check"><input id="f-owned" type="checkbox"><span></span><em data-i18n="owned">Possédées</em></label>
+          <label class="check"><input id="f-special" type="checkbox"><span></span><em data-i18n="specials">Versions spéciales</em></label>
+          <button id="fuse-btn" class="btn btn-line" data-i18n="fuse">Fusionner</button>
+          <button id="sell-all" class="btn btn-line" data-i18n="sellAll">Vendre les doublons</button>
+        </div>
+      </div>
+      <div id="cat-chips" class="chips"></div>
+      <div id="series-banner" class="series-banner" hidden></div>
+      <div id="grid" class="grid"></div>
+    </section>
+
+    <section id="view-series" class="view">
+      <div class="binder-head">
+        <div>
+          <h1 data-i18n="series.title">Séries</h1>
+          <p class="muted" id="series-summary"></p>
+        </div>
+      </div>
+      <div id="series-grid" class="series-grid"></div>
+    </section>
+
+    <section id="view-trade" class="view">
+      <div class="binder-head">
+        <div>
+          <h1 id="trade-title">Échanges</h1>
+          <p class="muted" id="trade-intro"></p>
+        </div>
+      </div>
+      <div id="trade-area"></div>
+    </section>
+
+    <section id="view-games" class="view">
+      <div class="binder-head">
+        <div>
+          <h1 id="games-title">Jeux</h1>
+          <p class="muted" id="games-intro"></p>
+        </div>
+      </div>
+      <div id="game-area"></div>
+    </section>
+
+    <section id="view-ach" class="view">
+      <div class="binder-head">
+        <div class="ach-head">
+          <h1 data-i18n="ach.title">Succès</h1>
+          <p class="muted" id="ach-summary"></p>
+          <div class="bar ach-total"><span id="ach-bar"></span></div>
+        </div>
+      </div>
+      <div id="ach-list"></div>
+    </section>
+  </main>
+
+  <!-- Scène d'ouverture plein écran -->
+  <div id="stage" class="stage" tabindex="-1" hidden>
+    <div class="stage-rays" aria-hidden="true"></div>
+    <div class="stage-flash" aria-hidden="true"></div>
+    <div class="stage-wallet" aria-live="polite"><span class="coin"></span><b id="stage-coins">0</b><em id="stage-gain"></em></div>
+    <div id="stage-pack" class="stage-pack"></div>
+    <p id="stage-hint" class="stage-hint"></p>
+    <div id="reveal" class="reveal"></div>
+    <div id="stage-bar" class="stage-bar">
+      <p id="stage-summary" class="stage-summary"></p>
+      <div class="stage-actions">
+        <button id="flip-all" class="btn btn-line btn-light" data-i18n="flipAll">Tout retourner</button>
+        <button id="again" class="btn btn-gold" hidden></button>
+        <button id="to-album" class="btn btn-line btn-light" hidden data-i18n="toAlbum">Voir l’album</button>
+        <button id="stage-close" class="btn btn-line btn-light" hidden data-i18n="close">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="detail">
+    <div class="detail-inner">
+      <div id="detail-card" class="detail-card"></div>
+      <button class="detail-nav" id="detail-prev" aria-label="‹" hidden>‹</button>
+      <button class="detail-nav" id="detail-next" aria-label="›" hidden>›</button>
+      <div class="detail-info">
+        <button class="close" id="detail-close" aria-label="×">×</button>
+        <div id="detail-body"></div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="fuse" class="side-dlg">
+    <button class="close" id="fuse-close" aria-label="×">×</button>
+    <div id="fuse-body"></div>
+  </dialog>
+
+  <dialog id="bug-dlg" class="side-dlg bug-dlg">
+    <button class="close" id="bug-close" aria-label="×">×</button>
+    <h2 data-i18n="bugTitle">Signaler un bug</h2>
+    <p class="bug-intro" data-i18n="bugIntro"></p>
+    <textarea id="bug-text" rows="5" data-i18n-ph="bugPh"></textarea>
+    <p class="bug-msg" id="bug-msg" role="alert" hidden></p>
+    <label class="bug-tech"><input type="checkbox" id="bug-tech" checked> <span data-i18n="bugTech"></span></label>
+    <div class="bug-actions" id="bug-actions"></div>
+    <p class="bug-note" data-i18n="bugNote"></p>
+  </dialog>
+  <dialog id="daily" class="daily-dlg">
+    <button class="close" id="daily-close" aria-label="×">×</button>
+    <div id="daily-body"></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+  <div id="ach-toast" class="ach-toast" role="status"></div>
+
+  <footer class="foot">
+    <div class="foot-groups">
+      <section class="foot-group">
+        <h4 data-i18n="footGame">Ta partie</h4>
+        <div class="foot-btns">
+          <button id="export" class="foot-btn" data-i18n="export">Exporter ma partie</button>
+          <button id="import" class="foot-btn" data-i18n="import">Importer une partie</button>
+          <input id="import-file" type="file" accept="application/json,.json" hidden>
+          <button id="reset" class="foot-btn is-danger" data-i18n="reset">Réinitialiser la partie</button>
+        </div>
+      </section>
+      <section class="foot-group">
+        <h4 data-i18n="footApp">L’appli</h4>
+        <div class="foot-btns">
+          <button id="install" class="foot-btn" data-i18n="install" hidden>Installer l’appli</button>
+          <button id="notif" class="foot-btn" hidden></button>
+          <button id="bug" class="foot-btn" data-i18n="bugBtn">Signaler un bug</button>
+          <button id="fete-btn" class="foot-btn" hidden></button>
+        </div>
+      </section>
+    </div>
+    <!-- Présentation lisible sans JavaScript (moteurs de recherche, vérification de Google pour la connexion) -->
+    <section class="foot-about">
+      <h4 data-i18n="aboutTitle">C’est quoi, Brol ?</h4>
+      <p data-i18n="aboutText">Brol est un jeu gratuit de cartes à collectionner sur la Belgique : politique, bourgmestres, culture, sport, communes… Ouvre des paquets, complète ton album, joue aux mini-jeux et échange tes doublons. Sans publicité. Le compte, facultatif, existe sur brol.elveli.net : il garde ton pseudo (connexion par code reçu par e-mail ou avec Google).</p>
+      <p lang="en">Brol is a free collectible card game about Belgium. On brol.elveli.net, signing in (email code or Google) is optional and only used to keep your player account and username. More: <a href="about">about Brol</a>, <a href="privacy">privacy policy</a>, <a href="cgu">terms</a>.</p>
+    </section>
+    <div class="foot-meta">
+      <p data-i18n-html="credits"></p>
+      <p class="foot-legal"><a href="privacy" data-i18n="legalPrivacy">Confidentialité et cookies</a> · <a href="cgu" data-i18n="legalTerms">Conditions d’utilisation</a> · <a href="accessibility" data-i18n="legalA11y">Accessibilité</a> · <a href="mailto:contact@elveli.net">contact@elveli.net</a></p>
+      <span class="version" id="version">v2026.10.29 · 5cd3a8c</span>
+    </div>
+  </footer>
+
+  <script src="config.js?v=5cd3a8c"></script>
+  <script src="data/cards.js?v=5cd3a8c"></script>
+  <script src="data/belgium.js?v=5cd3a8c"></script>
+  <script src="data/provinces.js?v=5cd3a8c"></script>
+  <script src="data/images.js?v=5cd3a8c"></script>
+  <script src="data/focus.js?v=5cd3a8c"></script>
+  <script src="i18n.js?v=5cd3a8c"></script>
+  <script src="dialog.js?v=5cd3a8c"></script>
+  <script src="sfx.js?v=5cd3a8c"></script>
+  <script src="achievements.js?v=5cd3a8c"></script>
+  <script src="app.js?v=5cd3a8c"></script>
+  <script src="account.js?v=5cd3a8c"></script>
+</body>
+</html>
